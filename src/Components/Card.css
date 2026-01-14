@@ -1,0 +1,14 @@
+.card-container {
+  background-color: white;
+  border-radius: 10px; /* Bordes redondeados */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra suave */
+  padding: 20px;
+  margin: 15px;
+  width: 300px; /* Ancho fijo o puedes usar % */
+  transition: transform 0.2s; /* Para animación opcional */
+}
+
+/* Opcional: efecto al pasar el mouse por toda la tarjeta */
+.card-container:hover {
+  transform: translateY(-5px);
+}

@@ -1,0 +1,32 @@
+html body {
+  font-family: Montserrat, Arial, Helvetica, sans-serif;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.container-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background-color: rgba(63, 108, 199, 0.8);
+}
+
+.navbar-list {
+  display: flex;
+  gap: 20px;
+}
+
+.navbar-list a {
+  display: inline-block;
+  transition: 0.3s ease;
+  text-decoration: none;
+  color: black;
+  font-weight: 500;
+}
+
+.navbar-list a:hover {
+  transform: scale(1.1);
+}
