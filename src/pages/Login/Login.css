@@ -1,0 +1,101 @@
+body {
+  background-color: #f8f9fa;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+}
+
+/* LA TARJETA DEL LOGIN */
+.container-login {
+  background-color: #ffffff;
+  width: 100%;
+  max-width: 400px;
+  margin: 30px auto;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
+
+.login-title {
+  color: #333;
+  font-size: 2rem;
+  margin-bottom: 30px;
+  font-weight: 600;
+}
+
+.form-group {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: #666;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  box-sizing: border-box;
+  transition: border-color 0.3s;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #5c85d6;
+}
+
+/* EL BOTÓN */
+.btn-login {
+  width: 100%;
+  padding: 12px;
+  background-color: #648de5;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s;
+  margin-top: 10px;
+}
+
+.btn-login:hover {
+  background-color: #4a76c9;
+}
+
+.forgot-password {
+  display: block;
+  text-align: right;
+  font-size: 0.85rem;
+  color: #648de5;
+  text-decoration: none;
+  margin-top: 5px;
+}
+
+.forgot-password:hover {
+  text-decoration: underline;
+}
+
+.register-link {
+  margin-top: 20px;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.register-link a {
+  color: #648de5;
+  font-weight: bold;
+  text-decoration: none;
+  margin-left: 5px;
+}
+
+.register-link a:hover {
+  text-decoration: underline;
+}

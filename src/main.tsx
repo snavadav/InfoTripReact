@@ -1,10 +1,11 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { InfoTrip } from "./InfoTrip.tsx";
+import { RouterProvider } from "react-router-dom";
+import { router } from "./router.tsx";
 import "./InfoTrip.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <InfoTrip />
+    <RouterProvider router={router} />
   </StrictMode>
 );
