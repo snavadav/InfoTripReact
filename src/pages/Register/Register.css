@@ -4,45 +4,51 @@ body {
   margin: 0;
   padding: 0;
   width: 100%;
-  height: 100vh; /* Forza a que la altura sea el 100% de la ventana */
-  overflow: hidden; /* ¡La clave! Oculta barras y bloquea el scroll */
+  height: 100vh; /* Forza la altura al 100% de la ventana visible */
+  overflow: hidden; /* ESTO ES LO QUE QUITA LA BARRA Y EL DESLIZ */
 }
-/* 1. CONTENEDOR PRINCIPAL (La Tarjeta) */
+.register-wrapper {
+  min-height: 50vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  box-sizing: border-box;
+  background-color: #f8f9fa;
+}
+
 .container-register {
   background-color: #ffffff;
-  width: 90%; /* Ocupa el 90% en celulares */
-  max-width: 550px; /* Un poco más ancho que el Login para que quepan los nombres */
-  margin: 10px auto; /* Centrado en pantalla */
-  padding: 40px;
-  border-radius: 12px; /* Bordes redondeados modernos */
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); /* Sombra suave "flotante" */
+  width: 100%;
+  max-width: 500px;
+  padding: 35px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   text-align: center;
 }
 
-/* Título */
 .container-register h3 {
   color: #333;
-  font-size: 2rem;
-  margin-bottom: 10px;
+  font-size: 1.8rem;
+  margin-bottom: 20px;
   font-weight: 700;
+  margin-top: 0;
 }
 
-/* 2. FILA PARA NOMBRE Y APELLIDO (Lado a lado) */
 .form-row {
   display: flex;
-  gap: 15px; /* Espacio entre el nombre y el apellido */
+  gap: 15px;
 }
 
-/* 3. GRUPOS DE INPUTS */
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 15px;
   text-align: left;
-  flex: 1; /* Esto hace que nombre y apellido ocupen el mismo ancho (50/50) */
+  flex: 1;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   color: #555;
   font-weight: 600;
   font-size: 0.9rem;
@@ -53,46 +59,36 @@ body {
   padding: 12px;
   border: 1px solid #ddd;
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: 0.95rem;
   background-color: #fff;
-  box-sizing: border-box; /* Vital para que el padding no rompa el diseño */
-  transition: all 0.3s ease; /* Suaviza el cambio de color al hacer clic */
+  box-sizing: border-box; /* CRÍTICO: evita que el padding rompa el ancho */
+  transition: all 0.3s ease;
 }
 
-/* Estado Focus (Cuando escribes) - Azul Eléctrico */
 .form-group input:focus {
   outline: none;
   border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); /* Resplandor azul suave */
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
-/* Estilo específico para el selector de fecha */
-input[type="date"] {
-  cursor: pointer;
-  color: #333;
-  font-family: inherit;
-}
-
-/* 4. BOTÓN DE REGISTRO */
 .btn-register {
   width: 100%;
   padding: 14px;
-  background-color: #2563eb; /* Tu color principal */
+  background-color: #2563eb;
   color: white;
   border: none;
   border-radius: 8px;
   font-size: 1.1rem;
   font-weight: bold;
   cursor: pointer;
-  margin-top: 10px;
+  margin-top: 15px;
   transition: background-color 0.3s;
 }
 
 .btn-register:hover {
-  background-color: #1d4ed8; /* Un tono más oscuro al pasar el mouse */
+  background-color: #1d4ed8;
 }
 
-/* 5. ENLACE AL LOGIN (Abajo) */
 .login-link {
   margin-top: 20px;
   font-size: 0.9rem;
@@ -106,19 +102,13 @@ input[type="date"] {
   margin-left: 5px;
 }
 
-.login-link a:hover {
-  text-decoration: underline;
-}
-
-/* --- RESPONSIVE (Para celulares) --- */
 @media (max-width: 500px) {
-  /* En pantallas pequeñas, quitamos el flex para que se apilen verticalmente */
   .form-row {
     flex-direction: column;
     gap: 0;
   }
 
   .container-register {
-    padding: 25px; /* Menos relleno en celular para aprovechar espacio */
+    padding: 25px 20px;
   }
 }
