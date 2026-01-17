@@ -1,38 +1,42 @@
-/* --- Register.css --- */
-html,
-body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100vh; /* Forza la altura al 100% de la ventana visible */
-  overflow: hidden; /* ESTO ES LO QUE QUITA LA BARRA Y EL DESLIZ */
-}
 .register-wrapper {
-  min-height: 50vh;
+  height: 100vh;
+  width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 10px;
-  box-sizing: border-box;
-  background-color: #f8f9fa;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  font-family: "Segoe UI", sans-serif;
+  overflow: hidden;
 }
 
 .container-register {
   background-color: #ffffff;
-  width: 100%;
-  max-width: 500px;
-  padding: 35px;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  width: 90%;
+  max-width: 550px;
+  padding: 30px 40px;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
   text-align: center;
+  transition: transform 0.3s ease;
 }
 
-.container-register h3 {
-  color: #333;
+.container-register:hover {
+  transform: translateY(-5px);
+}
+
+.register-title {
+  color: #1a202c;
   font-size: 1.8rem;
-  margin-bottom: 20px;
-  font-weight: 700;
   margin-top: 0;
+  margin-bottom: 5px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.register-description {
+  color: #718096;
+  font-size: 0.9rem;
+  margin-bottom: 20px;
 }
 
 .form-row {
@@ -49,57 +53,77 @@ body {
 .form-group label {
   display: block;
   margin-bottom: 6px;
-  color: #555;
+  color: #4a5568;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .form-group input {
   width: 100%;
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  padding: 12px 14px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
   font-size: 0.95rem;
-  background-color: #fff;
-  box-sizing: border-box; /* CRÍTICO: evita que el padding rompa el ancho */
+  background-color: #f7fafc;
+  color: #2d3748;
+  box-sizing: border-box;
   transition: all 0.3s ease;
 }
 
 .form-group input:focus {
   outline: none;
+  background-color: #fff;
   border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
+input[type="date"] {
+  font-family: inherit;
+  cursor: pointer;
+  color: #4a5568;
 }
 
 .btn-register {
   width: 100%;
   padding: 14px;
-  background-color: #2563eb;
+  background: linear-gradient(to right, #2563eb, #4f46e5);
   color: white;
   border: none;
-  border-radius: 8px;
-  font-size: 1.1rem;
-  font-weight: bold;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 700;
   cursor: pointer;
-  margin-top: 15px;
-  transition: background-color 0.3s;
+  margin-top: 10px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
 }
 
 .btn-register:hover {
-  background-color: #1d4ed8;
+  transform: translateY(-2px);
+  box-shadow: 0 7px 14px rgba(37, 99, 235, 0.3);
+  filter: brightness(1.1);
 }
 
 .login-link {
   margin-top: 20px;
+  border-top: 1px solid #edf2f7;
+  padding-top: 15px;
   font-size: 0.9rem;
-  color: #666;
+  color: #718096;
 }
 
 .login-link a {
   color: #2563eb;
   text-decoration: none;
-  font-weight: bold;
+  font-weight: 700;
   margin-left: 5px;
+  transition: color 0.2s;
+}
+
+.login-link a:hover {
+  text-decoration: underline;
 }
 
 @media (max-width: 500px) {
@@ -108,7 +132,10 @@ body {
     gap: 0;
   }
 
-  .container-register {
-    padding: 25px 20px;
+  .register-wrapper {
+    height: auto;
+    min-height: 100vh;
+    padding: 20px 0;
+    overflow-y: auto;
   }
 }

@@ -1,16 +1,17 @@
 import { Link } from "react-router-dom";
-import { PATHS } from "../../routes/paths"; // Asegúrate que esta ruta sea correcta
+import { PATHS } from "../../routes/paths";
 import "./Register.css";
 
 export const Register = () => {
   return (
-    // 1. El Wrapper para centrar y permitir scroll
+    // 1. WRAPPER PREMIUM (Fondo degradado)
     <div className="register-wrapper">
       <div className="container-register">
-        <h3>Regístrate</h3>
+        <h3 className="register-title">Crea tu cuenta</h3>
+        <p className="register-description">Únete a InfoTrip hoy mismo</p>
 
         <form action="">
-          {/* 2. Fila para Nombre y Apellido juntos */}
+          {/* FILA 1: Nombre y Apellido */}
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="name">Nombre</label>
@@ -35,7 +36,7 @@ export const Register = () => {
             </div>
           </div>
 
-          {/* 3. El Email (Ya está fuera del div anterior, corregido) */}
+          {/* Email */}
           <div className="form-group">
             <label htmlFor="email">Correo Electrónico</label>
             <input
@@ -47,8 +48,7 @@ export const Register = () => {
             />
           </div>
 
-          {/* ... resto del formulario ... */}
-
+          {/* Fecha */}
           <div className="form-group">
             <label htmlFor="birthday">Fecha de nacimiento</label>
             <input
@@ -59,7 +59,7 @@ export const Register = () => {
             />
           </div>
 
-          {/* NUEVO: Contraseñas en la misma fila para ahorrar espacio vertical */}
+          {/* FILA 2: Contraseñas */}
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="password-register">Contraseña</label>
@@ -67,7 +67,7 @@ export const Register = () => {
                 type="password"
                 id="password-register"
                 name="password"
-                placeholder="Contraseña"
+                placeholder="Crear"
                 autoComplete="new-password"
               />
             </div>
@@ -84,15 +84,12 @@ export const Register = () => {
             </div>
           </div>
 
-          {/* ... botón y link ... */}
-
           <div className="submit-register">
             <button type="submit" className="btn-register">
               Crear cuenta
             </button>
           </div>
 
-          {/* 4. Enlace para volver al Login */}
           <div className="login-link">
             ¿Ya tienes cuenta? <Link to={PATHS.LOGIN}>Inicia sesión</Link>
           </div>
@@ -101,5 +98,3 @@ export const Register = () => {
     </div>
   );
 };
-
-export default Register; // Si lo exportas por defecto

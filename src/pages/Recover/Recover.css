@@ -1,0 +1,130 @@
+/* --- Recover.css (Versión Premium) --- */
+
+/* 1. FONDO CON DEGRADADO (Mucho más elegante que un color plano) */
+.recover-wrapper {
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* Degradado suave entre azul grisáceo y blanco */
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  font-family: "Segoe UI", sans-serif; /* Aseguramos fuente limpia */
+  overflow: hidden;
+}
+
+/* 2. LA TARJETA (Efecto Flotante) */
+.container-recover {
+  background-color: #ffffff;
+  width: 90%;
+  max-width: 420px; /* Un poco más compacto para concentrar la atención */
+  padding: 45px 40px;
+  border-radius: 16px; /* Bordes más redondeados */
+  /* Sombra difusa y elegante (Soft Shadow) */
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+
+/* Pequeño efecto al cargar: La tarjeta flota un poquito */
+.container-recover:hover {
+  transform: translateY(-5px);
+}
+
+/* TITULO */
+.container-recover h3 {
+  margin-top: 0;
+  color: #1a202c; /* Negro suave, no negro puro */
+  font-size: 1.8rem;
+  margin-bottom: 10px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+/* DESCRIPCIÓN */
+.recover-description {
+  color: #718096; /* Gris medio */
+  font-size: 0.95rem;
+  margin-bottom: 35px;
+  line-height: 1.6;
+}
+
+/* 3. INPUTS MODERNOS */
+.form-group {
+  margin-bottom: 25px;
+  text-align: left;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: #4a5568;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase; /* Etiquetas en mayúsculas pequeñas se ven Pro */
+  letter-spacing: 0.5px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 14px 16px; /* Más espacio interno */
+  border: 2px solid #e2e8f0; /* Borde suave */
+  border-radius: 10px;
+  font-size: 1rem;
+  background-color: #f7fafc; /* Fondo gris muy clarito */
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+  color: #2d3748;
+}
+/* Efecto Focus: Borde Azul y Fondo Blanco */
+.form-group input:focus {
+  outline: none;
+  background-color: #fff;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); /* Resplandor */
+}
+
+/* 4. BOTÓN "GRADIENTE" */
+.btn-recover {
+  width: 100%;
+  padding: 14px;
+  /* Degradado moderno de azul a violeta suave */
+  background: linear-gradient(to right, #2563eb, #4f46e5);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+}
+
+.btn-recover:hover {
+  /* Al pasar el mouse, sube un poco y la sombra crece */
+  transform: translateY(-2px);
+  box-shadow: 0 7px 14px rgba(37, 99, 235, 0.3);
+  filter: brightness(1.1);
+}
+
+/* 5. ENLACE VOLVER */
+.back-link {
+  margin-top: 30px;
+  border-top: 1px solid #edf2f7; /* Línea separadora sutil */
+  padding-top: 20px;
+}
+
+.back-link a {
+  color: #718096;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: color 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.back-link a:hover {
+  color: #2563eb;
+}
