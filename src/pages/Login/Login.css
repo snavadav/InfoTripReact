@@ -1,106 +1,94 @@
-/* --- Login.css (Estilo Premium) --- */
-
-/* 1. FONDO Y CENTRADO */
+/* Login sin scroll */
 .login-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
   height: 100vh;
-  width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   font-family: "Segoe UI", sans-serif;
+  z-index: 9999;
   overflow: hidden;
 }
 
-/* 2. LA TARJETA FLOTANTE */
 .container-login {
   background-color: #ffffff;
   width: 90%;
-  max-width: 420px; /* Ancho ideal para lectura */
-  padding: 45px 40px;
+  max-width: 400px;
+  padding: 3vh 40px;
   border-radius: 16px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08); /* Sombra difusa 3D */
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
   text-align: center;
-  transition: transform 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  max-height: 95vh;
 }
 
-.container-login:hover {
-  transform: translateY(-5px); /* Flota un poquito al pasar el mouse */
-}
-
-/* TÍTULOS */
 .login-title {
   color: #1a202c;
   font-size: 1.8rem;
-  margin-top: 0;
-  margin-bottom: 5px;
+  margin: 0 0 5px 0;
   font-weight: 800;
-  letter-spacing: -0.5px;
 }
 
 .login-description {
   color: #718096;
-  font-size: 0.95rem;
-  margin-bottom: 30px;
+  font-size: 0.9rem;
+  margin: 0 0 20px 0;
 }
 
-/* 3. INPUTS MODERNOS */
+form {
+  width: 100%;
+}
+
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 15px;
   text-align: left;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 5px;
   color: #4a5568;
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 
 .form-group input {
   width: 100%;
-  padding: 14px 16px;
+  padding: 10px 15px;
   border: 2px solid #e2e8f0;
   border-radius: 10px;
-  font-size: 1rem;
+  font-size: 0.95rem;
   background-color: #f7fafc;
-  color: #2d3748;
   box-sizing: border-box;
-  transition: all 0.3s ease;
 }
 
 .form-group input:focus {
   outline: none;
   background-color: #fff;
   border-color: #2563eb;
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
 }
 
-/* LINK DE OLVIDÉ CONTRASEÑA */
 .forgot-container {
-  text-align: right; /* Alineado a la derecha */
-  margin-top: 8px;
+  text-align: right;
+  margin-top: 5px;
 }
 
 .forgot-password {
   color: #718096;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   text-decoration: none;
-  transition: color 0.2s;
 }
 
-.forgot-password:hover {
-  color: #2563eb;
-  text-decoration: underline;
-}
-
-/* 4. BOTÓN CON DEGRADADO */
 .btn-login {
   width: 100%;
-  padding: 14px;
+  padding: 12px;
   background: linear-gradient(to right, #2563eb, #4f46e5);
   color: white;
   border: none;
@@ -109,23 +97,18 @@
   font-weight: 700;
   cursor: pointer;
   margin-top: 10px;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
 }
 
-.btn-login:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 7px 14px rgba(37, 99, 235, 0.3);
-  filter: brightness(1.1);
-}
-
-/* 5. LINK DE REGISTRO (ABAJO) */
 .register-link {
-  margin-top: 30px;
+  margin-top: 20px;
   border-top: 1px solid #edf2f7;
-  padding-top: 20px;
-  font-size: 0.9rem;
+  padding-top: 15px;
+  font-size: 0.85rem;
   color: #718096;
+}
+
+.register-link p {
+  margin: 0;
 }
 
 .register-link a {
@@ -133,9 +116,23 @@
   text-decoration: none;
   font-weight: 700;
   margin-left: 5px;
-  transition: color 0.2s;
 }
 
-.register-link a:hover {
-  text-decoration: underline;
+@media (max-height: 650px) {
+  .container-login {
+    padding: 15px 30px;
+  }
+  .login-title {
+    font-size: 1.4rem;
+  }
+  .form-group {
+    margin-bottom: 10px;
+  }
+  .form-group input {
+    padding: 8px;
+  }
+  .register-link {
+    margin-top: 10px;
+    padding-top: 10px;
+  }
 }
