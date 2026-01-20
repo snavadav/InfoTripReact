@@ -45,7 +45,7 @@ export const Login = () => {
     setError(null); // Limpiamos errores previos
 
     try {
-      // --- AQUÍ LLAMAMOS EL SERVICIO FALSO ---
+      // AQUÍ LLAMAMOS EL SERVICIO FALSO
       const response = await AuthService.login(
         credentials.usuario,
         credentials.password,
@@ -53,7 +53,9 @@ export const Login = () => {
 
       if (response.success) {
         console.log("¡Login exitoso!", response.user);
-        // AQUÍ ES DONDE REDIRIGIMOS AL USUARIO AL INICIO
+
+        localStorage.setItem("userToken", "123456");
+
         navigate(PATHS.INFOTRIP);
       }
     } catch (err: any) {
