@@ -136,3 +136,34 @@ form {
     padding-top: 10px;
   }
 }
+
+/* Mensaje de error */
+.error-message {
+  background-color: #fee2e2;
+  color: #dc2626;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  margin-bottom: 15px;
+  border: 1px solid #fca5a5;
+  animation: shake 0.3s ease-in-out; /* una animación de sacudida */
+}
+
+/* Animación de No*/
+@keyframes shake {
+  0% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  50% {
+    transform: translateX(5px);
+  }
+  75% {
+    transform: translateX(-5px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
