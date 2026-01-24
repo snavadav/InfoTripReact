@@ -21,11 +21,11 @@ export const Header = () => {
           <a href="/">Inicio</a>
           <a href="/">Conocenos</a>
           {isLogged ? (
-            <a onClick={handleLogout} className="btn-logout">
+            <a href="" onClick={handleLogout} className="btn-logout">
               Cerrar Sesion
             </a>
           ) : (
-            <a onClick={() => navigate(PATHS.LOGIN)}>Iniciar Sesion</a>
+            <a href="" onClick={() => navigate(PATHS.LOGIN)}>Iniciar Sesion</a>
           )}
         </nav>
       </div>

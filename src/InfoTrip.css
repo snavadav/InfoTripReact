@@ -1,0 +1,10 @@
+.superior-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center; /* Alineación vertical */
+
+  /* CAMBIO AQUÍ: Quita width: 100% y usa box-sizing si quieres mantener el padding */
+  width: 100%;
+  padding: 20px;
+  box-sizing: border-box; /* ESTO evita que se salga */
+}

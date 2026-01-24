@@ -1,0 +1,43 @@
+/* El contenedor "cáscara" */
+.search-container {
+  display: flex; /* Alinea ícono e input en fila */
+  align-items: center; /* Centra verticalmente */
+
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0; /* Borde gris suave */
+  border-radius: 12px; /* Bordes redondeados modernos */
+  padding: 10px 15px; /* Espacio interno */
+  width: 100%;
+  max-width: 400px; /* Ancho máximo para que no se estire demasiado */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); /* Sombra sutil */
+  transition: all 0.3s ease; /* Animación suave */
+}
+
+/* Efecto: Cuando haces clic dentro, la caja cambia */
+.search-container:focus-within {
+  border-color: #3b82f6; /* Color azul al escribir */
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); /* Resplandor azul */
+}
+
+/* El ícono de lupa */
+.search-icon {
+  width: 20px;
+  height: 20px;
+  color: #9ca3af; /* Gris medio */
+  margin-right: 10px; /* Separación con el texto */
+}
+
+/* El input real (invisible pero funcional) */
+.search-input {
+  border: none;
+  outline: none; /* Quita el borde azul por defecto */
+  width: 100%;
+  font-size: 16px;
+  color: #374151;
+  background-color: transparent;
+}
+
+/* Color del placeholder */
+.search-input::placeholder {
+  color: #9ca3af;
+}
