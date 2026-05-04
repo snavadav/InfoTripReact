@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InfoTrip — Reseñas Recientes</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #FDFCFA;
+      --bg-soft:   #F7F3EE;
+      --primary:   #6741D9;
+      --primary-h: #5835C4;
+      --accent:    #F76707;
+      --ink:       #1F1635;
+      --muted:     #9B8FAF;
+      --border:    #E8E0F5;
+      --tag-bg:    #F3EFFF;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+    }
+
+    /* ─── SECCIÓN RESEÑAS ─────────────────────── */
+    .reviews {
+      padding: 5rem 2rem;
+      background: var(--bg);
+    }
+    .reviews-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Encabezado */
+    .section-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 2.5rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .section-header-left {
+      display: flex;
+      flex-direction: column;
+      gap: .5rem;
+    }
+    .section-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      color: var(--primary);
+      font-size: .75rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .section-tag svg {
+      width: 13px; height: 13px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+    }
+    .section-title {
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      font-weight: 800;
+      letter-spacing: -.75px;
+      color: var(--ink);
+      line-height: 1.2;
+    }
+
+    /* ── Estado vacío ── */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.25rem;
+      padding: 5rem 2rem;
+      background: var(--bg-soft);
+      border: 1.5px dashed var(--border);
+      border-radius: 1.5rem;
+      text-align: center;
+    }
+    .empty-icon {
+      width: 72px; height: 72px;
+      border-radius: 1.25rem;
+      background: var(--tag-bg);
+      border: 1.5px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .empty-icon svg {
+      width: 32px; height: 32px;
+      stroke: var(--primary);
+      stroke-width: 1.5;
+      fill: none;
+    }
+    .empty-state h3 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--ink);
+      letter-spacing: -.5px;
+    }
+    .empty-state p {
+      font-size: .95rem;
+      color: var(--muted);
+      line-height: 1.7;
+      max-width: 420px;
+    }
+    .btn-write {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      font-family: inherit;
+      font-size: .9rem;
+      font-weight: 700;
+      padding: .75rem 1.5rem;
+      border-radius: 2rem;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background .2s, transform .15s;
+      box-shadow: 0 4px 16px rgba(103,65,217,.25);
+    }
+    .btn-write svg {
+      width: 15px; height: 15px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+    }
+    .btn-write:hover {
+      background: var(--primary-h);
+      transform: translateY(-1px);
+    }
+
+    /* ── Nota informativa ── */
+    .empty-note {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      margin-top: .5rem;
+      font-size: .78rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .empty-note svg {
+      width: 14px; height: 14px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 600px) {
+      .section-header { flex-direction: column; align-items: flex-start; }
+      .empty-state { padding: 3rem 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+
+<section class="reviews" id="resenas">
+  <div class="reviews-inner">
+
+    <!-- Encabezado -->
+    <div class="section-header">
+      <div class="section-header-left">
+        <div class="section-tag">
+          <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          Reseñas de la comunidad
+        </div>
+        <h2 class="section-title">Lo que dicen quienes<br/>ya estuvieron ahí</h2>
+      </div>
+    </div>
+
+    <!-- Estado vacío -->
+    <div class="empty-state">
+      <div class="empty-icon">
+        <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      </div>
+      <h3>Aún no hay reseñas</h3>
+      <p>Sé el primero en compartir tu experiencia y ayuda a otros viajeros a descubrir México con información real y verificada.</p>
+      <a href="/resenas/nueva" class="btn-write">
+        <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Escribir la primera reseña
+      </a>
+      <span class="empty-note">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Solo usuarios registrados pueden publicar reseñas
+      </span>
+    </div>
+
+  </div>
+</section>
+
+</body>
+</html>

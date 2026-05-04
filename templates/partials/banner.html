@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InfoTrip — Banner CTA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #FDFCFA;
+      --bg-soft:   #F7F3EE;
+      --primary:   #6741D9;
+      --primary-h: #5835C4;
+      --accent:    #F76707;
+      --accent-h:  #E05A00;
+      --ink:       #1F1635;
+      --muted:     #9B8FAF;
+      --border:    #E8E0F5;
+      --tag-bg:    #F3EFFF;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+    }
+
+    /* ─── BANNER CTA ──────────────────────────── */
+    .cta-section {
+      padding: 5rem 2rem;
+      background: var(--bg);
+    }
+    .cta-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* ── Banner principal ── */
+    .cta-banner {
+      background: var(--primary);
+      border-radius: 2rem;
+      padding: 4rem 3.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-left {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.25rem;
+      position: relative;
+      z-index: 1;
+      max-width: 600px;
+    }
+    .cta-benefits {
+      display: flex;
+      flex-direction: column;
+      gap: .6rem;
+      align-items: flex-start;
+    }
+
+    /* Círculos decorativos de fondo */
+    .cta-circle {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .cta-circle-1 {
+      width: 400px; height: 400px;
+      top: -150px; right: -80px;
+      background: rgba(255,255,255,.05);
+    }
+    .cta-circle-2 {
+      width: 250px; height: 250px;
+      bottom: -100px; left: 30%;
+      background: rgba(247,103,7,.12);
+    }
+    .cta-circle-3 {
+      width: 160px; height: 160px;
+      top: -40px; left: 10%;
+      background: rgba(255,255,255,.04);
+    }
+
+    /* Contenido izquierdo */
+    .cta-left {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      position: relative;
+      z-index: 1;
+      max-width: 560px;
+    }
+    .cta-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.2);
+      color: #fff;
+      font-size: .75rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: .35rem .9rem;
+      border-radius: 2rem;
+      width: fit-content;
+    }
+    .cta-tag svg {
+      width: 12px; height: 12px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+    }
+    .cta-title {
+      font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.15;
+      letter-spacing: -.75px;
+    }
+    .cta-title em {
+      font-style: normal;
+      color: #FAAD3F;
+    }
+    .cta-text {
+      font-size: .975rem;
+      color: rgba(255,255,255,.75);
+      line-height: 1.75;
+    }
+
+    /* Bullets de beneficios */
+    .cta-benefits {
+      display: flex;
+      flex-direction: column;
+      gap: .6rem;
+    }
+    .cta-benefit {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      font-size: .875rem;
+      color: rgba(255,255,255,.85);
+      font-weight: 500;
+    }
+    .cta-benefit svg {
+      width: 16px; height: 16px;
+      stroke: #FAAD3F;
+      stroke-width: 2.5;
+      fill: none;
+      flex-shrink: 0;
+    }
+
+    /* Acciones */
+    .cta-actions {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      flex-wrap: wrap;
+    }
+    .btn-cta-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      background: #fff;
+      color: var(--primary);
+      border: none;
+      font-family: inherit;
+      font-size: .9rem;
+      font-weight: 800;
+      padding: .85rem 1.75rem;
+      border-radius: 2rem;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background .2s, transform .15s, box-shadow .2s;
+      box-shadow: 0 4px 20px rgba(0,0,0,.15);
+    }
+    .btn-cta-primary svg {
+      width: 16px; height: 16px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+    }
+    .btn-cta-primary:hover {
+      background: var(--bg-soft);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(0,0,0,.2);
+    }
+    .btn-cta-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      background: transparent;
+      color: rgba(255,255,255,.85);
+      border: 1.5px solid rgba(255,255,255,.3);
+      font-family: inherit;
+      font-size: .9rem;
+      font-weight: 600;
+      padding: .85rem 1.5rem;
+      border-radius: 2rem;
+      cursor: pointer;
+      text-decoration: none;
+      transition: border-color .2s, color .2s;
+    }
+    .btn-cta-ghost svg {
+      width: 15px; height: 15px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+      transition: transform .2s;
+    }
+    .btn-cta-ghost:hover {
+      border-color: rgba(255,255,255,.7);
+      color: #fff;
+    }
+    .btn-cta-ghost:hover svg { transform: translateX(3px); }
+
+    /* Nota de registro gratuito */
+    .cta-note {
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+      font-size: .75rem;
+      color: rgba(255,255,255,.5);
+      font-weight: 500;
+    }
+    .cta-note svg {
+      width: 13px; height: 13px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+      flex-shrink: 0;
+    }
+
+    /* ── Tarjeta derecha — stats animados ── */
+    .cta-right {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      flex-shrink: 0;
+      min-width: 260px;
+    }
+    .cta-stat-card {
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 1rem;
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      transition: background .2s;
+    }
+    .cta-stat-card:hover { background: rgba(255,255,255,.15); }
+    .cta-stat-icon {
+      width: 42px; height: 42px;
+      border-radius: .75rem;
+      background: rgba(255,255,255,.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .cta-stat-icon svg {
+      width: 20px; height: 20px;
+      stroke: #FAAD3F;
+      stroke-width: 1.75;
+      fill: none;
+    }
+    .cta-stat-info strong {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -.5px;
+      display: block;
+      line-height: 1.1;
+    }
+    .cta-stat-info span {
+      font-size: .78rem;
+      color: rgba(255,255,255,.6);
+      font-weight: 500;
+    }
+
+    /* ── Banner secundario — para negocios locales ── */
+    .cta-secondary {
+      margin-top: 1.25rem;
+      background: var(--bg-soft);
+      border: 1.5px solid var(--border);
+      border-radius: 1.5rem;
+      padding: 2rem 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+    .cta-secondary-left {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+    .cta-secondary-icon {
+      width: 52px; height: 52px;
+      border-radius: 1rem;
+      background: var(--tag-bg);
+      border: 1.5px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .cta-secondary-icon svg {
+      width: 24px; height: 24px;
+      stroke: var(--primary);
+      stroke-width: 1.6;
+      fill: none;
+    }
+    .cta-secondary-text strong {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--ink);
+      display: block;
+      margin-bottom: .25rem;
+    }
+    .cta-secondary-text p {
+      font-size: .875rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      font-family: inherit;
+      font-size: .875rem;
+      font-weight: 700;
+      padding: .7rem 1.4rem;
+      border-radius: 2rem;
+      cursor: pointer;
+      text-decoration: none;
+      white-space: nowrap;
+      box-shadow: 0 4px 14px rgba(247,103,7,.25);
+      transition: background .2s, transform .15s;
+    }
+    .btn-secondary svg {
+      width: 15px; height: 15px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+    }
+    .btn-secondary:hover {
+      background: var(--accent-h);
+      transform: translateY(-1px);
+    }
+
+    /* ─── RESPONSIVE ──────────────────────── */
+    @media (max-width: 960px) {
+      .cta-banner {
+        flex-direction: column;
+        padding: 3rem 2rem;
+      }
+      .cta-right {
+        width: 100%;
+        flex-direction: row;
+        flex-wrap: wrap;
+      }
+      .cta-stat-card { flex: 1; min-width: 180px; }
+    }
+    @media (max-width: 600px) {
+      .cta-banner { border-radius: 1.25rem; padding: 2.5rem 1.5rem; }
+      .cta-secondary { flex-direction: column; align-items: flex-start; }
+      .cta-secondary-left { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+<section class="cta-section">
+  <div class="cta-inner">
+
+    <!-- Banner principal -->
+    <div class="cta-banner">
+
+      <!-- Círculos decorativos -->
+      <div class="cta-circle cta-circle-1"></div>
+      <div class="cta-circle cta-circle-2"></div>
+      <div class="cta-circle cta-circle-3"></div>
+
+      <!-- Contenido izquierdo -->
+      <div class="cta-left">
+        <div class="cta-tag">
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Únete a la comunidad
+        </div>
+        <h2 class="cta-title">Tu próximo viaje empieza<br/>con <em>información real</em></h2>
+        <p class="cta-text">Regístrate gratis y accede al mapa interactivo, consulta precios reales y comparte tus experiencias con miles de viajeros.</p>
+        <div class="cta-benefits">
+          <div class="cta-benefit">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            Acceso a más de 500 destinos en México
+          </div>
+          <div class="cta-benefit">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            Precios promedio actualizados por la comunidad
+          </div>
+          <div class="cta-benefit">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            Mapa interactivo con geolocalización GPS
+          </div>
+          <div class="cta-benefit">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            Publica tus reseñas y ayuda a otros viajeros
+          </div>
+        </div>
+        <div class="cta-actions">
+          <a href="/registro" class="btn-cta-primary">
+            <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+            Crear cuenta gratis
+          </a>
+          <a href="/destinos" class="btn-cta-ghost">
+            Explorar destinos
+            <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </a>
+        </div>
+        <div class="cta-note">
+          <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Registro gratuito · Sin tarjeta de crédito · Sin spam
+        </div>
+      </div>
+
+    </div><!-- fin cta-banner -->
+
+    <!-- Banner secundario — negocios locales -->
+    <div class="cta-secondary">
+      <div class="cta-secondary-left">
+        <div class="cta-secondary-icon">
+          <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <div class="cta-secondary-text">
+          <strong>¿Tienes un negocio o destino turístico?</strong>
+          <p>Registra tu lugar y dale visibilidad a miles de viajeros que buscan experiencias auténticas en México.</p>
+        </div>
+      </div>
+      <a href="/negocios/registro" class="btn-secondary">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Registrar mi negocio
+      </a>
+    </div>
+
+  </div>
+</section>
+
+</body>
+</html>

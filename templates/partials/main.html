@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InfoTrip — Hero</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #FDFCFA;
+      --bg-soft:   #F7F3EE;
+      --primary:   #6741D9;
+      --primary-h: #5835C4;
+      --accent:    #F76707;
+      --accent-h:  #E05A00;
+      --ink:       #1F1635;
+      --muted:     #9B8FAF;
+      --border:    #E8E0F5;
+      --tag-bg:    #F3EFFF;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+    }
+
+    /* ─── HERO ────────────────────────────────────────── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 7rem 2rem 4rem;
+      position: relative;
+      overflow: hidden;
+      text-align: center;
+    }
+
+    /* Fondo con gradiente y textura sutil */
+    .hero-bg {
+      position: absolute; inset: 0; z-index: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(103,65,217,.1) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 40% at 80% 80%, rgba(247,103,7,.07) 0%, transparent 60%),
+        var(--bg-soft);
+    }
+
+    /* Círculos decorativos de fondo */
+    .hero-circle {
+      position: absolute; border-radius: 50%; z-index: 0;
+      pointer-events: none;
+    }
+    .hero-circle-1 {
+      width: 500px; height: 500px;
+      top: -180px; left: -120px;
+      background: radial-gradient(circle, rgba(103,65,217,.07) 0%, transparent 70%);
+    }
+    .hero-circle-2 {
+      width: 400px; height: 400px;
+      bottom: -100px; right: -80px;
+      background: radial-gradient(circle, rgba(247,103,7,.07) 0%, transparent 70%);
+    }
+
+    .hero-content {
+      position: relative; z-index: 1;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 1.5rem;
+      max-width: 760px; width: 100%;
+    }
+
+    /* Tag superior */
+    .hero-tag {
+      display: inline-flex; align-items: center; gap: .5rem;
+      background: var(--tag-bg);
+      border: 1px solid var(--border);
+      color: var(--primary);
+      font-size: .78rem; font-weight: 600;
+      letter-spacing: .5px;
+      padding: .4rem 1rem; border-radius: 2rem;
+      animation: fadeUp .6s ease both;
+    }
+    .hero-tag svg {
+      width: 13px; height: 13px;
+      stroke: currentColor; stroke-width: 2; fill: none;
+    }
+
+    /* Título */
+    .hero h1 {
+      font-size: clamp(2.2rem, 5.5vw, 3.75rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -1.5px;
+      color: var(--ink);
+      animation: fadeUp .7s .08s ease both;
+    }
+    .hero h1 em {
+      font-style: normal;
+      color: var(--primary);
+      position: relative;
+    }
+    .hero h1 em::after {
+      content: '';
+      position: absolute;
+      bottom: 2px; left: 0; right: 0;
+      height: 3px; border-radius: 2px;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      opacity: .4;
+    }
+
+    /* Subtítulo */
+    .hero p {
+      font-size: 1.05rem;
+      color: var(--muted);
+      line-height: 1.75;
+      max-width: 520px;
+      animation: fadeUp .7s .16s ease both;
+    }
+
+    /* ── BUSCADOR ── */
+    .search-box {
+      width: 100%; max-width: 680px;
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: 1.25rem;
+      padding: .6rem .6rem .6rem 1.25rem;
+      display: flex; align-items: center; gap: .75rem;
+      box-shadow: 0 8px 32px rgba(103,65,217,.1);
+      transition: border-color .25s, box-shadow .25s;
+      animation: fadeUp .7s .24s ease both;
+    }
+    .search-box:focus-within {
+      border-color: var(--primary);
+      box-shadow: 0 8px 40px rgba(103,65,217,.18);
+    }
+    .search-icon {
+      flex-shrink: 0;
+      color: var(--muted);
+      display: flex;
+    }
+    .search-icon svg {
+      width: 18px; height: 18px;
+      stroke: currentColor; stroke-width: 1.75; fill: none;
+    }
+    .search-input {
+      flex: 1;
+      border: none; outline: none;
+      background: transparent;
+      font-family: inherit;
+      font-size: .975rem;
+      font-weight: 500;
+      color: var(--ink);
+    }
+    .search-input::placeholder { color: var(--muted); font-weight: 400; }
+
+    .search-divider {
+      width: 1px; height: 26px;
+      background: var(--border); flex-shrink: 0;
+    }
+
+    /* Select categoría */
+    .search-select {
+      border: none; outline: none;
+      background: transparent;
+      font-family: inherit;
+      font-size: .875rem;
+      font-weight: 500;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 0 .5rem;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .search-select:focus { color: var(--primary); }
+
+    /* Botón buscar */
+    .search-btn {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      font-family: inherit;
+      font-size: .9rem; font-weight: 700;
+      padding: .75rem 1.5rem;
+      border-radius: .85rem;
+      cursor: pointer;
+      display: flex; align-items: center; gap: .45rem;
+      flex-shrink: 0;
+      transition: background .2s, transform .15s;
+    }
+    .search-btn svg {
+      width: 15px; height: 15px;
+      stroke: currentColor; stroke-width: 2; fill: none;
+    }
+    .search-btn:hover {
+      background: var(--primary-h);
+      transform: translateY(-1px);
+    }
+
+    /* ── CHIPS DE CATEGORÍA ── */
+    .chips {
+      display: flex; gap: .5rem; flex-wrap: wrap;
+      justify-content: center;
+      animation: fadeUp .7s .32s ease both;
+    }
+    .chip {
+      display: inline-flex; align-items: center; gap: .35rem;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      color: var(--muted);
+      font-family: inherit;
+      font-size: .8rem; font-weight: 600;
+      padding: .4rem .9rem; border-radius: 2rem;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .chip svg {
+      width: 13px; height: 13px;
+      stroke: currentColor; stroke-width: 1.75; fill: none;
+    }
+    .chip:hover, .chip.active {
+      background: var(--tag-bg);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    /* ── STATS ── */
+    .hero-stats {
+      display: flex; gap: 2.5rem;
+      animation: fadeUp .7s .4s ease both;
+    }
+    .stat {
+      display: flex; flex-direction: column; align-items: center; gap: .2rem;
+    }
+    .stat-num {
+      font-size: 1.4rem; font-weight: 800;
+      color: var(--ink); letter-spacing: -1px;
+    }
+    .stat-num span { color: var(--primary); }
+    .stat-lbl {
+      font-size: .75rem; font-weight: 500;
+      color: var(--muted);
+    }
+    .stat-sep {
+      width: 1px; background: var(--border);
+      align-self: stretch;
+    }
+
+    /* ── SUGERENCIAS ── */
+    .suggestions {
+      display: flex; align-items: center; gap: .5rem;
+      animation: fadeUp .7s .48s ease both;
+      flex-wrap: wrap; justify-content: center;
+    }
+    .suggestions span {
+      font-size: .78rem; color: var(--muted); font-weight: 500;
+    }
+    .suggestion-tag {
+      display: inline-flex; align-items: center; gap: .3rem;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      color: var(--ink);
+      font-size: .78rem; font-weight: 600;
+      padding: .3rem .75rem; border-radius: 2rem;
+      cursor: pointer;
+      transition: border-color .2s, color .2s;
+      text-decoration: none;
+    }
+    .suggestion-tag:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* ── IMAGEN FLOTANTE ── */
+    .hero-float {
+      position: absolute;
+      z-index: 1; pointer-events: none;
+    }
+    .float-card {
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 1rem;
+      padding: .75rem 1rem;
+      display: flex; align-items: center; gap: .65rem;
+      box-shadow: 0 8px 24px rgba(103,65,217,.1);
+      white-space: nowrap;
+    }
+    .float-card .fc-icon {
+      width: 36px; height: 36px; border-radius: .65rem;
+      background: var(--tag-bg);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .float-card .fc-icon svg {
+      width: 18px; height: 18px;
+      stroke: var(--primary); stroke-width: 1.75; fill: none;
+    }
+    .float-card .fc-text strong {
+      font-size: .82rem; font-weight: 700; color: var(--ink);
+      display: block;
+    }
+    .float-card .fc-text span {
+      font-size: .72rem; color: var(--muted);
+    }
+
+    .hero-float-1 {
+      left: 3vw; top: 28%;
+      animation: floatY 4s ease-in-out infinite;
+    }
+    .hero-float-2 {
+      right: 3vw; top: 38%;
+      animation: floatY 4s 1.5s ease-in-out infinite;
+    }
+    .hero-float-3 {
+      right: 5vw; bottom: 18%;
+      animation: floatY 4s .75s ease-in-out infinite;
+    }
+
+    .rotating-link {
+      color: inherit;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .sr-only {
+      position: absolute;
+      width: 1px; height: 1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      white-space: nowrap;
+    }
+    #rotating-dest {
+      display: inline-block;
+      transition: opacity .4s ease, transform .4s ease;
+    }
+    #rotating-dest.fade-out {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+    #rotating-dest.fade-in {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    @keyframes floatY {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-8px);
+      }
+    }
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ─── RESPONSIVE ──────────────────────── */
+    @media (max-width: 900px) {
+      .hero-float { display: none; }
+    }
+    @media (max-width: 600px) {
+      .search-divider, .search-select { display: none; }
+      .hero-stats { gap: 1.25rem; }
+      .stat-sep { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-circle hero-circle-1"></div>
+  <div class="hero-circle hero-circle-2"></div>
+
+  <!-- Tarjetas flotantes decorativas -->
+  <div class="hero-float hero-float-1">
+    <div class="float-card">
+      <div class="fc-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+      </div>
+      <div class="fc-text">
+        <strong>Puerto Vallarta</strong>
+        <span>⭐ 4.8 · 320 reseñas</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-float hero-float-2">
+    <div class="float-card">
+      <div class="fc-icon">
+        <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      </div>
+      <div class="fc-text">
+        <strong>Nueva reseña</strong>
+        <span>Tequila, Jal. · Hace 2h</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-float hero-float-3">
+    <div class="float-card">
+      <div class="fc-icon">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      </div>
+      <div class="fc-text">
+        <strong>Precio promedio</strong>
+        <span>Mazamitla · $180/persona</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-content">
+
+    <!-- Tag rotativo -->
+    <div class="hero-tag">
+      <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      Descubre <a id="rotating-dest" href="/destinos/?q=Guadalajara" class="rotating-link">Guadalajara</a>, Jalisco
+    </div>
+
+    <!-- Título -->
+    <h1>Viaja con <em>información real</em><br/>de viajeros reales</h1>
+
+    <!-- Subtítulo -->
+    <p>Encuentra destinos, consulta precios actualizados y lee experiencias verificadas por nuestra comunidad. Sin sorpresas, solo buenos viajes.</p>
+
+    <!-- Buscador -->
+    <div class="search-box">
+      <div class="search-icon">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      </div>
+      <input
+        class="search-input"
+        type="text"
+        placeholder="¿A dónde quieres ir? Ej: Tapalpa, Chapala, Tequila..."
+        id="searchInput"
+      />
+      <div class="search-divider"></div>
+      <label for="categorySelect" class="sr-only">Categoría</label>
+      <select class="search-select" id="categorySelect" aria-label="Categoría de destino">
+        <option value="">Todas las categorías</option>
+        <option value="playa">Playas</option>
+        <option value="pueblo">Pueblos Mágicos</option>
+        <option value="ciudad">Ciudades</option>
+        <option value="naturaleza">Naturaleza</option>
+        <option value="gastronomia">Gastronomía</option>
+      </select>
+      <button class="search-btn" onclick="handleSearch()">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        Buscar
+      </button>
+    </div>
+
+    <!-- Chips de categoría rápida -->
+    <div class="chips">
+      <button class="chip active" onclick="setChip(this, 'todas')">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Todos
+      </button>
+      <button class="chip" onclick="setChip(this, 'playa')">
+        <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 1 1 0 0 1-.29-.29"/><path d="M2 2s4 0 7 3c2.5 2.5 2.93 5.07 3 7"/><path d="M22 2s-4 0-7 3c-2.5 2.5-2.93 5.07-3 7"/></svg>
+        Playas
+      </button>
+      <button class="chip" onclick="setChip(this, 'pueblo')">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Pueblos Mágicos
+      </button>
+      <button class="chip" onclick="setChip(this, 'naturaleza')">
+        <svg viewBox="0 0 24 24"><path d="M17 8C8 10 5.9 16.17 3.82 19.87a.33.33 0 0 0 .46.42C7 18.5 10 17 12.7 17c0 0 3.2 0 5.3-3 2.1-3 1-6 1-6z"/><path d="M3 3c0 0 4 0 6 3"/></svg>
+        Naturaleza
+      </button>
+      <button class="chip" onclick="setChip(this, 'gastronomia')">
+        <svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+        Gastronomía
+      </button>
+      <button class="chip" onclick="setChip(this, 'ciudad')">
+        <svg viewBox="0 0 24 24"><line x1="3" y1="22" x2="21" y2="22"/><rect x="2" y="12" width="5" height="10"/><rect x="9" y="7" width="6" height="15"/><rect x="17" y="3" width="5" height="19"/></svg>
+        Ciudades
+      </button>
+    </div>
+
+    <!-- Stats -->
+    <div class="hero-stats">
+      <div class="stat">
+        <div class="stat-num">0<span></span></div>
+        <div class="stat-lbl">Destinos en Jalisco</div>
+      </div>
+      <div class="stat-sep"></div>
+      <div class="stat">
+        <div class="stat-num">0<span></span></div>
+        <div class="stat-lbl">Reseñas verificadas</div>
+      </div>
+      <div class="stat-sep"></div>
+      <div class="stat">
+        <div class="stat-num">0<span></span></div>
+        <div class="stat-lbl">Viajeros activos</div>
+      </div>
+    </div>
+
+    <!-- Búsquedas sugeridas -->
+    <div class="suggestions">
+      <span>Búsquedas populares:</span>
+      <a class="suggestion-tag" href="#">Guadalajara</a>
+      <a class="suggestion-tag" href="#">Tequila</a>
+      <a class="suggestion-tag" href="#">Puerto Vallarta</a>
+      <a class="suggestion-tag" href="#">Mazamitla</a>
+      <a class="suggestion-tag" href="#">Tapalpa</a>
+    </div>
+
+  </div>
+</section>
+
+<script>
+  // Destinos rotativos
+  const destinos = [
+    'Guadalajara', 'Puerto Vallarta', 'Tequila', 'Tlaquepaque',
+    'Mazamitla', 'Tapalpa', 'Chapala', 'Ajijic',
+    'Tomatlan', 'Zapopan', 'San Juan de los Lagos', 'Lagos de Moreno'
+  ];
+  let destIndex = 0;
+  const rotEl = document.getElementById('rotating-dest');
+
+  setInterval(() => {
+    rotEl.classList.add('fade-out');
+    setTimeout(() => {
+      destIndex = (destIndex + 1) % destinos.length;
+      const dest = destinos[destIndex];
+      rotEl.textContent = dest;
+      rotEl.href = `/destinos/?q=${encodeURIComponent(dest)}`;
+      rotEl.classList.remove('fade-out');
+    }, 400);
+  }, 8000);
+
+
+  function setChip(el, category) {
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    const select = document.getElementById('categorySelect');
+    select.value = category === 'todas' ? '' : category;
+  }
+
+  // Búsqueda
+  function handleSearch() {
+    const query    = document.getElementById('searchInput').value.trim();
+    const category = document.getElementById('categorySelect').value;
+    if (!query && !category) return;
+    const params = new URLSearchParams();
+    if (query)    params.set('q', query);
+    if (category) params.set('categoria', category);
+    // En Django esto redirigirá a: /destinos/?q=...&categoria=...
+    window.location.href = `/destinos/?${params.toString()}`;
+  }
+
+  // Buscar con Enter
+  document.getElementById('searchInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') handleSearch();
+  });
+</script>
+
+</body>
+</html>

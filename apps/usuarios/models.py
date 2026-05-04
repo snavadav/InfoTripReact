@@ -1,0 +1,73 @@
+"""
+InfoTrip — apps/usuarios/models.py
+Modelo de usuario personalizado basado en AbstractBaseUser
+"""
+
+from django.db import models
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+import uuid
+
+
+class UsuarioManager(BaseUserManager):
+    """Manager personalizado para el modelo Usuario."""
+
+    def create_user(self, email, nombre, apellido, password=None, **extra_fields):
+        if not email:
+            raise ValueError('El email es obligatorio.')
+        email = self.normalize_email(email)
+        user  = self.model(email=email, nombre=nombre, apellido=apellido, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, nombre, apellido, password=None, **extra_fields):
+        extra_fields.setdefault('es_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('es_activo', True)
+        return self.create_user(email, nombre, apellido, password, **extra_fields)
+
+
+class Usuario(AbstractBaseUser, PermissionsMixin):
+    """
+    Modelo de usuario personalizado para InfoTrip.
+    Usa email como identificador principal en lugar de username.
+    """
+
+    uuid          = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    nombre        = models.CharField(max_length=100)
+    apellido      = models.CharField(max_length=100)
+    email         = models.EmailField(unique=True)
+    foto_perfil   = models.ImageField(upload_to='perfiles/', blank=True, null=True)
+    ciudad_origen = models.CharField(max_length=150, blank=True)
+    bio           = models.TextField(blank=True)
+    es_activo     = models.BooleanField(default=True)
+    es_staff      = models.BooleanField(default=False)
+    es_verificado = models.BooleanField(default=False)
+    fecha_registro = models.DateTimeField(auto_now_add=True)
+    ultimo_acceso  = models.DateTimeField(null=True, blank=True)
+
+    objects = UsuarioManager()
+
+    USERNAME_FIELD  = 'email'
+    REQUIRED_FIELDS = ['nombre', 'apellido']
+
+    class Meta:
+        db_table = 'usuarios'
+        verbose_name = 'Usuario'
+        verbose_name_plural = 'Usuarios'
+
+    def __str__(self):
+        return f'{self.nombre} {self.apellido} <{self.email}>'
+
+    @property
+    def nombre_completo(self):
+        return f'{self.nombre} {self.apellido}'
+
+    # Requerido por Django admin
+    @property
+    def is_staff(self):
+        return self.es_staff
+
+    @property
+    def is_active(self):
+        return self.es_activo

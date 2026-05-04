@@ -1,0 +1,32 @@
+# Variables de entorno
+.env
+.env.local
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.py[cod]
+
+# Django
+db.sqlite3
+*.log
+
+# Media (fotos subidas por usuarios)
+media/
+
+# VS Code
+.vscode/
+
+# Node (por si acaso)
+node_modules/
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Migraciones compiladas
+*.egg-info/
+dist/
+build/

@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InfoTrip — Footer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #FDFCFA;
+      --bg-soft:   #F7F3EE;
+      --primary:   #6741D9;
+      --primary-h: #5835C4;
+      --accent:    #F76707;
+      --ink:       #1F1635;
+      --muted:     #9B8FAF;
+      --border:    #E8E0F5;
+      --tag-bg:    #F3EFFF;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+    }
+
+    /* ─── FOOTER ──────────────────────────────── */
+    footer {
+      background: var(--ink);
+      color: rgba(255,255,255,.7);
+    }
+
+    /* ── Parte superior ── */
+    .footer-top {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 4rem 2rem 3rem;
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 3rem;
+    }
+
+    /* Columna del logo */
+    .footer-brand { display: flex; flex-direction: column; gap: 1.25rem; }
+
+    .footer-logo {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #fff;
+      text-decoration: none;
+      letter-spacing: -1px;
+    }
+    .footer-logo span { color: var(--accent); }
+
+    .footer-desc {
+      font-size: .875rem;
+      color: rgba(255,255,255,.5);
+      line-height: 1.75;
+      max-width: 280px;
+    }
+
+    /* Redes sociales */
+    .footer-socials {
+      display: flex;
+      gap: .6rem;
+    }
+    .social-btn {
+      width: 36px; height: 36px;
+      border-radius: .65rem;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      transition: background .2s, border-color .2s;
+    }
+    .social-btn svg {
+      width: 16px; height: 16px;
+      stroke: rgba(255,255,255,.6);
+      stroke-width: 1.75;
+      fill: none;
+      transition: stroke .2s;
+    }
+    .social-btn:hover {
+      background: rgba(103,65,217,.4);
+      border-color: rgba(103,65,217,.6);
+    }
+    .social-btn:hover svg { stroke: #fff; }
+
+    /* Columnas de links */
+    .footer-col { display: flex; flex-direction: column; gap: 1rem; }
+
+    .footer-col-title {
+      font-size: .78rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .footer-links { display: flex; flex-direction: column; gap: .6rem; }
+
+    .footer-links a {
+      font-size: .875rem;
+      color: rgba(255,255,255,.5);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color .2s;
+      display: flex;
+      align-items: center;
+      gap: .35rem;
+    }
+    .footer-links a svg {
+      width: 12px; height: 12px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+      opacity: 0;
+      transform: translateX(-4px);
+      transition: opacity .2s, transform .2s;
+    }
+    .footer-links a:hover { color: rgba(255,255,255,.9); }
+    .footer-links a:hover svg {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    /* ── Separador ── */
+    .footer-sep {
+      max-width: 1200px;
+      margin: 0 auto;
+      height: 1px;
+      background: rgba(255,255,255,.07);
+      margin-left: 2rem;
+      margin-right: 2rem;
+    }
+
+    /* ── Parte inferior ── */
+    .footer-bottom {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1.5rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .footer-bottom-left {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .footer-copy {
+      font-size: .78rem;
+      color: rgba(255,255,255,.35);
+      font-weight: 500;
+    }
+    .footer-legal {
+      display: flex;
+      gap: 1.25rem;
+    }
+    .footer-legal a {
+      font-size: .78rem;
+      color: rgba(255,255,255,.35);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color .2s;
+    }
+    .footer-legal a:hover { color: rgba(255,255,255,.7); }
+
+    /* Badge hecho en México */
+    .footer-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.1);
+      color: rgba(255,255,255,.4);
+      font-size: .72rem;
+      font-weight: 600;
+      padding: .3rem .75rem;
+      border-radius: 2rem;
+    }
+    .footer-badge svg {
+      width: 12px; height: 12px;
+      stroke: var(--accent);
+      stroke-width: 2;
+      fill: none;
+    }
+
+    /* ─── RESPONSIVE ──────────────────────── */
+    @media (max-width: 900px) {
+      .footer-top {
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+      }
+      .footer-brand { grid-column: span 2; }
+    }
+    @media (max-width: 560px) {
+      .footer-top { grid-template-columns: 1fr; }
+      .footer-brand { grid-column: auto; }
+      .footer-bottom { flex-direction: column; align-items: flex-start; }
+      .footer-bottom-left { flex-direction: column; align-items: flex-start; gap: .5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<footer>
+
+  <!-- Parte superior -->
+  <div class="footer-top">
+
+    <!-- Marca -->
+    <div class="footer-brand">
+      <a href="/" class="footer-logo">Info<span>Trip</span></a>
+      <p class="footer-desc">Plataforma colaborativa para centralizar información turística verificada. Viaja con certeza, no con incertidumbre.</p>
+      <div class="footer-socials">
+        <a href="#" class="social-btn" aria-label="Instagram">
+          <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+        </a>
+        <a href="#" class="social-btn" aria-label="Facebook">
+          <svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+        </a>
+        <a href="#" class="social-btn" aria-label="Twitter / X">
+          <svg viewBox="0 0 24 24"><path d="M4 4l16 16M4 20L20 4"/></svg>
+        </a>
+        <a href="#" class="social-btn" aria-label="TikTok">
+          <svg viewBox="0 0 24 24"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <!-- Explorar -->
+    <div class="footer-col">
+      <span class="footer-col-title">Explorar</span>
+      <div class="footer-links">
+        <a href="/destinos">
+          <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          Destinos
+        </a>
+        <a href="/destinos/?categoria=playas">
+          <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          Playas
+        </a>
+        <a href="/destinos/?categoria=pueblos-magicos">
+          <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          Pueblos Mágicos
+        </a>
+        <a href="/destinos/?categoria=naturaleza">
+          <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          Naturaleza
+        </a>
+        <a href="/destinos/?categoria=gastronomia">
+          <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          Gastronomía
+        </a>
+      </div>
+    </div>
+
+    <!-- Comunidad -->
+    <div class="footer-col">
+      <span class="footer-col-title">Comunidad</span>
+      <div class="footer-links">
+        <a href="/resenas">
+          <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          Reseñas
+        </a>
+        <a href="/resenas/nueva">
+          <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          Escribir reseña
+        </a>
+        <a href="/registro">
+          <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          Registrarse
+        </a>
+        <a href="/login">
+          <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          Iniciar sesión
+        </a>
+        <a href="/negocios/registro">
+          <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          Registrar negocio
+        </a>
+      </div>
+    </div>
+
+    <!-- Info -->
+    <div class="footer-col">
+      <span class="footer-col-title">Información</span>
+      <div class="footer-links">
+        <a href="/acerca">
+          <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          Acerca de InfoTrip
+        </a>
+        <a href="/como-funciona">
+          <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          ¿Cómo funciona?
+        </a>
+        <a href="/privacidad">
+          <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          Aviso de privacidad
+        </a>
+        <a href="/terminos">
+          <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          Términos de uso
+        </a>
+        <a href="/contacto">
+          <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          Contacto
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Separador -->
+  <div class="footer-sep"></div>
+
+  <!-- Parte inferior -->
+  <div class="footer-bottom">
+    <div class="footer-bottom-left">
+      <span class="footer-copy">© 2025 InfoTrip. Todos los derechos reservados.</span>
+      <div class="footer-legal">
+        <a href="/privacidad">Privacidad</a>
+        <a href="/terminos">Términos</a>
+        <a href="/contacto">Contacto</a>
+      </div>
+    </div>
+    <div class="footer-badge">
+      <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      Hecho en México
+    </div>
+  </div>
+
+</footer>
+
+</body>
+</html>

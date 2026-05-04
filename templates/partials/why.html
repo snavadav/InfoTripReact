@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InfoTrip — ¿Por qué InfoTrip?</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #FDFCFA;
+      --bg-soft:   #F7F3EE;
+      --primary:   #6741D9;
+      --primary-h: #5835C4;
+      --accent:    #F76707;
+      --ink:       #1F1635;
+      --muted:     #9B8FAF;
+      --border:    #E8E0F5;
+      --tag-bg:    #F3EFFF;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg-soft);
+      color: var(--ink);
+    }
+
+    /* ─── SECCIÓN ─────────────────────────────── */
+    .why {
+      padding: 5rem 2rem;
+      background: var(--bg-soft);
+    }
+    .why-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Encabezado centrado */
+    .section-header-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: .75rem;
+      margin-bottom: 3.5rem;
+    }
+    .section-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      color: var(--primary);
+      font-size: .75rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .section-tag svg {
+      width: 13px; height: 13px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+    }
+    .section-title {
+      font-size: clamp(1.6rem, 3.5vw, 2.25rem);
+      font-weight: 800;
+      letter-spacing: -.75px;
+      color: var(--ink);
+      line-height: 1.2;
+    }
+    .section-title em {
+      font-style: normal;
+      color: var(--primary);
+    }
+    .section-sub {
+      font-size: .95rem;
+      color: var(--muted);
+      line-height: 1.75;
+      max-width: 500px;
+    }
+
+    /* ── Grid principal 3 columnas ── */
+    .why-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .why-card {
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 1.25rem;
+      padding: 2rem 1.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      transition: box-shadow .25s, border-color .25s, transform .25s;
+    }
+    .why-card:hover {
+      box-shadow: 0 10px 32px rgba(103,65,217,.1);
+      border-color: var(--primary);
+      transform: translateY(-3px);
+    }
+
+    /* Card destacada */
+    .why-card.highlight {
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+    .why-card.highlight .why-icon-wrap {
+      background: rgba(255,255,255,.15);
+      border-color: rgba(255,255,255,.2);
+    }
+    .why-card.highlight .why-icon-wrap svg { stroke: #fff; }
+    .why-card.highlight .why-card-title { color: #fff; }
+    .why-card.highlight .why-card-text  { color: rgba(255,255,255,.75); }
+    .why-card.highlight .why-card-tag   {
+      background: rgba(255,255,255,.15);
+      color: #fff;
+      border-color: rgba(255,255,255,.2);
+    }
+
+    /* Icono */
+    .why-icon-wrap {
+      width: 50px; height: 50px;
+      border-radius: 1rem;
+      background: var(--tag-bg);
+      border: 1.5px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .why-icon-wrap svg {
+      width: 22px; height: 22px;
+      stroke: var(--primary);
+      stroke-width: 1.6;
+      fill: none;
+    }
+
+    .why-card-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--ink);
+      line-height: 1.3;
+    }
+    .why-card-text {
+      font-size: .875rem;
+      color: var(--muted);
+      line-height: 1.7;
+      flex: 1;
+    }
+    .why-card-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      background: var(--tag-bg);
+      border: 1px solid var(--border);
+      color: var(--primary);
+      font-size: .72rem;
+      font-weight: 700;
+      padding: .3rem .75rem;
+      border-radius: 2rem;
+      width: fit-content;
+    }
+    .why-card-tag svg {
+      width: 11px; height: 11px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+    }
+
+    /* ── Fila inferior 2 columnas ── */
+    .why-grid-bottom {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.25rem;
+    }
+
+    /* Card horizontal */
+    .why-card-h {
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 1.25rem;
+      padding: 1.75rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 1.25rem;
+      transition: box-shadow .25s, border-color .25s, transform .25s;
+    }
+    .why-card-h:hover {
+      box-shadow: 0 10px 32px rgba(103,65,217,.1);
+      border-color: var(--primary);
+      transform: translateY(-3px);
+    }
+    .why-card-h .why-icon-wrap { flex-shrink: 0; }
+    .why-card-h-content {
+      display: flex;
+      flex-direction: column;
+      gap: .4rem;
+    }
+    .why-card-h-content .why-card-title { font-size: 1rem; }
+
+    /* ── Comparativa vs otras plataformas ── */
+    .comparison {
+      margin-top: 3.5rem;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 1.5rem;
+      overflow: hidden;
+    }
+    .comparison-header {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      background: var(--bg-soft);
+      border-bottom: 1.5px solid var(--border);
+    }
+    .comparison-header div {
+      padding: 1rem 1.5rem;
+      font-size: .8rem;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+    .comparison-header div.col-infotrip {
+      background: var(--primary);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+    }
+    .comparison-header div.col-infotrip svg {
+      width: 14px; height: 14px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+    }
+
+    .comparison-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      border-bottom: 1px solid var(--border);
+    }
+    .comparison-row:last-child { border-bottom: none; }
+    .comparison-row div {
+      padding: 1rem 1.5rem;
+      font-size: .875rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      border-right: 1px solid var(--border);
+    }
+    .comparison-row div:last-child { border-right: none; }
+    .comparison-row div.feature {
+      font-weight: 600;
+      color: var(--ink);
+    }
+    .comparison-row div.col-infotrip {
+      background: rgba(103,65,217,.03);
+      color: var(--primary);
+      font-weight: 600;
+    }
+    .comparison-row div svg {
+      width: 16px; height: 16px;
+      flex-shrink: 0;
+    }
+    .check {
+      stroke: #2D9B47;
+      stroke-width: 2.5;
+      fill: none;
+    }
+    .cross {
+      stroke: #D94141;
+      stroke-width: 2.5;
+      fill: none;
+    }
+    .neutral {
+      stroke: var(--muted);
+      stroke-width: 2;
+      fill: none;
+    }
+
+    /* ─── RESPONSIVE ──────────────────────── */
+    @media (max-width: 900px) {
+      .why-grid { grid-template-columns: repeat(2, 1fr); }
+      .comparison { display: none; }
+    }
+    @media (max-width: 600px) {
+      .why-grid        { grid-template-columns: 1fr; }
+      .why-grid-bottom { grid-template-columns: 1fr; }
+      .why-card-h      { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<section class="why" id="por-que">
+  <div class="why-inner">
+
+    <!-- Encabezado -->
+    <div class="section-header-center">
+      <div class="section-tag">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        ¿Por qué InfoTrip?
+      </div>
+      <h2 class="section-title">Información real para<br/><em>decisiones reales</em></h2>
+      <p class="section-sub">No somos una agencia de viajes ni vendemos boletos. Somos una comunidad que centraliza experiencias reales para que viajes con certeza.</p>
+    </div>
+
+    <!-- Grid superior 3 columnas -->
+    <div class="why-grid">
+
+      <div class="why-card">
+        <div class="why-icon-wrap">
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div class="why-card-title">Validado por la comunidad</div>
+        <p class="why-card-text">Cada reseña, foto y tip es publicado por viajeros reales que estuvieron en el lugar. No hay contenido patrocinado ni información inventada.</p>
+        <div class="why-card-tag">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          Sin contenido patrocinado
+        </div>
+      </div>
+
+      <div class="why-card highlight">
+        <div class="why-icon-wrap">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <div class="why-card-title">Precios reales y actualizados</div>
+        <p class="why-card-text">Los costos que ves son reportados por viajeros recientes, no por los mismos negocios. Sabes exactamente cuánto gastarás antes de salir.</p>
+        <div class="why-card-tag">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          Actualizado por usuarios
+        </div>
+      </div>
+
+      <div class="why-card">
+        <div class="why-icon-wrap">
+          <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        </div>
+        <div class="why-card-title">Mapa interactivo con GPS</div>
+        <p class="why-card-text">Visualiza destinos en contexto real — distancias, tiempos de traslado, servicios cercanos y rutas de acceso desde tu ubicación actual.</p>
+        <div class="why-card-tag">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          Geolocalización en tiempo real
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Grid inferior 2 columnas -->
+    <div class="why-grid-bottom">
+
+      <div class="why-card-h">
+        <div class="why-icon-wrap">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        </div>
+        <div class="why-card-h-content">
+          <div class="why-card-title">Fotos auténticas del lugar</div>
+          <p class="why-card-text">Nada de stock photos ni imágenes editadas. Las fotografías son tomadas por quienes visitaron el destino, mostrando la realidad tal como es.</p>
+          <div class="why-card-tag">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            Solo fotos de usuarios reales
+          </div>
+        </div>
+      </div>
+
+      <div class="why-card-h">
+        <div class="why-icon-wrap">
+          <svg viewBox="0 0 24 24"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg>
+        </div>
+        <div class="why-card-h-content">
+          <div class="why-card-title">Descubre destinos poco conocidos</div>
+          <p class="why-card-text">InfoTrip da visibilidad a lugares que no aparecen en plataformas grandes. Joyas locales, pueblos pequeños y experiencias únicas esperan ser encontradas.</p>
+          <div class="why-card-tag">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            Más allá de los típicos destinos
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Tabla comparativa -->
+    <div class="comparison">
+      <div class="comparison-header">
+        <div>Característica</div>
+        <div class="col-infotrip">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          InfoTrip
+        </div>
+        <div>Otras plataformas</div>
+      </div>
+
+      <div class="comparison-row">
+        <div class="feature">Reseñas verificadas por usuarios</div>
+        <div class="col-infotrip">
+          <svg class="check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          Siempre verificadas
+        </div>
+        <div>
+          <svg class="neutral" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Parcialmente
+        </div>
+      </div>
+
+      <div class="comparison-row">
+        <div class="feature">Precios reportados por viajeros</div>
+        <div class="col-infotrip">
+          <svg class="check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          Sí, actualizados
+        </div>
+        <div>
+          <svg class="cross" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          Precios del negocio
+        </div>
+      </div>
+
+      <div class="comparison-row">
+        <div class="feature">Sin publicidad de negocios</div>
+        <div class="col-infotrip">
+          <svg class="check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          100% libre de ads
+        </div>
+        <div>
+          <svg class="cross" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          Con contenido pagado
+        </div>
+      </div>
+
+      <div class="comparison-row">
+        <div class="feature">Destinos poco conocidos</div>
+        <div class="col-infotrip">
+          <svg class="check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          Sí, comunidad local
+        </div>
+        <div>
+          <svg class="cross" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          Solo destinos populares
+        </div>
+      </div>
+
+      <div class="comparison-row">
+        <div class="feature">Mapa interactivo con GPS</div>
+        <div class="col-infotrip">
+          <svg class="check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          Integrado
+        </div>
+        <div>
+          <svg class="neutral" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Limitado
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+</body>
+</html>
