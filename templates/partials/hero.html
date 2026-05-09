@@ -1,11 +1,6 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>InfoTrip — Hero</title>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <style>
+{% load static %}
+<style>
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
@@ -370,9 +365,8 @@
       .hero-stats { gap: 1.25rem; }
       .stat-sep { display: none; }
     }
-  </style>
-</head>
-<body>
+  
+</style>
 
 <section class="hero">
   <div class="hero-bg"></div>
@@ -563,5 +557,101 @@
   });
 </script>
 
-</body>
-</html>
+<script>
+(function(){
+
+// Destinos rotativos del tag
+  const destinos = [
+    'Guadalajara', 'Puerto Vallarta', 'Tequila', 'Tlaquepaque',
+    'Mazamitla', 'Tapalpa', 'Chapala', 'Ajijic',
+    'Tomatlan', 'Zapopan', 'San Juan de los Lagos', 'Lagos de Moreno'
+  ];
+  let destIndex = 0;
+  const rotEl = document.getElementById('rotating-dest');
+
+  setInterval(() => {
+    rotEl.classList.add('fade-out');
+    setTimeout(() => {
+      destIndex = (destIndex + 1) % destinos.length;
+      const dest = destinos[destIndex];
+      rotEl.textContent = dest;
+      rotEl.href = `/destinos/?q=${encodeURIComponent(dest)}`;
+      rotEl.classList.remove('fade-out');
+    }, 400);
+  }, 8000);
+
+  // Tarjeta flotante con imagen rotatoria
+  const floatDestinos = [
+    {
+        nombre: 'Tequila',
+        meta: 'Pueblo Mágico · Jalisco',
+        img: '../../images/tequila.jpg'
+      },  
+    {
+      nombre: 'Puerto Vallarta',
+      meta: 'Costa · Jalisco',
+      img: '../../images/ptVallarta.jpg'
+    },
+    {
+      nombre: 'Guadalajara',
+      meta: 'Ciudad · Jalisco',
+      img: 'images/guadalajara.jpg'
+    },
+    {
+      nombre: 'Tapalpa',
+      meta: 'Sierra · Jalisco',
+      img: 'images/tapalpa.jpg'
+    },
+    {
+      nombre: 'Chapala',
+      meta: 'Lago · Jalisco',
+      img: 'images/chapala.jpg'
+    },
+  ];
+
+  let floatIndex = 0;
+  const floatCard = document.getElementById('float-card-1');
+  const fcImg     = document.getElementById('fc-img');
+  const fcName    = document.getElementById('fc-name');
+  const fcMeta    = document.getElementById('fc-meta');
+
+  setInterval(() => {
+    floatCard.classList.add('fade-out');
+    setTimeout(() => {
+      floatIndex = (floatIndex + 1) % floatDestinos.length;
+      const d = floatDestinos[floatIndex];
+      fcImg.src = d.img;
+      fcImg.alt = d.nombre;
+      fcName.textContent = d.nombre;
+      fcMeta.textContent = d.meta;
+      floatCard.classList.remove('fade-out');
+    }, 500);
+  }, 4000);
+
+
+  function setChip(el, category) {
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    const select = document.getElementById('categorySelect');
+    select.value = category === 'todas' ? '' : category;
+  }
+
+  // Búsqueda
+  function handleSearch() {
+    const query    = document.getElementById('searchInput').value.trim();
+    const category = document.getElementById('categorySelect').value;
+    if (!query && !category) return;
+    const params = new URLSearchParams();
+    if (query)    params.set('q', query);
+    if (category) params.set('categoria', category);
+    // En Django esto redirigirá a: /destinos/?q=...&categoria=...
+    window.location.href = `/destinos/?${params.toString()}`;
+  }
+
+  // Buscar con Enter
+  document.getElementById('searchInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') handleSearch();
+  });
+
+})();
+</script>

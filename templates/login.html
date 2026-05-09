@@ -1,0 +1,450 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InfoTrip — Iniciar sesión</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #FDFCFA;
+      --bg-soft:   #F7F3EE;
+      --primary:   #6741D9;
+      --primary-h: #5835C4;
+      --accent:    #F76707;
+      --ink:       #1F1635;
+      --muted:     #9B8FAF;
+      --border:    #E8E0F5;
+      --tag-bg:    #F3EFFF;
+      --error:     #D94141;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg-soft);
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── Layout ── */
+    .auth-wrapper {
+      display: flex;
+      width: 100%;
+      min-height: 100vh;
+    }
+
+    /* Panel izquierdo decorativo */
+    .auth-left {
+      flex: 1;
+      background: var(--primary);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .auth-left-circle {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .circle-1 { width: 400px; height: 400px; top: -120px; right: -100px; background: rgba(255,255,255,.05); }
+    .circle-2 { width: 250px; height: 250px; bottom: -80px; left: -60px; background: rgba(247,103,7,.12); }
+    .circle-3 { width: 180px; height: 180px; top: 40%; left: 20%; background: rgba(255,255,255,.04); }
+
+    .auth-left-content {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      max-width: 380px;
+    }
+    .auth-logo {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: #fff;
+      text-decoration: none;
+      letter-spacing: -1.5px;
+      display: block;
+      margin-bottom: 2rem;
+    }
+    .auth-logo span { color: #FAAD3F; }
+
+    .auth-left-title {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.2;
+      letter-spacing: -.5px;
+      margin-bottom: 1rem;
+    }
+    .auth-left-title em {
+      font-style: normal;
+      color: #FAAD3F;
+    }
+    .auth-left-text {
+      font-size: .95rem;
+      color: rgba(255,255,255,.7);
+      line-height: 1.75;
+      margin-bottom: 2rem;
+    }
+
+    .auth-benefits {
+      display: flex;
+      flex-direction: column;
+      gap: .65rem;
+      text-align: left;
+    }
+    .auth-benefit {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      font-size: .875rem;
+      color: rgba(255,255,255,.85);
+      font-weight: 500;
+    }
+    .auth-benefit svg {
+      width: 16px; height: 16px;
+      stroke: #FAAD3F;
+      stroke-width: 2.5;
+      fill: none;
+      flex-shrink: 0;
+    }
+
+    /* Panel derecho — formulario */
+    .auth-right {
+      width: 480px;
+      flex-shrink: 0;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2.5rem;
+    }
+
+    .auth-form-wrap {
+      width: 100%;
+      max-width: 380px;
+    }
+
+    .auth-form-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      color: var(--primary);
+      font-size: .75rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: .75rem;
+    }
+    .auth-form-title {
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: -.75px;
+      color: var(--ink);
+      margin-bottom: .5rem;
+    }
+    .auth-form-sub {
+      font-size: .9rem;
+      color: var(--muted);
+      margin-bottom: 2rem;
+      line-height: 1.6;
+    }
+
+    /* Form */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: .4rem;
+      margin-bottom: 1.1rem;
+    }
+    .form-label {
+      font-size: .8rem;
+      font-weight: 600;
+      color: var(--ink);
+    }
+    .form-input {
+      width: 100%;
+      padding: .75rem 1rem;
+      border: 1.5px solid var(--border);
+      border-radius: .75rem;
+      font-family: inherit;
+      font-size: .9rem;
+      color: var(--ink);
+      background: var(--bg);
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .form-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(103,65,217,.1);
+    }
+    .form-input::placeholder { color: var(--muted); }
+
+    /* Olvidé mi contraseña */
+    .form-forgot {
+      text-align: right;
+      margin-top: -.5rem;
+      margin-bottom: 1rem;
+    }
+    .form-forgot a {
+      font-size: .8rem;
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .form-forgot a:hover { text-decoration: underline; }
+
+    /* Mensaje de error */
+    .form-error {
+      background: rgba(217,65,65,.08);
+      border: 1.5px solid rgba(217,65,65,.25);
+      border-radius: .65rem;
+      padding: .65rem 1rem;
+      font-size: .85rem;
+      color: var(--error);
+      margin-bottom: 1rem;
+      display: none;
+    }
+    .form-error.show { display: block; }
+
+    /* Botón submit */
+    .btn-submit {
+      width: 100%;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      font-family: inherit;
+      font-size: .95rem;
+      font-weight: 700;
+      padding: .875rem;
+      border-radius: 2rem;
+      cursor: pointer;
+      transition: background .2s, transform .15s, box-shadow .2s;
+      box-shadow: 0 4px 16px rgba(103,65,217,.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: .5rem;
+    }
+    .btn-submit svg {
+      width: 16px; height: 16px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+    }
+    .btn-submit:hover {
+      background: var(--primary-h);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(103,65,217,.4);
+    }
+    .btn-submit:disabled {
+      opacity: .7;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Divider */
+    .auth-divider {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      margin: 1.25rem 0;
+      color: var(--muted);
+      font-size: .8rem;
+    }
+    .auth-divider::before,
+    .auth-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* Link registro */
+    .auth-switch {
+      text-align: center;
+      font-size: .875rem;
+      color: var(--muted);
+    }
+    .auth-switch a {
+      color: var(--primary);
+      font-weight: 700;
+      text-decoration: none;
+    }
+    .auth-switch a:hover { text-decoration: underline; }
+
+    /* Loading spinner */
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+      display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Responsive */
+    @media (max-width: 860px) {
+      .auth-left { display: none; }
+      .auth-right { width: 100%; padding: 2rem 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="auth-wrapper">
+
+  <!-- Panel izquierdo -->
+  <div class="auth-left">
+    <div class="auth-left-circle circle-1"></div>
+    <div class="auth-left-circle circle-2"></div>
+    <div class="auth-left-circle circle-3"></div>
+    <div class="auth-left-content">
+      <a href="/" class="auth-logo">Info<span>Trip</span></a>
+      <h2 class="auth-left-title">Viaja con <em>información real</em></h2>
+      <p class="auth-left-text">Accede a precios verificados, reseñas auténticas y el mapa interactivo de Jalisco — todo en un solo lugar.</p>
+      <div class="auth-benefits">
+        <div class="auth-benefit">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          Reseñas verificadas por viajeros reales
+        </div>
+        <div class="auth-benefit">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          Precios promedio actualizados por la comunidad
+        </div>
+        <div class="auth-benefit">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          Mapa interactivo con geolocalización GPS
+        </div>
+        <div class="auth-benefit">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          Descubre destinos poco conocidos de Jalisco
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel derecho — Formulario -->
+  <div class="auth-right">
+    <div class="auth-form-wrap">
+
+      <div class="auth-form-tag">
+        <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Bienvenido de vuelta
+      </div>
+      <h1 class="auth-form-title">Iniciar sesión</h1>
+      <p class="auth-form-sub">Ingresa tus datos para acceder a tu cuenta.</p>
+
+      <div class="form-error" id="formError"></div>
+
+      <form id="loginForm">
+        {% csrf_token %}
+        <div class="form-group">
+          <label class="form-label" for="email">Correo electrónico</label>
+          <input class="form-input" type="email" id="email" name="email" placeholder="tu@correo.com" required autocomplete="email" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="password">Contraseña</label>
+          <input class="form-input" type="password" id="password" name="password" placeholder="Tu contraseña" required autocomplete="current-password" />
+        </div>
+
+        <div class="form-forgot">
+          <a href="#">¿Olvidaste tu contraseña?</a>
+        </div>
+
+        <button type="submit" class="btn-submit" id="submitBtn">
+          <span id="btnText">Iniciar sesión</span>
+          <div class="spinner" id="spinner"></div>
+          <svg id="btnIcon" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </form>
+
+      <div class="auth-divider">o</div>
+
+      <div class="auth-switch">
+        ¿No tienes cuenta? <a href="/registro/">Regístrate gratis</a>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const form      = document.getElementById('loginForm');
+  const submitBtn = document.getElementById('submitBtn');
+  const spinner   = document.getElementById('spinner');
+  const btnIcon   = document.getElementById('btnIcon');
+  const btnText   = document.getElementById('btnText');
+  const formError = document.getElementById('formError');
+
+  function showError(msg) {
+    formError.textContent = msg;
+    formError.classList.add('show');
+  }
+  function hideError() {
+    formError.classList.remove('show');
+  }
+  function setLoading(loading) {
+    submitBtn.disabled = loading;
+    spinner.style.display = loading ? 'block' : 'none';
+    btnIcon.style.display = loading ? 'none' : 'block';
+    btnText.textContent = loading ? 'Iniciando sesión...' : 'Iniciar sesión';
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideError();
+    setLoading(true);
+
+    const email    = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+
+    try {
+      const res = await fetch('/api/v1/auth/login/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        // Guardar tokens
+        localStorage.setItem('access_token',  data.access);
+        localStorage.setItem('refresh_token', data.refresh);
+        localStorage.setItem('usuario',       JSON.stringify(data.usuario));
+        // Redirigir a homepage
+        window.location.href = '/';
+      } else {
+        const msg = data.detail || data.non_field_errors?.[0] || 'Correo o contraseña incorrectos.';
+        showError(msg);
+      }
+    } catch {
+      showError('Error de conexión. Intenta de nuevo.');
+    } finally {
+      setLoading(false);
+    }
+  });
+
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+  }
+</script>
+
+</body>
+</html>

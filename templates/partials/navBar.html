@@ -1,11 +1,6 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>InfoTrip — Navbar</title>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <style>
+{% load static %}
+<style>
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
@@ -90,6 +85,7 @@
       flex-shrink: 0;
     }
 
+    /* ── Acciones ── */
     .nav-actions {
       display: flex;
       align-items: center;
@@ -138,6 +134,52 @@
       background: var(--border);
     }
 
+    /* ── Usuario autenticado ── */
+    .nav-user-wrap {
+      display: none;
+      align-items: center;
+      gap: .75rem;
+    }
+    .user-avatar {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      font-size: .82rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      border: 2px solid var(--border);
+    }
+    .user-name {
+      font-size: .875rem;
+      font-weight: 600;
+      color: var(--ink);
+      max-width: 120px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .btn-logout {
+      background: transparent;
+      border: 1.5px solid var(--border);
+      color: var(--muted);
+      font-family: inherit;
+      font-size: .8rem;
+      font-weight: 600;
+      padding: .4rem .9rem;
+      border-radius: 2rem;
+      cursor: pointer;
+      transition: border-color .2s, color .2s;
+    }
+    .btn-logout:hover {
+      border-color: #D94141;
+      color: #D94141;
+    }
+
+    /* ── Hamburger ── */
     .hamburger {
       display: none;
       flex-direction: column;
@@ -158,6 +200,7 @@
     .hamburger.open span:nth-child(2) { opacity: 0; }
     .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
+    /* ── Menú móvil ── */
     .mobile-menu {
       display: none;
       position: fixed;
@@ -205,13 +248,29 @@
       text-align: center;
     }
 
+    /* Usuario móvil */
+    .mobile-user-info {
+      display: none;
+      align-items: center;
+      gap: .75rem;
+      padding: .7rem .85rem;
+    }
+    .mobile-user-info .user-avatar {
+      width: 38px; height: 38px;
+      font-size: .9rem;
+    }
+    .mobile-user-info .user-name {
+      font-size: .925rem;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
     @media (max-width: 768px) {
       .nav-links, .nav-actions { display: none; }
       .hamburger { display: flex; }
     }
-  </style>
-</head>
-<body>
+  
+</style>
 
 <nav id="navbar">
   <div class="nav-inner">
@@ -246,9 +305,22 @@
     </ul>
 
     <div class="nav-actions">
-      <a href="/login" class="btn-ghost">Iniciar sesión</a>
-      <div class="nav-divider"></div>
-      <a href="/registro" class="btn-primary">Registrarse gratis</a>
+
+      <!-- No autenticado -->
+      <div id="nav-guest" style="display:flex;align-items:center;gap:.75rem;">
+        <a href="/login/" class="btn-ghost">Iniciar sesión</a>
+        <div class="nav-divider"></div>
+        <a href="/registro/" class="btn-primary">Registrarse gratis</a>
+      </div>
+
+      <!-- Autenticado -->
+      <div class="nav-user-wrap" id="nav-user">
+        <div class="user-avatar" id="userAvatar"></div>
+        <span class="user-name" id="userName"></span>
+        <div class="nav-divider"></div>
+        <button class="btn-logout" id="logoutBtn">Cerrar sesión</button>
+      </div>
+
     </div>
 
     <button class="hamburger" id="hamburger" aria-label="Menú">
@@ -257,7 +329,15 @@
   </div>
 </nav>
 
+<!-- Menú móvil -->
 <div class="mobile-menu" id="mobileMenu">
+
+  <!-- Info usuario móvil (autenticado) -->
+  <div class="mobile-user-info" id="mobileUserInfo">
+    <div class="user-avatar" id="mobileUserAvatar"></div>
+    <span class="user-name" id="mobileUserName"></span>
+  </div>
+
   <a href="#destinos">
     <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
     Destinos
@@ -274,34 +354,168 @@
     <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
     Comunidad
   </a>
+
   <div class="sep"></div>
-  <a href="/login">
-    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-    Iniciar sesión
-  </a>
-  <a href="/registro" class="btn-primary">Registrarse gratis</a>
+
+  <!-- No autenticado móvil -->
+  <div id="mobile-guest">
+    <a href="/login/">
+      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Iniciar sesión
+    </a>
+    <a href="/registro/" class="btn-primary">Registrarse gratis</a>
+  </div>
+
+  <!-- Autenticado móvil -->
+  <div id="mobile-auth" style="display:none;">
+    <a href="#" id="mobileLogoutBtn">
+      <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Cerrar sesión
+    </a>
+  </div>
+
 </div>
 
 <script>
+  // ── Scroll shadow ──
   const navbar = document.getElementById('navbar');
   window.addEventListener('scroll', () => {
     navbar.classList.toggle('scrolled', window.scrollY > 10);
   });
 
+  // ── Hamburger ──
   const hamburger = document.getElementById('hamburger');
   const mobileMenu = document.getElementById('mobileMenu');
   hamburger.addEventListener('click', () => {
     hamburger.classList.toggle('open');
     mobileMenu.classList.toggle('open');
   });
-
   mobileMenu.querySelectorAll('a').forEach(link => {
     link.addEventListener('click', () => {
       hamburger.classList.remove('open');
       mobileMenu.classList.remove('open');
     });
   });
+
+  // ── Sesión ──
+  const usuario = JSON.parse(localStorage.getItem('usuario') || 'null');
+
+  if (usuario) {
+    const inicial = usuario.nombre.charAt(0).toUpperCase();
+    const nombreCompleto = usuario.nombre + ' ' + usuario.apellido;
+
+    // Desktop
+    document.getElementById('nav-guest').style.display = 'none';
+    const navUser = document.getElementById('nav-user');
+    navUser.style.display = 'flex';
+    document.getElementById('userAvatar').textContent = inicial;
+    document.getElementById('userName').textContent   = nombreCompleto;
+
+    // Móvil
+    const mobileUserInfo = document.getElementById('mobileUserInfo');
+    mobileUserInfo.style.display = 'flex';
+    document.getElementById('mobileUserAvatar').textContent = inicial;
+    document.getElementById('mobileUserName').textContent   = nombreCompleto;
+    document.getElementById('mobile-guest').style.display   = 'none';
+    document.getElementById('mobile-auth').style.display    = 'block';
+  }
+
+  // ── Logout ──
+  function doLogout() {
+    const refresh = localStorage.getItem('refresh_token');
+    fetch('/api/v1/auth/logout/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+      body: JSON.stringify({ refresh })
+    }).finally(() => {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('usuario');
+      window.location.href = '/';
+    });
+  }
+
+  document.getElementById('logoutBtn')?.addEventListener('click', doLogout);
+  document.getElementById('mobileLogoutBtn')?.addEventListener('click', doLogout);
+
+  // ── CSRF ──
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+  }
 </script>
 
-</body>
-</html>
+<script>
+(function(){
+
+  // ── Scroll shadow ──
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => {
+    navbar.classList.toggle('scrolled', window.scrollY > 10);
+  });
+
+  // ── Hamburger ──
+  const hamburger = document.getElementById('hamburger');
+  const mobileMenu = document.getElementById('mobileMenu');
+  hamburger.addEventListener('click', () => {
+    hamburger.classList.toggle('open');
+    mobileMenu.classList.toggle('open');
+  });
+  mobileMenu.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => {
+      hamburger.classList.remove('open');
+      mobileMenu.classList.remove('open');
+    });
+  });
+
+  // ── Sesión ──
+  const usuario = JSON.parse(localStorage.getItem('usuario') || 'null');
+
+  if (usuario) {
+    const inicial = usuario.nombre.charAt(0).toUpperCase();
+    const nombreCompleto = usuario.nombre + ' ' + usuario.apellido;
+
+    // Desktop
+    document.getElementById('nav-guest').style.display = 'none';
+    const navUser = document.getElementById('nav-user');
+    navUser.style.display = 'flex';
+    document.getElementById('userAvatar').textContent = inicial;
+    document.getElementById('userName').textContent   = nombreCompleto;
+
+    // Móvil
+    const mobileUserInfo = document.getElementById('mobileUserInfo');
+    mobileUserInfo.style.display = 'flex';
+    document.getElementById('mobileUserAvatar').textContent = inicial;
+    document.getElementById('mobileUserName').textContent   = nombreCompleto;
+    document.getElementById('mobile-guest').style.display   = 'none';
+    document.getElementById('mobile-auth').style.display    = 'block';
+  }
+
+  // ── Logout ──
+  function doLogout() {
+    const refresh = localStorage.getItem('refresh_token');
+    fetch('/api/v1/auth/logout/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+      body: JSON.stringify({ refresh })
+    }).finally(() => {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('usuario');
+      window.location.href = '/';
+    });
+  }
+
+  document.getElementById('logoutBtn')?.addEventListener('click', doLogout);
+  document.getElementById('mobileLogoutBtn')?.addEventListener('click', doLogout);
+
+  // ── CSRF ──
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+  }
+
+})();
+</script>

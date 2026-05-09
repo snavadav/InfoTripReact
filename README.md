@@ -55,7 +55,7 @@ python -m pip install django djangorestframework djangorestframework-simplejwt p
 
 Crea un archivo `.env` en la raíz del proyecto con este contenido:
 
-```
+```-
 SECRET_KEY=django-insecure-cambia-esta-clave
 DEBUG=True
 ALLOWED_HOSTS=localhost,127.0.0.1
@@ -90,10 +90,10 @@ python manage.py createsuperuser
 ```
 
 Te pedirá:
-- Email
-- Nombre
-- Apellido
-- Contraseña
+-Email
+-Nombre
+-Apellido
+-Contraseña
 
 ### 7. Correr el servidor
 
@@ -106,7 +106,6 @@ python manage.py runserver
 ## 🌐 URLs disponibles
 
 | URL | Descripción |
-|---|---|
 | `http://127.0.0.1:8000/` | Página principal |
 | `http://127.0.0.1:8000/admin/` | Panel de administración |
 | `http://127.0.0.1:8000/api/v1/auth/registro/` | Registro de usuarios |

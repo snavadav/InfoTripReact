@@ -1,11 +1,6 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>InfoTrip — Categorías</title>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <style>
+{% load static %}
+<style>
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
@@ -215,9 +210,8 @@
       .cat-grid { grid-template-columns: repeat(2, 1fr); }
       .section-header { flex-direction: column; align-items: flex-start; }
     }
-  </style>
-</head>
-<body>
+  
+</style>
 
 <section class="categories" id="categorias">
   <div class="categories-inner">
@@ -347,5 +341,17 @@
   });
 </script>
 
-</body>
-</html>
+<script>
+(function(){
+
+// Highlight de categoría activa al hacer clic
+  document.querySelectorAll('.cat-card').forEach(card => {
+    card.addEventListener('click', function(e) {
+      // Solo para preview — en producción Django maneja la navegación
+      document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+
+})();
+</script>
