@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ lugar.nombre }} — InfoTrip{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/comunidad.css' %}">{% endblock %}
+{% block content %}
+{% include 'partials/navBar.html' %}
+<main class="explore-shell detail-shell">
+  <a class="back-link" href="{% url 'destinos-listado' %}">← Explorar destinos</a>
+  <header class="detail-heading"><div><span class="eyebrow">{{ lugar.municipio }} · {{ lugar.region }}</span><h1>{{ lugar.nombre }}</h1></div><a class="directions-button" href="{{ lugar.maps_url }}" target="_blank" rel="noopener noreferrer">Cómo llegar ↗<span class="sr-only"> (abre Google Maps en otra pestaña)</span></a></header>
+  <div class="detail-layout">
+    <div>
+      {% if lugar.foto_url %}<a class="detail-photo" href="{{ lugar.foto_url }}" target="_blank" rel="noopener noreferrer" aria-label="Ampliar fotografía de {{ lugar.nombre }} (otra pestaña)"><img src="{{ lugar.foto_url }}" alt="{{ lugar.alt }}" width="960" height="640"><span>Ampliar fotografía ↗</span></a>{% else %}<div class="detail-no-photo"><span aria-hidden="true">↗</span><p>Las fotografías de este destino estarán disponibles pronto.</p></div>{% endif %}
+      {% if lugar.editorial %}<p class="editorial-note">Selección de inspiración. La ficha completa y los servicios están por confirmar.</p>{% endif %}
+    </div>
+    <div class="detail-information">
+      <section><h2>Conoce el lugar</h2><div class="description">{{ lugar.descripcion|linebreaksbr }}</div><div class="category-chips">{% for categoria in lugar.categorias %}<span>{{ categoria }}</span>{% endfor %}</div></section>
+      <section><h2>Ubicación</h2><p>{{ lugar.municipio }}, Jalisco</p>{% if lugar.direccion %}<p>{{ lugar.direccion }}</p>{% endif %}{% if not lugar.editorial %}<p class="coordinates">{{ lugar.latitud }}, {{ lugar.longitud }}</p>{% endif %}</section>
+      <section><h2>Servicios</h2>{% if lugar.servicios %}<ul class="services">{% for servicio in lugar.servicios %}<li>{{ servicio }}</li>{% endfor %}</ul>{% else %}<p>Aún no hay servicios confirmados para este lugar.</p>{% endif %}</section>
+    </div>
+  </div>
+  {% include 'comunidad/destino.html' %}
+  {% include 'destinos/footer.html' %}
+</main>
+{% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/cuenta-api.js' %}"></script><script src="{% static 'js/comunidad.js' %}"></script>{% endblock %}

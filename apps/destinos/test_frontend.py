@@ -1,0 +1,116 @@
+from django.test import TestCase
+from django.urls import reverse
+from .models import Destino, Region, Municipio, Servicio
+
+
+class PaginasDestinoTests(TestCase):
+    def crear_destino(self, **cambios):
+        region, _ = Region.objects.get_or_create(nombre='Región prueba', slug='region-prueba')
+        municipio, _ = Municipio.objects.get_or_create(nombre='Municipio prueba', slug='municipio-prueba', region=region)
+        campos = dict(nombre='Lugar de prueba', slug='lugar-prueba', descripcion='Senderos y descanso', municipio=municipio,
+                      latitud='20.123456', longitud='-103.654321', direccion='Calle de prueba 10')
+        campos.update(cambios)
+        return Destino.objects.create(**campos)
+
+    def test_portada_breve_con_enlaces_editoriales(self):
+        respuesta = self.client.get('/')
+        self.assertContains(respuesta, 'name="q"')
+        self.assertContains(respuesta, '/destinos/tequila/')
+        self.assertNotContains(respuesta, 'id="resenas"')
+        self.assertEqual(len(respuesta.context['lugares']), 2)
+
+    def test_detalle_editorial_y_404(self):
+        respuesta = self.client.get('/destinos/tequila/')
+        self.assertContains(respuesta, 'Selección de inspiración')
+        self.assertContains(respuesta, 'google.com/maps/dir/')
+        self.assertEqual(self.client.get('/destinos/no-existe/').status_code, 404)
+
+    def test_busqueda_editorial_y_vacia(self):
+        respuesta = self.client.get('/destinos/', {'q': 'TEQUILA'})
+        self.assertEqual(len(respuesta.context['lugares']), 1)
+        self.assertEqual(respuesta.context['lugares'][0]['slug'], 'tequila')
+        self.assertContains(self.client.get('/destinos/', {'q': 'no-existe'}), 'No hay destinos para mostrar')
+
+    def test_detalle_real_servicios_coordenadas_y_escapado(self):
+        destino = self.crear_destino(descripcion='<script>alert(1)</script>')
+        servicio = Servicio.objects.create(nombre='Estacionamiento', slug='estacionamiento')
+        destino.servicios.add(servicio)
+        respuesta = self.client.get(reverse('destino-detalle', kwargs={'slug': destino.slug}))
+        self.assertContains(respuesta, 'Estacionamiento')
+        self.assertContains(respuesta, '20.123456%2C-103.654321')
+        self.assertContains(respuesta, 'Calle de prueba 10')
+        self.assertContains(respuesta, '&lt;script&gt;')
+        self.assertNotContains(respuesta, '<script>alert(1)</script>')
+        self.assertContains(respuesta, 'Las fotografías de este destino estarán disponibles pronto.')
+
+    def test_no_reaparece_destino_inactivo_como_editorial(self):
+        self.crear_destino(slug='tequila', es_activo=False)
+        self.assertEqual(self.client.get('/destinos/tequila/').status_code, 404)
+        self.assertEqual(len(self.client.get('/').context['lugares']), 0)
+        self.assertEqual(len(self.client.get('/destinos/').context['lugares']), 0)
+
+    def test_portada_maximo_tres_y_busqueda_en_catalogo(self):
+        for numero in range(10):
+            self.crear_destino(nombre=f'Destino {numero}', slug=f'destino-{numero}')
+        self.assertEqual(len(self.client.get('/').context['lugares']), 3)
+        respuesta = self.client.get('/destinos/', {'q': 'Municipio prueba', 'page': 2})
+        self.assertEqual(len(respuesta.context['lugares']), 2)
+        self.assertEqual(respuesta.context['pagina'].paginator.count, 10)
+        self.assertContains(respuesta, 'q=Municipio+prueba')
+
+    def test_mapa_editorial_y_catalogo_usan_destino_correcto(self):
+        lugares = self.client.get('/').context['exploracion']
+        tequila = next(lugar for lugar in lugares if lugar['slug'] == 'tequila')
+        self.assertIn('q=Tequila%2C+Jalisco', tequila['mapa_embed'])
+        self.crear_destino()
+        respuesta = self.client.get('/')
+        self.assertIn('q=20.123456%2C-103.654321', respuesta.context['exploracion'][0]['mapa_embed'])
+        self.assertContains(respuesta, 'id="preview-map"')
+        self.assertNotContains(respuesta, '<iframe src=')
+
+    def test_datos_interactivos_escapan_contenido_y_excluyen_inactivos(self):
+        self.crear_destino(nombre='</script><script>alert(1)</script>')
+        self.crear_destino(slug='oculto', es_activo=False)
+        respuesta = self.client.get('/')
+        self.assertEqual(len(respuesta.context['exploracion']), 1)
+        self.assertNotContains(respuesta, '</script><script>alert(1)</script>')
+
+class ExploracionMapaTests(TestCase):
+    crear_destino = PaginasDestinoTests.crear_destino
+
+    def test_filtros_combinados_y_paginacion(self):
+        from .models import Categoria
+        categoria = Categoria.objects.create(nombre='Naturaleza', slug='naturaleza')
+        servicio = Servicio.objects.create(nombre='Baños', slug='banos')
+        for numero in range(10):
+            destino = self.crear_destino(nombre=f'Bosque {numero}', slug=f'bosque-{numero}')
+            destino.categorias.add(categoria)
+            destino.servicios.add(servicio)
+        self.crear_destino(slug='sin-servicio')
+        respuesta = self.client.get('/destinos/', {'categoria': 'naturaleza', 'servicio': 'banos',
+            'municipio': 'municipio-prueba', 'region': 'region-prueba', 'page': 2})
+        self.assertEqual(respuesta.context['pagina'].paginator.count, 10)
+        self.assertEqual(len(respuesta.context['puntos_mapa']), 2)
+        self.assertContains(respuesta, 'servicio=banos')
+        self.assertContains(respuesta, 'municipio=municipio-prueba')
+
+    def test_filtro_invalido_no_devuelve_catalogo_completo(self):
+        self.crear_destino()
+        respuesta = self.client.get('/destinos/', {'municipio': 'desconocido'})
+        self.assertTrue(respuesta.context['formulario'].errors)
+        self.assertEqual(respuesta.context['puntos_mapa'], [])
+        self.assertEqual(respuesta.context['pagina'].paginator.count, 0)
+
+    def test_marcadores_solo_activos_y_json_seguro(self):
+        self.crear_destino(nombre='</script><script>alert(1)</script>')
+        self.crear_destino(slug='oculto', es_activo=False)
+        respuesta = self.client.get('/destinos/')
+        self.assertEqual(len(respuesta.context['puntos_mapa']), 1)
+        self.assertEqual(respuesta.context['puntos_mapa'][0]['latitud'], '20.123456')
+        self.assertNotContains(respuesta, '</script><script>alert(1)</script>')
+
+    def test_editorial_filtrada_sin_coordenadas_inventadas(self):
+        respuesta = self.client.get('/destinos/', {'municipio': 'tequila', 'categoria': 'pueblos'})
+        self.assertEqual(respuesta.context['pagina'].paginator.count, 1)
+        self.assertEqual(respuesta.context['puntos_mapa'], [])
+        self.assertContains(respuesta, 'no tienen coordenadas registradas')

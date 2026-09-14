@@ -3,6 +3,7 @@
 .env.local
 
 # Python
+.venv/
 __pycache__/
 *.pyc
 *.pyo
@@ -30,3 +31,4 @@ Thumbs.db
 *.egg-info/
 dist/
 build/
+.venv314/

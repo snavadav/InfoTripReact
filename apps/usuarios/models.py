@@ -71,3 +71,14 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     @property
     def is_active(self):
         return self.es_activo
+class CodigoAcceso(models.Model):
+    """Un único desafío vigente por cuenta; nunca se guarda el código en claro."""
+    usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE, related_name='codigo_acceso')
+    desafio = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    codigo_hash = models.CharField(max_length=64)
+    credencial_hash = models.CharField(max_length=64)
+    email = models.EmailField()
+    enviado = models.DateTimeField()
+    expira = models.DateTimeField()
+    intentos = models.PositiveSmallIntegerField(default=0)
+    consumido = models.BooleanField(default=False)

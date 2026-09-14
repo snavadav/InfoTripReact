@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Explorar destinos — InfoTrip{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/explorar.css' %}">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<link rel="stylesheet" href="{% static 'css/mapa.css' %}">
+{% endblock %}
+{% block content %}
+{% include 'partials/navBar.html' %}
+<main class="explore-shell results-shell">
+  <a class="back-link" href="{% url 'index' %}">← Volver al inicio</a>
+  <div class="results-header"><div><span class="eyebrow">TU PRÓXIMA ESCAPADA</span><h1>Explora Jalisco</h1></div><p>Encuentra un lugar. Acércate en el mapa. Prepara tu visita.</p></div>
+  <form class="explore-filters" action="{% url 'destinos-listado' %}" role="search">
+    {% for campo in formulario %}<div class="filter-field"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{{ campo.errors }}</div>{% endfor %}
+    <div class="filter-actions"><button type="submit">Buscar</button><a href="{% url 'destinos-listado' %}">Limpiar filtros</a></div>
+  </form>
+  <p class="editorial-note">Los precios comparan aportes publicados de los últimos 365 días por concepto. Los destinos sin datos no aparecen al filtrar por precio o calificación.</p>
+  <div class="map-toolbar"><p class="result-count">{{ pagina.paginator.count }} resultado{{ pagina.paginator.count|pluralize }}{% if q %} para «{{ q }}»{% endif %}</p><button type="button" id="toggle-map" aria-expanded="false" aria-controls="map-panel" hidden>Ver mapa</button></div>
+  <section id="map-panel" hidden aria-label="Mapa de destinos">
+    <div class="map-tools"><button type="button" id="locate-me">Usar mi ubicación</button><button type="button" id="fit-results">Ver resultados</button><span>El mapa muestra los destinos de esta página.</span></div>
+    <p id="map-status" role="status" aria-live="polite">Abre un marcador para consultar el destino.</p>
+    {% if editorial %}<p class="editorial-note">Las fichas de inspiración aún no tienen coordenadas registradas. Puedes consultar su ubicación desde el detalle.</p>{% endif %}
+    <div id="destinations-map" aria-label="Mapa interactivo de Jalisco"></div>
+  </section>
+  <noscript><p class="editorial-note">Activa JavaScript para ver el mapa. Puedes buscar y abrir los destinos con los enlaces siguientes.</p></noscript>
+  {% include 'destinos/tarjetas.html' %}
+  {% if puntos_mapa %}<div class="map-links" aria-label="Localizar un resultado">{% for lugar in puntos_mapa %}<button type="button" data-map-slug="{{ lugar.slug }}" hidden>Ubicar {{ lugar.nombre }}</button>{% endfor %}</div>{% endif %}
+  {% if pagina.has_other_pages %}<nav class="pagination" aria-label="Páginas de destinos">{% if pagina.has_previous %}<a href="?{{ filtros }}&page={{ pagina.previous_page_number }}">← Anterior</a>{% endif %}<span>Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>{% if pagina.has_next %}<a href="?{{ filtros }}&page={{ pagina.next_page_number }}">Siguiente →</a>{% endif %}</nav>{% endif %}
+  {% include 'destinos/footer.html' %}
+</main>
+{{ puntos_mapa|json_script:"map-places" }}
+{% endblock %}
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
+<script src="{% static 'js/mapa.js' %}" defer></script>
+{% endblock %}

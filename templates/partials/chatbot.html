@@ -1,0 +1,14 @@
+<aside id="trip-chat" class="trip-chat" aria-label="Asistente de InfoTrip" hidden>
+  <section id="trip-chat-panel" class="trip-chat-panel" aria-labelledby="trip-chat-title" hidden>
+    <header class="trip-chat-header">
+      <div><span class="trip-chat-eyebrow">TE AYUDAMOS A EMPEZAR</span><h2 id="trip-chat-title">Tu asistente InfoTrip</h2></div>
+      <button id="trip-chat-close" type="button" aria-label="Cerrar asistente">×</button>
+    </header>
+    <p class="trip-chat-notice">Guía con respuestas básicas. El catálogo está creciendo.</p>
+    <div id="trip-chat-log" class="trip-chat-log" role="log" aria-label="Conversación" aria-live="polite" aria-relevant="additions" tabindex="0"></div>
+    <div id="trip-chat-options" class="trip-chat-options" role="group" aria-label="Elige una opción"></div>
+    <footer class="trip-chat-footer"><span>Selecciona una opción para continuar</span><button id="trip-chat-reset" type="button">Volver al inicio</button></footer>
+  </section>
+  <button id="trip-chat-toggle" class="trip-chat-toggle" type="button" aria-controls="trip-chat-panel" aria-expanded="false"><span aria-hidden="true">✦</span> ¿Planeamos tu viaje?</button>
+  <div id="trip-chat-links" hidden data-trips="{% url 'mis-viajes' %}" data-catalog="{% url 'destinos-listado' %}" data-register="{% url 'registro' %}" data-profile="{% url 'perfil' %}"></div>
+</aside>

@@ -299,6 +299,10 @@
       .auth-left { display: none; }
       .auth-right { width: 100%; padding: 2rem 1.5rem; }
     }
+    #loginCode { letter-spacing: .45em; font-size: 1.5rem; text-align: center; }
+    #resendBtn, #backBtn { border: 0; background: transparent; color: var(--primary); font: inherit; font-size: .8rem; cursor: pointer; padding: .5rem 0; }
+    #resendBtn:disabled { color: #776d85; cursor: wait; }
+    #resendBtn:focus-visible, #backBtn:focus-visible { outline: 2px solid var(--primary); outline-offset: 4px; }
   </style>
 </head>
 <body>
@@ -346,7 +350,8 @@
       <h1 class="auth-form-title">Iniciar sesión</h1>
       <p class="auth-form-sub">Ingresa tus datos para acceder a tu cuenta.</p>
 
-      <div class="form-error" id="formError"></div>
+      <div class="form-error" id="formError" role="alert"></div>
+      <p id="loginNotice" role="status" style="font-size:.85rem;line-height:1.6;margin-bottom:1rem;color:#6741D9"></p>
 
       <form id="loginForm">
         {% csrf_token %}
@@ -361,7 +366,7 @@
         </div>
 
         <div class="form-forgot">
-          <a href="#">¿Olvidaste tu contraseña?</a>
+          <a href="/recuperar/">¿Olvidaste tu contraseña?</a>
         </div>
 
         <button type="submit" class="btn-submit" id="submitBtn">
@@ -369,6 +374,18 @@
           <div class="spinner" id="spinner"></div>
           <svg id="btnIcon" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
         </button>
+      </form>
+      <form id="codeForm" hidden>
+        <div class="form-group">
+          <label class="form-label" for="loginCode">Código de verificación</label>
+          <input class="form-input" id="loginCode" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" minlength="6" autocomplete="one-time-code" placeholder="000000" required aria-describedby="codeHelp">
+          <p id="codeHelp" style="font-size:.8rem;line-height:1.6;color:#675975">Escribe los 6 dígitos de tu código de acceso. El código caduca en 10 minutos; tienes hasta 5 intentos.</p>
+        </div>
+        <button type="submit" class="btn-submit" id="verifyBtn">Verificar e iniciar sesión</button>
+        <div style="display:flex;gap:16px;justify-content:space-between;margin-top:18px">
+          <button type="button" id="resendBtn" disabled>Reenviar código</button>
+          <button type="button" id="backBtn">Cambiar cuenta</button>
+        </div>
       </form>
 
       <div class="auth-divider">o</div>
@@ -382,69 +399,6 @@
 
 </div>
 
-<script>
-  const form      = document.getElementById('loginForm');
-  const submitBtn = document.getElementById('submitBtn');
-  const spinner   = document.getElementById('spinner');
-  const btnIcon   = document.getElementById('btnIcon');
-  const btnText   = document.getElementById('btnText');
-  const formError = document.getElementById('formError');
-
-  function showError(msg) {
-    formError.textContent = msg;
-    formError.classList.add('show');
-  }
-  function hideError() {
-    formError.classList.remove('show');
-  }
-  function setLoading(loading) {
-    submitBtn.disabled = loading;
-    spinner.style.display = loading ? 'block' : 'none';
-    btnIcon.style.display = loading ? 'none' : 'block';
-    btnText.textContent = loading ? 'Iniciando sesión...' : 'Iniciar sesión';
-  }
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    hideError();
-    setLoading(true);
-
-    const email    = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-
-    try {
-      const res = await fetch('/api/v1/auth/login/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
-        body: JSON.stringify({ email, password })
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        // Guardar tokens
-        localStorage.setItem('access_token',  data.access);
-        localStorage.setItem('refresh_token', data.refresh);
-        localStorage.setItem('usuario',       JSON.stringify(data.usuario));
-        // Redirigir a homepage
-        window.location.href = '/';
-      } else {
-        const msg = data.detail || data.non_field_errors?.[0] || 'Correo o contraseña incorrectos.';
-        showError(msg);
-      }
-    } catch {
-      showError('Error de conexión. Intenta de nuevo.');
-    } finally {
-      setLoading(false);
-    }
-  });
-
-  function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-  }
-</script>
-
+<script src="{% static 'js/login.js' %}" defer></script>
 </body>
 </html>

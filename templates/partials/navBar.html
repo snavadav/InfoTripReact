@@ -19,10 +19,10 @@
     body {
       font-family: 'Plus Jakarta Sans', sans-serif;
       background: var(--bg-soft);
-      min-height: 200vh;
+      min-height: 100vh;
     }
 
-    nav {
+    #navbar {
       position: fixed;
       top: 0; left: 0; right: 0;
       z-index: 100;
@@ -30,7 +30,7 @@
       border-bottom: 1.5px solid var(--border);
       transition: box-shadow .3s;
     }
-    nav.scrolled {
+    #navbar.scrolled {
       box-shadow: 0 4px 24px rgba(103,65,217,.08);
     }
 
@@ -278,30 +278,21 @@
     <a href="/" class="logo">Info<span>Trip</span></a>
 
     <ul class="nav-links">
+      <li><a href="/mis-viajes/">Mis viajes</a></li>
       <li>
-        <a href="#destinos">
+        <a href="/destinos/">
           <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
           Destinos
         </a>
       </li>
       <li>
-        <a href="#explorar">
+        <a href="/destinos/">
           <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
           Explorar
         </a>
       </li>
-      <li>
-        <a href="#resenas">
-          <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-          Reseñas
-        </a>
-      </li>
-      <li>
-        <a href="#comunidad">
-          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          Comunidad
-        </a>
-      </li>
+
+
     </ul>
 
     <div class="nav-actions">
@@ -331,6 +322,7 @@
 
 <!-- Menú móvil -->
 <div class="mobile-menu" id="mobileMenu">
+  <a href="/mis-viajes/">Mis viajes</a>
 
   <!-- Info usuario móvil (autenticado) -->
   <div class="mobile-user-info" id="mobileUserInfo">
@@ -338,22 +330,16 @@
     <span class="user-name" id="mobileUserName"></span>
   </div>
 
-  <a href="#destinos">
+  <a href="/destinos/">
     <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
     Destinos
   </a>
-  <a href="#explorar">
+  <a href="/destinos/">
     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
     Explorar
   </a>
-  <a href="#resenas">
-    <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-    Reseñas
-  </a>
-  <a href="#comunidad">
-    <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-    Comunidad
-  </a>
+
+
 
   <div class="sep"></div>
 
@@ -367,7 +353,7 @@
   </div>
 
   <!-- Autenticado móvil -->
-  <div id="mobile-auth" style="display:none;">
+  <div id="mobile-auth" style="display:none;"><a href="/perfil/">Mi perfil y aportes</a>
     <a href="#" id="mobileLogoutBtn">
       <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
       Cerrar sesión
@@ -398,7 +384,9 @@
   });
 
   // ── Sesión ──
-  const usuario = JSON.parse(localStorage.getItem('usuario') || 'null');
+  let usuario = null;
+  try {usuario = JSON.parse(localStorage.getItem('usuario') || 'null');} catch {}
+  if (!usuario || typeof usuario.nombre !== 'string' || typeof usuario.apellido !== 'string' || !localStorage.getItem('access_token')) usuario = null;
 
   if (usuario) {
     const inicial = usuario.nombre.charAt(0).toUpperCase();
@@ -420,12 +408,16 @@
     document.getElementById('mobile-auth').style.display    = 'block';
   }
 
+  const profileLink = document.createElement('a');
+  profileLink.href = '/perfil/'; profileLink.textContent = 'Mi perfil';
+  document.getElementById('nav-user').prepend(profileLink);
+
   // ── Logout ──
   function doLogout() {
     const refresh = localStorage.getItem('refresh_token');
     fetch('/api/v1/auth/logout/', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('access_token'), 'X-CSRFToken': getCookie('csrftoken') },
       body: JSON.stringify({ refresh })
     }).finally(() => {
       localStorage.removeItem('access_token');
@@ -444,78 +436,4 @@
     const parts = value.split(`; ${name}=`);
     if (parts.length === 2) return parts.pop().split(';').shift();
   }
-</script>
-
-<script>
-(function(){
-
-  // ── Scroll shadow ──
-  const navbar = document.getElementById('navbar');
-  window.addEventListener('scroll', () => {
-    navbar.classList.toggle('scrolled', window.scrollY > 10);
-  });
-
-  // ── Hamburger ──
-  const hamburger = document.getElementById('hamburger');
-  const mobileMenu = document.getElementById('mobileMenu');
-  hamburger.addEventListener('click', () => {
-    hamburger.classList.toggle('open');
-    mobileMenu.classList.toggle('open');
-  });
-  mobileMenu.querySelectorAll('a').forEach(link => {
-    link.addEventListener('click', () => {
-      hamburger.classList.remove('open');
-      mobileMenu.classList.remove('open');
-    });
-  });
-
-  // ── Sesión ──
-  const usuario = JSON.parse(localStorage.getItem('usuario') || 'null');
-
-  if (usuario) {
-    const inicial = usuario.nombre.charAt(0).toUpperCase();
-    const nombreCompleto = usuario.nombre + ' ' + usuario.apellido;
-
-    // Desktop
-    document.getElementById('nav-guest').style.display = 'none';
-    const navUser = document.getElementById('nav-user');
-    navUser.style.display = 'flex';
-    document.getElementById('userAvatar').textContent = inicial;
-    document.getElementById('userName').textContent   = nombreCompleto;
-
-    // Móvil
-    const mobileUserInfo = document.getElementById('mobileUserInfo');
-    mobileUserInfo.style.display = 'flex';
-    document.getElementById('mobileUserAvatar').textContent = inicial;
-    document.getElementById('mobileUserName').textContent   = nombreCompleto;
-    document.getElementById('mobile-guest').style.display   = 'none';
-    document.getElementById('mobile-auth').style.display    = 'block';
-  }
-
-  // ── Logout ──
-  function doLogout() {
-    const refresh = localStorage.getItem('refresh_token');
-    fetch('/api/v1/auth/logout/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
-      body: JSON.stringify({ refresh })
-    }).finally(() => {
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
-      localStorage.removeItem('usuario');
-      window.location.href = '/';
-    });
-  }
-
-  document.getElementById('logoutBtn')?.addEventListener('click', doLogout);
-  document.getElementById('mobileLogoutBtn')?.addEventListener('click', doLogout);
-
-  // ── CSRF ──
-  function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-  }
-
-})();
 </script>

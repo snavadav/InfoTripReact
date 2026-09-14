@@ -1,0 +1,28 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}Mis viajes — InfoTrip{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/comunidad.css' %}"><link rel="stylesheet" href="{% static 'css/viajes.css' %}">{% endblock %}
+{% block content %}{% include 'partials/navBar.html' %}
+<main class="explore-shell trips-shell">
+  <span class="eyebrow">DEL PLAN A LA ESCAPADA</span><h1>Mis viajes</h1><p>Organiza tu salida y descubre cómo se reparte el presupuesto.</p>
+  <p id="trip-status" role="status"></p><p id="trip-login" hidden><a href="{% url 'login' %}">Inicia sesión</a> para guardar y consultar tus viajes.</p>
+  <div class="trips-layout">
+    <section aria-labelledby="saved-title"><div class="trips-heading"><h2 id="saved-title">Tus escapadas</h2><button id="new-trip" type="button">+ Crear</button></div><div id="saved-trips"></div><button id="more-trips" type="button" hidden>Cargar más</button></section>
+    <section class="community-box" aria-labelledby="editor-title">
+      <h2 id="editor-title">Nueva escapada</h2>
+      <form id="trip-form" class="community-form">
+        <div class="trip-fields">
+          <label>Nombre del viaje<input name="nombre" maxlength="120" required placeholder="Nuestra escapada del sábado"></label>
+          <label>Destino o zona<input name="destino" maxlength="200" required placeholder="Escribe el lugar que tienes en mente"></label>
+          <label>Salida<input name="fecha_inicio" type="date" required></label><label>Regreso<input name="fecha_fin" type="date" required></label>
+          <label>Viajeros<input name="personas" type="number" min="1" max="100" step="1" value="1" required></label>
+          <label>Presupuesto de todo el grupo (MXN)<input name="presupuesto" type="number" min="0" max="999999999.99" step=".01" value="0" required></label>
+        </div>
+        <h3>Gastos estimados</h3><p class="community-note">Importes introducidos por ti, no cotizaciones. “Por persona” se multiplica por todos los viajeros; “Compartido” se suma una sola vez. Cantidad permite contar noches, comidas o trayectos.</p>
+        <div id="trip-expenses"></div><button id="add-expense" type="button">+ Agregar gasto</button>
+        <div class="trip-totals" aria-live="polite" id="trip-totals"></div><p class="community-note">El reparto es igual entre viajeros y se redondea a centavos. Incluye todos los gastos que necesites; un plan vacío no indica que viajar sea gratis.</p>
+        <button type="submit">Guardar escapada</button><p class="form-status" role="status"></p>
+      </form>
+    </section>
+  </div>{% include 'destinos/footer.html' %}
+</main>{% endblock %}
+{% block extra_js %}<script src="{% static 'js/cuenta-api.js' %}"></script><script src="{% static 'js/viajes.js' %}" defer></script>{% endblock %}

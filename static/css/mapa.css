@@ -1,0 +1,18 @@
+.explore-filters { display:grid; grid-template-columns:2fr repeat(4,1fr); gap:14px; padding:22px; margin-top:24px; border:1px solid #e5dfed; border-radius:18px; background:white; }
+.filter-field { min-width:0; }.filter-field label { display:block; font-size:12px; font-weight:700; margin-bottom:8px; }
+.filter-field input,.filter-field select { width:100%; min-width:0; padding:11px 9px; font:inherit; font-size:12px; border:1px solid #d9d0e4; border-radius:9px; background:#faf8fc; color:#251b36; }
+.filter-field select:focus-visible {outline:3px solid #dc753a; outline-offset:3px;}
+.filter-actions {grid-column:1/-1; display:flex; align-items:center; gap:18px;}
+.filter-actions a {font-size:12px; color:#6741d9;}
+.filter-actions button,.map-toolbar button,.map-tools button,.map-links button {font:inherit; font-size:12px; padding:10px 15px; border:1px solid #d9ceeb; border-radius:10px; background:white; color:#5835c4; cursor:pointer;}
+.filter-actions button {background:#6741d9; color:white; border-color:#6741d9;}
+.map-toolbar {display:flex; align-items:center; justify-content:space-between; gap:12px; margin:18px 0;}.map-toolbar .result-count {margin:0;}
+#map-panel {padding:16px; background:white; border:1px solid #e5dfed; border-radius:18px; margin-bottom:22px; scroll-margin-top:85px;}
+.map-tools {display:flex; flex-wrap:wrap; align-items:center; gap:10px;}.map-tools span,#map-status {font-size:12px; color:#706577; line-height:1.7;}#map-status {margin:12px 0;}
+#destinations-map {height:360px; border-radius:12px; background:#ede9e3; z-index:0;}
+.map-links {display:flex; flex-wrap:wrap; gap:10px; margin-top:16px;}.map-links button {overflow-wrap:anywhere;}
+.results-header>p {font-size:13px; line-height:1.8; max-width:270px; color:#706577;}
+.errorlist {font-size:12px; color:#a42c39; list-style:none; margin-top:6px;}
+.map-tools button:disabled {opacity:.5; cursor:default;}
+@media(max-width:900px) {.explore-filters {grid-template-columns:repeat(2,1fr);}.filter-field:first-child {grid-column:1/-1;}}
+@media(max-width:520px) {.explore-filters {padding:15px; gap:12px;}#destinations-map {height:300px;}#map-panel {padding:10px;}.results-header>p {display:none;}}

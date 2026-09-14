@@ -8,53 +8,19 @@ from rest_framework.views        import APIView
 from rest_framework.response     import Response
 from rest_framework.permissions  import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens        import RefreshToken
-from rest_framework_simplejwt.views         import TokenObtainPairView
-from rest_framework_simplejwt.serializers   import TokenObtainPairSerializer
 from django.utils                import timezone
 
 from .models      import Usuario
 from .serializers import RegistroSerializer, UsuarioPerfilSerializer, CambiarPasswordSerializer
 
 
-# ─── TOKEN PERSONALIZADO ──────────────────────────────────────
-class InfoTripTokenSerializer(TokenObtainPairSerializer):
-    """Agrega datos del usuario al response del login."""
-
-    def validate(self, attrs):
-        data    = super().validate(attrs)
-        usuario = self.user
-
-        # Actualizar último acceso
-        usuario.ultimo_acceso = timezone.now()
-        usuario.save(update_fields=['ultimo_acceso'])
-
-        # Agregar datos del usuario al response
-        data['usuario'] = {
-            'uuid':          str(usuario.uuid),
-            'nombre':        usuario.nombre,
-            'apellido':      usuario.apellido,
-            'email':         usuario.email,
-            'foto_perfil':   usuario.foto_perfil.url if usuario.foto_perfil else None,
-            'es_verificado': usuario.es_verificado,
-        }
-        return data
-
-
-class LoginView(TokenObtainPairView):
-    """
-    POST /api/v1/auth/login/
-    Retorna access token, refresh token y datos del usuario.
-    """
-    serializer_class = InfoTripTokenSerializer
-    permission_classes = [AllowAny]
-
-
 # ─── REGISTRO ─────────────────────────────────────────────────
 class RegistroView(generics.CreateAPIView):
     """
     POST /api/v1/auth/registro/
-    Crea un nuevo usuario y retorna sus tokens.
+    Crea un usuario sin emitir tokens; debe verificar su correo al iniciar sesión.
     """
+    authentication_classes = []
     serializer_class   = RegistroSerializer
     permission_classes = [AllowAny]
 
@@ -63,21 +29,9 @@ class RegistroView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         usuario = serializer.save()
 
-        # Generar tokens para el nuevo usuario
-        refresh = RefreshToken.for_user(usuario)
-
         return Response({
-            'mensaje': '¡Bienvenido a InfoTrip! Tu cuenta fue creada correctamente.',
-            'usuario': {
-                'uuid':     str(usuario.uuid),
-                'nombre':   usuario.nombre,
-                'apellido': usuario.apellido,
-                'email':    usuario.email,
-            },
-            'tokens': {
-                'access':  str(refresh.access_token),
-                'refresh': str(refresh),
-            }
+            'mensaje': 'Cuenta creada. Inicia sesión para verificar tu correo con un código.',
+            'requiere_verificacion': True,
         }, status=status.HTTP_201_CREATED)
 
 

@@ -1,15 +1,26 @@
 {% extends 'base.html' %}
 {% load static %}
-
-{% block title %}InfoTrip — Descubre Jalisco con información real{% endblock %}
-
+{% block title %}InfoTrip — Encuentra tu próxima escapada{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/inicio-interactivo.css' %}">{% endblock %}
 {% block content %}
-  {% include 'partials/navbar.html' %}
-  {% include 'partials/hero.html' %}
-  {% include 'partials/categorias.html' %}
-  {% include 'partials/destinos.html' %}
-  {% include 'partials/resenas.html' %}
-  {% include 'partials/por_que.html' %}
-  {% include 'partials/cta.html' %}
-  {% include 'partials/footer.html' %}
+{% include 'partials/navBar.html' %}
+<main class="explore-shell interactive-home">
+  <section class="interactive-intro" id="explorar" aria-labelledby="home-title">
+    <div><span class="eyebrow">UN NUEVO PLAN, CERCA DE TI</span><h1 id="home-title">Jalisco se disfruta.<br> <em>Empieza por descubrirlo.</em></h1><p>Elige un paisaje, ubícalo en el mapa y prepara tu próxima escapada.</p></div>
+    <form class="trip-search" action="{% url 'destinos-listado' %}" role="search"><label for="destination-query">¿Qué lugar tienes en mente?</label><div><input id="destination-query" type="search" name="q" maxlength="200" placeholder="Destino o municipio"><button type="submit">Buscar ↗</button></div><span class="search-hint">Explora el catálogo completo o déjate sorprender abajo.</span></form>
+  </section>
+  <section class="discovery" aria-labelledby="discovery-title">
+    <header class="discovery-toolbar"><h2 id="discovery-title">¿Qué se te antoja?</h2><div class="discovery-filters" role="group" aria-label="Filtrar selección"><button type="button" data-category="" aria-pressed="true">Todo</button>{% for categoria in categorias_inicio %}<button type="button" data-category="{{ categoria }}" aria-pressed="false">{{ categoria }}</button>{% endfor %}</div><button id="surprise-place" class="surprise" type="button">✦ Sorpréndeme</button></header>
+    <div class="discovery-board" id="discovery-board" hidden>
+      <div class="discovery-list"><div class="discovery-list-heading"><span id="selection-count"></span><a href="{% url 'destinos-listado' %}">Ver todos ↗</a></div><div class="discovery-cards" id="discovery-cards"></div><div class="list-controls"><button type="button" id="previous-place" aria-label="Destino anterior">←</button><p id="selection-position" role="status"></p><button type="button" id="next-place" aria-label="Siguiente destino">→</button></div></div>
+      <section class="place-preview" aria-labelledby="preview-name"><div class="preview-visual"><img id="preview-image" alt=""><div id="preview-placeholder" hidden>Un lugar por descubrir ↗</div><iframe id="preview-map" title="Mapa del destino seleccionado" referrerpolicy="no-referrer-when-downgrade" hidden></iframe><div class="preview-modes" role="group" aria-label="Vista del destino"><button type="button" id="photo-mode" aria-pressed="true">Fotografía</button><button type="button" id="map-mode" aria-pressed="false">Mapa ↗</button></div><span id="preview-label" class="preview-label"></span></div><div class="preview-copy"><div class="preview-heading"><h3 id="preview-name"></h3><a id="preview-directions" target="_blank" rel="noopener noreferrer" aria-label="Abrir mapa en otra pestaña">Cómo llegar ↗</a></div><p id="preview-description"></p><a class="preview-detail" id="preview-detail">Conocer este destino →</a></div></section>
+    </div>
+    <p id="discovery-empty" class="empty-catalog" hidden>No hay lugares en esta selección. <a href="{% url 'destinos-listado' %}">Explora el catálogo</a>.</p>
+    <noscript>{% include 'destinos/tarjetas.html' %}</noscript>
+  </section>
+  <div class="app-discover"><span>Tu viaje, en un solo lugar.</span><button type="button" data-info="Explora destinos, consulta sus detalles y encuentra tu siguiente escapada." aria-pressed="true">↗ Descubre</button><button type="button" data-info="Cambia a la vista Mapa para ubicar el lugar, acercarte y explorar sus alrededores." aria-pressed="false">⌖ Ubica</button><button type="button" data-info="Comparte reseñas, fotografías y gastos desde cada destino. En Mi perfil puedes gestionar tus aportes." aria-pressed="false">♡ Comunidad</button><a href="{% url 'registro' %}">Unirme ↗</a></div><p class="app-info" id="app-info" role="status">Explora destinos, consulta sus detalles y encuentra tu siguiente escapada.</p>
+  {% include 'destinos/footer.html' %}
+</main>
+{{ exploracion|json_script:'home-places' }}
 {% endblock %}
+{% block extra_js %}<script src="{% static 'js/inicio-interactivo.js' %}" defer></script>{% endblock %}

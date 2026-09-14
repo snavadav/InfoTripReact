@@ -1,0 +1,156 @@
+"""Inicio de sesión en dos pasos: contraseña y código enviado al buzón."""
+import secrets
+import uuid
+from datetime import timedelta
+from smtplib import SMTPException
+
+from django.conf import settings
+from django.contrib.auth import authenticate
+from django.core.mail import send_mail
+from django.db import transaction
+from django.utils import timezone
+from django.utils.crypto import constant_time_compare, salted_hmac
+from rest_framework import serializers
+from rest_framework.exceptions import APIException, AuthenticationFailed, Throttled
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework.throttling import AnonRateThrottle
+from rest_framework.views import APIView
+from .authentication import CorreoJWTAuthentication
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenRefreshView
+
+from .models import CodigoAcceso, Usuario
+from .serializers import UsuarioPerfilSerializer
+
+
+class CorreoNoDisponible(APIException):
+    status_code = 503
+    default_detail = 'No pudimos enviar el código. Intenta de nuevo más tarde.'
+
+
+class LoginThrottle(AnonRateThrottle):
+    rate = '10/min'
+    scope = 'login_correo'
+
+
+class VerificacionThrottle(AnonRateThrottle):
+    rate = '30/min'
+    scope = 'verificacion_correo'
+
+
+class CredencialesSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True, trim_whitespace=False, max_length=1024)
+
+
+class CodigoSerializer(serializers.Serializer):
+    desafio = serializers.UUIDField()
+    codigo = serializers.RegexField(r'\A[0-9]{6}\Z', max_length=6, min_length=6, trim_whitespace=True)
+
+
+def hash_codigo(desafio, codigo):
+    return salted_hmac('infotrip.login.codigo', f'{desafio}:{codigo}', algorithm='sha256').hexdigest()
+
+
+def hash_credencial(usuario):
+    return salted_hmac('infotrip.login.credencial', usuario.password, algorithm='sha256').hexdigest()
+
+
+class LoginView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
+    throttle_classes = [LoginThrottle]
+
+    def post(self, request):
+        datos = CredencialesSerializer(data=request.data)
+        datos.is_valid(raise_exception=True)
+        usuario = authenticate(request=request, **datos.validated_data)
+        if usuario is None:
+            raise AuthenticationFailed('Correo o contraseña incorrectos.')
+        # Bloquear siempre primero al usuario: serializa envío y verificación en PostgreSQL.
+        with transaction.atomic():
+            usuario = Usuario.objects.select_for_update().get(pk=usuario.pk)
+            if not usuario.es_activo or not usuario.check_password(datos.validated_data['password']):
+                raise AuthenticationFailed('Correo o contraseña incorrectos.')
+            anterior = CodigoAcceso.objects.filter(usuario=usuario).first()
+            ahora = timezone.now()
+            if anterior:
+                restante = 60 - (ahora - anterior.enviado).total_seconds()
+                if restante > 0:
+                    raise Throttled(wait=int(restante) + 1, detail='Espera un minuto entre envíos.')
+            if settings.EMAIL_BACKEND.endswith('smtp.EmailBackend') and not settings.EMAIL_HOST:
+                raise CorreoNoDisponible()
+            codigo = f'{secrets.randbelow(1000000):06d}'
+            desafio = uuid.uuid4()
+            CodigoAcceso.objects.update_or_create(usuario=usuario, defaults={
+                'desafio': desafio, 'codigo_hash': hash_codigo(desafio, codigo),
+                'credencial_hash': hash_credencial(usuario), 'email': usuario.email,
+                'enviado': ahora, 'expira': ahora + timedelta(minutes=10),
+                'intentos': 0, 'consumido': False,
+            })
+            try:
+                enviados = send_mail(
+                    'Tu código de acceso a InfoTrip',
+                    f'Tu código para iniciar sesión en InfoTrip es: {codigo}\n\n'
+                    'Caduca en 10 minutos y solo puede utilizarse una vez.\n'
+                    'No lo compartas. Si no solicitaste este acceso, ignora este mensaje.',
+                    settings.DEFAULT_FROM_EMAIL, [usuario.email], fail_silently=False,
+                )
+                if enviados != 1:
+                    raise CorreoNoDisponible()
+            except (SMTPException, OSError) as error:
+                raise CorreoNoDisponible() from error
+        return Response({'requiere_codigo': True, 'desafio': str(desafio), 'expira_en': 600,
+                         'reenviar_en': 60,
+                         'modo_prueba': settings.EMAIL_BACKEND.endswith('console.EmailBackend'),
+                         'mensaje': 'Código de acceso generado.'})
+
+
+class VerificarCodigoView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
+    throttle_classes = [VerificacionThrottle]
+
+    def post(self, request):
+        datos = CodigoSerializer(data=request.data)
+        datos.is_valid(raise_exception=True)
+        desafio = datos.validated_data['desafio']
+        propietario = CodigoAcceso.objects.filter(desafio=desafio).values_list('usuario_id', flat=True).first()
+        error = {'detail': 'Código incorrecto, vencido o no disponible. Solicita uno nuevo si es necesario.'}
+        if propietario is None:
+            return Response(error, status=400)
+        with transaction.atomic():
+            usuario = Usuario.objects.select_for_update().get(pk=propietario)
+            registro = CodigoAcceso.objects.filter(usuario=usuario, desafio=desafio).first()
+            if (not registro or registro.consumido or registro.expira <= timezone.now()
+                    or registro.intentos >= 5 or not usuario.es_activo
+                    or registro.email != usuario.email
+                    or not constant_time_compare(registro.credencial_hash, hash_credencial(usuario))):
+                return Response(error, status=400)
+            if not constant_time_compare(registro.codigo_hash, hash_codigo(desafio, datos.validated_data['codigo'])):
+                registro.intentos += 1
+                registro.save(update_fields=['intentos'])
+                return Response(error, status=400)
+            registro.consumido = True
+            registro.save(update_fields=['consumido'])
+            usuario.es_verificado = True
+            usuario.ultimo_acceso = timezone.now()
+            usuario.save(update_fields=['es_verificado', 'ultimo_acceso'])
+            refresh = RefreshToken.for_user(usuario)
+            refresh['correo_confirmado'] = True
+            return Response({'access': str(refresh.access_token), 'refresh': str(refresh),
+                             'usuario': UsuarioPerfilSerializer(usuario, context={'request': request}).data})
+
+
+class CorreoRefreshSerializer(TokenRefreshSerializer):
+    def validate(self, attrs):
+        token = self.token_class(attrs['refresh'])
+        CorreoJWTAuthentication().get_user(token)
+        return super().validate(attrs)
+
+
+class CorreoRefreshView(TokenRefreshView):
+    serializer_class = CorreoRefreshSerializer
+    authentication_classes = []

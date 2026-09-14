@@ -32,6 +32,8 @@ INSTALLED_APPS = [
 
     # InfoTrip apps
     'apps.usuarios',
+    'apps.destinos',
+    'apps.comunidad',
 ]
 
 # ─── MIDDLEWARE ───────────────────────────────────────────────
@@ -92,7 +94,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # ─── DJANGO REST FRAMEWORK ───────────────────────────────────
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'apps.usuarios.authentication.CorreoJWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
@@ -105,6 +107,7 @@ REST_FRAMEWORK = {
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME':  timedelta(hours=2),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'CHECK_REVOKE_TOKEN': True,
     'ROTATE_REFRESH_TOKENS':  True,
     'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
@@ -127,3 +130,17 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # ─── PRIMARY KEY DEFAULT ─────────────────────────────────────
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Correo: SMTP real por defecto. Sin host, el login informa que no puede enviar.
+EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = config('EMAIL_HOST', default='')
+EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
+EMAIL_TIMEOUT = 15
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='InfoTrip <no-reply@localhost>')
+
+PUBLIC_BASE_URL = config('PUBLIC_BASE_URL', default='http://127.0.0.1:8000').rstrip('/')
+PASSWORD_RESET_TIMEOUT = 3600

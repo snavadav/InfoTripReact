@@ -36,6 +36,12 @@ class UsuarioPerfilSerializer(serializers.ModelSerializer):
     """Serializer para leer y actualizar perfil de usuario."""
 
     nombre_completo = serializers.ReadOnlyField()
+    bio = serializers.CharField(required=False, allow_blank=True, max_length=2000)
+
+    def validate_foto_perfil(self, value):
+        from apps.comunidad.imagenes import imagen_segura
+        return imagen_segura(value) if value else value
+
 
     class Meta:
         model  = Usuario

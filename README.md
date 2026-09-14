@@ -80,7 +80,7 @@ CREATE DATABASE infotrip;
 ### 5. Aplicar migraciones
 
 ```bash
-python manage.py migrate --fake-initial
+python manage.py migrate
 ```
 
 ### 6. Crear superusuario
@@ -167,3 +167,37 @@ git push origin master
 ## 📄 Licencia
 
 Proyecto académico — Universidad de Guadalajara 🎓
+
+## Catálogo de destinos
+
+El módulo de catálogo incluye modelos, migraciones y API pública de consulta. Consulta [la guía del módulo](docs/modulo-1-catalogo.md) para instalarlo, consultar endpoints y ejecutar las pruebas.
+
+
+## MVP integrado
+
+Módulos disponibles: catálogo y administración, exploración y mapa, detalle, reseñas, fotos y gastos, moderación con historial, perfil y recuperación de contraseña. Consulta [la guía de los módulos restantes](docs/modulos-5-a-9.md).
+
+- `/destinos/`: filtros y mapa, con comparación de precios por concepto y calificación.
+- `/destinos/<slug>/`: aportes públicos y formulario de contribución.
+- `/perfil/`: datos personales, foto, contraseña y gestión de aportes propios.
+- `/recuperar/`: solicitud y confirmación de recuperación por correo.
+- `/admin/`: catálogo, usuarios y moderación; necesita una cuenta de administrador.
+
+Para la base SQLite de desarrollo (desde la carpeta de este README):
+
+```powershell
+.\.venv314\Scripts\python.exe -B manage.py migrate --settings=infotrip.settings_local
+.\.venv314\Scripts\python.exe -B manage.py cargar_destinos_iniciales --settings=infotrip.settings_local
+.\.venv314\Scripts\python.exe -B manage.py createsuperuser --settings=infotrip.settings_local
+.\.venv314\Scripts\python.exe -B manage.py runserver --settings=infotrip.settings_local
+```
+
+El comando de carga agrega cinco localidades sin sobrescribir registros existentes. Fuentes y alcance de sus coordenadas en [catálogo inicial](docs/catalogo-inicial.md). Las credenciales del administrador las eliges al ejecutar `createsuperuser`.
+
+Pruebas:
+
+```powershell
+.\.venv314\Scripts\python.exe -B manage.py test apps.destinos apps.usuarios apps.comunidad --settings=infotrip.settings_test
+```
+
+La configuración local actual imprime correos en consola; no entrega mensajes a Gmail. No publicar con `settings_local`. El despliegue y la validación con PostgreSQL real siguen siendo pasos operativos independientes.
