@@ -18,9 +18,10 @@
       <section><h2>Servicios</h2>{% if lugar.servicios %}<ul class="services">{% for servicio in lugar.servicios %}<li>{{ servicio }}</li>{% endfor %}</ul>{% else %}<p>Aún no hay servicios confirmados para este lugar.</p>{% endif %}</section>
     </div>
   </div>
+  {% include 'comunidad/practica.html' %}
   {% include 'comunidad/destino.html' %}
   {% include 'destinos/footer.html' %}
 </main>
 {% endblock %}
 
-{% block extra_js %}<script src="{% static 'js/cuenta-api.js' %}"></script><script src="{% static 'js/comunidad.js' %}"></script>{% endblock %}
+{% block extra_js %}<script src="{% static 'js/cuenta-api.js' %}"></script><script src="{% static 'js/comunidad.js' %}"></script><script src="{% static 'js/practica.js' %}" defer></script>{% endblock %}

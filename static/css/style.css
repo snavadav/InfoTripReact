@@ -1,0 +1,288 @@
+/* ═══════════════════════════════════════════════════════════════
+   InfoTrip — Global Design System
+   Mejoras generales: animaciones, micro-interacciones, accesibilidad
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Smooth scrolling ── */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ── Tipografía global mejorada ── */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* ── Selección de texto ── */
+::selection {
+  background: rgba(103, 65, 217, 0.18);
+  color: #1F1635;
+}
+
+/* ── Focus ring global mejorado ── */
+:focus-visible {
+  outline: 2.5px solid #6741D9;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* ── Scrollbar personalizado ── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #D4CAE8;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #A893D0;
+}
+
+/* ── Transiciones de página ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(103, 65, 217, 0.3); }
+  50%       { box-shadow: 0 0 0 8px rgba(103, 65, 217, 0); }
+}
+
+/* ── Animaciones de entrada para secciones ── */
+main > section,
+main > .explore-shell > section,
+main > .explore-shell > div {
+  animation: fadeUp 0.45s ease both;
+}
+
+/* ── Utility: skeleton loading ── */
+.skeleton {
+  background: linear-gradient(90deg, #f0eaf7 25%, #ebe3f5 50%, #f0eaf7 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s infinite;
+  border-radius: 8px;
+}
+@keyframes skeleton-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+/* ── Utility: badge ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+.badge-primary { background: #F3EFFF; color: #6741D9; }
+.badge-accent  { background: #FFF0E6; color: #F76707; }
+.badge-success { background: #E8F5ED; color: #2D9B47; }
+.badge-muted   { background: #F3F0F6; color: #7B6D8A; }
+
+/* ── Utility: divider ── */
+.divider {
+  height: 1px;
+  background: linear-gradient(to right, transparent, #E8E0F5, transparent);
+  border: none;
+  margin: 2rem 0;
+}
+
+/* ── Utility: glass card ── */
+.glass-card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 20px;
+  box-shadow: 0 4px 24px rgba(31, 22, 53, 0.06);
+}
+
+/* ── Mejoras de botones globales ── */
+button, [role="button"] {
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease, color 0.2s ease;
+}
+button:active:not(:disabled),
+[role="button"]:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* ── Links base ── */
+a {
+  transition: color 0.18s ease;
+}
+
+/* ── Imágenes suaves ── */
+img {
+  transition: transform 0.35s ease;
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+  html { scroll-behavior: auto; }
+}
+
+/* ── Mejoras formularios globales ── */
+input, select, textarea {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: #6741D9 !important;
+  box-shadow: 0 0 0 3px rgba(103, 65, 217, 0.12) !important;
+}
+
+/* ── Placeholder styling ── */
+input::placeholder,
+textarea::placeholder {
+  color: #B0A5C0;
+}
+
+/* ── Estado de carga ── */
+.loading-dots::after {
+  content: '';
+  animation: loading-ellipsis 1.2s infinite;
+}
+@keyframes loading-ellipsis {
+  0%   { content: ''; }
+  25%  { content: '.'; }
+  50%  { content: '..'; }
+  75%  { content: '...'; }
+  100% { content: ''; }
+}
+
+/* ── Tooltip accesible ── */
+[data-tooltip] {
+  position: relative;
+  cursor: default;
+}
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) scale(0.9);
+  background: #1F1635;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 5px 10px;
+  border-radius: 8px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  z-index: 1000;
+}
+[data-tooltip]:hover::after,
+[data-tooltip]:focus::after {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+}
+
+/* ── Toast notifications ── */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  pointer-events: none;
+}
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  border-radius: 14px;
+  background: #1F1635;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 8px 32px rgba(31, 22, 53, 0.25);
+  animation: slideInRight 0.3s ease;
+  pointer-events: all;
+}
+.toast-success { background: #1A4731; }
+.toast-error   { background: #5C1E1E; }
+
+/* ── Chip/tag hover mejorado ── */
+.category-chips span,
+.services li,
+.home-quick a {
+  transition: background 0.18s, color 0.18s, transform 0.15s;
+}
+.category-chips span:hover,
+.services li:hover {
+  background: #E8DFFF;
+  color: #5835C4;
+}
+
+/* ── Scroll top button (si se añade) ── */
+.scroll-top-btn {
+  position: fixed;
+  bottom: 90px;
+  right: 24px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #6741D9;
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(103, 65, 217, 0.35);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.3s, transform 0.3s;
+  z-index: 500;
+}
+.scroll-top-btn.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.scroll-top-btn:hover {
+  background: #5835C4;
+  transform: translateY(-2px);
+}
+
+/* ── Mejoras de tipografía responsive ── */
+@media (max-width: 600px) {
+  h1 { letter-spacing: -1.5px; }
+  h2 { letter-spacing: -0.8px; }
+}

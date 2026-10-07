@@ -73,3 +73,48 @@ class DecisionAdmin(admin.ModelAdmin):
     def has_add_permission(self, request): return False
     def has_change_permission(self, request, obj=None): return False
     def has_delete_permission(self, request, obj=None): return False
+
+
+from .models import Colaboracion, RevisionColaboracion
+
+
+def revisar_colaboracion(item, moderador, estado, motivo):
+    """El llamador bloquea la fila dentro de una transacción."""
+    if item.estado == estado:
+        return
+    RevisionColaboracion.objects.create(colaboracion=item, moderador=moderador, anterior=item.estado, nuevo=estado, motivo=motivo)
+    item.estado = estado
+    item.save(update_fields=['estado'])
+
+
+@admin.register(Colaboracion)
+class ColaboracionAdmin(admin.ModelAdmin):
+    list_display = ['id', 'destino', 'tipo', 'campo', 'estado', 'fecha_dato', 'creado']
+    list_filter = ['estado', 'tipo', 'campo']
+    search_fields = ['destino__nombre', 'texto', 'fuente']
+    readonly_fields = ['destino', 'autor', 'tipo', 'campo', 'texto', 'fuente', 'fecha_dato', 'pregunta', 'estado', 'creado']
+    actions = ['publicar', 'ocultar']
+
+    def has_add_permission(self, request): return False
+    def has_delete_permission(self, request, obj=None): return False
+
+    @admin.action(description='Publicar información o conversación revisada', permissions=['change'])
+    def publicar(self, request, queryset):
+        with transaction.atomic():
+            for item in queryset.select_for_update():
+                revisar_colaboracion(item, request.user, 'publicado', 'Publicación tras revisión editorial.')
+
+    @admin.action(description='Ocultar información o conversación', permissions=['change'])
+    def ocultar(self, request, queryset):
+        with transaction.atomic():
+            for item in queryset.select_for_update():
+                revisar_colaboracion(item, request.user, 'oculto', 'Ocultación tras revisión editorial.')
+
+
+@admin.register(RevisionColaboracion)
+class RevisionColaboracionAdmin(admin.ModelAdmin):
+    list_display = ['colaboracion', 'moderador', 'anterior', 'nuevo', 'creado']
+    readonly_fields = ['colaboracion', 'moderador', 'anterior', 'nuevo', 'motivo', 'creado']
+    def has_add_permission(self, request): return False
+    def has_change_permission(self, request, obj=None): return False
+    def has_delete_permission(self, request, obj=None): return False

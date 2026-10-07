@@ -5,7 +5,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>InfoTrip — Crear cuenta</title>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -265,28 +266,28 @@
 
     .btn-submit {
       width: 100%;
-      background: var(--accent);
+      background: linear-gradient(135deg, var(--accent), #E05A00);
       color: #fff;
       border: none;
       font-family: inherit;
       font-size: .95rem;
       font-weight: 700;
-      padding: .875rem;
+      padding: .9rem;
       border-radius: 2rem;
       cursor: pointer;
       transition: background .2s, transform .15s, box-shadow .2s;
-      box-shadow: 0 4px 16px rgba(247,103,7,.3);
+      box-shadow: 0 4px 18px rgba(247,103,7,.35);
       display: flex;
       align-items: center;
       justify-content: center;
       gap: .5rem;
     }
     .btn-submit:hover {
-      background: #E05A00;
+      background: linear-gradient(135deg, #E05A00, #C94E00);
       transform: translateY(-1px);
-      box-shadow: 0 6px 20px rgba(247,103,7,.4);
+      box-shadow: 0 8px 24px rgba(247,103,7,.45);
     }
-    .btn-submit:disabled { opacity: .7; cursor: not-allowed; transform: none; }
+    .btn-submit:disabled { opacity: .65; cursor: not-allowed; transform: none; }
 
     .spinner {
       width: 16px; height: 16px;

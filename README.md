@@ -30,7 +30,7 @@ InfoTrip centraliza información turística verificada por la comunidad. Los via
 Antes de instalar el proyecto necesitas tener:
 
 - **Python 3.14+** — [python.org](https://www.python.org/downloads/)
-- **PostgreSQL** — vía [DBngin](https://dbngin.com/) (Mac) o [postgresql.org](https://www.postgresql.org/download/) (Windows)
+- **PostgreSQL 16** — servidor y pgAdmin, desde [postgresql.org/download/windows](https://www.postgresql.org/download/windows/)
 - **DBeaver** — [dbeaver.io](https://dbeaver.io/download/)
 - **Git** — [git-scm.com](https://git-scm.com/)
 
@@ -48,7 +48,7 @@ cd InfoTripReact
 ### 2. Instalar dependencias
 
 ```bash
-python -m pip install django djangorestframework djangorestframework-simplejwt pillow psycopg2-binary python-decouple
+python -m pip install -r requirements.txt
 ```
 
 ### 3. Configurar variables de entorno
@@ -61,32 +61,56 @@ DEBUG=True
 ALLOWED_HOSTS=localhost,127.0.0.1
 
 DB_NAME=infotrip
-DB_USER=postgres
-DB_PASSWORD=tu_password_aqui
-DB_HOST=localhost
+DB_USER=infotrip_user
+DB_PASSWORD=la_contraseña_que_elegiste_para_infotrip_user
+DB_HOST=127.0.0.1
 DB_PORT=5432
 ```
 
 > ⚠️ Nunca subas el `.env` a GitHub — ya está en el `.gitignore`
 
-### 4. Crear la base de datos
+### 4. Instalar e iniciar PostgreSQL (Windows)
 
-Abre **DBeaver**, conéctate a PostgreSQL y ejecuta:
+1. Descarga el instalador oficial de PostgreSQL para Windows desde el enlace de requisitos. Durante la instalación conserva el puerto `5432`, instala pgAdmin y define una contraseña para el usuario administrador `postgres`. Guarda esa contraseña: Django la necesita.
+2. Al terminar, abre **Servicios** de Windows y confirma que el servicio `postgresql-x64-16` esté en estado **En ejecución**. El nombre puede variar si instalaste otra versión. También puedes abrir **SQL Shell (psql)** desde Inicio; con servidor `localhost`, puerto `5432`, base `postgres` y usuario `postgres`, debe conectarse.
+3. Abre **SQL Shell (psql)** o pgAdmin y conéctate como `postgres`. En psql ejecuta:
 
 ```sql
-CREATE DATABASE infotrip;
+CREATE USER infotrip_user WITH PASSWORD 'elige_una_contraseña_local';
+CREATE DATABASE infotrip OWNER infotrip_user;
 ```
 
-### 5. Aplicar migraciones
+En pgAdmin puedes abrir **Query Tool** sobre la base `postgres` y ejecutar las mismas sentencias. Usa una contraseña propia y evita reutilizar la del usuario `postgres`.
 
-```bash
-python manage.py migrate
+### 5. Configurar Django
+
+En el `.env` de la raíz, establece los datos de la base recién creada:
+
+```dotenv
+DB_NAME=infotrip
+DB_USER=infotrip_user
+DB_PASSWORD=la_misma_contraseña_que_elegiste_arriba
+DB_HOST=127.0.0.1
+DB_PORT=5432
 ```
 
-### 6. Crear superusuario
+No subas `.env` a Git. El `.env.example` incluye la plantilla sin credenciales.
 
-```bash
-python manage.py createsuperuser
+### 6. Crear las tablas y datos iniciales
+
+Desde PowerShell en la raíz del repositorio, ejecuta:
+
+```powershell
+.\.venv314\Scripts\python.exe -B manage.py migrate
+.\.venv314\Scripts\python.exe -B manage.py cargar_destinos_iniciales
+```
+
+Si usas otro entorno virtual, reemplaza la ruta al ejecutable de Python. La carga de destinos es opcional e idempotente.
+
+### 7. Crear superusuario
+
+```powershell
+.\.venv314\Scripts\python.exe -B manage.py createsuperuser
 ```
 
 Te pedirá:
@@ -95,10 +119,10 @@ Te pedirá:
 -Apellido
 -Contraseña
 
-### 7. Correr el servidor
+### 8. Correr el servidor
 
-```bash
-python manage.py runserver
+```powershell
+.\.venv314\Scripts\python.exe -B manage.py runserver
 ```
 
 ---
@@ -183,7 +207,7 @@ Módulos disponibles: catálogo y administración, exploración y mapa, detalle,
 - `/recuperar/`: solicitud y confirmación de recuperación por correo.
 - `/admin/`: catálogo, usuarios y moderación; necesita una cuenta de administrador.
 
-Para la base SQLite de desarrollo (desde la carpeta de este README):
+Para desarrollo con SQLite (sin PostgreSQL), selecciona explícitamente `settings_local` desde la carpeta de este README:
 
 ```powershell
 .\.venv314\Scripts\python.exe -B manage.py migrate --settings=infotrip.settings_local
@@ -201,3 +225,8 @@ Pruebas:
 ```
 
 La configuración local actual imprime correos en consola; no entrega mensajes a Gmail. No publicar con `settings_local`. El despliegue y la validación con PostgreSQL real siguen siendo pasos operativos independientes.
+
+
+## Fichas, favoritos y agenda
+
+Las fichas admiten información práctica con fuentes y fechas, correcciones moderadas y preguntas/respuestas. `/favoritos/` permite guardar destinos y vincularlos a viajes. Mis viajes incorpora actividades por día, notas y pendientes. Instalación, moderación y pruebas en [la guía de expansión](docs/expansion-comunidad-agenda.md).

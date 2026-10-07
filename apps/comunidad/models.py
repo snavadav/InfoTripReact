@@ -13,6 +13,10 @@ class Viaje(models.Model):
     personas = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(100)])
     presupuesto = models.DecimalField(max_digits=11, decimal_places=2, validators=[MinValueValidator(Decimal('0'))])
     gastos = models.JSONField(default=list)
+    actividades = models.JSONField(default=list)
+    pendientes = models.JSONField(default=list)
+    notas = models.TextField(max_length=3000, blank=True)
+    lugares = models.ManyToManyField('destinos.Destino', blank=True, related_name='viajes_guardados')
     actualizado = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -74,3 +78,48 @@ class Decision(models.Model):
     creado = models.DateTimeField(auto_now_add=True)
     class Meta:
         ordering = ['-creado']
+
+
+class Favorito(models.Model):
+    autor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='favoritos')
+    destino = models.ForeignKey('destinos.Destino', on_delete=models.CASCADE, related_name='favoritos')
+    creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-creado', '-pk']
+        constraints = [models.UniqueConstraint(fields=['autor', 'destino'], name='favorito_unico')]
+
+
+class Colaboracion(models.Model):
+    CAMPOS = [('horarios', 'Horarios'), ('acceso', 'Cómo acceder'), ('estacionamiento', 'Estacionamiento'), ('pago', 'Formas de pago'), ('restricciones', 'Restricciones'), ('accesibilidad', 'Accesibilidad'), ('contacto', 'Contacto'), ('precios', 'Precios y cargos adicionales')]
+    TIPOS = [('correccion', 'Información práctica / corrección'), ('pregunta', 'Pregunta'), ('respuesta', 'Respuesta')]
+    ESTADOS = [('pendiente', 'Pendiente'), ('publicado', 'Publicado'), ('oculto', 'Oculto')]
+    destino = models.ForeignKey('destinos.Destino', on_delete=models.PROTECT, related_name='colaboraciones')
+    autor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    tipo = models.CharField(max_length=12, choices=TIPOS)
+    campo = models.CharField(max_length=20, choices=CAMPOS, blank=True)
+    texto = models.TextField(max_length=1500)
+    fuente = models.CharField(max_length=300, blank=True)
+    fecha_dato = models.DateField(null=True, blank=True)
+    pregunta = models.ForeignKey('self', on_delete=models.PROTECT, null=True, blank=True, related_name='respuestas')
+    estado = models.CharField(max_length=12, choices=ESTADOS, default='pendiente')
+    creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-creado', '-pk']
+        indexes = [models.Index(fields=['destino', 'tipo', 'estado'], name='colaboracion_publica_idx')]
+
+    def __str__(self):
+        return f'{self.get_tipo_display()} · {self.destino} · {self.pk}'
+
+
+class RevisionColaboracion(models.Model):
+    colaboracion = models.ForeignKey(Colaboracion, on_delete=models.PROTECT, related_name='revisiones')
+    moderador = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    anterior = models.CharField(max_length=12)
+    nuevo = models.CharField(max_length=12)
+    motivo = models.CharField(max_length=500)
+    creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-creado', '-pk']

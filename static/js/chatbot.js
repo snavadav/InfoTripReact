@@ -50,7 +50,7 @@
       button.addEventListener('click', () => { message(label, true); show(next, true); });
       options.appendChild(button);
     });
-    (flow.links || []).forEach(([label, key]) => {
+    (flow.links || []).filter(([, key]) => key !== 'profile' || window.InfoTripSession?.authenticated).forEach(([label, key]) => {
       const link = document.createElement('a');
       link.textContent = label;
       link.href = links[key];

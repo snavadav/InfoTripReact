@@ -1,9 +1,9 @@
 {% extends 'base.html' %}{% load static %}
-{% block title %}Mis viajes — InfoTrip{% endblock %}
+{% block title %}Planear escapada — InfoTrip{% endblock %}
 {% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/comunidad.css' %}"><link rel="stylesheet" href="{% static 'css/viajes.css' %}">{% endblock %}
 {% block content %}{% include 'partials/navBar.html' %}
 <main class="explore-shell trips-shell">
-  <span class="eyebrow">DEL PLAN A LA ESCAPADA</span><h1>Mis viajes</h1><p>Organiza tu salida y descubre cómo se reparte el presupuesto.</p>
+  <span class="eyebrow">DEL PLAN A LA ESCAPADA</span><h1 data-trip-label>Planear escapada</h1><p>Organiza tu salida y descubre cómo se reparte el presupuesto.</p>
   <p id="trip-status" role="status"></p><p id="trip-login" hidden><a href="{% url 'login' %}">Inicia sesión</a> para guardar y consultar tus viajes.</p>
   <div class="trips-layout">
     <section aria-labelledby="saved-title"><div class="trips-heading"><h2 id="saved-title">Tus escapadas</h2><button id="new-trip" type="button">+ Crear</button></div><div id="saved-trips"></div><button id="more-trips" type="button" hidden>Cargar más</button></section>
@@ -17,6 +17,10 @@
           <label>Viajeros<input name="personas" type="number" min="1" max="100" step="1" value="1" required></label>
           <label>Presupuesto de todo el grupo (MXN)<input name="presupuesto" type="number" min="0" max="999999999.99" step=".01" value="0" required></label>
         </div>
+        <h3>Lugares de esta escapada</h3><p class="community-note" data-session-only hidden>Agrega lugares a un viaje guardado desde <a href="/favoritos/">Mis favoritos</a>. Quitar un lugar aquí no elimina el destino ni sus favoritos.</p><div id="trip-places"></div>
+        <h3>Agenda por día</h3><p class="community-note">El día 1 es la fecha de salida. Las actividades se ordenan por día y horario al guardar.</p><div id="trip-activities"></div><button id="add-activity" type="button">+ Agregar actividad</button>
+        <label>Notas del viaje<textarea name="notas" maxlength="3000" rows="3" placeholder="Ideas, contactos y recordatorios para tu escapada"></textarea></label>
+        <h3>Lista de pendientes</h3><div id="trip-tasks"></div><button id="add-task" type="button">+ Agregar pendiente</button>
         <h3>Gastos estimados</h3><p class="community-note">Importes introducidos por ti, no cotizaciones. “Por persona” se multiplica por todos los viajeros; “Compartido” se suma una sola vez. Cantidad permite contar noches, comidas o trayectos.</p>
         <div id="trip-expenses"></div><button id="add-expense" type="button">+ Agregar gasto</button>
         <div class="trip-totals" aria-live="polite" id="trip-totals"></div><p class="community-note">El reparto es igual entre viajeros y se redondea a centavos. Incluye todos los gastos que necesites; un plan vacío no indica que viajar sea gratis.</p>

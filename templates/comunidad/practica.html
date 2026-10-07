@@ -1,0 +1,32 @@
+{% if not lugar.editorial %}
+<section id="practical-info" class="community-section" data-slug="{{ lugar.slug }}" aria-labelledby="practical-title">
+  <div class="contribution-actions"><button id="favorite-toggle" type="button" aria-pressed="false" disabled>Guardar lugar</button><a href="{% url 'mis-viajes' %}?destino={{ lugar.nombre|urlencode }}">Agregar a una nueva escapada →</a><a href="{% url 'favoritos' %}" data-session-only hidden>Mis favoritos</a></div>
+  <p id="favorite-status" role="status"></p>
+  <h2 id="practical-title">Antes de visitar este lugar</h2>
+  <p class="community-note">Datos aportados por la comunidad y revisados editorialmente. No garantizan condiciones actuales: confirma con el lugar antes de salir.</p>
+  <div class="practical-grid">
+    {% for campo in practica %}<article class="community-box"><h3>{{ campo.nombre }}</h3>
+    {% if campo.dato %}<p class="contribution-text">{{ campo.dato.texto|linebreaksbr }}</p><p class="community-note">Fuente: {{ campo.dato.fuente }}<br>Consultado el {{ campo.dato.fecha_dato|date:'d/m/Y' }} · Aporte de {{ campo.dato.autor.nombre }}</p>
+      {% if campo.historial %}<details><summary>Ver versiones anteriores ({{ campo.historial|length }})</summary>{% for anterior in campo.historial %}<p class="contribution-text">{{ anterior.texto|linebreaksbr }}</p><p class="community-note">{{ anterior.fecha_dato|date:'d/m/Y' }} · {{ anterior.fuente }} · {{ anterior.autor.nombre }}</p>{% endfor %}</details>{% endif %}
+    {% else %}<p>Sin confirmar</p>{% endif %}</article>{% endfor %}
+  </div>
+  <details class="community-box"><summary>Sugerir información o una corrección</summary><p>Necesitas iniciar sesión. Tu propuesta quedará pendiente de revisión y no reemplazará datos publicados automáticamente.</p>
+    <form class="community-form collaboration-form" data-type="correccion">
+      <label>Dato que quieres actualizar<select name="campo">{% for value,label in campos_practicos %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select></label>
+      <label>Información propuesta<textarea name="texto" rows="3" maxlength="1500" required></textarea></label>
+      <label>Fuente (sitio oficial, contacto o visita propia)<input name="fuente" maxlength="300" required></label>
+      <label>Fecha en que consultaste el dato<input name="fecha_dato" type="date" max="{{ hoy }}" required></label>
+      <button type="submit">Enviar a revisión</button><p class="form-status" role="status"></p>
+    </form>
+  </details>
+</section>
+<section class="community-section" aria-labelledby="questions-title">
+  <h2 id="questions-title">Preguntas de viajeros</h2><p class="community-note">Las preguntas y respuestas pasan por moderación. Las respuestas son experiencias de la comunidad, no información oficial del destino.</p>
+  <details class="community-box"><summary>Hacer una pregunta</summary><form class="community-form collaboration-form" data-type="pregunta"><label>¿Qué te gustaría saber?<textarea name="texto" rows="2" maxlength="1500" required></textarea></label><button type="submit">Enviar pregunta a revisión</button><p class="form-status" role="status"></p></form></details>
+  {% for pregunta in preguntas %}<article class="community-box"><h3>{{ pregunta.texto|linebreaksbr }}</h3><p class="community-note">{{ pregunta.autor.nombre }} · {{ pregunta.creado|date:'d/m/Y' }}</p>
+    {% for respuesta in pregunta.respuestas_publicas %}<blockquote class="community-answer"><p class="contribution-text">{{ respuesta.texto|linebreaksbr }}</p><p class="community-note">{{ respuesta.autor.nombre }} · {{ respuesta.creado|date:'d/m/Y' }}</p></blockquote>{% empty %}<p>Aún no hay respuestas publicadas.</p>{% endfor %}
+    <details><summary>Responder</summary><form class="community-form collaboration-form" data-type="respuesta" data-question="{{ pregunta.pk }}"><label>Tu respuesta<textarea name="texto" rows="2" maxlength="1500" required></textarea></label><button type="submit">Enviar respuesta a revisión</button><p class="form-status" role="status"></p></form></details>
+  </article>{% empty %}<p class="community-box">Todavía no hay preguntas publicadas. Puedes iniciar la conversación.</p>{% endfor %}
+  {% if preguntas.has_other_pages %}<nav class="pagination" aria-label="Páginas de preguntas">{% if preguntas.has_previous %}<a href="?preguntas={{ preguntas.previous_page_number }}#questions-title">Anterior</a>{% endif %}<span>{{ preguntas.number }} de {{ preguntas.paginator.num_pages }}</span>{% if preguntas.has_next %}<a href="?preguntas={{ preguntas.next_page_number }}#questions-title">Siguiente</a>{% endif %}</nav>{% endif %}
+</section>
+{% endif %}

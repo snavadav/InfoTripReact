@@ -13,7 +13,7 @@ Disponible en `/mis-viajes/`, desde el menú, Mi perfil y el chatbot.
 - Presupuesto usable sin sesión; guardado y consulta requieren la autenticación existente.
 - Aviso antes de descartar cambios. Los borradores no se conservan después de abandonar la página.
 
-El redondeo individual es a centavos; puede quedar una diferencia de centavos al multiplicarlo por todos los viajeros. No se gestionan cobros, reservas, saldos individuales ni agenda de actividades en esta versión.
+El redondeo individual es a centavos; puede quedar una diferencia de centavos al multiplicarlo por todos los viajeros. No se gestionan cobros, reservas ni saldos individuales. La agenda, notas, pendientes y lugares vinculados están documentados en [expansión de comunidad y agenda](expansion-comunidad-agenda.md).
 
 ## API
 

@@ -149,6 +149,14 @@ def detalle(request, slug):
     contexto = {'lugar': completar(lugar), 'hoy': timezone.localdate().isoformat()}
     if not lugar['editorial']:
         destino = get_object_or_404(Destino, slug=slug, es_activo=True)
+        from apps.comunidad.practica import ficha_practica, publicas
+        from apps.comunidad.models import Colaboracion
+        from django.db.models import Prefetch
+        contexto['practica'] = ficha_practica(destino)
+        contexto['campos_practicos'] = Colaboracion.CAMPOS
+        preguntas = publicas().filter(destino=destino, tipo='pregunta').select_related('autor').prefetch_related(
+            Prefetch('respuestas', queryset=publicas().filter(tipo='respuesta').select_related('autor'), to_attr='respuestas_publicas'))
+        contexto['preguntas'] = Paginator(preguntas, 8).get_page(request.GET.get('preguntas'))
         contexto['resumen'] = resumen(destino)
         contexto['aportes'] = Paginator(publicados().filter(destino=destino).select_related('autor'), 9).get_page(request.GET.get('aportes'))
     return render(request, 'destinos/detalle.html', contexto)

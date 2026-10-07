@@ -3,6 +3,7 @@ from decimal import Decimal, ROUND_HALF_UP
 from rest_framework import generics, serializers
 from rest_framework.permissions import IsAuthenticated
 from .models import Viaje
+from apps.destinos.models import Destino
 
 
 class GastoSerializer(serializers.Serializer):
@@ -13,13 +14,39 @@ class GastoSerializer(serializers.Serializer):
     cantidad = serializers.IntegerField(min_value=1, max_value=365)
 
 
+class ActividadSerializer(serializers.Serializer):
+    dia = serializers.IntegerField(min_value=1, max_value=366)
+    hora = serializers.RegexField(r'^([01][0-9]|2[0-3]):[0-5][0-9]$', allow_blank=True)
+    titulo = serializers.CharField(max_length=150)
+    notas = serializers.CharField(max_length=500, allow_blank=True)
+
+
+class PendienteSerializer(serializers.Serializer):
+    texto = serializers.CharField(max_length=200)
+    hecho = serializers.BooleanField()
+
+
 class ViajeSerializer(serializers.ModelSerializer):
     gastos = GastoSerializer(many=True, max_length=100)
     resumen = serializers.SerializerMethodField()
+    actividades = ActividadSerializer(many=True, max_length=150, required=False)
+    pendientes = PendienteSerializer(many=True, max_length=100, required=False)
+    lugares = serializers.PrimaryKeyRelatedField(many=True, queryset=Destino.objects.all(), required=False)
+    lugares_detalle = serializers.SerializerMethodField()
+
+    def validate_lugares(self, values):
+        existentes = set(self.instance.lugares.values_list('pk', flat=True)) if self.instance else set()
+        if any(not d.es_activo and d.pk not in existentes for d in values):
+            raise serializers.ValidationError('Uno de los destinos ya no está disponible.')
+        return values
+
+    def get_lugares_detalle(self, obj):
+        return [{'id': d.pk, 'nombre': d.nombre, 'slug': d.slug, 'activo': d.es_activo} for d in obj.lugares.all()]
+
 
     class Meta:
         model = Viaje
-        fields = ['id', 'nombre', 'destino', 'fecha_inicio', 'fecha_fin', 'personas', 'presupuesto', 'gastos', 'resumen', 'actualizado']
+        fields = ['id', 'nombre', 'destino', 'fecha_inicio', 'fecha_fin', 'personas', 'presupuesto', 'gastos', 'actividades', 'pendientes', 'notas', 'lugares', 'lugares_detalle', 'resumen', 'actualizado']
         read_only_fields = ['id', 'actualizado']
 
     def validate(self, attrs):
@@ -27,6 +54,13 @@ class ViajeSerializer(serializers.ModelSerializer):
         end = attrs.get('fecha_fin', getattr(self.instance, 'fecha_fin', None))
         if start and end and end < start:
             raise serializers.ValidationError({'fecha_fin': 'El regreso no puede ser anterior a la salida.'})
+        actividades = attrs.get('actividades', getattr(self.instance, 'actividades', []))
+        if start and end and any(a['dia'] > (end - start).days + 1 for a in actividades):
+            raise serializers.ValidationError({'actividades': 'Cada actividad debe estar dentro de los días del viaje.'})
+        if len(attrs.get('lugares', [])) > 100:
+            raise serializers.ValidationError({'lugares': 'Puedes vincular hasta 100 lugares.'})
+        if 'actividades' in attrs:
+            attrs['actividades'] = sorted(attrs['actividades'], key=lambda a: (a['dia'], a['hora'] or '99:99'))
         return attrs
 
     def validate_gastos(self, gastos):
@@ -44,7 +78,7 @@ class MisViajesView(generics.ListCreateAPIView):
     serializer_class = ViajeSerializer
 
     def get_queryset(self):
-        return Viaje.objects.filter(autor=self.request.user)
+        return Viaje.objects.filter(autor=self.request.user).prefetch_related('lugares')
 
     def perform_create(self, serializer):
         serializer.save(autor=self.request.user)
@@ -56,4 +90,25 @@ class ViajeView(generics.RetrieveUpdateDestroyAPIView):
     http_method_names = ['get', 'patch', 'delete', 'head', 'options']
 
     def get_queryset(self):
-        return Viaje.objects.filter(autor=self.request.user)
+        return Viaje.objects.filter(autor=self.request.user).prefetch_related('lugares')
+
+
+from django.db import transaction
+from django.shortcuts import get_object_or_404
+from rest_framework.views import APIView
+from rest_framework.response import Response
+
+
+class VincularLugarView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        slug = serializers.SlugField(max_length=220).run_validation(request.data.get('slug'))
+        with transaction.atomic():
+            viaje = get_object_or_404(Viaje.objects.select_for_update(), pk=pk, autor=request.user)
+            destino = get_object_or_404(Destino, slug=slug, es_activo=True)
+            if viaje.lugares.count() >= 100 and not viaje.lugares.filter(pk=destino.pk).exists():
+                raise serializers.ValidationError('Puedes vincular hasta 100 lugares.')
+            viaje.lugares.add(destino)
+            viaje.save(update_fields=['actualizado'])
+        return Response({'detail': 'Lugar agregado a la escapada.'})
