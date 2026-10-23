@@ -1,0 +1,92 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: '3.14'
+  PIP_DISABLE_PIP_VERSION_CHECK: '1'
+
+jobs:
+  calidad:
+    name: Lint y auditoría de dependencias
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements*.txt
+      - run: pip install -r requirements-dev.txt
+      - name: Ruff
+        run: ruff check --output-format=github .
+      - name: Vulnerabilidades conocidas (pip-audit)
+        run: pip-audit -r requirements.txt --progress-spinner off
+
+  pruebas:
+    name: Pruebas (PostgreSQL 16 y Redis)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: infotrip
+          POSTGRES_PASSWORD: infotrip
+          POSTGRES_DB: infotrip
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U infotrip"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DB_NAME: infotrip
+      DB_USER: infotrip
+      DB_PASSWORD: infotrip
+      DB_HOST: 127.0.0.1
+      DB_PORT: '5432'
+      REDIS_URL: redis://127.0.0.1:6379/1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements*.txt
+      - run: pip install -r requirements-dev.txt
+
+      - name: Migraciones al día
+        run: python manage.py makemigrations --check --dry-run --settings=infotrip.settings.test_postgres
+
+      - name: Migraciones aplicables sobre PostgreSQL
+        run: python manage.py migrate --noinput --settings=infotrip.settings.test_postgres
+
+      - name: Pruebas con cobertura (PostgreSQL + Redis)
+        run: |
+          coverage run manage.py test --settings=infotrip.settings.test_postgres
+          coverage report
+
+      - name: Pruebas en SQLite (configuración local)
+        run: python manage.py test --settings=infotrip.settings.test
+        env:
+          REDIS_URL: ''
+
+      - name: check --deploy con la configuración de producción
+        run: python manage.py check --deploy --fail-level WARNING --settings=infotrip.settings.prod
+        env:
+          SECRET_KEY: ci-${{ github.run_id }}-clave-de-prueba-solo-para-check-deploy-no-secreta
+          ALLOWED_HOSTS: infotrip.example.mx

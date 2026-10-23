@@ -35,9 +35,16 @@ omit = [
     "*/test_*.py",
     "infotrip/asgi.py",
     "infotrip/wsgi.py",
+    # Configuración por entorno: no se ejecuta durante las pruebas.
+    "infotrip/settings/dev.py",
+    "infotrip/settings/local.py",
+    "infotrip/settings/prod.py",
+    "infotrip/settings_local.py",
+    "infotrip/settings_test.py",
 ]
 
 [tool.coverage.report]
+fail_under = 90
 show_missing = true
 skip_covered = true
 precision = 1
