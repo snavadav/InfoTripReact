@@ -1,12 +1,11 @@
 from django.db import IntegrityError, transaction
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, serializers
-from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
-from rest_framework.views import APIView
 from apps.destinos.models import Destino
-from .models import Aporte, Reporte
+from .models import Aporte
 from .serializers import AporteSerializer, ReporteSerializer
 from .consultas import publicados
 

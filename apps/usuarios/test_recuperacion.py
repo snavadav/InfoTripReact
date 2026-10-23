@@ -1,7 +1,5 @@
-import re
 from datetime import timedelta
 from unittest.mock import patch
-from urllib.parse import urlparse, parse_qs
 from django.contrib.auth.tokens import default_token_generator
 from django.core import mail
 from django.core.cache import cache
