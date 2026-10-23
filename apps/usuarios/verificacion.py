@@ -116,18 +116,24 @@ class LoginView(APIView):
                 'enviado': ahora, 'expira': ahora + timedelta(minutes=10),
                 'intentos': 0, 'consumido': False,
             })
-            try:
-                enviados = send_mail(
-                    'Tu código de acceso a InfoTrip',
-                    f'Tu código para iniciar sesión en InfoTrip es: {codigo}\n\n'
-                    'Caduca en 10 minutos y solo puede utilizarse una vez.\n'
-                    'No lo compartas. Si no solicitaste este acceso, ignora este mensaje.',
-                    settings.DEFAULT_FROM_EMAIL, [usuario.email], fail_silently=False,
-                )
-                if enviados != 1:
-                    raise CorreoNoDisponible()
-            except (SMTPException, OSError) as error:
-                raise CorreoNoDisponible() from error
+        # El envío ocurre ya confirmada la transacción: el SMTP puede tardar hasta EMAIL_TIMEOUT
+        # y no debe retener el bloqueo de la fila. La marca 'enviado' ya impide reenvíos simultáneos.
+        try:
+            enviados = send_mail(
+                'Tu código de acceso a InfoTrip',
+                f'Tu código para iniciar sesión en InfoTrip es: {codigo}\n\n'
+                'Caduca en 10 minutos y solo puede utilizarse una vez.\n'
+                'No lo compartas. Si no solicitaste este acceso, ignora este mensaje.',
+                settings.DEFAULT_FROM_EMAIL, [usuario.email], fail_silently=False,
+            )
+            if enviados != 1:
+                raise CorreoNoDisponible()
+        except (SMTPException, OSError, CorreoNoDisponible) as error:
+            # Sin correo entregado el desafío no sirve; se retira para permitir reintentar.
+            CodigoAcceso.objects.filter(usuario=usuario, desafio=desafio).delete()
+            if isinstance(error, CorreoNoDisponible):
+                raise
+            raise CorreoNoDisponible() from error
         return Response({'requiere_codigo': True, 'desafio': str(desafio), 'expira_en': 600,
                          'reenviar_en': 60,
                          'modo_prueba': settings.EMAIL_BACKEND.endswith('console.EmailBackend'),

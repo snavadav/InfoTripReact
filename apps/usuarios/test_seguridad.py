@@ -1,9 +1,13 @@
-"""Pruebas de los hallazgos de seguridad S1 (límites), S2 (correo) y S3 (registro)."""
-from django.core.cache import cache
-from django.test import override_settings
-from rest_framework.test import APITestCase
+"""Pruebas de los hallazgos de seguridad S1 (límites), S2 (correo), S3 (registro) y S7 (SMTP)."""
+from smtplib import SMTPException
+from unittest.mock import patch
 
-from .models import Usuario
+from django.core.cache import cache
+from django.db import connection
+from django.test import override_settings
+from rest_framework.test import APITestCase, APITransactionTestCase
+
+from .models import CodigoAcceso, Usuario
 
 
 @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
@@ -107,3 +111,28 @@ class RegistroGenericoTests(APITestCase):
         for intento in range(10):
             self.registrar(f'masivo{intento}@example.com')
         self.assertEqual(self.registrar('uno-mas@example.com').status_code, 429)
+
+
+@override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
+class EnvioFueraDeTransaccionTests(APITransactionTestCase):
+    """S7: el SMTP puede tardar hasta EMAIL_TIMEOUT; no debe retener el bloqueo del usuario."""
+
+    def setUp(self):
+        cache.clear()
+        Usuario.objects.create_user('smtp@example.com', 'Ana', 'Viaje', 'Prueba-segura-493!')
+        self.credenciales = {'email': 'smtp@example.com', 'password': 'Prueba-segura-493!'}
+
+    def test_codigo_se_envia_sin_transaccion_abierta(self):
+        en_transaccion = []
+        def enviar(*args, **kwargs):
+            en_transaccion.append(connection.in_atomic_block)
+            return 1
+        with patch('apps.usuarios.verificacion.send_mail', side_effect=enviar):
+            self.assertEqual(self.client.post('/api/v1/auth/login/', self.credenciales).status_code, 200)
+        self.assertEqual(en_transaccion, [False])
+        self.assertTrue(CodigoAcceso.objects.exists())
+
+    def test_fallo_de_envio_no_deja_desafio(self):
+        with patch('apps.usuarios.verificacion.send_mail', side_effect=SMTPException('fallo')):
+            self.assertEqual(self.client.post('/api/v1/auth/login/', self.credenciales).status_code, 503)
+        self.assertFalse(CodigoAcceso.objects.exists())
