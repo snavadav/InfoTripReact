@@ -4,12 +4,26 @@ Modelo de usuario personalizado basado en AbstractBaseUser
 """
 
 from django.db import models
+from django.db.models.functions import Lower
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 import uuid
 
 
+def normalizar_email(email):
+    """El correo identifica la cuenta: se compara y se guarda siempre en minúsculas."""
+    return (email or '').strip().lower()
+
+
 class UsuarioManager(BaseUserManager):
     """Manager personalizado para el modelo Usuario."""
+
+    @classmethod
+    def normalize_email(cls, email):
+        return normalizar_email(email)
+
+    def get_by_natural_key(self, email):
+        # Lo usan authenticate() y el login del admin.
+        return self.get(email__iexact=normalizar_email(email))
 
     def create_user(self, email, nombre, apellido, password=None, **extra_fields):
         if not email:
@@ -55,9 +69,16 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
         db_table = 'usuarios'
         verbose_name = 'Usuario'
         verbose_name_plural = 'Usuarios'
+        constraints = [
+            models.UniqueConstraint(Lower('email'), name='usuario_email_unico_sin_mayusculas'),
+        ]
 
     def __str__(self):
         return f'{self.nombre} {self.apellido} <{self.email}>'
+
+    def save(self, *args, **kwargs):
+        self.email = normalizar_email(self.email)
+        super().save(*args, **kwargs)
 
     @property
     def nombre_completo(self):

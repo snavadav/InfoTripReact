@@ -41,3 +41,69 @@ class LimitesLoginTests(APITestCase):
         self.assertEqual(self.login(password=self.credenciales['password']).status_code, 200)
         for intento in range(4):
             self.assertEqual(self.login(REMOTE_ADDR=f'192.0.2.{intento}').status_code, 403)
+
+
+@override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
+class CorreoSinMayusculasTests(APITestCase):
+    def setUp(self):
+        cache.clear()
+        self.datos = {'nombre': 'Ana', 'apellido': 'Viaje', 'password': 'Prueba-segura-493!',
+                      'password2': 'Prueba-segura-493!'}
+
+    def registrar(self, email, **extra):
+        return self.client.post('/api/v1/auth/registro/', dict(self.datos, email=email), **extra)
+
+    def test_registro_guarda_correo_en_minusculas(self):
+        self.assertEqual(self.registrar('  Ana@Ejemplo.COM ').status_code, 201)
+        self.assertEqual(Usuario.objects.get().email, 'ana@ejemplo.com')
+
+    def test_mayusculas_no_crean_cuenta_duplicada(self):
+        self.registrar('ana@ejemplo.com')
+        self.registrar('ANA@ejemplo.com')
+        self.assertEqual(Usuario.objects.count(), 1)
+
+    def test_manager_y_restriccion_de_base_ignoran_mayusculas(self):
+        from django.db import IntegrityError, transaction
+        Usuario.objects.create_user('Mixto@Ejemplo.com', 'A', 'B', 'Prueba-segura-493!')
+        self.assertTrue(Usuario.objects.filter(email='mixto@ejemplo.com').exists())
+        # bulk_create no pasa por save(): la restricción de la base es la última barrera.
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            Usuario.objects.bulk_create([Usuario(email='MIXTO@ejemplo.com', nombre='C', apellido='D')])
+
+    def test_login_y_recuperacion_aceptan_mayusculas(self):
+        Usuario.objects.create_user('ana@ejemplo.com', 'Ana', 'Viaje', 'Prueba-segura-493!')
+        login = self.client.post('/api/v1/auth/login/', {'email': 'ANA@Ejemplo.com', 'password': 'Prueba-segura-493!'})
+        self.assertEqual(login.status_code, 200, login.data)
+        from django.core import mail
+        self.client.post('/api/v1/auth/recuperar/', {'email': 'Ana@EJEMPLO.com'})
+        self.assertEqual(mail.outbox[-1].to, ['ana@ejemplo.com'])
+
+
+class RegistroGenericoTests(APITestCase):
+    def setUp(self):
+        cache.clear()
+        Usuario.objects.create_user('existe@example.com', 'Ana', 'Viaje', 'Prueba-segura-493!')
+
+    def registrar(self, email):
+        return self.client.post('/api/v1/auth/registro/', {
+            'email': email, 'nombre': 'Otro', 'apellido': 'Viajero',
+            'password': 'Prueba-segura-493!', 'password2': 'Prueba-segura-493!'})
+
+    def test_respuesta_no_revela_si_el_correo_existe(self):
+        existente = self.registrar('existe@example.com')
+        nuevo = self.registrar('nuevo@example.com')
+        self.assertEqual(existente.status_code, nuevo.status_code)
+        self.assertEqual(existente.data, nuevo.data)
+        self.assertEqual(Usuario.objects.count(), 2)
+        self.assertEqual(Usuario.objects.get(email='existe@example.com').nombre, 'Ana')
+
+    def test_errores_de_validacion_siguen_informandose(self):
+        respuesta = self.client.post('/api/v1/auth/registro/', {
+            'email': 'otro@example.com', 'nombre': 'A', 'apellido': 'B', 'password': 'Prueba-segura-493!',
+            'password2': 'distinta'})
+        self.assertEqual(respuesta.status_code, 400)
+
+    def test_limite_de_registros_por_ip(self):
+        for intento in range(10):
+            self.registrar(f'masivo{intento}@example.com')
+        self.assertEqual(self.registrar('uno-mas@example.com').status_code, 429)

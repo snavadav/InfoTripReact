@@ -13,7 +13,7 @@
   let busy = false;
   let resendAt = 0;
   if (new URLSearchParams(location.search).has('registro')) {
-    notice.textContent = 'Cuenta creada. Inicia sesión para verificar tu correo.';
+    notice.textContent = 'Registro recibido. Inicia sesión para verificar tu correo.';
   }
   function showError(message) {
     error.textContent = message;

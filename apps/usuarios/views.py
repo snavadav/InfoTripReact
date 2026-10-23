@@ -7,11 +7,17 @@ from rest_framework              import status, generics
 from rest_framework.views        import APIView
 from rest_framework.response     import Response
 from rest_framework.permissions  import IsAuthenticated, AllowAny
+from rest_framework.throttling   import AnonRateThrottle
 from rest_framework_simplejwt.tokens        import RefreshToken
-from django.utils                import timezone
+from django.db                   import IntegrityError, transaction
 
 from .models      import Usuario
 from .serializers import RegistroSerializer, UsuarioPerfilSerializer, CambiarPasswordSerializer
+
+
+class RegistroThrottle(AnonRateThrottle):
+    rate = '10/hour'
+    scope = 'registro'
 
 
 # ─── REGISTRO ─────────────────────────────────────────────────
@@ -19,18 +25,25 @@ class RegistroView(generics.CreateAPIView):
     """
     POST /api/v1/auth/registro/
     Crea un usuario sin emitir tokens; debe verificar su correo al iniciar sesión.
+    La respuesta es la misma si el correo ya tenía cuenta, para no revelarlo.
     """
     authentication_classes = []
     serializer_class   = RegistroSerializer
     permission_classes = [AllowAny]
+    throttle_classes   = [RegistroThrottle]
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        usuario = serializer.save()
+        if not Usuario.objects.filter(email__iexact=serializer.validated_data['email']).exists():
+            try:
+                with transaction.atomic():
+                    serializer.save()
+            except IntegrityError:
+                pass  # Registro simultáneo del mismo correo: la cuenta ya existe.
 
         return Response({
-            'mensaje': 'Cuenta creada. Inicia sesión para verificar tu correo con un código.',
+            'mensaje': 'Registro recibido. Inicia sesión con tu correo y contraseña para verificar tu cuenta con un código.',
             'requiere_verificacion': True,
         }, status=status.HTTP_201_CREATED)
 
