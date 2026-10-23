@@ -5,9 +5,12 @@ Tareas que no se pueden automatizar desde el código. Marca cada una al completa
 ## Fase 1
 
 - [ ] **Rotar la contraseña de PostgreSQL.** El `.env` del commit `de86d6d` (luego borrado en `04a1f87`) incluía `DB_PASSWORD`; sigue en el historial de git. Cambia la contraseña del usuario de base de datos y actualiza tu `.env`.
+  - Comprobado el 22/10/2026: la contraseña filtrada (usuario `postgres`, puerto 5433) es distinta a la actual del servidor local en el puerto 5432. Solo hay riesgo si esa contraseña sigue usándose en otro servidor o equipo del equipo de trabajo.
+- [ ] **Cambiar la contraseña del superusuario `postgres`.** Se compartió en texto plano en la conversación con el asistente. No está en el `.env` ni en git: la aplicación usa el rol `infotrip_user`, así que cambiarla no afecta a InfoTrip.
 - [ ] **Decidir si limpiar el historial de git.** Si el repositorio `snavadav/InfoTripReact` es público, el `.env` antiguo es visible para cualquiera. Limpiarlo (`git filter-repo`) reescribe el historial y obliga al equipo a volver a clonar; acordarlo antes.
-- [ ] **Completar el `.env` local con las variables de PostgreSQL** (`DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`). Sin ellas, `manage.py` (configuración `dev`) no conecta: el servidor de PostgreSQL de tu equipo exige contraseña. Alternativa sin PostgreSQL: `--settings=infotrip.settings_local`.
-- [ ] **Aplicar la migración `usuarios.0003`** con `python manage.py migrate` (y con `--settings=infotrip.settings_local` si usas SQLite). Solo añade la restricción de correo único sin mayúsculas; no modifica datos. Si se detiene por correos duplicados, resolverlos a mano antes de reintentar.
+- [x] **Completar el `.env` local con las variables de PostgreSQL** (`DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`). Sin ellas, `manage.py` (configuración `dev`) no conecta: el servidor de PostgreSQL de tu equipo exige contraseña. Alternativa sin PostgreSQL: `--settings=infotrip.settings_local`.
+  - Hecho el 22/10/2026: rol `infotrip_user` (contraseña aleatoria, permiso `CREATEDB`) dueño de la base `infotrip` en el puerto 5432; variables `DB_*` añadidas al `.env`. Todas las migraciones aplicadas.
+- [x] **Aplicar la migración `usuarios.0003`** con `python manage.py migrate` (y con `--settings=infotrip.settings_local` si usas SQLite). Solo añade la restricción de correo único sin mayúsculas; no modifica datos. Si se detiene por correos duplicados, resolverlos a mano antes de reintentar.
 - [ ] **Al desplegar, definir las variables de producción** (`infotrip.settings.prod`):
   - `SECRET_KEY` de 50+ caracteres aleatorios (distinta a la de desarrollo).
   - `ALLOWED_HOSTS` con el dominio público.
@@ -18,12 +21,12 @@ Tareas que no se pueden automatizar desde el código. Marca cada una al completa
 
 ## Fase 2
 
-- [ ] **Actualizar tu entorno virtual** con las versiones nuevas: `uv pip install --python .venv314/Scripts/python.exe -r requirements-dev.txt` (Django 6.0.9, DRF 3.18.3, simplejwt 5.5.1, redis y herramientas de desarrollo).
-- [ ] **Aplicar `token_blacklist.0013`** (de simplejwt 5.5.1) con `python manage.py migrate`. Solo cambia opciones `Meta`; no modifica datos.
+- [x] **Actualizar tu entorno virtual** con las versiones nuevas: `uv pip install --python .venv314/Scripts/python.exe -r requirements-dev.txt` (Django 6.0.9, DRF 3.18.3, simplejwt 5.5.1, redis y herramientas de desarrollo).
+- [x] **Aplicar `token_blacklist.0013`** (de simplejwt 5.5.1) con `python manage.py migrate`. Solo cambia opciones `Meta`; no modifica datos.
 - [ ] **Decidir sobre Pillow 13.0.0.** Corrige 35 vulnerabilidades de Pillow 12.3.0, pero salió el 16/10/2026 y es versión mayor. Hasta actualizar, el paso `pip-audit` de la CI fallará.
 - [ ] **Al hacer push, revisar la primera ejecución de la CI**: es la primera vez que las pruebas corren con Redis (no hay Redis local para comprobarlo).
 - [ ] **Decidir si quitar del repositorio los 10 `.pyc` versionados** en `apps/usuarios/__pycache__/` (se subieron antes de que `.gitignore` los excluyera). Sería `git rm --cached`; los archivos locales no se borran.
-- [ ] Opcional: para correr las pruebas de concurrencia en local, `python manage.py test --settings=infotrip.settings.test_postgres` con `DB_*` de un usuario con permiso `CREATEDB`.
+- [x] Opcional: para correr las pruebas de concurrencia en local, `python manage.py test --settings=infotrip.settings.test_postgres` con `DB_*` de un usuario con permiso `CREATEDB`.
 
 ## Generales
 
