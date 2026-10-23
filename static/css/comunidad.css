@@ -315,6 +315,18 @@ details[open] summary::before {
 .practical-grid + details {
   margin-top: 20px;
 }
+.data-freshness {
+  display: inline-flex;
+  width: fit-content;
+  margin: 8px 0 0;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.data-freshness--recent { color: #176443; background: #e9f7ef; }
+.data-freshness--check { color: #78520a; background: #fff5d8; }
+.data-freshness--old { color: #8a3535; background: #fff0f0; }
 
 /* ── Respuesta de comunidad ── */
 .community-answer {

@@ -1,14 +1,16 @@
 """Presentación pública del catálogo y selección editorial inicial."""
+from datetime import timedelta
 from random import sample
 from urllib.parse import urlencode
 import unicodedata
 
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Exists, OuterRef, Q
 from django.http import Http404
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.templatetags.static import static
+from django.utils import timezone
 
 from .models import Destino, Categoria, Municipio, Region, Servicio
 from django import forms
@@ -87,6 +89,7 @@ class ExploracionForm(forms.Form):
     calificacion_min = forms.DecimalField(label='Calificación mínima', required=False, min_value=1, max_value=5, decimal_places=1)
     concepto = forms.ChoiceField(label='Tipo de gasto', required=False, choices=[('', 'Cualquiera'), ('entrada', 'Entrada por persona'), ('comida', 'Comida por persona'), ('alojamiento', 'Alojamiento por noche'), ('transporte', 'Transporte por persona')])
     precio_max = forms.DecimalField(label='Promedio máximo (MXN)', required=False, min_value=0, max_value=9999999, decimal_places=2)
+    datos_recientes = forms.BooleanField(label='Con información práctica consultada en los últimos 90 días', required=False)
 
     def clean(self):
         datos = super().clean()
@@ -109,6 +112,15 @@ def listado(request):
     valido = formulario.is_valid()
     datos = formulario.cleaned_data if valido else {}
     queryset = destinos_publicos(con_fotos=True)
+    from apps.comunidad.models import Colaboracion
+    desde = timezone.localdate() - timedelta(days=90)
+    correcciones_recientes = Colaboracion.objects.filter(
+        destino_id=OuterRef('pk'), tipo='correccion', estado='publicado',
+        autor__es_activo=True, fecha_dato__gte=desde,
+    )
+    queryset = queryset.annotate(tiene_info_reciente=Exists(correcciones_recientes))
+    if datos.get('datos_recientes'):
+        queryset = queryset.filter(tiene_info_reciente=True)
     texto = datos.get('q', '')
     if texto:
         queryset = queryset.filter(Q(nombre__icontains=texto) | Q(descripcion__icontains=texto) | Q(municipio__nombre__icontains=texto))
@@ -123,12 +135,16 @@ def listado(request):
                       if normalizar(texto) in normalizar(lugar['nombre'] + ' ' + lugar['descripcion'] + ' ' + lugar['municipio'])
                       and all(not datos.get(campo) or datos[campo] == slugify(lugar[campo])
                               for campo in ['categoria', 'municipio', 'region'])
-                      and not datos.get('servicio') and datos.get('calificacion_min') is None
+                      and not datos.get('servicio') and not datos.get('datos_recientes') and datos.get('calificacion_min') is None
                       and datos.get('precio_max') is None and not datos.get('concepto')] if valido else []
     else:
         resultados = queryset.distinct() if valido else queryset.none()
     pagina = Paginator(resultados, 8).get_page(request.GET.get('page'))
-    lugares = [completar(lugar if isinstance(lugar, dict) else presentar(lugar)) for lugar in pagina]
+    lugares = []
+    for destino in pagina:
+        lugar = completar(destino if isinstance(destino, dict) else presentar(destino))
+        lugar['tiene_info_reciente'] = getattr(destino, 'tiene_info_reciente', False)
+        lugares.append(lugar)
     puntos = [lugar for lugar in lugares if not lugar['editorial']]
     return render(request, 'destinos/listado.html', {
         'lugares': lugares, 'pagina': pagina, 'q': texto, 'formulario': formulario,

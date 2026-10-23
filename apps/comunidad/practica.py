@@ -16,10 +16,14 @@ def publicas():
 
 def ficha_practica(destino):
     correcciones = list(publicas().filter(destino=destino, tipo='correccion').select_related('autor').order_by('-fecha_dato', '-creado', '-pk'))
+    hoy = timezone.localdate()
     campos = []
     for key, label in Colaboracion.CAMPOS:
         historial = [item for item in correcciones if item.campo == key]
-        campos.append({'nombre': label, 'dato': historial[0] if historial else None, 'historial': historial[1:]})
+        dato = historial[0] if historial else None
+        edad = (hoy - dato.fecha_dato).days if dato else None
+        vigencia = ('reciente' if edad <= 30 else 'por_confirmar' if edad <= 90 else 'antigua') if edad is not None else 'desconocida'
+        campos.append({'nombre': label, 'dato': dato, 'historial': historial[1:], 'edad_dias': edad, 'vigencia': vigencia})
     return campos
 
 
