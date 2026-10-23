@@ -1,19 +1,20 @@
 """
-InfoTrip — settings.py
-Configuración principal del proyecto Django
+InfoTrip — settings/base.py
+Configuración común. No se usa directamente: elige dev, local, test o prod.
 """
 
 from pathlib import Path
-from decouple import config
+from decouple import Csv, config
 from datetime import timedelta
 
 # ─── RUTAS BASE ───────────────────────────────────────────────
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 # ─── SEGURIDAD ────────────────────────────────────────────────
-SECRET_KEY = config('SECRET_KEY', default='django-insecure-cambia-esto-en-produccion')
-DEBUG      = config('DEBUG', default=True, cast=bool)
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
+# Sin valores inseguros por defecto: cada entorno decide qué hacer si faltan.
+SECRET_KEY = config('SECRET_KEY', default='')
+DEBUG      = False
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='', cast=Csv())
 
 # ─── APLICACIONES ─────────────────────────────────────────────
 INSTALLED_APPS = [
