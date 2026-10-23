@@ -13,6 +13,11 @@ if len(SECRET_KEY) < 50 or SECRET_KEY.startswith('django-insecure'):  # noqa: F4
     )
 if not ALLOWED_HOSTS:  # noqa: F405
     raise ImproperlyConfigured('Define ALLOWED_HOSTS con los dominios públicos, separados por comas.')
+if not REDIS_URL:  # noqa: F405
+    raise ImproperlyConfigured(
+        'Define REDIS_URL (por ejemplo redis://localhost:6379/0): con varios procesos, una caché '
+        'local por proceso multiplica los límites de intentos de login.'
+    )
 
 # ─── HTTPS ────────────────────────────────────────────────────
 SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=True, cast=bool)

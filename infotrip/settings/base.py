@@ -107,6 +107,18 @@ REST_FRAMEWORK = {
     'NUM_PROXIES': config('NUM_PROXIES', default=0, cast=int),
 }
 
+# ─── CACHÉ ────────────────────────────────────────────────────
+# Los límites de intentos (throttles y bloqueo por cuenta) viven en la caché: con varios
+# procesos debe ser compartida (Redis). LocMem solo sirve con un único proceso.
+def configurar_cache(redis_url):
+    if redis_url:
+        return {'default': {'BACKEND': 'django.core.cache.backends.redis.RedisCache', 'LOCATION': redis_url}}
+    return {'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache', 'LOCATION': 'infotrip'}}
+
+
+REDIS_URL = config('REDIS_URL', default='')
+CACHES = configurar_cache(REDIS_URL)
+
 # ─── JWT ──────────────────────────────────────────────────────
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME':  timedelta(hours=2),
