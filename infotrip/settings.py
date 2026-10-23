@@ -101,6 +101,9 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
+    # Proxies inversos de confianza delante de Django. Con 0 se ignora X-Forwarded-For
+    # y los límites usan REMOTE_ADDR; detrás de nginx/balanceador usar 1.
+    'NUM_PROXIES': config('NUM_PROXIES', default=0, cast=int),
 }
 
 # ─── JWT ──────────────────────────────────────────────────────

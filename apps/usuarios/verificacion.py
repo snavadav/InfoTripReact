@@ -1,4 +1,5 @@
 """Inicio de sesión en dos pasos: contraseña y código enviado al buzón."""
+import hashlib
 import secrets
 import uuid
 from datetime import timedelta
@@ -6,6 +7,7 @@ from smtplib import SMTPException
 
 from django.conf import settings
 from django.contrib.auth import authenticate
+from django.core.cache import cache
 from django.core.mail import send_mail
 from django.db import transaction
 from django.utils import timezone
@@ -58,6 +60,24 @@ def hash_credencial(usuario):
     return salted_hmac('infotrip.login.credencial', usuario.password, algorithm='sha256').hexdigest()
 
 
+# Límite por cuenta, independiente de la IP: frena la prueba de contraseñas distribuida.
+LOGIN_MAX_FALLOS = 5
+LOGIN_BLOQUEO_SEGUNDOS = 15 * 60
+
+
+def clave_fallos(email):
+    return 'login_fallos:' + hashlib.sha256(email.strip().lower().encode()).hexdigest()
+
+
+def registrar_fallo(clave):
+    # La ventana empieza en el primer fallo; incr conserva la caducidad original.
+    cache.add(clave, 0, LOGIN_BLOQUEO_SEGUNDOS)
+    try:
+        cache.incr(clave)
+    except ValueError:
+        cache.set(clave, 1, LOGIN_BLOQUEO_SEGUNDOS)
+
+
 class LoginView(APIView):
     permission_classes = [AllowAny]
     authentication_classes = []
@@ -66,9 +86,15 @@ class LoginView(APIView):
     def post(self, request):
         datos = CredencialesSerializer(data=request.data)
         datos.is_valid(raise_exception=True)
+        fallos = clave_fallos(datos.validated_data['email'])
+        if cache.get(fallos, 0) >= LOGIN_MAX_FALLOS:
+            raise Throttled(wait=LOGIN_BLOQUEO_SEGUNDOS,
+                            detail='Demasiados intentos fallidos para esta cuenta. Espera unos minutos.')
         usuario = authenticate(request=request, **datos.validated_data)
         if usuario is None:
+            registrar_fallo(fallos)
             raise AuthenticationFailed('Correo o contraseña incorrectos.')
+        cache.delete(fallos)
         # Bloquear siempre primero al usuario: serializa envío y verificación en PostgreSQL.
         with transaction.atomic():
             usuario = Usuario.objects.select_for_update().get(pk=usuario.pk)
