@@ -27,5 +27,18 @@
       form.reset();feedback.textContent='Gracias. Tu aporte quedó pendiente de revisión; aparecerá cuando sea publicado.';
     });
   }));
+  // "¿Sigue vigente?": confirmar renueva la fecha de vigencia del dato sin pasar por moderación.
+  document.querySelectorAll('.confirm-data').forEach(button=>button.addEventListener('click',async()=>{
+    const feedback=button.parentElement.nextElementSibling;
+    if(!window.InfoTripSession?.authenticated){
+      feedback.replaceChildren(document.createTextNode('Entra para confirmar este dato. '));
+      const link=document.createElement('a');link.href='/login/';link.textContent='Iniciar sesión';feedback.append(link);return;
+    }
+    button.disabled=true;
+    try{
+      const data=await InfoTrip.api(`/api/v1/colaboraciones/${button.dataset.dato}/confirmar/`,{method:'POST'});
+      feedback.textContent=`Gracias. Confirmaste que sigue vigente (${data.confirmaciones} confirmación${data.confirmaciones===1?'':'es'}).`;
+    }catch(error){feedback.textContent=error.message;button.disabled=false;}
+  }));
   initial();
 })();

@@ -4,9 +4,9 @@ Es la única puerta de `destinos` hacia `comunidad`: este módulo solo depende d
 comunidad y conoce los destinos por su clave foránea, así que nunca importa código de `destinos`.
 """
 from datetime import timedelta
-from django.db.models import Avg, Count, Exists, Max, Min, OuterRef, Prefetch, Subquery
+from django.db.models import Avg, Count, Exists, Max, Min, OuterRef, Prefetch, Q, Subquery
 from django.utils import timezone
-from .models import Aporte, Colaboracion
+from .models import Aporte, Colaboracion, Confirmacion
 
 
 def publicados():
@@ -23,16 +23,22 @@ def con_foto_publica(destinos):
     return destinos.prefetch_related(Prefetch('aportes', queryset=fotos, to_attr='fotos_publicas'))
 
 
+def confirmaciones_validas():
+    return Confirmacion.objects.filter(autor__es_activo=True)
+
+
 def correcciones_recientes(dias=90):
+    """Datos prácticos consultados o confirmados como vigentes en los últimos `dias`."""
     desde = timezone.localdate() - timedelta(days=dias)
+    confirmado = Exists(confirmaciones_validas().filter(dato_id=OuterRef('pk'), fecha__gte=desde))
     return Colaboracion.objects.filter(
-        destino_id=OuterRef('pk'), tipo='correccion', estado='publicado',
-        autor__es_activo=True, fecha_dato__gte=desde,
+        Q(fecha_dato__gte=desde) | confirmado,
+        destino_id=OuterRef('pk'), tipo='correccion', estado='publicado', autor__es_activo=True,
     )
 
 
 def con_info_reciente(destinos):
-    """Anota `tiene_info_reciente`: información práctica consultada en los últimos 90 días."""
+    """Anota `tiene_info_reciente`: información práctica consultada o confirmada en los últimos 90 días."""
     return destinos.annotate(tiene_info_reciente=Exists(correcciones_recientes()))
 
 
@@ -69,23 +75,44 @@ def resumen(destino):
 
 def ficha_practica(destino):
     """Información aportada por personas: nunca se rellena un dato desconocido."""
-    correcciones = list(publicas().filter(destino=destino, tipo='correccion').select_related('autor')
-                        .order_by('-fecha_dato', '-creado', '-pk'))
+    confirmaciones = confirmaciones_validas().filter(dato_id=OuterRef('pk')).order_by()
+    correcciones = list(
+        dato_vigente_primero(publicas().filter(destino=destino, tipo='correccion').select_related('autor'))
+        .annotate(
+            ultima_confirmacion=Subquery(confirmaciones.order_by('-fecha').values('fecha')[:1]),
+            num_confirmaciones=Subquery(confirmaciones.values('dato_id').annotate(n=Count('pk')).values('n')),
+        )
+    )
     hoy = timezone.localdate()
     campos = []
     for key, label in Colaboracion.CAMPOS:
         historial = [item for item in correcciones if item.campo == key]
         dato = historial[0] if historial else None
-        edad = (hoy - dato.fecha_dato).days if dato else None
+        # La vigencia cuenta desde la consulta original o desde la última confirmación, lo más reciente.
+        vigente_desde = max(filter(None, [dato.fecha_dato, dato.ultima_confirmacion])) if dato else None
+        edad = (hoy - vigente_desde).days if dato else None
         vigencia = (
             ('reciente' if edad <= 30 else 'por_confirmar' if edad <= 90 else 'antigua')
             if edad is not None
             else 'desconocida'
         )
         campos.append(
-            {'nombre': label, 'dato': dato, 'historial': historial[1:], 'edad_dias': edad, 'vigencia': vigencia}
+            {'nombre': label, 'dato': dato, 'historial': historial[1:], 'edad_dias': edad, 'vigencia': vigencia,
+             'vigente_desde': vigente_desde}
         )
     return campos
+
+
+def dato_vigente_primero(correcciones):
+    """Orden de las versiones de un dato práctico: la primera de cada campo es la vigente."""
+    return correcciones.order_by('-fecha_dato', '-creado', '-pk')
+
+
+def dato_vigente(correccion):
+    """La versión publicada que hoy se muestra para el mismo destino y campo."""
+    return dato_vigente_primero(
+        publicas().filter(destino_id=correccion.destino_id, tipo='correccion', campo=correccion.campo)
+    ).first()
 
 
 def preguntas_publicas(destino):

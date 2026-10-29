@@ -210,3 +210,19 @@ class Colaboracion(Moderable):
 
 class RevisionColaboracion(RegistroModeracion):
     colaboracion = models.ForeignKey(Colaboracion, on_delete=models.PROTECT, related_name='revisiones')
+
+
+class Confirmacion(models.Model):
+    """Una persona confirma que un dato práctico publicado sigue vigente ("¿Sigue vigente?").
+
+    No pasa por moderación porque no añade texto: solo renueva la fecha de vigencia del dato.
+    Cada persona confirma una vez por dato; volver a confirmar actualiza la fecha.
+    """
+    dato = models.ForeignKey(Colaboracion, on_delete=models.CASCADE, related_name='confirmaciones')
+    autor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='confirmaciones')
+    fecha = models.DateField()
+    creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-fecha', '-pk']
+        constraints = [models.UniqueConstraint(fields=['dato', 'autor'], name='una_confirmacion_por_persona')]

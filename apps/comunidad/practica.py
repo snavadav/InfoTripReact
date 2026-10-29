@@ -5,8 +5,8 @@ from rest_framework import generics, serializers
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Favorito, Colaboracion
-from .selectors import publicas
+from .models import Colaboracion, Confirmacion, Favorito
+from .selectors import confirmaciones_validas, dato_vigente, publicas
 from .views import AporteThrottle
 from apps.destinos.models import Destino
 
@@ -107,3 +107,20 @@ class FavoritoView(APIView):
     def delete(self, request, slug):
         Favorito.objects.filter(autor=request.user, destino__slug=slug).delete()
         return Response(status=204)
+
+
+class ConfirmarDatoView(APIView):
+    """POST: confirma que un dato práctico vigente sigue siendo correcto hoy."""
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [AporteThrottle]
+
+    def post(self, request, pk):
+        dato = get_object_or_404(publicas().filter(tipo='correccion'), pk=pk)
+        if dato.autor_id == request.user.pk:
+            raise serializers.ValidationError('Tu propio dato ya cuenta con la fecha en que lo consultaste.')
+        if dato_vigente(dato).pk != dato.pk:
+            raise serializers.ValidationError('Hay una versión más reciente de este dato. Confirma esa versión.')
+        hoy = timezone.localdate()
+        Confirmacion.objects.update_or_create(dato=dato, autor=request.user, defaults={'fecha': hoy})
+        total = confirmaciones_validas().filter(dato=dato).count()
+        return Response({'confirmaciones': total, 'fecha': hoy})

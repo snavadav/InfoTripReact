@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.db import transaction
-from .models import Aporte, Colaboracion, Decision, Reporte, RevisionColaboracion
+from .models import Aporte, Colaboracion, Confirmacion, Decision, Reporte, RevisionColaboracion
 from .moderacion import moderar
 
 
@@ -122,3 +122,13 @@ class RevisionColaboracionAdmin(admin.ModelAdmin):
     def has_add_permission(self, request): return False
     def has_change_permission(self, request, obj=None): return False
     def has_delete_permission(self, request, obj=None): return False
+
+
+@admin.register(Confirmacion)
+class ConfirmacionAdmin(admin.ModelAdmin):
+    """Confirmaciones de "¿Sigue vigente?": no se editan; el personal puede borrar las abusivas."""
+    list_display = ['dato', 'autor', 'fecha', 'creado']
+    search_fields = ['dato__destino__nombre', 'autor__email']
+    readonly_fields = ['dato', 'autor', 'fecha', 'creado']
+    def has_add_permission(self, request): return False
+    def has_change_permission(self, request, obj=None): return False
