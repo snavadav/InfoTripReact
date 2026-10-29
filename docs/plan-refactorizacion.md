@@ -26,15 +26,16 @@ Plan acordado el 22/10/2026 a partir de la revisión de arquitectura. Rama: `ref
 - [x] 6: modelos abstractos `Moderable` y `RegistroModeracion`, y `moderacion.moderar()`. Plan aprobado: se mantienen las dos tablas de historial; la migración `comunidad.0004` solo renombra columnas y amplía `motivo`, sin copiar ni borrar datos (lo comprueba `test_moderacion.py`).
 - [x] Limpieza: importaciones a mitad de archivo, consultas repetidas en `frontend.py`, el `except Exception` de `LogoutView`, líneas de más de 120 caracteres (E501 en el código de la aplicación) y el JS minificado de `favoritos.js`.
 
-## Fase 4: funcionalidades (recomendaciones 7 y 8)
+## Fase 4: funcionalidades (recomendaciones 7 y 8). Terminada
 
-- [ ] 7: notificar al autor cuando cambie el estado de su aporte o colaboración, y cola de moderación con contadores para staff.
-- [ ] 8: botón "¿Sigue vigente?" y orden o filtro por frescura del dato.
+- [x] 7: avisos internos al autor al publicar u ocultar su contenido (modelo `Notificacion`, se ven en Mi perfil) y cola de moderación en `/admin/moderacion/` con contadores y enlace en el encabezado del admin. El aviso por correo queda para la Fase 5.
+- [x] 8: botón "¿Sigue vigente?" (modelo `Confirmacion`, una por persona y dato; renueva la vigencia sin moderación) y orden `orden=recientes` en la API y en `/destinos/`. El filtro de información reciente cuenta las confirmaciones.
 
 ## Fase 5: despliegue, observabilidad y documentación (recomendación 10)
 
 - [ ] `Dockerfile` (gunicorn y WhiteNoise) y `docker-compose.yml` (app, PostgreSQL y Redis); plan para servir `media/`.
 - [ ] `LOGGING` y loggers en fallos de SMTP, decisiones de moderación e intentos de login bloqueados; endpoint `/health/`.
+- [ ] Aviso por correo al autor cuando se modera su contenido, enviado fuera de la petición del admin (cola de tareas o comando programado) y con registro de fallos.
 - [ ] OpenAPI con drf-spectacular y README actualizado.
 - [ ] S6, segunda parte: refresh token en una cookie `HttpOnly` con protección CSRF y access token solo en memoria, en lugar de `localStorage`. Cambia el login, el refresco, el logout y los JS que leen el token.
 
