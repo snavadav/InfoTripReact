@@ -5,7 +5,6 @@ import unicodedata
 
 from django import forms
 from django.core.paginator import Paginator
-from django.db.models import Q
 from django.http import Http404
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
@@ -15,8 +14,9 @@ from django.utils.text import slugify
 
 from apps.comunidad.models import Colaboracion
 from apps.comunidad.selectors import (
-    aportes_publicos, con_info_reciente, ficha_practica, filtrar_comunidad, preguntas_publicas, resumen,
+    aportes_publicos, con_info_reciente, ficha_practica, preguntas_publicas, resumen,
 )
+from .filtros import filtrar_destinos
 from .models import Destino, Categoria, Municipio, Region, Servicio
 from .views import destinos_publicos
 
@@ -114,17 +114,7 @@ def listado(request):
     formulario = ExploracionForm(request.GET, editorial=editorial)
     valido = formulario.is_valid()
     datos = formulario.cleaned_data if valido else {}
-    queryset = con_info_reciente(destinos_publicos(con_fotos=True))
-    if datos.get('datos_recientes'):
-        queryset = queryset.filter(tiene_info_reciente=True)
     texto = datos.get('q', '')
-    if texto:
-        queryset = queryset.filter(Q(nombre__icontains=texto) | Q(descripcion__icontains=texto) | Q(municipio__nombre__icontains=texto))
-    for campo, relacion in [('categoria', 'categorias__slug'), ('municipio', 'municipio__slug'),
-                            ('region', 'municipio__region__slug'), ('servicio', 'servicios__slug')]:
-        if datos.get(campo):
-            queryset = queryset.filter(**{relacion: datos[campo]})
-    queryset = filtrar_comunidad(queryset, datos)
     if editorial:
         resultados = [lugar for lugar in INSPIRACION
                       if normalizar(texto) in normalizar(lugar['nombre'] + ' ' + lugar['descripcion'] + ' ' + lugar['municipio'])
@@ -133,7 +123,8 @@ def listado(request):
                       and not datos.get('servicio') and not datos.get('datos_recientes') and datos.get('calificacion_min') is None
                       and datos.get('precio_max') is None and not datos.get('concepto')] if valido else []
     else:
-        resultados = queryset.distinct() if valido else queryset.none()
+        queryset = con_info_reciente(destinos_publicos(con_fotos=True))
+        resultados = filtrar_destinos(queryset, datos) if valido else queryset.none()
     pagina = Paginator(resultados, 8).get_page(request.GET.get('page'))
     lugares = []
     for destino in pagina:

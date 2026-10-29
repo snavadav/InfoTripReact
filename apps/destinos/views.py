@@ -1,8 +1,8 @@
-from django.db.models import Q
 from rest_framework import generics
 from rest_framework.permissions import AllowAny
 
-from apps.comunidad.selectors import con_foto_publica, filtrar_comunidad
+from apps.comunidad.selectors import con_foto_publica
+from .filtros import filtrar_destinos
 from .models import Categoria, Destino, Municipio, Region, Servicio
 from .serializers import (
     CategoriaSerializer, DestinoSerializer, FiltrosDestinoSerializer,
@@ -24,22 +24,7 @@ class DestinoListView(generics.ListAPIView):
     def get_queryset(self):
         filtros = FiltrosDestinoSerializer(data=self.request.query_params)
         filtros.is_valid(raise_exception=True)
-        datos = filtros.validated_data
-        queryset = destinos_publicos()
-        if datos.get('q'):
-            texto = datos['q']
-            queryset = queryset.filter(
-                Q(nombre__icontains=texto) | Q(descripcion__icontains=texto)
-                | Q(municipio__nombre__icontains=texto)
-            )
-        campos = {
-            'categoria': 'categorias__slug', 'municipio': 'municipio__slug',
-            'region': 'municipio__region__slug', 'servicio': 'servicios__slug',
-        }
-        for parametro, campo in campos.items():
-            if parametro in datos:
-                queryset = queryset.filter(**{campo: datos[parametro]})
-        return filtrar_comunidad(queryset, datos).distinct()
+        return filtrar_destinos(destinos_publicos(), filtros.validated_data)
 
 
 class DestinoDetailView(generics.RetrieveAPIView):
