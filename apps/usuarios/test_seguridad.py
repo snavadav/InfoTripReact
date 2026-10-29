@@ -1,10 +1,13 @@
-"""Pruebas de los hallazgos de seguridad S1 (límites), S2 (correo), S3 (registro) y S7 (SMTP)."""
+"""Pruebas de los hallazgos de seguridad S1 (límites), S2 (correo), S3 (registro), S6 (CSP) y S7 (SMTP)."""
+import re
+from pathlib import Path
 from smtplib import SMTPException
 from unittest.mock import patch
 
 from django.core.cache import cache
 from django.db import connection
-from django.test import override_settings
+from django.conf import settings
+from django.test import TestCase, override_settings
 from rest_framework.test import APITestCase, APITransactionTestCase
 
 from .models import CodigoAcceso, Usuario
@@ -136,3 +139,20 @@ class EnvioFueraDeTransaccionTests(APITransactionTestCase):
         with patch('apps.usuarios.verificacion.send_mail', side_effect=SMTPException('fallo')):
             self.assertEqual(self.client.post('/api/v1/auth/login/', self.credenciales).status_code, 503)
         self.assertFalse(CodigoAcceso.objects.exists())
+
+
+class PoliticaDeContenidoTests(TestCase):
+    def test_paginas_envian_csp_sin_scripts_en_linea(self):
+        for ruta in ('/', '/login/', '/registro/', '/destinos/', '/perfil/'):
+            politica = self.client.get(ruta).headers.get('Content-Security-Policy', '')
+            script_src = re.search(r'script-src ([^;]*)', politica)
+            self.assertIsNotNone(script_src, ruta)
+            self.assertNotIn("'unsafe-inline'", script_src.group(1), ruta)
+            self.assertIn("object-src 'none'", politica, ruta)
+
+    def test_plantillas_no_tienen_scripts_en_linea(self):
+        # Con la CSP, un <script> sin src no se ejecutaría: el código va en static/js/.
+        for plantilla in Path(settings.BASE_DIR, 'templates').rglob('*.html'):
+            texto = plantilla.read_text(encoding='utf-8')
+            self.assertNotRegex(texto, r'<script(?![^>]*\ssrc=)(?![^>]*application/json)[^>]*>', plantilla.name)
+            self.assertNotRegex(texto, r'\son[a-z]+=', plantilla.name)

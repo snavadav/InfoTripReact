@@ -6,6 +6,7 @@ Configuración común. No se usa directamente: elige dev, local, test o prod.
 from pathlib import Path
 from decouple import Csv, config
 from datetime import timedelta
+from django.utils.csp import CSP
 
 # ─── RUTAS BASE ───────────────────────────────────────────────
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -15,6 +16,22 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 SECRET_KEY = config('SECRET_KEY', default='')
 DEBUG      = False
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='', cast=Csv())
+
+# Content Security Policy (S6): solo se ejecutan scripts de archivos propios y de Leaflet en
+# unpkg, así que un XSS no puede inyectar <script> en línea ni cargar código de otros dominios.
+# Los estilos admiten 'unsafe-inline' porque las plantillas usan bloques <style> y style="".
+SECURE_CSP = {
+    'default-src': [CSP.SELF],
+    'script-src': [CSP.SELF, 'https://unpkg.com'],
+    'style-src': [CSP.SELF, CSP.UNSAFE_INLINE, 'https://fonts.googleapis.com', 'https://unpkg.com'],
+    'font-src': [CSP.SELF, 'https://fonts.gstatic.com'],
+    'img-src': [CSP.SELF, 'data:', 'https://tile.openstreetmap.org', 'https://unpkg.com'],
+    'connect-src': [CSP.SELF],
+    'object-src': [CSP.NONE],
+    'base-uri': [CSP.SELF],
+    'form-action': [CSP.SELF],
+    'frame-ancestors': [CSP.NONE],
+}
 
 # ─── APLICACIONES ─────────────────────────────────────────────
 INSTALLED_APPS = [
@@ -40,6 +57,7 @@ INSTALLED_APPS = [
 # ─── MIDDLEWARE ───────────────────────────────────────────────
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'django.middleware.csp.ContentSecurityPolicyMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',

@@ -8,7 +8,8 @@ Plan acordado el 22/10/2026 a partir de la revisión de arquitectura. Rama: `ref
 - [x] S2 y S3: correos en minúsculas, `UniqueConstraint(Lower('email'))` y registro con respuesta genérica y límite de solicitudes.
 - [x] S4: settings separados (`base`, `dev`, `local`, `test`, `prod`), `DEBUG=False` por defecto, `SECRET_KEY` obligatoria en producción, HSTS y cookies seguras, `asgi.py` completo.
 - [x] S7: envío del correo fuera de `transaction.atomic()`.
-- [ ] S5 (secretos en el historial) y S6 (tokens en `localStorage` y sin CSP): S5 es manual; S6 no entró en ninguna fase.
+- [ ] S5 (secretos en el historial): tarea manual, en [pendientes-manuales.md](pendientes-manuales.md).
+- [x] S6, primera parte: Content Security Policy con la integración de Django 6 (`SECURE_CSP`). Los scripts en línea pasaron a `static/js/` (`navbar.js`, `registro.js`, `categorias.js`). La migración de los tokens a cookies quedó en la Fase 5.
 
 ## Fase 2: red de seguridad (recomendación 9). Terminada
 
@@ -35,6 +36,7 @@ Plan acordado el 22/10/2026 a partir de la revisión de arquitectura. Rama: `ref
 - [ ] `Dockerfile` (gunicorn y WhiteNoise) y `docker-compose.yml` (app, PostgreSQL y Redis); plan para servir `media/`.
 - [ ] `LOGGING` y loggers en fallos de SMTP, decisiones de moderación e intentos de login bloqueados; endpoint `/health/`.
 - [ ] OpenAPI con drf-spectacular y README actualizado.
+- [ ] S6, segunda parte: refresh token en una cookie `HttpOnly` con protección CSRF y access token solo en memoria, en lugar de `localStorage`. Cambia el login, el refresco, el logout y los JS que leen el token.
 
 ## Cierre
 
