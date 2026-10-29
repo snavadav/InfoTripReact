@@ -8,7 +8,7 @@ from apps.usuarios.models import Usuario
 from apps.destinos.models import Destino, Region, Municipio
 from .models import Colaboracion, RevisionColaboracion, Favorito, Viaje
 from .admin import ColaboracionAdmin
-from .practica import ficha_practica
+from .selectors import ficha_practica
 
 
 class ExpansionTests(TestCase):

@@ -1,20 +1,23 @@
 """Presentación pública del catálogo y selección editorial inicial."""
-from datetime import timedelta
 from random import sample
 from urllib.parse import urlencode
 import unicodedata
 
+from django import forms
 from django.core.paginator import Paginator
-from django.db.models import Exists, OuterRef, Q
+from django.db.models import Q
 from django.http import Http404
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.templatetags.static import static
 from django.utils import timezone
-
-from .models import Destino, Categoria, Municipio, Region, Servicio
-from django import forms
 from django.utils.text import slugify
+
+from apps.comunidad.models import Colaboracion
+from apps.comunidad.selectors import (
+    aportes_publicos, con_info_reciente, ficha_practica, filtrar_comunidad, preguntas_publicas, resumen,
+)
+from .models import Destino, Categoria, Municipio, Region, Servicio
 from .views import destinos_publicos
 
 
@@ -111,14 +114,7 @@ def listado(request):
     formulario = ExploracionForm(request.GET, editorial=editorial)
     valido = formulario.is_valid()
     datos = formulario.cleaned_data if valido else {}
-    queryset = destinos_publicos(con_fotos=True)
-    from apps.comunidad.models import Colaboracion
-    desde = timezone.localdate() - timedelta(days=90)
-    correcciones_recientes = Colaboracion.objects.filter(
-        destino_id=OuterRef('pk'), tipo='correccion', estado='publicado',
-        autor__es_activo=True, fecha_dato__gte=desde,
-    )
-    queryset = queryset.annotate(tiene_info_reciente=Exists(correcciones_recientes))
+    queryset = con_info_reciente(destinos_publicos(con_fotos=True))
     if datos.get('datos_recientes'):
         queryset = queryset.filter(tiene_info_reciente=True)
     texto = datos.get('q', '')
@@ -128,7 +124,6 @@ def listado(request):
                             ('region', 'municipio__region__slug'), ('servicio', 'servicios__slug')]:
         if datos.get(campo):
             queryset = queryset.filter(**{relacion: datos[campo]})
-    from apps.comunidad.filtros import filtrar_comunidad
     queryset = filtrar_comunidad(queryset, datos)
     if editorial:
         resultados = [lugar for lugar in INSPIRACION
@@ -160,19 +155,12 @@ def detalle(request, slug):
             raise Http404('Destino no encontrado')
     else:
         lugar = presentar(get_object_or_404(destinos_publicos(con_fotos=True), slug=slug))
-    from apps.comunidad.consultas import publicados, resumen
-    from django.utils import timezone
     contexto = {'lugar': completar(lugar), 'hoy': timezone.localdate().isoformat()}
     if not lugar['editorial']:
         destino = get_object_or_404(Destino, slug=slug, es_activo=True)
-        from apps.comunidad.practica import ficha_practica, publicas
-        from apps.comunidad.models import Colaboracion
-        from django.db.models import Prefetch
         contexto['practica'] = ficha_practica(destino)
         contexto['campos_practicos'] = Colaboracion.CAMPOS
-        preguntas = publicas().filter(destino=destino, tipo='pregunta').select_related('autor').prefetch_related(
-            Prefetch('respuestas', queryset=publicas().filter(tipo='respuesta').select_related('autor'), to_attr='respuestas_publicas'))
-        contexto['preguntas'] = Paginator(preguntas, 8).get_page(request.GET.get('preguntas'))
+        contexto['preguntas'] = Paginator(preguntas_publicas(destino), 8).get_page(request.GET.get('preguntas'))
         contexto['resumen'] = resumen(destino)
-        contexto['aportes'] = Paginator(publicados().filter(destino=destino).select_related('autor'), 9).get_page(request.GET.get('aportes'))
+        contexto['aportes'] = Paginator(aportes_publicos(destino), 9).get_page(request.GET.get('aportes'))
     return render(request, 'destinos/detalle.html', contexto)

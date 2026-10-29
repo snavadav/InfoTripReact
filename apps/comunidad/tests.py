@@ -14,7 +14,7 @@ from apps.usuarios.models import Usuario
 from apps.destinos.models import Destino, Region, Municipio
 from .models import Aporte, Reporte, Decision
 from .admin import AporteAdmin, ReporteAdmin
-from .consultas import resumen
+from .selectors import resumen
 
 
 class ComunidadTests(APITestCase):

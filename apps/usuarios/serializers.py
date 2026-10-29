@@ -5,6 +5,7 @@ Serializers para registro, login y perfil de usuario
 
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
+from apps.core.imagenes import imagen_segura
 from .models import Usuario, normalizar_email
 
 
@@ -44,7 +45,6 @@ class UsuarioPerfilSerializer(serializers.ModelSerializer):
     bio = serializers.CharField(required=False, allow_blank=True, max_length=2000)
 
     def validate_foto_perfil(self, value):
-        from apps.comunidad.imagenes import imagen_segura
         return imagen_segura(value) if value else value
 
 

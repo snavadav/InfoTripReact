@@ -1,7 +1,7 @@
 from django.utils import timezone
 from rest_framework import serializers
 from .models import Aporte, Reporte
-from .imagenes import imagen_segura
+from apps.core.imagenes import imagen_segura
 
 
 class AporteSerializer(serializers.ModelSerializer):

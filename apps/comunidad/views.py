@@ -7,7 +7,7 @@ from rest_framework.throttling import UserRateThrottle
 from apps.destinos.models import Destino
 from .models import Aporte
 from .serializers import AporteSerializer, ReporteSerializer
-from .consultas import publicados
+from .selectors import publicados
 
 
 class AporteThrottle(UserRateThrottle):
