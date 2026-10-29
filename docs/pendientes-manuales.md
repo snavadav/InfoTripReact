@@ -23,9 +23,11 @@ Tareas que no se pueden automatizar desde el código. Marca cada una al completa
 
 - [x] **Actualizar tu entorno virtual** con las versiones nuevas: `uv pip install --python .venv314/Scripts/python.exe -r requirements-dev.txt` (Django 6.0.9, DRF 3.18.3, simplejwt 5.5.1, redis y herramientas de desarrollo).
 - [x] **Aplicar `token_blacklist.0013`** (de simplejwt 5.5.1) con `python manage.py migrate`. Solo cambia opciones `Meta`; no modifica datos.
-- [ ] **Decidir sobre Pillow 13.0.0.** Corrige 35 vulnerabilidades de Pillow 12.3.0, pero salió el 16/10/2026 y es versión mayor. Hasta actualizar, el paso `pip-audit` de la CI fallará.
+- [x] **Decidir sobre Pillow 13.0.0.** Corrige 35 vulnerabilidades de Pillow 12.3.0, pero salió el 16/10/2026 y es versión mayor. Hasta actualizar, el paso `pip-audit` de la CI fallará.
+  - Hecho el 29/10/2026: actualizado a 13.0.0. Las 93 pruebas pasan en PostgreSQL; `pip-audit` y ruff sin hallazgos.
 - [ ] **Al hacer push, revisar la primera ejecución de la CI**: es la primera vez que las pruebas corren con Redis (no hay Redis local para comprobarlo).
-- [ ] **Decidir si quitar del repositorio los 10 `.pyc` versionados** en `apps/usuarios/__pycache__/` (se subieron antes de que `.gitignore` los excluyera). Sería `git rm --cached`; los archivos locales no se borran.
+- [x] **Decidir si quitar del repositorio los 10 `.pyc` versionados** en `apps/usuarios/__pycache__/` (se subieron antes de que `.gitignore` los excluyera). Sería `git rm --cached`; los archivos locales no se borran.
+  - Hecho el 29/10/2026 con `git rm --cached`.
 - [x] Opcional: para correr las pruebas de concurrencia en local, `python manage.py test --settings=infotrip.settings.test_postgres` con `DB_*` de un usuario con permiso `CREATEDB`.
 
 ## Generales
