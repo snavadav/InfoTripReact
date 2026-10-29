@@ -26,7 +26,8 @@ SECURE_CSP = {
     'style-src': [CSP.SELF, CSP.UNSAFE_INLINE, 'https://fonts.googleapis.com', 'https://unpkg.com'],
     'font-src': [CSP.SELF, 'https://fonts.gstatic.com'],
     'img-src': [CSP.SELF, 'data:', 'https://tile.openstreetmap.org', 'https://unpkg.com'],
-    'connect-src': [CSP.SELF],
+    # unpkg: las herramientas de desarrollo del navegador descargan el source map de Leaflet.
+    'connect-src': [CSP.SELF, 'https://unpkg.com'],
     'object-src': [CSP.NONE],
     'base-uri': [CSP.SELF],
     'form-action': [CSP.SELF],
