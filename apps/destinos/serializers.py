@@ -57,6 +57,8 @@ class FiltrosDestinoSerializer(serializers.Serializer):
         required=False, min_value=Decimal(0), max_value=Decimal(9999999), max_digits=9, decimal_places=2
     )
     concepto = serializers.ChoiceField(required=False, choices=['entrada', 'comida', 'alojamiento', 'transporte'])
+    datos_recientes = serializers.BooleanField(required=False)
+    orden = serializers.ChoiceField(required=False, choices=['recientes'])
 
     def validate(self, datos):
         if datos.get('precio_max') is not None and not datos.get('concepto'):

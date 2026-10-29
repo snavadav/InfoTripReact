@@ -127,7 +127,11 @@ class ExploracionForm(forms.Form):
         label='Promedio máximo (MXN)', required=False, min_value=0, max_value=9999999, decimal_places=2
     )
     datos_recientes = forms.BooleanField(
-        label='Con información práctica consultada en los últimos 90 días', required=False
+        label='Con información práctica consultada o confirmada en los últimos 90 días', required=False
+    )
+    orden = forms.ChoiceField(
+        label='Ordenar por', required=False,
+        choices=[('', 'Nombre'), ('recientes', 'Información práctica más reciente')],
     )
 
     def clean(self):

@@ -3,8 +3,9 @@
 Es la única puerta de `destinos` hacia `comunidad`: este módulo solo depende de los modelos de
 comunidad y conoce los destinos por su clave foránea, así que nunca importa código de `destinos`.
 """
-from datetime import timedelta
-from django.db.models import Avg, Count, Exists, Max, Min, OuterRef, Prefetch, Q, Subquery
+from datetime import date, timedelta
+from django.db.models import Avg, Count, DateField, Exists, Max, Min, OuterRef, Prefetch, Q, Subquery, Value
+from django.db.models.functions import Coalesce, Greatest
 from django.utils import timezone
 from .models import Aporte, Colaboracion, Confirmacion
 
@@ -35,6 +36,26 @@ def correcciones_recientes(dias=90):
         Q(fecha_dato__gte=desde) | confirmado,
         destino_id=OuterRef('pk'), tipo='correccion', estado='publicado', autor__es_activo=True,
     )
+
+
+SIN_FECHA = date(1900, 1, 1)
+
+
+def por_informacion_reciente(destinos):
+    """Ordena por la fecha más reciente en que se consultó o confirmó un dato práctico del destino.
+
+    Los destinos sin datos prácticos quedan al final, por nombre.
+    """
+    datos = Colaboracion.objects.filter(
+        destino_id=OuterRef('pk'), tipo='correccion', estado='publicado', autor__es_activo=True,
+    ).order_by().values('destino_id').annotate(m=Max('fecha_dato')).values('m')
+    confirmaciones = confirmaciones_validas().filter(
+        dato__destino_id=OuterRef('pk'), dato__tipo='correccion', dato__estado='publicado', dato__autor__es_activo=True,
+    ).order_by().values('dato__destino_id').annotate(m=Max('fecha')).values('m')
+    sin_fecha = Value(SIN_FECHA, output_field=DateField())
+    return destinos.annotate(
+        info_actualizada=Greatest(Coalesce(Subquery(datos), sin_fecha), Coalesce(Subquery(confirmaciones), sin_fecha)),
+    ).order_by('-info_actualizada', 'nombre', 'pk')
 
 
 def con_info_reciente(destinos):

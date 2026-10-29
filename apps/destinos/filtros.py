@@ -6,7 +6,7 @@ en la web, con sus mensajes y opciones), y las dos filtran con FiltroDestinos.
 import django_filters
 from django.db.models import Exists, Q
 
-from apps.comunidad.selectors import correcciones_recientes, filtrar_comunidad
+from apps.comunidad.selectors import correcciones_recientes, filtrar_comunidad, por_informacion_reciente
 
 
 class FiltroDestinos(django_filters.FilterSet):
@@ -21,6 +21,8 @@ class FiltroDestinos(django_filters.FilterSet):
     calificacion_min = django_filters.NumberFilter(method='aplicar_en_comunidad')
     concepto = django_filters.CharFilter(method='aplicar_en_comunidad')
     precio_max = django_filters.NumberFilter(method='aplicar_en_comunidad')
+    # El orden se aplica al final, después de los filtros de comunidad.
+    orden = django_filters.CharFilter(method='aplicar_en_comunidad')
 
     def buscar(self, queryset, nombre, texto):
         return queryset.filter(Q(nombre__icontains=texto) | Q(descripcion__icontains=texto)
@@ -34,7 +36,10 @@ class FiltroDestinos(django_filters.FilterSet):
 
     def filter_queryset(self, queryset):
         queryset = super().filter_queryset(queryset)
-        return filtrar_comunidad(queryset, self.form.cleaned_data).distinct()
+        queryset = filtrar_comunidad(queryset, self.form.cleaned_data).distinct()
+        if self.form.cleaned_data.get('orden') == 'recientes':
+            queryset = por_informacion_reciente(queryset)
+        return queryset
 
 
 def filtrar_destinos(queryset, datos):

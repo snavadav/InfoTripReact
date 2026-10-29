@@ -15,7 +15,7 @@
     {% for campo in formulario %}<div class="filter-field"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{{ campo.errors }}</div>{% endfor %}
     <div class="filter-actions"><button type="submit">Buscar</button><a href="{% url 'destinos-listado' %}">Limpiar filtros</a></div>
   </form>
-  <p class="editorial-note">El filtro de información reciente usa la fecha de consulta indicada por la comunidad. No garantiza que el dato siga vigente; confirma horarios, precios y condiciones antes de viajar.</p>
+  <p class="editorial-note">El filtro y el orden por información reciente usan la fecha de consulta indicada por la comunidad o la última vez que alguien confirmó el dato. No garantiza que el dato siga vigente; confirma horarios, precios y condiciones antes de viajar.</p>
   <p class="editorial-note">Los precios comparan aportes publicados de los últimos 365 días por concepto. Los destinos sin datos no aparecen al filtrar por precio o calificación.</p>
   <div class="map-toolbar"><p class="result-count">{{ pagina.paginator.count }} resultado{{ pagina.paginator.count|pluralize }}{% if q %} para «{{ q }}»{% endif %}</p><button type="button" id="toggle-map" aria-expanded="false" aria-controls="map-panel" hidden>Ver mapa</button></div>
   <section id="map-panel" hidden aria-label="Mapa de destinos">

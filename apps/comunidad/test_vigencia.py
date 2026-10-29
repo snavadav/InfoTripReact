@@ -83,3 +83,18 @@ class VigenciaTests(TestCase):
         self.assertEqual(self.client.get('/destinos/', filtro).context['pagina'].paginator.count, 0)
         self.confirmar(self.viajero)
         self.assertEqual(self.client.get('/destinos/', filtro).context['pagina'].paginator.count, 1)
+
+    def test_orden_por_informacion_reciente_igual_en_api_y_web(self):
+        reciente = self.crear_destino('reciente')
+        self.correccion(reciente, dias=5)
+        confirmado = self.crear_destino('confirmado')
+        Confirmacion.objects.create(dato=self.correccion(confirmado, dias=300), autor=self.viajero, fecha=self.hoy)
+        self.crear_destino('aaa-sin-datos')
+        esperado = ['confirmado', 'reciente', 'destino', 'aaa-sin-datos']
+        api = [d['slug'] for d in self.client.get('/api/v1/destinos/', {'orden': 'recientes'}).data['results']]
+        web = [lugar['slug'] for lugar in self.client.get('/destinos/', {'orden': 'recientes'}).context['lugares']]
+        self.assertEqual(api, esperado)
+        self.assertEqual(web, esperado)
+        sin_orden = [d['slug'] for d in self.client.get('/api/v1/destinos/').data['results']]
+        self.assertEqual(sin_orden, ['aaa-sin-datos', 'confirmado', 'destino', 'reciente'])
+        self.assertEqual(self.client.get('/api/v1/destinos/', {'orden': 'otro'}).status_code, 400)
