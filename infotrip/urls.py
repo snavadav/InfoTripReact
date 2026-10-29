@@ -8,12 +8,15 @@ from django.views.generic import TemplateView
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from apps.comunidad.cola import cola_moderacion
 from apps.usuarios.views_frontend import login_view, registro_view
 from apps.destinos.frontend import inicio, listado, detalle
 
 urlpatterns = [
     path('favoritos/', TemplateView.as_view(template_name='comunidad/favoritos.html'), name='favoritos'),
     path('mis-viajes/', TemplateView.as_view(template_name='comunidad/viajes.html'), name='mis-viajes'),
+    # Antes de admin.site.urls para que el admin no la tome como una app.
+    path('admin/moderacion/', admin.site.admin_view(cola_moderacion), name='cola-moderacion'),
     path('admin/', admin.site.urls),
 
     # API v1

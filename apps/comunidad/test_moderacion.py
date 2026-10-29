@@ -1,4 +1,5 @@
 """Moderación unificada (recomendación 6): moderar() y la migración que conserva el historial."""
+from django.contrib.auth.models import Permission
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
 from django.test import TestCase, TransactionTestCase
@@ -7,7 +8,7 @@ from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 from apps.destinos.models import Destino, Municipio, Region
 from apps.usuarios.models import Usuario
-from .models import Aporte, Colaboracion, Decision, Notificacion, RevisionColaboracion
+from .models import Aporte, Colaboracion, Decision, Notificacion, Reporte, RevisionColaboracion
 from .moderacion import moderar
 
 
@@ -146,3 +147,29 @@ class AvisosAlAutorTests(DatosModeracion):
         self.assertEqual(cliente.get('/api/v1/notificaciones/').data['no_leidas'], 0)
         self.assertFalse(Notificacion.objects.get(usuario=self.otro).leida)
         self.assertEqual(APIClient().get('/api/v1/notificaciones/').status_code, 401)
+
+
+class ColaModeracionTests(DatosModeracion):
+    def test_contadores_y_orden_de_lo_pendiente(self):
+        antiguo = self.aporte()
+        self.aporte(tipo='gasto', calificacion=None, monto=50, concepto='comida')
+        self.aporte(estado='publicado', tipo='foto', calificacion=None)
+        self.colaboracion()
+        Reporte.objects.create(aporte=self.aporte(estado='publicado', tipo='gasto', calificacion=None, monto=1,
+                                                  concepto='entrada'), autor=self.moderador, motivo='Dato falso')
+        self.client.force_login(self.moderador)
+        respuesta = self.client.get('/admin/moderacion/')
+        self.assertEqual(respuesta.status_code, 200)
+        totales = {s['titulo']: s['total'] for s in respuesta.context['secciones']}
+        self.assertEqual(totales, {'Aportes pendientes': 2, 'Colaboraciones pendientes': 1, 'Reportes abiertos': 1})
+        primero = respuesta.context['secciones'][0]['elementos'][0]
+        self.assertEqual(primero['enlace'], f'/admin/comunidad/aporte/{antiguo.pk}/change/')
+        self.assertContains(self.client.get('/admin/'), 'href="/admin/moderacion/"')
+
+    def test_solo_personal_y_secciones_segun_permisos(self):
+        self.assertEqual(self.client.get('/admin/moderacion/').status_code, 302)
+        personal = Usuario.objects.create_user('staff@example.com', 'Sol', 'Prueba', 'Clave-segura-483!', es_staff=True)
+        personal.user_permissions.add(Permission.objects.get(codename='view_colaboracion'))
+        self.client.force_login(personal)
+        secciones = self.client.get('/admin/moderacion/').context['secciones']
+        self.assertEqual([s['titulo'] for s in secciones], ['Colaboraciones pendientes'])
