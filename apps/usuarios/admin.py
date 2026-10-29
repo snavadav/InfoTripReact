@@ -16,10 +16,13 @@ class UsuarioAdmin(UserAdmin):
     ordering      = ['-fecha_registro']
 
     fieldsets = (
-        ('Credenciales',  {'fields': ('email', 'password')}),
-        ('Información',   {'fields': ('nombre', 'apellido', 'foto_perfil', 'ciudad_origen', 'bio')}),
-        ('Permisos',      {'fields': ('es_activo', 'es_staff', 'es_verificado', 'is_superuser', 'groups', 'user_permissions')}),
-        ('Fechas',        {'fields': ('fecha_registro', 'ultimo_acceso')}),
+        ('Credenciales', {'fields': ('email', 'password')}),
+        ('Información', {'fields': ('nombre', 'apellido', 'foto_perfil', 'ciudad_origen', 'bio')}),
+        (
+            'Permisos',
+            {'fields': ('es_activo', 'es_staff', 'es_verificado', 'is_superuser', 'groups', 'user_permissions')},
+        ),
+        ('Fechas', {'fields': ('fecha_registro', 'ultimo_acceso')}),
     )
 
     add_fieldsets = (

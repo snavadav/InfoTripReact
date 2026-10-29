@@ -142,3 +142,24 @@ class VerificacionCorreoTests(APITestCase):
         for _ in range(10):
             self.client.post('/api/v1/auth/login/', dict(self.credenciales, password='incorrecta'))
         self.assertEqual(self.client.post('/api/v1/auth/login/', self.credenciales).status_code, 429)
+
+
+class LogoutTests(APITestCase):
+    def setUp(self):
+        self.usuario = Usuario.objects.create_user('salida@example.com', 'Ana', 'Viaje', 'Prueba-segura-493!', es_verificado=True)
+        self.refresh = RefreshToken.for_user(self.usuario)
+        self.refresh['correo_confirmado'] = True
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + str(self.refresh.access_token))
+
+    def logout(self, datos):
+        return self.client.post('/api/v1/auth/logout/', datos, format='json')
+
+    def test_invalida_el_refresh_token(self):
+        self.assertEqual(self.logout({'refresh': str(self.refresh)}).status_code, 200)
+        respuesta = self.client.post('/api/v1/auth/token/refresh/', {'refresh': str(self.refresh)}, format='json')
+        self.assertEqual(respuesta.status_code, 401)
+
+    def test_token_ausente_invalido_o_cuerpo_no_objeto(self):
+        for datos in [{}, {'refresh': 'no-es-un-token'}, {'refresh': 123}, ['refresh']]:
+            with self.subTest(datos=datos):
+                self.assertEqual(self.logout(datos).status_code, 400)

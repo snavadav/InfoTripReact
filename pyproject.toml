@@ -12,7 +12,7 @@ extend-exclude = ["*/migrations/*", ".venv*", "staticfiles", "media"]
 
 [tool.ruff.lint]
 # Errores reales (pyflakes y pycodestyle básicos) más avisos de espacios (W).
-select = ["E4", "E7", "E9", "F", "W"]
+select = ["E4", "E501", "E7", "E9", "F", "W"]
 ignore = [
     "E701",  # Varias sentencias en una línea con ':'; estilo existente del proyecto.
     "E702",  # Varias sentencias con ';' en una línea; estilo existente del proyecto.
@@ -21,9 +21,14 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "infotrip/settings/*.py" = ["F403", "F405"]
 "infotrip/settings_*.py" = ["F403"]
-# Pendiente de la limpieza de la Fase 3 (importaciones a mitad de archivo y lambda asignada).
+# Las pruebas conservan su estilo compacto de datos en línea.
+"**/test*.py" = ["E501"]
+# Pendiente de la recomendación 6 de la Fase 3 (importación a mitad de archivo).
 "apps/comunidad/admin.py" = ["E402"]
-"apps/comunidad/viajes.py" = ["E402", "E731"]
+
+# Formato solo para ajustar líneas largas a mano (ruff format --range); conserva las comillas simples.
+[tool.ruff.format]
+quote-style = "preserve"
 
 # ─── Coverage ─────────────────────────────────────────────────
 [tool.coverage.run]

@@ -16,7 +16,18 @@ class ColaboracionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Colaboracion
-        fields = ['id', 'tipo', 'campo', 'texto', 'fuente', 'fecha_dato', 'pregunta', 'estado', 'creado', 'autor_nombre']
+        fields = [
+            'id',
+            'tipo',
+            'campo',
+            'texto',
+            'fuente',
+            'fecha_dato',
+            'pregunta',
+            'estado',
+            'creado',
+            'autor_nombre',
+        ]
         read_only_fields = ['id', 'estado', 'creado', 'autor_nombre']
 
     def validate(self, attrs):
@@ -26,12 +37,19 @@ class ColaboracionSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({'fecha_dato': 'La fecha no puede ser futura.'})
         if tipo == 'correccion':
             if not attrs.get('campo') or not attrs.get('fuente') or not attrs.get('fecha_dato'):
-                raise serializers.ValidationError('Incluye el dato que actualizas, su fuente y la fecha en que lo consultaste.')
+                raise serializers.ValidationError(
+                    'Incluye el dato que actualizas, su fuente y la fecha en que lo consultaste.'
+                )
         elif attrs.get('campo'):
             raise serializers.ValidationError({'campo': 'Solo las correcciones llevan un campo.'})
         if tipo == 'respuesta':
             destino = self.context['view'].destino()
-            if not parent or parent.tipo != 'pregunta' or parent.destino_id != destino.pk or not publicas().filter(pk=parent.pk).exists():
+            if (
+                not parent
+                or parent.tipo != 'pregunta'
+                or parent.destino_id != destino.pk
+                or not publicas().filter(pk=parent.pk).exists()
+            ):
                 raise serializers.ValidationError({'pregunta': 'Selecciona una pregunta publicada de este destino.'})
         elif parent:
             raise serializers.ValidationError({'pregunta': 'Solo las respuestas llevan una pregunta.'})

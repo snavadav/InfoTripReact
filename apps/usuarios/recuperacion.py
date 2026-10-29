@@ -44,9 +44,14 @@ class RecuperarView(APIView):
             token = default_token_generator.make_token(usuario)
             url = f'{settings.PUBLIC_BASE_URL}/recuperar/?uid={uid}&token={token}'
             try:
-                enviados = send_mail('Recupera tu acceso a InfoTrip',
-                    f'Abre este enlace para elegir una contraseña nueva. Caduca en una hora:\n{url}\nSi no lo solicitaste, ignora este mensaje.',
-                    settings.DEFAULT_FROM_EMAIL, [usuario.email], fail_silently=False)
+                enviados = send_mail(
+                    'Recupera tu acceso a InfoTrip',
+                    f'Abre este enlace para elegir una contraseña nueva. Caduca en una hora:\n{url}\n'
+                    'Si no lo solicitaste, ignora este mensaje.',
+                    settings.DEFAULT_FROM_EMAIL,
+                    [usuario.email],
+                    fail_silently=False,
+                )
                 if enviados != 1: raise CorreoNoDisponible()
             except (SMTPException, OSError) as error:
                 raise CorreoNoDisponible() from error
@@ -66,7 +71,9 @@ class RestablecerView(APIView):
         except (ValueError, TypeError, UnicodeDecodeError, OverflowError):
             raise serializers.ValidationError('El enlace no es válido o ha caducado.')
         with transaction.atomic():
-            usuario = Usuario.objects.select_for_update().filter(pk=pk, es_activo=True).first() if 0 < pk < 2**63 else None
+            usuario = (
+                Usuario.objects.select_for_update().filter(pk=pk, es_activo=True).first() if 0 < pk < 2**63 else None
+            )
             if not usuario or not default_token_generator.check_token(usuario, campos['token']):
                 raise serializers.ValidationError('El enlace no es válido o ha caducado.')
             if campos['password'] != campos['password2']:

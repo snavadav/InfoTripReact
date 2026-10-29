@@ -39,8 +39,12 @@ def con_info_reciente(destinos):
 def filtrar_comunidad(queryset, datos):
     aportes = publicados().filter(destino_id=OuterRef('pk')).order_by()
     if datos.get('calificacion_min') is not None:
-        promedio = aportes.filter(tipo='resena').values('destino_id').annotate(valor=Avg('calificacion')).values('valor')
-        queryset = queryset.annotate(nota_comunidad=Subquery(promedio)).filter(nota_comunidad__gte=datos['calificacion_min'])
+        promedio = (
+            aportes.filter(tipo='resena').values('destino_id').annotate(valor=Avg('calificacion')).values('valor')
+        )
+        queryset = queryset.annotate(nota_comunidad=Subquery(promedio)).filter(
+            nota_comunidad__gte=datos['calificacion_min']
+        )
     if datos.get('concepto'):
         promedio = (aportes.filter(tipo='gasto', concepto=datos['concepto'],
                                    fecha_visita__gte=timezone.localdate() - timedelta(days=365))
@@ -73,8 +77,14 @@ def ficha_practica(destino):
         historial = [item for item in correcciones if item.campo == key]
         dato = historial[0] if historial else None
         edad = (hoy - dato.fecha_dato).days if dato else None
-        vigencia = ('reciente' if edad <= 30 else 'por_confirmar' if edad <= 90 else 'antigua') if edad is not None else 'desconocida'
-        campos.append({'nombre': label, 'dato': dato, 'historial': historial[1:], 'edad_dias': edad, 'vigencia': vigencia})
+        vigencia = (
+            ('reciente' if edad <= 30 else 'por_confirmar' if edad <= 90 else 'antigua')
+            if edad is not None
+            else 'desconocida'
+        )
+        campos.append(
+            {'nombre': label, 'dato': dato, 'historial': historial[1:], 'edad_dias': edad, 'vigencia': vigencia}
+        )
     return campos
 
 

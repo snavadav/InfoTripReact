@@ -9,7 +9,9 @@ def decidir(aporte, moderador, estado, motivo):
         return
     aporte.estado = estado
     aporte.save(update_fields=['estado', 'actualizado'])
-    Decision.objects.create(aporte=aporte, moderador=moderador, estado_anterior=anterior, estado_nuevo=estado, motivo=motivo)
+    Decision.objects.create(
+        aporte=aporte, moderador=moderador, estado_anterior=anterior, estado_nuevo=estado, motivo=motivo
+    )
 
 
 @admin.register(Aporte)
@@ -17,7 +19,20 @@ class AporteAdmin(admin.ModelAdmin):
     list_display = ['id', 'destino', 'autor', 'tipo', 'estado', 'fecha_visita']
     list_filter = ['estado', 'tipo']
     search_fields = ['destino__nombre', 'autor__email', 'texto']
-    readonly_fields = ['destino', 'autor', 'tipo', 'texto', 'fecha_visita', 'calificacion', 'imagen', 'monto', 'concepto', 'estado', 'creado', 'actualizado']
+    readonly_fields = [
+        'destino',
+        'autor',
+        'tipo',
+        'texto',
+        'fecha_visita',
+        'calificacion',
+        'imagen',
+        'monto',
+        'concepto',
+        'estado',
+        'creado',
+        'actualizado',
+    ]
     actions = ['publicar', 'ocultar']
     def has_add_permission(self, request): return False
     def has_delete_permission(self, request, obj=None): return False
@@ -82,7 +97,9 @@ def revisar_colaboracion(item, moderador, estado, motivo):
     """El llamador bloquea la fila dentro de una transacción."""
     if item.estado == estado:
         return
-    RevisionColaboracion.objects.create(colaboracion=item, moderador=moderador, anterior=item.estado, nuevo=estado, motivo=motivo)
+    RevisionColaboracion.objects.create(
+        colaboracion=item, moderador=moderador, anterior=item.estado, nuevo=estado, motivo=motivo
+    )
     item.estado = estado
     item.save(update_fields=['estado'])
 
@@ -92,7 +109,18 @@ class ColaboracionAdmin(admin.ModelAdmin):
     list_display = ['id', 'destino', 'tipo', 'campo', 'estado', 'fecha_dato', 'creado']
     list_filter = ['estado', 'tipo', 'campo']
     search_fields = ['destino__nombre', 'texto', 'fuente']
-    readonly_fields = ['destino', 'autor', 'tipo', 'campo', 'texto', 'fuente', 'fecha_dato', 'pregunta', 'estado', 'creado']
+    readonly_fields = [
+        'destino',
+        'autor',
+        'tipo',
+        'campo',
+        'texto',
+        'fuente',
+        'fecha_dato',
+        'pregunta',
+        'estado',
+        'creado',
+    ]
     actions = ['publicar', 'ocultar']
 
     def has_add_permission(self, request): return False

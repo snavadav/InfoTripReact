@@ -50,8 +50,12 @@ class FiltrosDestinoSerializer(serializers.Serializer):
     region = serializers.SlugField(required=False, max_length=160)
     servicio = serializers.SlugField(required=False, max_length=160)
 
-    calificacion_min = serializers.DecimalField(required=False, min_value=Decimal(1), max_value=Decimal(5), max_digits=2, decimal_places=1)
-    precio_max = serializers.DecimalField(required=False, min_value=Decimal(0), max_value=Decimal(9999999), max_digits=9, decimal_places=2)
+    calificacion_min = serializers.DecimalField(
+        required=False, min_value=Decimal(1), max_value=Decimal(5), max_digits=2, decimal_places=1
+    )
+    precio_max = serializers.DecimalField(
+        required=False, min_value=Decimal(0), max_value=Decimal(9999999), max_digits=9, decimal_places=2
+    )
     concepto = serializers.ChoiceField(required=False, choices=['entrada', 'comida', 'alojamiento', 'transporte'])
 
     def validate(self, datos):

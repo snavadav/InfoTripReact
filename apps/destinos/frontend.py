@@ -22,16 +22,36 @@ from .views import destinos_publicos
 
 
 INSPIRACION = [
-    {'nombre': 'Puerto Vallarta', 'slug': 'puerto-vallarta', 'municipio': 'Puerto Vallarta',
-     'region': 'Costa de Jalisco', 'categoria': 'Costa', 'categorias': ['Costa'],
-     'imagen': 'images/ptVallarta.jpg', 'alt': 'Vista de la bahía de Puerto Vallarta al atardecer',
-     'descripcion': 'Una escapada junto al mar. Encuentra inspiración en el paisaje de la bahía, sus paseos y los colores del atardecer.',
-     'servicios': [], 'direccion': '', 'editorial': True},
-    {'nombre': 'Tequila', 'slug': 'tequila', 'municipio': 'Tequila',
-     'region': 'Jalisco', 'categoria': 'Pueblos', 'categorias': ['Pueblos'],
-     'imagen': 'images/tequila.jpg', 'alt': 'Calle peatonal de Tequila con arquitectura tradicional y vegetación',
-     'descripcion': 'Una pausa entre calles con historia. Camina sin prisa, descubre rincones llenos de color y disfruta el ambiente de un pueblo de Jalisco.',
-     'servicios': [], 'direccion': '', 'editorial': True},
+    {
+        'nombre': 'Puerto Vallarta',
+        'slug': 'puerto-vallarta',
+        'municipio': 'Puerto Vallarta',
+        'region': 'Costa de Jalisco',
+        'categoria': 'Costa',
+        'categorias': ['Costa'],
+        'imagen': 'images/ptVallarta.jpg',
+        'alt': 'Vista de la bahía de Puerto Vallarta al atardecer',
+        'descripcion': ('Una escapada junto al mar. Encuentra inspiración en el paisaje de la bahía, '
+                        'sus paseos y los colores del atardecer.'),
+        'servicios': [],
+        'direccion': '',
+        'editorial': True,
+    },
+    {
+        'nombre': 'Tequila',
+        'slug': 'tequila',
+        'municipio': 'Tequila',
+        'region': 'Jalisco',
+        'categoria': 'Pueblos',
+        'categorias': ['Pueblos'],
+        'imagen': 'images/tequila.jpg',
+        'alt': 'Calle peatonal de Tequila con arquitectura tradicional y vegetación',
+        'descripcion': ('Una pausa entre calles con historia. Camina sin prisa, descubre rincones llenos '
+                        'de color y disfruta el ambiente de un pueblo de Jalisco.'),
+        'servicios': [],
+        'direccion': '',
+        'editorial': True,
+    },
 ]
 FOTOS = {lugar['slug']: (lugar['imagen'], lugar['alt']) for lugar in INSPIRACION}
 
@@ -67,8 +87,8 @@ def completar(lugar):
 
 def inicio(request):
     lugares = [presentar(destino) for destino in destinos_publicos(con_fotos=True)[:12]]
-    # La selección editorial solo se usa en una instalación sin destinos.
-    if not Destino.objects.exists():
+    # La selección editorial solo se usa en una instalación sin destinos (ni siquiera inactivos).
+    if not lugares and not Destino.objects.exists():
         lugares = INSPIRACION
     seleccion = sample(lugares, min(3, len(lugares)))
     return render(request, 'index.html', {
@@ -89,10 +109,26 @@ class ExploracionForm(forms.Form):
     municipio = forms.ChoiceField(label='Municipio', required=False)
     region = forms.ChoiceField(label='Región', required=False)
     servicio = forms.ChoiceField(label='Servicio', required=False)
-    calificacion_min = forms.DecimalField(label='Calificación mínima', required=False, min_value=1, max_value=5, decimal_places=1)
-    concepto = forms.ChoiceField(label='Tipo de gasto', required=False, choices=[('', 'Cualquiera'), ('entrada', 'Entrada por persona'), ('comida', 'Comida por persona'), ('alojamiento', 'Alojamiento por noche'), ('transporte', 'Transporte por persona')])
-    precio_max = forms.DecimalField(label='Promedio máximo (MXN)', required=False, min_value=0, max_value=9999999, decimal_places=2)
-    datos_recientes = forms.BooleanField(label='Con información práctica consultada en los últimos 90 días', required=False)
+    calificacion_min = forms.DecimalField(
+        label='Calificación mínima', required=False, min_value=1, max_value=5, decimal_places=1
+    )
+    concepto = forms.ChoiceField(
+        label='Tipo de gasto',
+        required=False,
+        choices=[
+            ('', 'Cualquiera'),
+            ('entrada', 'Entrada por persona'),
+            ('comida', 'Comida por persona'),
+            ('alojamiento', 'Alojamiento por noche'),
+            ('transporte', 'Transporte por persona'),
+        ],
+    )
+    precio_max = forms.DecimalField(
+        label='Promedio máximo (MXN)', required=False, min_value=0, max_value=9999999, decimal_places=2
+    )
+    datos_recientes = forms.BooleanField(
+        label='Con información práctica consultada en los últimos 90 días', required=False
+    )
 
     def clean(self):
         datos = super().clean()
@@ -102,7 +138,12 @@ class ExploracionForm(forms.Form):
 
     def __init__(self, *args, editorial=False, **kwargs):
         super().__init__(*args, **kwargs)
-        for campo, modelo in [('categoria', Categoria), ('municipio', Municipio), ('region', Region), ('servicio', Servicio)]:
+        for campo, modelo in [
+            ('categoria', Categoria),
+            ('municipio', Municipio),
+            ('region', Region),
+            ('servicio', Servicio),
+        ]:
             opciones = list(modelo.objects.values_list('slug', 'nombre'))
             if editorial and campo != 'servicio':
                 opciones = sorted({(slugify(lugar[campo]), lugar[campo]) for lugar in INSPIRACION})
@@ -116,12 +157,25 @@ def listado(request):
     datos = formulario.cleaned_data if valido else {}
     texto = datos.get('q', '')
     if editorial:
-        resultados = [lugar for lugar in INSPIRACION
-                      if normalizar(texto) in normalizar(lugar['nombre'] + ' ' + lugar['descripcion'] + ' ' + lugar['municipio'])
-                      and all(not datos.get(campo) or datos[campo] == slugify(lugar[campo])
-                              for campo in ['categoria', 'municipio', 'region'])
-                      and not datos.get('servicio') and not datos.get('datos_recientes') and datos.get('calificacion_min') is None
-                      and datos.get('precio_max') is None and not datos.get('concepto')] if valido else []
+        resultados = (
+            [
+                lugar
+                for lugar in INSPIRACION
+                if normalizar(texto)
+                in normalizar(lugar['nombre'] + ' ' + lugar['descripcion'] + ' ' + lugar['municipio'])
+                and all(
+                    not datos.get(campo) or datos[campo] == slugify(lugar[campo])
+                    for campo in ['categoria', 'municipio', 'region']
+                )
+                and not datos.get('servicio')
+                and not datos.get('datos_recientes')
+                and datos.get('calificacion_min') is None
+                and datos.get('precio_max') is None
+                and not datos.get('concepto')
+            ]
+            if valido
+            else []
+        )
     else:
         queryset = con_info_reciente(destinos_publicos(con_fotos=True))
         resultados = filtrar_destinos(queryset, datos) if valido else queryset.none()
@@ -132,23 +186,33 @@ def listado(request):
         lugar['tiene_info_reciente'] = getattr(destino, 'tiene_info_reciente', False)
         lugares.append(lugar)
     puntos = [lugar for lugar in lugares if not lugar['editorial']]
-    return render(request, 'destinos/listado.html', {
-        'lugares': lugares, 'pagina': pagina, 'q': texto, 'formulario': formulario,
-        'categoria': datos.get('categoria', ''), 'filtros': urlencode({k: v for k, v in datos.items() if v is not None and v != ''}),
-        'puntos_mapa': puntos, 'editorial': editorial,
-    })
+    return render(
+        request,
+        'destinos/listado.html',
+        {
+            'lugares': lugares,
+            'pagina': pagina,
+            'q': texto,
+            'formulario': formulario,
+            'categoria': datos.get('categoria', ''),
+            'filtros': urlencode({k: v for k, v in datos.items() if v is not None and v != ''}),
+            'puntos_mapa': puntos,
+            'editorial': editorial,
+        },
+    )
 
 
 def detalle(request, slug):
+    destino = None
     if not Destino.objects.exists():
         lugar = next((item for item in INSPIRACION if item['slug'] == slug), None)
         if lugar is None:
             raise Http404('Destino no encontrado')
     else:
-        lugar = presentar(get_object_or_404(destinos_publicos(con_fotos=True), slug=slug))
+        destino = get_object_or_404(destinos_publicos(con_fotos=True), slug=slug)
+        lugar = presentar(destino)
     contexto = {'lugar': completar(lugar), 'hoy': timezone.localdate().isoformat()}
-    if not lugar['editorial']:
-        destino = get_object_or_404(Destino, slug=slug, es_activo=True)
+    if destino is not None:
         contexto['practica'] = ficha_practica(destino)
         contexto['campos_practicos'] = Colaboracion.CAMPOS
         contexto['preguntas'] = Paginator(preguntas_publicas(destino), 8).get_page(request.GET.get('preguntas'))

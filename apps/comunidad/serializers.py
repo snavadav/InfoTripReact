@@ -36,7 +36,12 @@ class AporteSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({'imagen': 'Selecciona una imagen.'})
         if tipo == 'gasto' and (valor('monto') is None or not valor('concepto')):
             raise serializers.ValidationError('Indica monto en MXN y concepto del gasto.')
-        for campo, requerido_por in [('calificacion', 'resena'), ('imagen', 'foto'), ('monto', 'gasto'), ('concepto', 'gasto')]:
+        for campo, requerido_por in [
+            ('calificacion', 'resena'),
+            ('imagen', 'foto'),
+            ('monto', 'gasto'),
+            ('concepto', 'gasto'),
+        ]:
             if tipo != requerido_por and datos.get(campo) not in (None, ''):
                 raise serializers.ValidationError({campo: 'Este campo no corresponde al tipo de aporte.'})
         return datos

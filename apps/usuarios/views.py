@@ -8,6 +8,7 @@ from rest_framework.views        import APIView
 from rest_framework.response     import Response
 from rest_framework.permissions  import IsAuthenticated, AllowAny
 from rest_framework.throttling   import AnonRateThrottle
+from rest_framework_simplejwt.exceptions    import TokenError
 from rest_framework_simplejwt.tokens        import RefreshToken
 from django.db                   import IntegrityError, transaction
 
@@ -42,10 +43,14 @@ class RegistroView(generics.CreateAPIView):
             except IntegrityError:
                 pass  # Registro simultáneo del mismo correo: la cuenta ya existe.
 
-        return Response({
-            'mensaje': 'Registro recibido. Inicia sesión con tu correo y contraseña para verificar tu cuenta con un código.',
-            'requiere_verificacion': True,
-        }, status=status.HTTP_201_CREATED)
+        return Response(
+            {
+                'mensaje': ('Registro recibido. Inicia sesión con tu correo y contraseña '
+                            'para verificar tu cuenta con un código.'),
+                'requiere_verificacion': True,
+            },
+            status=status.HTTP_201_CREATED,
+        )
 
 
 # ─── LOGOUT ───────────────────────────────────────────────────
@@ -57,17 +62,17 @@ class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        refresh_token = request.data.get('refresh') if hasattr(request.data, 'get') else None
+        if not refresh_token:
+            return Response(
+                {'error': 'Se requiere el refresh token.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        # Solo se capturan errores del token: cualquier otro fallo debe verse, no convertirse en un 400.
         try:
-            refresh_token = request.data.get('refresh')
-            if not refresh_token:
-                return Response(
-                    {'error': 'Se requiere el refresh token.'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            token = RefreshToken(refresh_token)
-            token.blacklist()
+            RefreshToken(str(refresh_token)).blacklist()
             return Response({'mensaje': 'Sesión cerrada correctamente.'})
-        except Exception:
+        except TokenError:
             return Response(
                 {'error': 'Token inválido o ya expirado.'},
                 status=status.HTTP_400_BAD_REQUEST

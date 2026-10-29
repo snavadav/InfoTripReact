@@ -22,24 +22,42 @@ class Viaje(models.Model):
     class Meta:
         ordering = ['-actualizado', '-pk']
         constraints = [
-            models.CheckConstraint(condition=models.Q(personas__gte=1, personas__lte=100), name='viaje_personas_validas'),
+            models.CheckConstraint(
+                condition=models.Q(personas__gte=1, personas__lte=100), name='viaje_personas_validas'
+            ),
             models.CheckConstraint(condition=models.Q(presupuesto__gte=0), name='viaje_presupuesto_valido'),
-            models.CheckConstraint(condition=models.Q(fecha_fin__gte=models.F('fecha_inicio')), name='viaje_fechas_validas'),
+            models.CheckConstraint(
+                condition=models.Q(fecha_fin__gte=models.F('fecha_inicio')), name='viaje_fechas_validas'
+            ),
         ]
 
 
 class Aporte(models.Model):
     TIPOS = [('resena', 'Reseña'), ('foto', 'Fotografía'), ('gasto', 'Gasto')]
-    ESTADOS = [('pendiente', 'Pendiente'), ('publicado', 'Publicado'), ('oculto', 'Oculto'), ('retirado', 'Retirado por autor')]
-    CONCEPTOS = [('entrada', 'Entrada por persona'), ('comida', 'Comida por persona'), ('alojamiento', 'Alojamiento por noche'), ('transporte', 'Transporte por persona')]
+    ESTADOS = [
+        ('pendiente', 'Pendiente'),
+        ('publicado', 'Publicado'),
+        ('oculto', 'Oculto'),
+        ('retirado', 'Retirado por autor'),
+    ]
+    CONCEPTOS = [
+        ('entrada', 'Entrada por persona'),
+        ('comida', 'Comida por persona'),
+        ('alojamiento', 'Alojamiento por noche'),
+        ('transporte', 'Transporte por persona'),
+    ]
     destino = models.ForeignKey('destinos.Destino', on_delete=models.PROTECT, related_name='aportes')
     autor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='aportes')
     tipo = models.CharField(max_length=10, choices=TIPOS)
     texto = models.TextField(max_length=2000)
     fecha_visita = models.DateField()
-    calificacion = models.PositiveSmallIntegerField(null=True, blank=True, validators=[MinValueValidator(1), MaxValueValidator(5)])
+    calificacion = models.PositiveSmallIntegerField(
+        null=True, blank=True, validators=[MinValueValidator(1), MaxValueValidator(5)]
+    )
     imagen = models.ImageField(upload_to='comunidad/%Y/%m/', blank=True)
-    monto = models.DecimalField(max_digits=9, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(Decimal(0))])
+    monto = models.DecimalField(
+        max_digits=9, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(Decimal(0))]
+    )
     concepto = models.CharField(max_length=15, choices=CONCEPTOS, blank=True)
     estado = models.CharField(max_length=12, choices=ESTADOS, default='pendiente')
     creado = models.DateTimeField(auto_now_add=True)
@@ -48,9 +66,18 @@ class Aporte(models.Model):
     class Meta:
         ordering = ['-creado', '-pk']
         constraints = [
-            models.UniqueConstraint(fields=['autor', 'destino'], condition=models.Q(tipo='resena') & ~models.Q(estado='retirado'), name='una_resena_vigente'),
-            models.CheckConstraint(condition=models.Q(calificacion__isnull=True) | models.Q(calificacion__gte=1, calificacion__lte=5), name='aporte_calificacion_rango'),
-            models.CheckConstraint(condition=models.Q(monto__isnull=True) | models.Q(monto__gte=0), name='aporte_monto_positivo'),
+            models.UniqueConstraint(
+                fields=['autor', 'destino'],
+                condition=models.Q(tipo='resena') & ~models.Q(estado='retirado'),
+                name='una_resena_vigente',
+            ),
+            models.CheckConstraint(
+                condition=models.Q(calificacion__isnull=True) | models.Q(calificacion__gte=1, calificacion__lte=5),
+                name='aporte_calificacion_rango',
+            ),
+            models.CheckConstraint(
+                condition=models.Q(monto__isnull=True) | models.Q(monto__gte=0), name='aporte_monto_positivo'
+            ),
         ]
         indexes = [models.Index(fields=['destino', 'estado', 'tipo'], name='aporte_publico_idx')]
 
@@ -91,7 +118,16 @@ class Favorito(models.Model):
 
 
 class Colaboracion(models.Model):
-    CAMPOS = [('horarios', 'Horarios'), ('acceso', 'Cómo acceder'), ('estacionamiento', 'Estacionamiento'), ('pago', 'Formas de pago'), ('restricciones', 'Restricciones'), ('accesibilidad', 'Accesibilidad'), ('contacto', 'Contacto'), ('precios', 'Precios y cargos adicionales')]
+    CAMPOS = [
+        ('horarios', 'Horarios'),
+        ('acceso', 'Cómo acceder'),
+        ('estacionamiento', 'Estacionamiento'),
+        ('pago', 'Formas de pago'),
+        ('restricciones', 'Restricciones'),
+        ('accesibilidad', 'Accesibilidad'),
+        ('contacto', 'Contacto'),
+        ('precios', 'Precios y cargos adicionales'),
+    ]
     TIPOS = [('correccion', 'Información práctica / corrección'), ('pregunta', 'Pregunta'), ('respuesta', 'Respuesta')]
     ESTADOS = [('pendiente', 'Pendiente'), ('publicado', 'Publicado'), ('oculto', 'Oculto')]
     destino = models.ForeignKey('destinos.Destino', on_delete=models.PROTECT, related_name='colaboraciones')
