@@ -32,7 +32,36 @@ class Viaje(models.Model):
         ]
 
 
-class Aporte(models.Model):
+class Moderable(models.Model):
+    """Contenido de la comunidad que un moderador publica u oculta, con historial de cada cambio.
+
+    Las subclases definen `estado` y cómo guardan su historial; la moderación la hace moderacion.moderar().
+    """
+    # Estados que la moderación no puede cambiar (por ejemplo, un aporte que retiró su autor).
+    ESTADOS_SIN_MODERACION = ()
+    CAMPOS_AL_MODERAR = ['estado']
+
+    class Meta:
+        abstract = True
+
+    def registrar_moderacion(self, **campos):
+        raise NotImplementedError
+
+
+class RegistroModeracion(models.Model):
+    """Historial de solo lectura: quién cambió el estado, de cuál a cuál y por qué."""
+    moderador = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    estado_anterior = models.CharField(max_length=12)
+    estado_nuevo = models.CharField(max_length=12)
+    motivo = models.TextField(max_length=1000)
+    creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        abstract = True
+        ordering = ['-creado', '-pk']
+
+
+class Aporte(Moderable):
     TIPOS = [('resena', 'Reseña'), ('foto', 'Fotografía'), ('gasto', 'Gasto')]
     ESTADOS = [
         ('pendiente', 'Pendiente'),
@@ -81,8 +110,14 @@ class Aporte(models.Model):
         ]
         indexes = [models.Index(fields=['destino', 'estado', 'tipo'], name='aporte_publico_idx')]
 
+    ESTADOS_SIN_MODERACION = ('retirado',)
+    CAMPOS_AL_MODERAR = ['estado', 'actualizado']
+
     def __str__(self):
         return f'{self.get_tipo_display()} · {self.destino} · {self.autor.nombre}'
+
+    def registrar_moderacion(self, **campos):
+        return self.decisiones.create(**campos)
 
 
 class Reporte(models.Model):
@@ -96,15 +131,8 @@ class Reporte(models.Model):
         constraints = [models.UniqueConstraint(fields=['aporte', 'autor'], name='un_reporte_por_autor')]
 
 
-class Decision(models.Model):
+class Decision(RegistroModeracion):
     aporte = models.ForeignKey(Aporte, on_delete=models.PROTECT, related_name='decisiones')
-    moderador = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
-    estado_anterior = models.CharField(max_length=12)
-    estado_nuevo = models.CharField(max_length=12)
-    motivo = models.TextField(max_length=1000)
-    creado = models.DateTimeField(auto_now_add=True)
-    class Meta:
-        ordering = ['-creado']
 
 
 class Favorito(models.Model):
@@ -117,7 +145,7 @@ class Favorito(models.Model):
         constraints = [models.UniqueConstraint(fields=['autor', 'destino'], name='favorito_unico')]
 
 
-class Colaboracion(models.Model):
+class Colaboracion(Moderable):
     CAMPOS = [
         ('horarios', 'Horarios'),
         ('acceso', 'Cómo acceder'),
@@ -148,14 +176,9 @@ class Colaboracion(models.Model):
     def __str__(self):
         return f'{self.get_tipo_display()} · {self.destino} · {self.pk}'
 
+    def registrar_moderacion(self, **campos):
+        return self.revisiones.create(**campos)
 
-class RevisionColaboracion(models.Model):
+
+class RevisionColaboracion(RegistroModeracion):
     colaboracion = models.ForeignKey(Colaboracion, on_delete=models.PROTECT, related_name='revisiones')
-    moderador = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
-    anterior = models.CharField(max_length=12)
-    nuevo = models.CharField(max_length=12)
-    motivo = models.CharField(max_length=500)
-    creado = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ['-creado', '-pk']

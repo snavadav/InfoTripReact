@@ -23,8 +23,6 @@ ignore = [
 "infotrip/settings_*.py" = ["F403"]
 # Las pruebas conservan su estilo compacto de datos en línea.
 "**/test*.py" = ["E501"]
-# Pendiente de la recomendación 6 de la Fase 3 (importación a mitad de archivo).
-"apps/comunidad/admin.py" = ["E402"]
 
 # Formato solo para ajustar líneas largas a mano (ruff format --range); conserva las comillas simples.
 [tool.ruff.format]

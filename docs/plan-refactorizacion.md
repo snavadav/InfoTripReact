@@ -19,12 +19,12 @@ Plan acordado el 22/10/2026 a partir de la revisión de arquitectura. Rama: `ref
 - [x] `CACHES` con Redis configurable y LocMem de respaldo.
 - [ ] Revisar la primera ejecución de la CI en el PR.
 
-## Fase 3: arquitectura (recomendaciones 4, 5 y 6)
+## Fase 3: arquitectura (recomendaciones 4, 5 y 6). Terminada
 
-- [ ] 4: crear `apps/comunidad/selectors.py` y `apps/core/` (mover `imagenes.py`); eliminar las importaciones dentro de funciones entre `destinos` y `comunidad`.
-- [ ] 5: una sola fuente de verdad para los filtros de destinos (django-filter) compartida por la API y la vista HTML, con una prueba de que ambas devuelven lo mismo.
-- [ ] 6: modelo abstracto `Moderable` y función única `moderar()`. La migración de datos conserva todo el historial de `Decision` y `RevisionColaboracion`; mostrar el plan de migración antes de aplicarla.
-- [ ] Limpieza: importaciones a mitad de archivo (quitar sus excepciones de ruff), consultas repetidas en `frontend.py`, el `except Exception` de `LogoutView`, líneas de más de 120 caracteres y el JS minificado de `favoritos.js`.
+- [x] 4: `apps/comunidad/selectors.py` y `apps/core/` (con `imagenes.py`); sin importaciones dentro de funciones. `destinos` usa `comunidad` solo mediante `selectors` y `models` (lo comprueba `test_dependencias.py`).
+- [x] 5: `FiltroDestinos` (django-filter) en `apps/destinos/filtros.py`, compartido por la API y `/destinos/`, con una prueba de que ambas devuelven lo mismo. La validación sigue en cada interfaz para no cambiar los mensajes de error.
+- [x] 6: modelos abstractos `Moderable` y `RegistroModeracion`, y `moderacion.moderar()`. Plan aprobado: se mantienen las dos tablas de historial; la migración `comunidad.0004` solo renombra columnas y amplía `motivo`, sin copiar ni borrar datos (lo comprueba `test_moderacion.py`).
+- [x] Limpieza: importaciones a mitad de archivo, consultas repetidas en `frontend.py`, el `except Exception` de `LogoutView`, líneas de más de 120 caracteres (E501 en el código de la aplicación) y el JS minificado de `favoritos.js`.
 
 ## Fase 4: funcionalidades (recomendaciones 7 y 8)
 
