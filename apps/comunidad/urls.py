@@ -2,7 +2,10 @@ from django.urls import path
 from .views import PublicarView, MisAportesView, EditarAporteView, ReportarView
 from .viajes import MisViajesView, ViajeView, VincularLugarView
 from .practica import ColaboracionesView, FavoritosView, FavoritoView
+from .avisos import NotificacionesView, NotificacionesLeidasView
 urlpatterns = [
+    path('notificaciones/', NotificacionesView.as_view(), name='notificaciones'),
+    path('notificaciones/leidas/', NotificacionesLeidasView.as_view(), name='notificaciones-leidas'),
     path('mis-viajes/<int:pk>/lugares/', VincularLugarView.as_view(), name='vincular-lugar'),
     path('destinos/<slug:slug>/colaboraciones/', ColaboracionesView.as_view(), name='colaboraciones'),
     path('favoritos/', FavoritosView.as_view(), name='favoritos-api'),

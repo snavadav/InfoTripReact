@@ -40,12 +40,37 @@ class Moderable(models.Model):
     # Estados que la moderación no puede cambiar (por ejemplo, un aporte que retiró su autor).
     ESTADOS_SIN_MODERACION = ()
     CAMPOS_AL_MODERAR = ['estado']
+    # Cómo se nombra cada tipo en el aviso al autor ("Publicamos tu reseña sobre…").
+    NOMBRES_EN_AVISO = {}
 
     class Meta:
         abstract = True
 
     def registrar_moderacion(self, **campos):
         raise NotImplementedError
+
+    def aviso_para_autor(self, anterior, estado):
+        """Texto del aviso al autor por un cambio de estado, o None si ese cambio no se avisa."""
+        tipo = self.NOMBRES_EN_AVISO.get(self.tipo, 'aporte')
+        if estado == 'publicado':
+            return f'Publicamos tu {tipo} sobre {self.destino.nombre}.'
+        if estado == 'oculto':
+            momento = 'tras una nueva revisión' if anterior == 'publicado' else 'tras la revisión'
+            return f'Ocultamos tu {tipo} sobre {self.destino.nombre} {momento}.'
+        return None
+
+
+class Notificacion(models.Model):
+    """Aviso interno para un usuario; se muestra en Mi perfil."""
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notificaciones')
+    texto = models.CharField(max_length=300)
+    enlace = models.CharField(max_length=300, blank=True)
+    leida = models.BooleanField(default=False)
+    creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-creado', '-pk']
+        indexes = [models.Index(fields=['usuario', 'leida'], name='notificacion_usuario_idx')]
 
 
 class RegistroModeracion(models.Model):
@@ -112,6 +137,7 @@ class Aporte(Moderable):
 
     ESTADOS_SIN_MODERACION = ('retirado',)
     CAMPOS_AL_MODERAR = ['estado', 'actualizado']
+    NOMBRES_EN_AVISO = {'resena': 'reseña', 'foto': 'fotografía', 'gasto': 'registro de gasto'}
 
     def __str__(self):
         return f'{self.get_tipo_display()} · {self.destino} · {self.autor.nombre}'
@@ -175,6 +201,8 @@ class Colaboracion(Moderable):
 
     def __str__(self):
         return f'{self.get_tipo_display()} · {self.destino} · {self.pk}'
+
+    NOMBRES_EN_AVISO = {'correccion': 'dato práctico', 'pregunta': 'pregunta', 'respuesta': 'respuesta'}
 
     def registrar_moderacion(self, **campos):
         return self.revisiones.create(**campos)
