@@ -179,3 +179,18 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='InfoTrip <no-reply@lo
 
 PUBLIC_BASE_URL = config('PUBLIC_BASE_URL', default='http://127.0.0.1:8000').rstrip('/')
 PASSWORD_RESET_TIMEOUT = 3600
+
+# ─── REGISTRO (LOGGING) ───────────────────────────────────────
+# Todo va a la salida estándar (12-factor): Docker, systemd o la plataforma lo recogen.
+# Los registros de InfoTrip nunca incluyen correos ni contraseñas: solo ids o huellas.
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {'simple': {'format': '{asctime} {levelname} {name}: {message}', 'style': '{'}},
+    'handlers': {'consola': {'class': 'logging.StreamHandler', 'formatter': 'simple'}},
+    'root': {'handlers': ['consola'], 'level': 'WARNING'},
+    'loggers': {
+        # infotrip.correo, infotrip.moderacion, infotrip.seguridad…
+        'infotrip': {'handlers': ['consola'], 'level': config('LOG_LEVEL', default='INFO'), 'propagate': False},
+    },
+}

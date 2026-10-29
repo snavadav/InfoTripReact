@@ -1,5 +1,6 @@
 """Inicio de sesión en dos pasos: contraseña y código enviado al buzón."""
 import hashlib
+import logging
 import secrets
 import uuid
 from datetime import timedelta
@@ -60,6 +61,9 @@ def hash_credencial(usuario):
     return salted_hmac('infotrip.login.credencial', usuario.password, algorithm='sha256').hexdigest()
 
 
+registro_seguridad = logging.getLogger('infotrip.seguridad')
+registro_correo = logging.getLogger('infotrip.correo')
+
 # Límite por cuenta, independiente de la IP: frena la prueba de contraseñas distribuida.
 LOGIN_MAX_FALLOS = 5
 LOGIN_BLOQUEO_SEGUNDOS = 15 * 60
@@ -73,9 +77,14 @@ def registrar_fallo(clave):
     # La ventana empieza en el primer fallo; incr conserva la caducidad original.
     cache.add(clave, 0, LOGIN_BLOQUEO_SEGUNDOS)
     try:
-        cache.incr(clave)
+        fallos = cache.incr(clave)
     except ValueError:
         cache.set(clave, 1, LOGIN_BLOQUEO_SEGUNDOS)
+        fallos = 1
+    if fallos == LOGIN_MAX_FALLOS:
+        # La huella identifica la cuenta en los registros sin escribir el correo.
+        registro_seguridad.warning('Cuenta bloqueada %s min tras %s contraseñas incorrectas (huella %s)',
+                                   LOGIN_BLOQUEO_SEGUNDOS // 60, LOGIN_MAX_FALLOS, clave[-12:])
 
 
 class LoginView(APIView):
@@ -129,6 +138,7 @@ class LoginView(APIView):
             if enviados != 1:
                 raise CorreoNoDisponible()
         except (SMTPException, OSError, CorreoNoDisponible) as error:
+            registro_correo.error('No se pudo enviar el código de acceso al usuario %s: %r', usuario.pk, error)
             # Sin correo entregado el desafío no sirve; se retira para permitir reintentar.
             CodigoAcceso.objects.filter(usuario=usuario, desafio=desafio).delete()
             if isinstance(error, CorreoNoDisponible):

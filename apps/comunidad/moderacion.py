@@ -1,6 +1,9 @@
 """Moderación de contenido comunitario (aportes y colaboraciones) con una sola regla."""
+import logging
 from django.urls import reverse
 from .models import Notificacion
+
+registro = logging.getLogger('infotrip.moderacion')
 
 
 def moderar(objeto, moderador, estado, motivo, registrar_sin_cambio=False):
@@ -20,6 +23,8 @@ def moderar(objeto, moderador, estado, motivo, registrar_sin_cambio=False):
         objeto.estado = estado
         objeto.save(update_fields=objeto.CAMPOS_AL_MODERAR)
     objeto.registrar_moderacion(moderador=moderador, estado_anterior=anterior, estado_nuevo=estado, motivo=motivo)
+    registro.info('%s %s: %s → %s por el moderador %s', type(objeto).__name__, objeto.pk, anterior, estado,
+                  moderador.pk)
     if cambia:
         avisar_al_autor(objeto, anterior, estado)
     return cambia

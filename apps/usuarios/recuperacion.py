@@ -13,7 +13,7 @@ from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
 from smtplib import SMTPException
 from .models import Usuario
-from .verificacion import CorreoNoDisponible
+from .verificacion import CorreoNoDisponible, registro_correo
 
 
 class RecuperacionThrottle(AnonRateThrottle):
@@ -53,7 +53,8 @@ class RecuperarView(APIView):
                     fail_silently=False,
                 )
                 if enviados != 1: raise CorreoNoDisponible()
-            except (SMTPException, OSError) as error:
+            except (SMTPException, OSError, CorreoNoDisponible) as error:
+                registro_correo.error('No se pudo enviar la recuperación al usuario %s: %r', usuario.pk, error)
                 raise CorreoNoDisponible() from error
         return Response({'mensaje': 'Si existe una cuenta activa con ese correo, recibirás un enlace de recuperación.',
                          'modo_prueba': settings.EMAIL_BACKEND.endswith('console.EmailBackend')})

@@ -21,6 +21,8 @@ if not REDIS_URL:  # noqa: F405
 
 # ─── HTTPS ────────────────────────────────────────────────────
 SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=True, cast=bool)
+# El chequeo de salud de Docker o del balanceador llega por HTTP desde dentro de la red.
+SECURE_REDIRECT_EXEMPT = [r'^health/$']
 # Solo si un proxy de confianza termina TLS y fija X-Forwarded-Proto (por ejemplo nginx).
 if config('DETRAS_DE_PROXY_HTTPS', default=False, cast=bool):
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
