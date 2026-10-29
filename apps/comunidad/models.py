@@ -61,16 +61,27 @@ class Moderable(models.Model):
 
 
 class Notificacion(models.Model):
-    """Aviso interno para un usuario; se muestra en Mi perfil."""
+    """Aviso interno para un usuario; se muestra en Mi perfil y, si corresponde, se envía por correo.
+
+    El correo no se envía al moderar: lo envía después el comando `enviar_avisos`.
+    """
+    MAX_INTENTOS_CORREO = 3
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notificaciones')
     texto = models.CharField(max_length=300)
     enlace = models.CharField(max_length=300, blank=True)
     leida = models.BooleanField(default=False)
     creado = models.DateTimeField(auto_now_add=True)
+    correo_pendiente = models.BooleanField(default=False)
+    correo_intentos = models.PositiveSmallIntegerField(default=0)
+    correo_enviado = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ['-creado', '-pk']
-        indexes = [models.Index(fields=['usuario', 'leida'], name='notificacion_usuario_idx')]
+        indexes = [
+            models.Index(fields=['usuario', 'leida'], name='notificacion_usuario_idx'),
+            models.Index(fields=['correo_pendiente'], name='notificacion_correo_idx',
+                         condition=models.Q(correo_pendiente=True)),
+        ]
 
 
 class RegistroModeracion(models.Model):

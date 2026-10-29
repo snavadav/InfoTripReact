@@ -1,8 +1,13 @@
 """Moderación unificada (recomendación 6): moderar() y la migración que conserva el historial."""
+from io import StringIO
+from smtplib import SMTPException
+from unittest.mock import patch
 from django.contrib.auth.models import Permission
+from django.core import mail
+from django.core.management import call_command
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
-from django.test import TestCase, TransactionTestCase
+from django.test import TestCase, TransactionTestCase, override_settings
 from django.utils import timezone
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -173,3 +178,43 @@ class ColaModeracionTests(DatosModeracion):
         self.client.force_login(personal)
         secciones = self.client.get('/admin/moderacion/').context['secciones']
         self.assertEqual([s['titulo'] for s in secciones], ['Colaboraciones pendientes'])
+
+
+@override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
+                   PUBLIC_BASE_URL='https://infotrip.example')
+class AvisosPorCorreoTests(DatosModeracion):
+    def enviar(self):
+        call_command('enviar_avisos', stdout=StringIO())
+
+    def test_moderar_deja_el_correo_pendiente_y_el_comando_lo_envia(self):
+        moderar(self.aporte(), self.moderador, 'publicado', 'Reporte 3: texto ajeno')
+        self.assertEqual(len(mail.outbox), 0)
+        self.enviar()
+        self.assertEqual(len(mail.outbox), 1)
+        mensaje = mail.outbox[0]
+        self.assertEqual(mensaje.to, [self.autor.email])
+        self.assertIn('Publicamos tu reseña sobre Destino.', mensaje.body)
+        self.assertIn('https://infotrip.example/destinos/destino/', mensaje.body)
+        self.assertNotIn('Reporte', mensaje.body)
+        aviso = Notificacion.objects.get()
+        self.assertFalse(aviso.correo_pendiente)
+        self.assertIsNotNone(aviso.correo_enviado)
+        self.enviar()
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_reintenta_y_se_rinde_tras_tres_fallos(self):
+        moderar(self.aporte(), self.moderador, 'publicado', 'Revisado')
+        with patch('apps.comunidad.management.commands.enviar_avisos.send_mail', side_effect=SMTPException('caído')), \
+                self.assertLogs('infotrip.correo', 'ERROR'):
+            for _ in range(4):
+                self.enviar()
+        aviso = Notificacion.objects.get()
+        self.assertEqual((aviso.correo_intentos, aviso.correo_pendiente, aviso.correo_enviado), (3, False, None))
+
+    def test_no_envia_a_cuentas_inactivas_ni_avisos_antiguos(self):
+        Notificacion.objects.create(usuario=self.autor, texto='Aviso anterior al correo')
+        moderar(self.aporte(), self.moderador, 'publicado', 'Revisado')
+        Usuario.objects.filter(pk=self.autor.pk).update(es_activo=False)
+        self.enviar()
+        self.assertEqual(len(mail.outbox), 0)
+        self.assertFalse(Notificacion.objects.filter(correo_pendiente=True).exists())

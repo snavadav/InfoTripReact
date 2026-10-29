@@ -35,4 +35,4 @@ def avisar_al_autor(objeto, anterior, estado):
     texto = objeto.aviso_para_autor(anterior, estado)
     if texto:
         enlace = reverse('destino-detalle', kwargs={'slug': objeto.destino.slug}) if estado == 'publicado' else ''
-        Notificacion.objects.create(usuario=objeto.autor, texto=texto, enlace=enlace)
+        Notificacion.objects.create(usuario=objeto.autor, texto=texto, enlace=enlace, correo_pendiente=True)
