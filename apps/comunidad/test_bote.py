@@ -118,7 +118,8 @@ class InvitacionTests(BoteBase):
         pagina = self.client.get(f'/botes/{enlace}/')
         self.assertContains(pagina, 'Con amigos')
         self.assertContains(pagina, 'noindex')
-        self.assertNotContains(pagina, '987')
+        # Con los centavos: "987" solo podría aparecer por azar en el enlace de la invitación.
+        self.assertNotContains(pagina, '987.65')
         self.assertNotContains(pagina, 'ana@example.com')
 
     def test_limite_de_personas(self):

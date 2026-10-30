@@ -14,7 +14,8 @@ class Evento(models.Model):
     DEL_SERVIDOR = ['registro_completado', 'login_completado', 'aporte_enviado', 'aporte_publicado',
                     'dato_enviado', 'dato_confirmado', 'reporte_enviado', 'viaje_guardado', 'favorito_guardado',
                     'bote_creado', 'bote_unido', 'gasto_real_publicado', 'visita_comprobada',
-                    'sello_obtenido', 'interes_negocio']
+                    'sello_obtenido', 'interes_negocio', 'resena_lugar_enviada', 'resena_lugar_publicada',
+                    'lugar_confirmado', 'lugar_propuesto', 'lugar_aprobado']
 
     nombre = models.CharField(max_length=40)
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,

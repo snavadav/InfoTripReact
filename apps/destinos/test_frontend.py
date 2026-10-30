@@ -49,7 +49,8 @@ class PaginasDestinoTests(TestCase):
         self.assertContains(respuesta, 'Calle de prueba 10')
         self.assertContains(respuesta, '&lt;script&gt;')
         self.assertNotContains(respuesta, '<script>alert(1)</script>')
-        self.assertContains(respuesta, 'Las fotografías de este destino estarán disponibles pronto.')
+        self.assertContains(respuesta, 'Aún no hay fotografías de este lugar.')
+        self.assertContains(respuesta, 'id="ficha-mapa"')
 
     def test_no_reaparece_destino_inactivo_como_editorial(self):
         self.crear_destino(slug='tequila', es_activo=False)
@@ -97,9 +98,18 @@ class ExploracionMapaTests(TestCase):
         respuesta = self.client.get('/destinos/', {'categoria': 'naturaleza', 'servicio': 'banos',
             'municipio': 'municipio-prueba', 'region': 'region-prueba', 'page': 2})
         self.assertEqual(respuesta.context['pagina'].paginator.count, 10)
-        self.assertEqual(len(respuesta.context['puntos_mapa']), 2)
+        # La lista va por páginas; el mapa muestra todos los resultados.
+        self.assertEqual(len(respuesta.context['lugares']), 2)
+        self.assertEqual(len(respuesta.context['puntos_mapa']), 10)
         self.assertContains(respuesta, 'servicio=banos')
         self.assertContains(respuesta, 'municipio=municipio-prueba')
+
+    def test_lo_curado_aparece_antes_que_lo_importado(self):
+        self.crear_destino(nombre='Antes por nombre', slug='importado', osm_id='node/1')
+        self.crear_destino(nombre='Zapotlán', slug='propio')
+        self.assertEqual([lugar['slug'] for lugar in self.client.get('/destinos/').context['lugares']],
+                         ['propio', 'importado'])
+        self.assertEqual(self.client.get('/').context['exploracion'][0]['slug'], 'propio')
 
     def test_filtro_invalido_no_devuelve_catalogo_completo(self):
         self.crear_destino()
@@ -212,4 +222,6 @@ class FiltrosSinValorTests(TestCase):
     def test_una_casilla_sin_marcar_no_cuenta_como_filtro(self):
         self.assertEqual(self.client.get('/destinos/').context['filtros'], '')
         self.assertContains(self.client.get('/destinos/'), 'data-activos="false"')
-        self.assertContains(self.client.get('/destinos/', {'q': 'lago'}), 'data-activos="true"')
+        # La búsqueda está fuera del panel de filtros: no hace falta abrirlo para verla.
+        self.assertContains(self.client.get('/destinos/', {'q': 'lago'}), 'data-activos="false"')
+        self.assertContains(self.client.get('/destinos/', {'concepto': 'comida'}), 'data-activos="true"')

@@ -8,7 +8,7 @@ from statistics import median
 from django.db.models import Avg, Count, DateField, Exists, Max, Min, OuterRef, Prefetch, Q, Subquery, Value
 from django.db.models.functions import Coalesce, Greatest
 from django.utils import timezone
-from .models import Aporte, Colaboracion, Confirmacion, VisitaComprobada
+from .models import Aporte, Colaboracion, Confirmacion, ConfirmacionLugar, ResenaLugar, VisitaComprobada
 
 # Lista del programa federal consultada en prensa (docs/catalogo-inicial.md): confírmala si cambia.
 # El sello se activa solo en cuanto exista un destino publicado con ese slug.
@@ -263,3 +263,43 @@ def cronistas():
             'municipio': fila['destino__municipio__nombre'], 'nombre': fila['autor__nombre'], 'datos': fila['datos'],
         })
     return list(elegidos.values())
+
+
+def resenas_publicas_de_lugar(lugar):
+    return ResenaLugar.objects.filter(lugar=lugar, estado='publicado', autor__es_activo=True).select_related('autor')
+
+
+def con_resumen_de_resenas(lugares):
+    """Anota `calificacion_promedio` y `num_resenas` en una sola consulta, aunque sean cientos de lugares."""
+    resenas = (ResenaLugar.objects.filter(lugar_id=OuterRef('pk'), estado='publicado', autor__es_activo=True)
+               .order_by().values('lugar_id'))
+    return lugares.annotate(
+        calificacion_promedio=Subquery(resenas.annotate(valor=Avg('calificacion')).values('valor')),
+        num_resenas=Coalesce(Subquery(resenas.annotate(valor=Count('pk')).values('valor')), Value(0)),
+    )
+
+
+TIPOS_CON_GASTO = ('comer', 'dormir')
+
+
+def gasto_de_lugar(lugar):
+    """Lo habitual según las reseñas del último año. Con pocas sería la opinión de una o dos personas."""
+    montos = list(resenas_publicas_de_lugar(lugar).filter(
+        monto__isnull=False, fecha_visita__gte=timezone.localdate() - timedelta(days=365),
+    ).values_list('monto', flat=True))
+    if len(montos) < MINIMO_REPORTES:
+        return None
+    return {'mediana': median(montos), 'minimo': min(montos), 'maximo': max(montos), 'cantidad': len(montos)}
+
+
+def estado_de_lugar(lugar):
+    """Respuestas del último año a "¿Sigue abierto?". Una sola persona no basta para sugerir un cierre."""
+    respuestas = list(ConfirmacionLugar.objects.filter(
+        lugar=lugar, autor__es_activo=True, fecha__gte=timezone.localdate() - timedelta(days=365),
+    ).values_list('abierto', 'fecha'))
+    abiertos = sum(abierto for abierto, _ in respuestas)
+    cerrados = len(respuestas) - abiertos
+    return {
+        'abiertos': abiertos, 'cerrados': cerrados, 'ultima': max((fecha for _, fecha in respuestas), default=None),
+        'posible_cierre': cerrados >= 2 and cerrados > abiertos,
+    }

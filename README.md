@@ -179,6 +179,9 @@ docker compose --env-file .env.docker down
 | `/login/`, `/registro/`, `/recuperar/` | Acceso a la cuenta |
 | `/perfil/` | Datos personales, avisos de moderación y aportes propios |
 | `/favoritos/`, `/mis-viajes/` | Lugares guardados y planes de viaje |
+| `/lugares/proponer/` | Proponer un lugar que falta, marcándolo en el mapa; se publica al aprobarlo el equipo |
+| `/lugares/<id>/` | Ficha de un restaurante, hotel o servicio: contacto, reseñas y "¿Sigue abierto?" |
+| `/destinos/` (mapa) | Explorador con todos los resultados en el mapa, ficha rápida, favoritos y recorrido guardado en el navegador |
 | `/mis-viajes/<id>/bote/`, `/botes/<invitación>/` | Bote de la escapada: gastos reales del grupo y quién le debe a quién |
 | `/admin/` | Administración del catálogo, usuarios y moderación |
 | `/admin/moderacion/` | Cola de moderación con contadores (personal) |
@@ -224,6 +227,13 @@ La referencia completa e interactiva está en `/api/v1/docs/` (Swagger) y el esq
 | Bote | `/api/v1/mis-viajes/<id>/bote/participantes/<id>/` | DELETE |
 | Bote | `/api/v1/mis-viajes/<id>/bote/publicar/` | POST |
 | Bote | `/api/v1/botes/<invitación>/unirse/`, `/api/v1/mis-botes/` | POST, GET |
+| Lugares | `/api/v1/lugares/` (zona visible) | GET |
+| Lugares | `/api/v1/lugares/cerca/` | POST |
+| Lugares | `/api/v1/lugares/propuestas/` | GET, POST |
+| Lugares | `/api/v1/lugares/<id>/resenas/` | GET, POST |
+| Lugares | `/api/v1/lugares/<id>/mi-opinion/` | GET, PATCH, DELETE |
+| Lugares | `/api/v1/lugares/<id>/estado/` ("¿Sigue abierto?") | POST |
+| Lugares | `/api/v1/resenas-lugar/<id>/reportar/`, `/api/v1/mis-resenas-lugar/` | POST, GET |
 | Visitas | `/api/v1/destinos/<slug>/visita/` | GET, POST |
 | Negocios | `/api/v1/negocios/interes/` | POST |
 | Pasaporte | `/api/v1/mi-pasaporte/` | GET |
@@ -248,6 +258,7 @@ Registrarse o iniciar sesión envía un código al correo, y `verificar-codigo` 
 | `python manage.py generar_miniaturas` | Crea las miniaturas de fotos anteriores a este campo; basta una vez |
 | `python manage.py purgar_eventos` | Borra los eventos de uso de más de 13 meses |
 | `python manage.py cargar_destinos_iniciales` | Carga opcional del catálogo inicial |
+| `python manage.py importar_lugares` | Importa dónde comer, dormir y servicios de OpenStreetMap; se publican de inmediato ([guía](docs/importar-osm.md)) |
 | `python manage.py importar_osm` | Importa lugares de OpenStreetMap, ocultos hasta publicarlos; gratis y sin cuenta ([guía](docs/importar-osm.md)) |
 
 Los registros van a la salida estándar. `LOG_LEVEL` ajusta el detalle, y nunca incluyen correos ni contraseñas. Copias de seguridad, restauración y monitoreo en [la guía de operación](docs/operacion.md).

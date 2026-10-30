@@ -1,0 +1,23 @@
+{% if cerca %}
+<section class="community-section" id="cerca-de-aqui" aria-labelledby="cerca-titulo">
+  <h2 id="cerca-titulo">Cerca de aquí</h2>
+  <p class="community-note">A menos de 5 km en línea recta. Son datos de <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© colaboradores de OpenStreetMap</a> y pueden estar desactualizados: confirma antes de ir.</p>
+  <div class="cerca-grupos">
+    {% for grupo in cerca %}
+    <div class="community-box cerca-grupo">
+      <h3>{{ grupo.titulo }}</h3>
+      <ul>
+        {% for sitio in grupo.lugares %}
+        <li>
+          <div class="cerca-fila"><strong><a href="{% url 'lugar-detalle' sitio.pk %}">{{ sitio.nombre }}</a></strong><span class="cerca-distancia">{{ sitio.distancia_legible }}</span></div>
+          <small>{{ sitio.get_subtipo_display }}{% if sitio.num_resenas %} · {{ sitio.calificacion_promedio|floatformat:1 }} / 5{% endif %}{% if sitio.horario %} · {{ sitio.horario }}{% endif %}</small>
+          <div class="cerca-enlaces"><a href="https://www.google.com/maps/dir/?api=1&amp;destination={{ sitio.latitud }},{{ sitio.longitud }}" target="_blank" rel="noopener noreferrer">Cómo llegar ↗</a>{% if sitio.telefono %}<a href="tel:{{ sitio.telefono_marcable }}">{{ sitio.telefono }}</a>{% endif %}{% if sitio.sitio_web %}<a href="{{ sitio.sitio_web }}" target="_blank" rel="noopener noreferrer">Sitio web ↗</a>{% endif %}</div>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endfor %}
+  </div>
+  <p class="explorer-enlace"><a href="{% url 'proponer-lugar' %}">¿Falta un lugar? Propónlo →</a></p>
+</section>
+{% endif %}

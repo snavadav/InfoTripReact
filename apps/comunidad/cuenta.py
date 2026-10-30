@@ -17,8 +17,8 @@ from apps.metricas.models import Evento
 from apps.usuarios.models import CodigoAcceso
 from apps.usuarios.sesion import borrar_cookie_refresh
 from .models import (
-    Aporte, Colaboracion, Confirmacion, Favorito, GastoReal, Notificacion, Participante, PasaporteCompartido, Viaje,
-    VisitaComprobada,
+    Aporte, Colaboracion, Confirmacion, ConfirmacionLugar, Favorito, GastoReal, Notificacion, Participante,
+    PasaporteCompartido, PropuestaLugar, ResenaLugar, Viaje, VisitaComprobada,
 )
 
 TEXTO_ELIMINADO = '[Eliminado por su autor]'
@@ -32,13 +32,21 @@ def anonimizar_cuenta(usuario):
     """Debe ejecutarse en una transacción. Los archivos se borran solo si esta se confirma."""
     archivos = [archivo for aporte in Aporte.objects.filter(autor=usuario).exclude(imagen='')
                 for archivo in (aporte.imagen, aporte.miniatura) if archivo]
+    archivos += [archivo for resena in ResenaLugar.objects.filter(autor=usuario).exclude(imagen='')
+                 for archivo in (resena.imagen, resena.miniatura) if archivo]
     if usuario.foto_perfil:
         archivos.append(usuario.foto_perfil)
     Aporte.objects.filter(autor=usuario).update(
         estado='retirado', texto=TEXTO_ELIMINADO, imagen='', miniatura=''
     )
     Colaboracion.objects.filter(autor=usuario).update(estado='oculto', texto=TEXTO_ELIMINADO, fuente='')
-    for modelo in (Viaje, Favorito, Confirmacion, VisitaComprobada):
+    ResenaLugar.objects.filter(autor=usuario).update(
+        estado='retirado', texto=TEXTO_ELIMINADO, imagen='', miniatura='', monto=None
+    )
+    # Lo ya aprobado es un dato del lugar, no de la persona: se queda. Lo pendiente ya no se publicará.
+    PropuestaLugar.objects.filter(autor=usuario, estado='pendiente').update(estado='oculto')
+    PropuestaLugar.objects.filter(autor=usuario).update(nota='')
+    for modelo in (Viaje, Favorito, Confirmacion, ConfirmacionLugar, VisitaComprobada):
         modelo.objects.filter(autor=usuario).delete()
     # En botes de otras personas su parte se queda, para que las cuentas del grupo sigan cuadrando.
     Participante.objects.filter(usuario=usuario).update(usuario=None)

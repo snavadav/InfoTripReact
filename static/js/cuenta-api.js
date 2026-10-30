@@ -20,7 +20,8 @@
     fecha_fin: 'Regreso', personas: 'Viajeros', presupuesto: 'Presupuesto', gastos: 'Gastos',
     actividades: 'Actividades', pendientes: 'Pendientes', notas: 'Notas', lugares: 'Lugares',
     negocio: 'Negocio', contacto: 'Tu nombre', correo: 'Correo', telefono: 'Teléfono', municipio: 'Municipio',
-    mensaje: 'Mensaje', acepto: 'Autorización', descripcion: 'Descripción', fecha: 'Fecha', noches: 'Noches', pagado_por: 'Quién pagó', entre: 'Entre quiénes',
+    mensaje: 'Mensaje', acepto: 'Autorización', subtipo: 'Tipo de lugar', latitud: 'Punto en el mapa',
+    longitud: 'Punto en el mapa', sitio_web: 'Sitio web', direccion: 'Dirección', horario: 'Horario', nota: 'Nota', descripcion: 'Descripción', fecha: 'Fecha', noches: 'Noches', pagado_por: 'Quién pagó', entre: 'Entre quiénes',
   };
   function message(data) {
     if (typeof data === 'string') return data;
@@ -57,7 +58,11 @@
       return api(url, {method, body:headers['Content-Type'] ? JSON.parse(body || 'null') : body, auth}, false);
     }
     const data = response.status === 204 ? null : await response.json().catch(() => ({detail:'No pudimos completar la solicitud.'}));
-    if (!response.ok) throw new Error(message(data));
+    if (!response.ok) {
+      const error = new Error(message(data));
+      if (data?.parecidos) error.parecidos = data.parecidos;
+      throw error;
+    }
     return data;
   }
   async function submit(form, operation) {

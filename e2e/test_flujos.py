@@ -7,12 +7,16 @@ import os
 import re
 from unittest import skipUnless
 
+from io import BytesIO
+
+from PIL import Image
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.core import mail
 from django.core.cache import cache
 
-from apps.comunidad.models import Aporte, InteresNegocio, Viaje
-from apps.destinos.models import Destino, Municipio, Region
+from apps.comunidad.models import Aporte, InteresNegocio, PropuestaLugar, Viaje
+from apps.comunidad.moderacion import moderar
+from apps.destinos.models import Destino, Lugar, Municipio, Region
 from apps.metricas.models import Evento
 from apps.usuarios.models import Usuario
 
@@ -82,7 +86,7 @@ class FlujosTests(StaticLiveServerTestCase):
         self.pagina.wait_for_url(lambda url: '/login/' not in url)
 
     def test_paginas_publicas_sin_violaciones_de_csp(self):
-        for ruta in ['/', '/destinos/', '/destinos/mirador/', '/destinos/mirador/costos/', '/costos/', '/misiones/', '/pasaporte/', '/negocios/', '/login/', '/registro/', '/api/v1/docs/', '/no-existe/']:
+        for ruta in ['/', '/destinos/', '/destinos/mirador/', '/destinos/mirador/costos/', '/costos/', '/misiones/', '/pasaporte/', '/negocios/', '/lugares/proponer/', '/login/', '/registro/', '/api/v1/docs/', '/no-existe/']:
             with self.subTest(ruta=ruta):
                 self.abrir(ruta)
                 self.pagina.wait_for_load_state('load')
@@ -226,7 +230,7 @@ class FlujosTests(StaticLiveServerTestCase):
         self.assertLess(self.pagina.locator('.trip-card').first.bounding_box()['y'], 812)
         self.assertFalse(self.pagina.locator('#filters-panel').evaluate('panel => panel.open'))
         self.assertEqual(self.pagina.evaluate('document.documentElement.scrollWidth'), 375)
-        self.abrir('/destinos/?q=mirador')
+        self.abrir('/destinos/?concepto=comida')
         self.assertTrue(self.pagina.locator('#filters-panel').evaluate('panel => panel.open'))
         self.abrir('/')
         pequenos = self.pagina.evaluate('''[...document.querySelectorAll('main button, main input, main select')]
@@ -331,6 +335,174 @@ class FlujosTests(StaticLiveServerTestCase):
         self.pagina.click('#negocios-form button[type="submit"]')
         self.pagina.wait_for_selector('#negocios-form .form-status:has-text("Gracias")')
         self.assertEqual(InteresNegocio.objects.get().negocio, 'Hostal Sierra')
+
+    def test_elegir_en_el_mapa_guardar_y_armar_un_recorrido(self):
+        Destino.objects.create(nombre='Cascada', slug='cascada', municipio=self.destino.municipio, descripcion='Salto de agua',
+                               latitud=19.95, longitud=-103.75)
+        self.iniciar_sesion()
+        self.abrir('/destinos/')
+        self.pagina.wait_for_selector('.pin', state='attached')
+        self.pagina.click('.trip-card[data-slug="mirador"]')
+        self.pagina.wait_for_selector('#place-panel:not([hidden])')
+        self.assertEqual(self.pagina.inner_text('#place-name'), 'Mirador')
+        self.pagina.wait_for_selector('#place-description:has-text("Lugar de prueba")')
+        self.assertIn('/destinos/mirador/', self.pagina.get_attribute('#place-detail', 'href'))
+        self.pagina.click('#place-favorite')
+        self.pagina.wait_for_selector('#place-status:has-text("Guardado")')
+        self.assertTrue(self.usuario.favoritos.filter(destino=self.destino).exists())
+        self.pagina.click('#place-route')
+        self.pagina.click('.trip-card[data-slug="cascada"]')
+        self.pagina.wait_for_selector('#place-name:has-text("Cascada")')
+        self.pagina.click('#place-route')
+        self.assertEqual(self.pagina.locator('#route-stops li').count(), 2)
+        self.pagina.wait_for_selector('path.linea-recorrido', state='attached')
+        ruta = self.pagina.get_attribute('#route-open', 'href')
+        self.assertIn('google.com/maps/dir', ruta)
+        self.assertIn('waypoints=19.9', ruta)
+        # El recorrido sobrevive a recargar; solo está en este navegador.
+        self.pagina.reload()
+        self.pagina.wait_for_selector('#route-panel:not([hidden])')
+        self.pagina.click('#route-clear')
+        self.assertTrue(self.pagina.is_hidden('#route-panel'))
+
+    def test_el_tema_se_cambia_y_se_recuerda(self):
+        self.contexto.close()
+        self.contexto = self.navegador.new_context(color_scheme='light')
+        self.pagina = self.contexto.new_page()
+        self.abrir('/destinos/')
+        self.assertEqual(self.pagina.evaluate('document.documentElement.dataset.theme'), 'light')
+        fondo_claro = self.pagina.evaluate("getComputedStyle(document.querySelector('.explorer-side')).backgroundColor")
+        self.pagina.click('#navbar [data-theme-toggle]')
+        self.assertEqual(self.pagina.evaluate('document.documentElement.dataset.theme'), 'dark')
+        self.assertNotEqual(self.pagina.evaluate("getComputedStyle(document.querySelector('.explorer-side')).backgroundColor"), fondo_claro)
+        self.assertIn('invert', self.pagina.evaluate("getComputedStyle(document.querySelector('.leaflet-tile-pane')).filter"))
+        self.abrir('/login/')
+        self.assertEqual(self.pagina.evaluate('document.documentElement.dataset.theme'), 'dark')
+
+    def test_en_movil_la_tarjeta_elegida_queda_a_la_vista(self):
+        for numero in range(6):
+            Destino.objects.create(nombre=f'Lugar {numero}', slug=f'lugar-{numero}', municipio=self.destino.municipio,
+                                   descripcion='-', latitud=19.9, longitud=-103.7)
+        self.pagina.set_viewport_size({'width': 375, 'height': 812})
+        self.abrir('/')
+        self.pagina.wait_for_selector('.discovery-card')
+        for _ in range(4):
+            self.pagina.click('#next-place')
+        caja = self.pagina.locator('.discovery-card[aria-pressed="true"]').bounding_box()
+        # Margen de un píxel: el navegador redondea la posición al desplazar.
+        self.assertGreaterEqual(caja['x'], -1)
+        self.assertLessEqual(caja['x'] + caja['width'], 376)
+
+    def test_el_mapa_se_identifica_ante_openstreetmap(self):
+        # Sin Referer, el servidor responde 403 y pinta "Access blocked" en cada cuadro del mapa.
+        peticiones = []
+        self.pagina.on('request', lambda p: peticiones.append(p) if 'tile.openstreetmap.org' in p.url else None)
+        self.abrir('/destinos/')
+        self.pagina.wait_for_selector('.leaflet-tile', state='attached')
+        self.pagina.wait_for_load_state('networkidle')
+        self.assertTrue(peticiones)
+        for peticion in peticiones:
+            self.assertEqual(peticion.all_headers().get('referer'), self.live_server_url + '/')
+
+    def test_cerca_de_mi_y_lugares_por_zona(self):
+        Lugar.objects.create(nombre='Fonda Doña Ana', tipo='comer', subtipo='restaurant', latitud=19.901, longitud=-103.701,
+                             telefono='33 1234', osm_id='node/1')
+        Lugar.objects.create(nombre='Hotel Sierra', tipo='dormir', subtipo='hotel', latitud=19.905, longitud=-103.705)
+        self.contexto.grant_permissions(['geolocation'], origin=self.live_server_url)
+        self.contexto.set_geolocation({'latitude': 19.9, 'longitude': -103.7})
+        # El enlace de la portada abre directamente la búsqueda.
+        self.abrir('/')
+        self.pagina.click('.home-cerca a')
+        self.pagina.wait_for_selector('#nearby-list .nearby-fila')
+        filas = self.pagina.locator('#nearby-list .nearby-fila')
+        self.assertEqual(filas.count(), 2)
+        self.assertIn('Fonda Doña Ana', filas.first.inner_text())
+        self.pagina.click('[data-lugar-tipo="dormir"]')
+        self.pagina.wait_for_selector('#nearby-list .nearby-fila:has-text("Fonda")', state='detached')
+        self.assertIn('Hotel Sierra', self.pagina.inner_text('#nearby-list'))
+        self.pagina.click('#nearby-list .nearby-fila')
+        self.pagina.wait_for_selector('.lugar-popup:has-text("Hotel Sierra")')
+        # Al cerrar sigue el filtro, ahora por la zona visible del mapa.
+        self.pagina.click('#nearby-close')
+        self.pagina.click('[data-lugar-tipo="comer"]')
+        self.pagina.wait_for_selector('.pin-lugar', state='attached')
+        self.pagina.click('.pin-lugar')
+        self.pagina.wait_for_selector('.lugar-popup:has-text("Fonda Doña Ana")')
+        self.assertEqual(self.pagina.get_attribute('.lugar-popup a[href^="tel:"]', 'href'), 'tel:331234')
+
+    def test_mover_el_mapa_no_cierra_el_lugar_abierto(self):
+        Lugar.objects.create(nombre='Fonda Doña Ana', tipo='comer', subtipo='restaurant', latitud=19.9, longitud=-103.7)
+        self.abrir('/destinos/')
+        self.pagina.wait_for_selector('.pin', state='attached')
+        self.pagina.evaluate('InfoTripExplorador.map.setView([19.9, -103.7], 15, {animate: false})')
+        self.pagina.click('[data-lugar-tipo="comer"]')
+        self.pagina.wait_for_selector('.pin-lugar', state='attached')
+        self.pagina.click('.pin-lugar')
+        self.pagina.wait_for_selector('.lugar-popup:has-text("Fonda Doña Ana")')
+        # Abrir un recuadro cerca del borde mueve el mapa, y moverlo recarga los lugares de la zona.
+        self.pagina.evaluate('InfoTripExplorador.map.panBy([20, 20], {animate: false})')
+        self.pagina.wait_for_load_state('networkidle')
+        self.pagina.wait_for_timeout(600)
+        self.assertTrue(self.pagina.is_visible('.lugar-popup:has-text("Fonda Doña Ana")'))
+
+    def test_resenar_un_lugar_y_responder_si_sigue_abierto(self):
+        sitio = Lugar.objects.create(nombre='Fonda Doña Ana', tipo='comer', subtipo='restaurant', latitud=19.901, longitud=-103.701,
+                                     osm_id='node/1')
+        self.contexto.grant_permissions(['geolocation'], origin=self.live_server_url)
+        self.contexto.set_geolocation({'latitude': 19.9011, 'longitude': -103.7011})
+        self.iniciar_sesion()
+        self.abrir(f'/lugares/{sitio.pk}/')
+        self.pagina.wait_for_selector('#ficha-mapa .pin-lugar', state='attached')
+        self.pagina.click('.estado-lugar[data-abierto="true"]')
+        self.pagina.wait_for_selector('#estado-resumen:has-text("1 dice que sí")')
+        self.pagina.click('#escribir-resena summary')
+        self.pagina.fill('#resena-form [name="texto"]', 'Muy rico')
+        self.pagina.fill('#resena-form [name="fecha_visita"]', '2026-01-15')
+        self.pagina.fill('#resena-form [name="monto"]', '180')
+        salida = BytesIO()
+        Image.new('RGB', (40, 30), 'teal').save(salida, format='PNG')
+        self.pagina.set_input_files('#resena-form [name="imagen"]', {'name': 'foto.png', 'mimeType': 'image/png', 'buffer': salida.getvalue()})
+        self.pagina.check('#resena-form [name="comprobar"]')
+        self.pagina.click('#resena-form button[type="submit"]')
+        self.pagina.wait_for_selector('#resena-form .form-status:has-text("pendiente de revisión")')
+        resena = sitio.resenas.get()
+        self.assertTrue(resena.ubicacion_comprobada)
+        self.assertEqual(resena.monto, 180)
+        self.addCleanup(resena.miniatura.delete, False)
+        self.addCleanup(resena.imagen.delete, False)
+        moderar(resena, Usuario.objects.create_superuser('m@example.com', 'Mod', 'P', CLAVE), 'publicado', 'Revisada')
+        # Al volver, la página recuerda lo que respondió y muestra la reseña publicada.
+        self.abrir(f'/lugares/{sitio.pk}/')
+        self.pagina.wait_for_selector('.visit-badge')
+        self.pagina.wait_for_selector('.contribution-list img.community-photo')
+        self.pagina.wait_for_selector('#resena-titulo:has-text("Editar mi reseña")')
+        self.pagina.wait_for_selector('.estado-lugar[data-abierto="true"][aria-pressed="true"]')
+        self.assertIn('Muy rico', self.pagina.inner_text('.contribution-list'))
+
+    def test_proponer_un_lugar_y_aprobarlo(self):
+        Lugar.objects.create(nombre='Fonda Doña Ana', tipo='comer', subtipo='restaurant', latitud=19.9, longitud=-103.7)
+        self.contexto.grant_permissions(['geolocation'], origin=self.live_server_url)
+        self.contexto.set_geolocation({'latitude': 19.9, 'longitude': -103.7})
+        self.iniciar_sesion()
+        self.abrir('/lugares/proponer/')
+        self.pagina.fill('#propuesta-form [name="nombre"]', 'Fonda Dona Ana')
+        self.pagina.select_option('#propuesta-form [name="subtipo"]', 'restaurant')
+        # Sin punto no se envía nada.
+        self.pagina.click('#propuesta-form button[type="submit"]')
+        self.pagina.wait_for_selector('#propuesta-form .form-status:has-text("marcar dónde")')
+        self.pagina.click('#propuesta-ubicacion')
+        self.pagina.wait_for_selector('#propuesta-punto:has-text("Arrastra")')
+        # Ya existe algo parecido: pregunta antes de guardar.
+        self.pagina.click('#propuesta-form button[type="submit"]')
+        self.pagina.wait_for_selector('#propuesta-parecidos:not([hidden])')
+        self.assertIn('Fonda Doña Ana', self.pagina.inner_text('#propuesta-parecidos-lista'))
+        self.assertFalse(PropuestaLugar.objects.exists())
+        self.pagina.click('#propuesta-distinto')
+        self.pagina.wait_for_selector('#propuesta-form .form-status:has-text("Recibimos")')
+        propuesta = PropuestaLugar.objects.get()
+        moderar(propuesta, Usuario.objects.create_superuser('m@example.com', 'Mod', 'P', CLAVE), 'publicado', 'Revisada')
+        self.abrir(f'/lugares/{propuesta.lugar_id}/')
+        self.pagina.wait_for_selector('text=Agregado por la comunidad')
 
     def test_guardar_favorito_y_cerrar_sesion(self):
         self.iniciar_sesion()

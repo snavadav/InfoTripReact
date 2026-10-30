@@ -53,3 +53,28 @@ Los datos de OpenStreetMap tienen licencia [ODbL](https://www.openstreetmap.org/
 - Si se distribuye una base de datos derivada, debe ir bajo la misma licencia. Por eso `Destino.osm_id` identifica lo que viene de OpenStreetMap, y conviene no mezclarlo con lo que aporta la comunidad.
 
 Reglas del servicio: identifica la aplicación (el comando lo hace) y úsalo con moderación. Una importación de vez en cuando está dentro de lo normal. No lo programes en cada visita ni lo ejecutes en paralelo.
+
+## Dónde comer, dormir y servicios
+
+Restaurantes, cafés, bares, hoteles, moteles, hostales, tiendas útiles para viajar, gasolineras, farmacias, cajeros y bancos van en otra tabla, `Lugar`, y **se publican de inmediato**, porque son miles:
+
+```bash
+python manage.py importar_lugares --simular
+```
+
+```bash
+python manage.py importar_lugares
+```
+
+- Aparecen en `/destinos/`, con los botones sobre el mapa y **Cerca de mí**, y en la ficha de cada destino, en "Cerca de aquí". No aparecen en la lista de destinos, las misiones ni el pasaporte.
+- Repetirlo trae los cambios de OpenStreetMap. Lo que edites en `/admin/destinos/lugar/` queda protegido y no se pisa. Para retirar un lugar, ocúltalo.
+- `--retirar-ausentes` oculta lo que ya no aparece en OpenStreetMap. No lo uses si la descarga parece incompleta.
+- Pocos lugares traen horario o teléfono: la página los muestra como registrados y pide confirmar antes de ir.
+
+## Lugares propuestos por la comunidad
+
+Las personas proponen lugares en `/lugares/proponer/`. Se revisan en `/admin/moderacion/`, donde se ven los parecidos a menos de 150 m y se puede corregir lo escrito antes de aprobar. Al aprobar se crea el lugar con `osm_id` vacío: así queda separado de lo que viene de OpenStreetMap y la importación nunca lo toca. El municipio se toma de lo publicado más cercano y se puede corregir en el admin.
+
+## Qué tiendas se importan
+
+De las 7,719 tiendas con nombre que había en Jalisco el 30 de octubre de 2026, solo se traen las útiles para quien viaja: conveniencia, supermercados, tiendas variadas y departamentales, centros comerciales, panaderías, pastelerías, dulcerías, licorerías, vinos, bebidas, regalos, artesanías y arte. Se omiten las demás (por ejemplo 1,658 papelerías, ópticas, purificadoras y talleres) y las registradas sin un nombre real, como "Papeleria sin nombre". Para agregar un tipo, súmalo a `TIPO_DE_SUBTIPO` y `Lugar.SUBTIPOS` y a la consulta de `apps/destinos/osm.py`.

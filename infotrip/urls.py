@@ -19,7 +19,9 @@ from apps.comunidad.viajes import viaje_publico
 from apps.core.views import robots, salud
 from apps.destinos.sitemaps import CostosSitemap, DestinosSitemap, PaginasSitemap
 from apps.usuarios.views_frontend import baja_avisos, login_view, registro_view
-from apps.destinos.frontend import costos_destino, costos_indice, creditos, inicio, listado, detalle, misiones
+from apps.destinos.frontend import (
+    costos_destino, costos_indice, creditos, inicio, listado, detalle, lugar_detalle, misiones, proponer_lugar,
+)
 from apps.metricas.views import EventosView, panel as panel_metricas
 
 
@@ -71,6 +73,8 @@ urlpatterns = [
     path('destinos/<slug:slug>/costos/', costos_destino, name='destino-costos'),
     path('costos/', costos_indice, name='costos-indice'),
     path('misiones/', misiones, name='misiones'),
+    path('lugares/proponer/', proponer_lugar, name='proponer-lugar'),
+    path('lugares/<int:pk>/', lugar_detalle, name='lugar-detalle'),
     path('',          inicio,         name='index'),
     path('login/',    login_view,    name='login'),
     path('registro/', registro_view, name='registro'),

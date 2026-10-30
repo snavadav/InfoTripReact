@@ -5,6 +5,7 @@ import unicodedata
 
 from django import forms
 from django.core.paginator import Paginator
+from django.db.models import F
 from django.http import Http404
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
@@ -15,11 +16,13 @@ from django.utils.text import slugify
 from apps.comunidad.models import Aporte, Colaboracion
 from apps.comunidad.selectors import (
     MINIMO_CRONISTA, MINIMO_REPORTES, SLUGS_PUEBLOS, aportes_publicos, con_info_reciente, costos_de_destino,
-    costos_por_destino, cronistas, ficha_practica, misiones_por_destino, preguntas_publicas, resumen,
+    costos_por_destino, cronistas, estado_de_lugar, ficha_practica, misiones_por_destino, preguntas_publicas,
+    gasto_de_lugar, resenas_publicas_de_lugar, resumen, TIPOS_CON_GASTO,
 )
 from .filtros import filtrar_destinos
+from .lugares import activos as lugares_activos, cercanos_de_destino
 from .fotos import FOTOS_CATALOGO
-from .models import Destino, Categoria, Municipio, Region, Servicio
+from .models import Destino, Categoria, Lugar, Municipio, Region, Servicio, TIPO_DE_SUBTIPO
 from .seo import seo_de_destino
 from .views import destinos_publicos
 
@@ -94,8 +97,25 @@ def completar(lugar):
     return lugar
 
 
+def primero_lo_curado(destinos):
+    """Lo registrado por el equipo antes que lo importado: es lo que tiene descripción y fotografía."""
+    return destinos.order_by(F('osm_id').asc(nulls_first=True), 'nombre', 'pk')
+
+
+def punto_de_mapa(destino):
+    """Solo lo que el mapa pinta al abrir: con cientos de puntos, cada campo se nota en el tamaño de la página."""
+    lugar = completar(presentar(destino))
+    return {
+        'slug': lugar['slug'], 'nombre': lugar['nombre'], 'municipio': lugar['municipio'], 'region': lugar['region'],
+        'categoria': lugar['categoria'], 'categorias': lugar['categorias'],
+        'latitud': lugar['latitud'], 'longitud': lugar['longitud'],
+        'url': lugar['url'], 'maps_url': lugar['maps_url'], 'miniatura_url': lugar['miniatura_url'],
+        'destacado': bool(lugar['miniatura_url']),
+    }
+
+
 def inicio(request):
-    lugares = [presentar(destino) for destino in destinos_publicos(con_fotos=True)[:12]]
+    lugares = [presentar(destino) for destino in primero_lo_curado(destinos_publicos(con_fotos=True))[:12]]
     # La selección editorial solo se usa en una instalación sin destinos (ni siquiera inactivos).
     if not lugares and not Destino.objects.exists():
         lugares = INSPIRACION
@@ -103,6 +123,7 @@ def inicio(request):
     return render(request, 'index.html', {
         'lugares': [completar(lugar) for lugar in seleccion],
         'exploracion': [completar(lugar) for lugar in lugares],
+        'puntos_mapa': [punto_de_mapa(destino) for destino in destinos_publicos(con_fotos=True)],
         'categorias_inicio': sorted({categoria for lugar in lugares for categoria in lugar['categorias']}),
     })
 
@@ -140,7 +161,7 @@ class ExploracionForm(forms.Form):
     )
     orden = forms.ChoiceField(
         label='Ordenar por', required=False,
-        choices=[('', 'Nombre'), ('recientes', 'Información práctica más reciente')],
+        choices=[('', 'Destacados primero'), ('recientes', 'Información práctica más reciente')],
     )
 
     def clean(self):
@@ -193,13 +214,16 @@ def listado(request):
     else:
         queryset = con_info_reciente(destinos_publicos(con_fotos=True))
         resultados = filtrar_destinos(queryset, datos) if valido else queryset.none()
+        if not datos.get('orden'):
+            resultados = primero_lo_curado(resultados)
     pagina = Paginator(resultados, 8).get_page(request.GET.get('page'))
     lugares = []
     for destino in pagina:
         lugar = completar(destino if isinstance(destino, dict) else presentar(destino))
         lugar['tiene_info_reciente'] = getattr(destino, 'tiene_info_reciente', False)
         lugares.append(lugar)
-    puntos = [lugar for lugar in lugares if not lugar['editorial']]
+    # El mapa muestra todos los resultados, no solo los de esta página de la lista.
+    puntos = [] if editorial else [punto_de_mapa(destino) for destino in resultados]
     return render(
         request,
         'destinos/listado.html',
@@ -210,6 +234,7 @@ def listado(request):
             'formulario': formulario,
             'categoria': datos.get('categoria', ''),
             'filtros': urlencode({k: v for k, v in datos.items() if v not in (None, '', False)}),
+            'filtros_activos': any(v not in (None, '', False) for k, v in datos.items() if k != 'q'),
             'puntos_mapa': puntos,
             'editorial': editorial,
         },
@@ -233,6 +258,7 @@ def detalle(request, slug):
         contexto['preguntas'] = Paginator(preguntas_publicas(destino), 8).get_page(request.GET.get('preguntas'))
         contexto['resumen'] = resumen(destino)
         contexto['aportes'] = Paginator(aportes_publicos(destino), 9).get_page(request.GET.get('aportes'))
+        contexto['cerca'] = cercanos_de_destino(destino)
     contexto['seo'] = seo_de_destino(lugar, contexto.get('resumen'))
     return render(request, 'destinos/detalle.html', contexto)
 
@@ -291,3 +317,27 @@ def misiones(request):
         'municipio_actual': municipio, 'seo': seo, 'cronistas': cronistas(), 'minimo_cronista': MINIMO_CRONISTA,
         'total_misiones': sum(len(fila['faltan']) + len(fila['confirmar']) for fila in filas),
     })
+
+
+def lugar_detalle(request, pk):
+    sitio = get_object_or_404(lugares_activos(), pk=pk)
+    municipio = f', {sitio.municipio.nombre}' if sitio.municipio else ''
+    seo = {'titulo': f'{sitio.nombre}{municipio} — InfoTrip',
+           'descripcion': f'{sitio.get_subtipo_display()} en Jalisco: ubicación, contacto y reseñas de viajeros.'}
+    return render(request, 'destinos/lugar.html', {
+        'sitio': sitio, 'seo': seo, 'estado': estado_de_lugar(sitio), 'hoy': timezone.localdate().isoformat(),
+        'gasto': gasto_de_lugar(sitio), 'lleva_gasto': sitio.tipo in TIPOS_CON_GASTO,
+        'unidad_de_gasto': 'por noche' if sitio.tipo == 'dormir' else 'por persona',
+        'resenas': Paginator(resenas_publicas_de_lugar(sitio), 10).get_page(request.GET.get('resenas')),
+        'como_llegar': 'https://www.google.com/maps/dir/?' + urlencode(
+            {'api': 1, 'destination': f'{sitio.latitud},{sitio.longitud}'}),
+    })
+
+
+def proponer_lugar(request):
+    # "pub" y "bar" se ven igual para quien propone: basta una opción.
+    opciones = [(clave, nombre) for clave, nombre in Lugar.SUBTIPOS if clave != 'pub']
+    return render(request, 'destinos/proponer_lugar.html', {'subtipos': [
+        {'nombre': nombre, 'opciones': [opcion for opcion in opciones if TIPO_DE_SUBTIPO[opcion[0]] == tipo]}
+        for tipo, nombre in Lugar.TIPOS
+    ]})

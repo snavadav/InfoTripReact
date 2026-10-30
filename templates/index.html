@@ -1,26 +1,79 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block title %}InfoTrip — Encuentra tu próxima escapada{% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/inicio-interactivo.css' %}">{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/explorar.css' %}">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" integrity="sha256-YU3qCpj/P06tdPBJGPax0bm6Q1wltfwjsho5TR4+TYc=" crossorigin="">
+<link rel="stylesheet" href="{% static 'css/mapa.css' %}">
+<link rel="stylesheet" href="{% static 'css/inicio-interactivo.css' %}">
+{% endblock %}
 {% block content %}
 {% include 'partials/navBar.html' %}
-<main class="explore-shell interactive-home">
-  <section class="interactive-intro" id="explorar" aria-labelledby="home-title">
-    <div><span class="eyebrow">UN NUEVO PLAN, CERCA DE TI</span><h1 id="home-title">Jalisco se disfruta.<br> <em>Empieza por descubrirlo.</em></h1><p>Elige un paisaje, ubícalo en el mapa y prepara tu próxima escapada.</p></div>
-    <form class="trip-search" action="{% url 'destinos-listado' %}" role="search"><label for="destination-query">¿Qué lugar tienes en mente?</label><div><input id="destination-query" type="search" name="q" maxlength="200" placeholder="Destino o municipio"><button type="submit">Buscar ↗</button></div><span class="search-hint">Explora el catálogo completo o déjate sorprender abajo.</span></form>
-  </section>
-  <section class="discovery" aria-labelledby="discovery-title">
-    <header class="discovery-toolbar"><h2 id="discovery-title">¿Qué se te antoja?</h2><div class="discovery-filters" role="group" aria-label="Filtrar selección"><button type="button" data-category="" aria-pressed="true">Todo</button>{% for categoria in categorias_inicio %}<button type="button" data-category="{{ categoria }}" aria-pressed="false">{{ categoria }}</button>{% endfor %}</div><button id="surprise-place" class="surprise" type="button">✦ Sorpréndeme</button></header>
-    <div class="discovery-board" id="discovery-board" hidden>
-      <div class="discovery-list"><div class="discovery-list-heading"><span id="selection-count"></span><a href="{% url 'destinos-listado' %}">Ver todos ↗</a></div><div class="discovery-cards" id="discovery-cards"></div><div class="list-controls"><button type="button" id="previous-place" aria-label="Destino anterior">←</button><p id="selection-position" role="status"></p><button type="button" id="next-place" aria-label="Siguiente destino">→</button></div></div>
-      <section class="place-preview" aria-labelledby="preview-name"><div class="preview-visual"><img id="preview-image" alt=""><div id="preview-placeholder" hidden>Un lugar por descubrir ↗</div><iframe id="preview-map" title="Mapa del destino seleccionado" referrerpolicy="no-referrer-when-downgrade" hidden></iframe><div class="preview-modes" role="group" aria-label="Vista del destino"><button type="button" id="photo-mode" aria-pressed="true">Fotografía</button><button type="button" id="map-mode" aria-pressed="false">Mapa ↗</button></div><span id="preview-label" class="preview-label"></span></div><div class="preview-copy"><div class="preview-heading"><h3 id="preview-name"></h3><a id="preview-directions" target="_blank" rel="noopener noreferrer" aria-label="Abrir mapa en otra pestaña">Cómo llegar ↗</a></div><p id="preview-description"></p><a class="preview-detail" id="preview-detail">Conocer este destino →</a></div></section>
+<main class="interactive-home">
+  <div class="home-stage">
+    <div id="home-map" aria-label="Mapa de los lugares de Jalisco"></div>
+    <div class="home-rail">
+      <section class="interactive-intro" id="explorar" aria-labelledby="home-title">
+        <span class="eyebrow">Jalisco · 20.6597° N, 103.3496° O</span>
+        <h1 id="home-title">Todo Jalisco, en un mapa.</h1>
+        <p>Encuentra un lugar, mira lo que cuentan quienes ya fueron y arma tu escapada.</p>
+        <form class="trip-search" action="{% url 'destinos-listado' %}" role="search">
+          <label class="sr-only" for="destination-query">¿Qué lugar tienes en mente?</label>
+          <div><input id="destination-query" type="search" name="q" maxlength="200" placeholder="Busca un destino o municipio"><button type="submit">Buscar</button></div>
+        </form>
+        <p class="home-cerca"><a href="{% url 'destinos-listado' %}#cerca">Ver qué hay cerca de mí →</a></p>
+      </section>
+      <section class="discovery" aria-labelledby="discovery-title">
+        <header class="discovery-toolbar">
+          <div class="discovery-title"><h2 id="discovery-title">¿Qué se te antoja?</h2><button id="surprise-place" class="surprise" type="button">Sorpréndeme</button></div>
+          <div class="discovery-filters" role="group" aria-label="Filtrar selección"><button type="button" data-category="" aria-pressed="true">Todo</button>{% for categoria in categorias_inicio %}<button type="button" data-category="{{ categoria }}" aria-pressed="false">{{ categoria }}</button>{% endfor %}</div>
+        </header>
+        <div class="discovery-board" id="discovery-board" hidden>
+          <div class="discovery-list">
+            <div class="discovery-list-heading"><span id="selection-count"></span><a href="{% url 'destinos-listado' %}">Ver todos</a></div>
+            <div class="discovery-cards" id="discovery-cards"></div>
+            <div class="list-controls"><button type="button" id="previous-place" aria-label="Destino anterior">←</button><p id="selection-position" role="status"></p><button type="button" id="next-place" aria-label="Siguiente destino">→</button></div>
+          </div>
+        </div>
+        <p id="discovery-empty" class="empty-catalog" hidden>No hay lugares en esta selección. <a href="{% url 'destinos-listado' %}">Explora el catálogo</a>.</p>
+        <noscript>{% include 'destinos/tarjetas.html' %}</noscript>
+      </section>
     </div>
-    <p id="discovery-empty" class="empty-catalog" hidden>No hay lugares en esta selección. <a href="{% url 'destinos-listado' %}">Explora el catálogo</a>.</p>
-    <noscript>{% include 'destinos/tarjetas.html' %}</noscript>
+    <section class="place-preview" id="place-preview" aria-labelledby="preview-name" hidden>
+      <div class="preview-visual">
+        <img id="preview-image" alt="">
+        <div id="preview-placeholder" hidden>Aún sin fotografía</div>
+        <iframe id="preview-map" title="Mapa del destino seleccionado" referrerpolicy="no-referrer-when-downgrade" hidden></iframe>
+        <div class="preview-modes" role="group" aria-label="Vista del destino"><button type="button" id="photo-mode" aria-pressed="true">Foto</button><button type="button" id="map-mode" aria-pressed="false">Mapa</button></div>
+      </div>
+      <div class="preview-copy">
+        <span id="preview-label" class="preview-label"></span>
+        <h3 id="preview-name"></h3>
+        <p id="preview-description"></p>
+        <div class="preview-heading"><a class="boton boton-primario preview-detail" id="preview-detail">Ver ficha</a><a class="boton" id="preview-directions" target="_blank" rel="noopener noreferrer" aria-label="Cómo llegar: abre un mapa en otra pestaña">Cómo llegar ↗</a></div>
+      </div>
+    </section>
+  </div>
+
+  <section class="home-features" aria-labelledby="features-title">
+    <h2 id="features-title">Lo que no te dice un mapa</h2>
+    <div class="home-features-grid">
+      <a href="{% url 'costos-indice' %}"><span>01</span><strong>¿Cuánto cuesta ir?</strong><p>Gastos reales de viajeros, por concepto, con su número de reportes.</p></a>
+      <a href="{% url 'mis-viajes' %}"><span>02</span><strong>Planea y divide</strong><p>Agenda, presupuesto y un bote para saber quién le debe a quién.</p></a>
+      <a href="{% url 'misiones' %}"><span>03</span><strong>Misiones</strong><p>Lo que falta saber de cada lugar. Si lo conoces, cuéntalo.</p></a>
+      <a href="{% url 'pasaporte' %}"><span>04</span><strong>Pasaporte</strong><p>Un sello por cada Pueblo Mágico que visites.</p></a>
+    </div>
+    <p class="home-features-cta"><a href="{% url 'registro' %}">Crear mi cuenta gratis →</a> · <a href="{% url 'negocios' %}">¿Tienes un negocio?</a></p>
+    {% include 'destinos/footer.html' %}
   </section>
-  <div class="app-discover"><span>Tu viaje, en un solo lugar.</span><button type="button" data-info="Explora destinos, consulta sus detalles y encuentra tu siguiente escapada." aria-pressed="true">↗ Descubre</button><button type="button" data-info="Cambia a la vista Mapa para ubicar el lugar, acercarte y explorar sus alrededores." aria-pressed="false">⌖ Ubica</button><button type="button" data-info="Comparte reseñas, fotografías y gastos desde cada destino. En Mi perfil puedes gestionar tus aportes." aria-pressed="false">♡ Comunidad</button><a href="{% url 'registro' %}">Unirme ↗</a></div><p class="app-info" id="app-info" role="status">Explora destinos, consulta sus detalles y encuentra tu siguiente escapada.</p>
-  {% include 'destinos/footer.html' %}
 </main>
 {{ exploracion|json_script:'home-places' }}
+{{ puntos_mapa|json_script:'home-points' }}
 {% endblock %}
-{% block extra_js %}<script src="{% static 'js/inicio-interactivo.js' %}" defer></script>{% endblock %}
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" integrity="sha256-Hk4dIpcqOSb0hZjgyvFOP+cEmDXUKKNE/tT542ZbNQg=" crossorigin="" defer></script>
+<script src="{% static 'js/mapa-base.js' %}" defer></script>
+<script src="{% static 'js/inicio-interactivo.js' %}" defer></script>
+{% endblock %}
