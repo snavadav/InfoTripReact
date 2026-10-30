@@ -25,6 +25,7 @@ from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.utils import aware_utcnow, datetime_from_epoch
+from apps.metricas.models import registrar
 from .sesion import COOKIE_REFRESH, borrar_cookie_refresh, exigir_csrf, guardar_cookie_refresh
 from rest_framework_simplejwt.views import TokenRefreshView
 
@@ -192,6 +193,7 @@ class VerificarCodigoView(APIView):
             usuario.es_verificado = True
             usuario.ultimo_acceso = timezone.now()
             usuario.save(update_fields=['es_verificado', 'ultimo_acceso'])
+            registrar('login_completado', usuario=usuario)
             refresh = RefreshToken.for_user(usuario)
             refresh['correo_confirmado'] = True
             respuesta = Response({'access': str(refresh.access_token),

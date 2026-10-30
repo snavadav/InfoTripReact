@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import Viaje
 from apps.destinos.models import Destino
+from apps.metricas.models import registrar
 
 
 def pesos(valor):
@@ -113,6 +114,7 @@ class MisViajesView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(autor=self.request.user)
+        registrar('viaje_guardado', usuario=self.request.user)
 
 
 class ViajeView(generics.RetrieveUpdateDestroyAPIView):

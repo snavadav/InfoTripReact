@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 
+from apps.metricas.models import Evento
 from apps.usuarios.models import CodigoAcceso
 from apps.usuarios.sesion import borrar_cookie_refresh
 from .models import Aporte, Colaboracion, Confirmacion, Favorito, Notificacion, Viaje
@@ -35,6 +36,7 @@ def anonimizar_cuenta(usuario):
         modelo.objects.filter(autor=usuario).delete()
     Notificacion.objects.filter(usuario=usuario).delete()
     CodigoAcceso.objects.filter(usuario=usuario).delete()
+    Evento.objects.filter(usuario=usuario).update(usuario=None)
     for token in OutstandingToken.objects.filter(user=usuario):
         BlacklistedToken.objects.get_or_create(token=token)
     usuario.nombre = 'Cuenta'

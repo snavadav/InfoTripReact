@@ -1,0 +1,36 @@
+{% extends "admin/base_site.html" %}
+{% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url 'admin:index' %}">Inicio</a> › Métricas de uso</div>{% endblock %}
+{% block content %}
+<div id="content-main">
+  <div class="module">
+    <h2>Indicadores</h2>
+    <table>
+      <tbody>
+        <tr><th scope="row">Fichas con al menos 3 datos prácticos</th><td>{{ fichas.utiles }} de {{ fichas.total }}{% if fichas.porcentaje is not None %} ({{ fichas.porcentaje }} %){% endif %}</td></tr>
+        <tr><th scope="row">Retención a 30 días (registrados hace 30 a 60 días)</th><td>{% if retencion.porcentaje is not None %}{{ retencion.activos }} de {{ retencion.cohorte }} ({{ retencion.porcentaje }} %){% else %}Aún sin datos{% endif %}</td></tr>
+      </tbody>
+    </table>
+  </div>
+  {% for embudo in embudos %}
+  <div class="module">
+    <h2>Embudo de {{ embudo.titulo|lower }}, últimos 30 días</h2>
+    <table>
+      <thead><tr><th>Etapa</th><th>Eventos</th><th>Respecto a la anterior</th></tr></thead>
+      <tbody>
+        {% for fila in embudo.filas %}<tr><th scope="row">{{ fila.etapa }}</th><td>{{ fila.total }}</td><td>{% if fila.conversion is not None %}{{ fila.conversion }} %{% else %}—{% endif %}</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endfor %}
+  <div class="module">
+    <h2>Todos los eventos</h2>
+    <table>
+      <thead><tr><th>Evento</th><th>7 días</th><th>30 días</th></tr></thead>
+      <tbody>
+        {% for evento in eventos %}<tr><th scope="row">{{ evento.nombre }}</th><td>{{ evento.dias_7 }}</td><td>{{ evento.dias_30 }}</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p>Son conteos de eventos, no de personas. Quien activa «No rastrear» no aparece en los eventos del navegador.</p>
+</div>
+{% endblock %}

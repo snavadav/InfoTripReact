@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'apps.usuarios',
     'apps.destinos',
     'apps.comunidad',
+    'apps.metricas',
 ]
 
 # ─── MIDDLEWARE ───────────────────────────────────────────────

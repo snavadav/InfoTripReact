@@ -16,6 +16,7 @@ from apps.core.views import robots, salud
 from apps.destinos.sitemaps import DestinosSitemap, PaginasSitemap
 from apps.usuarios.views_frontend import login_view, registro_view
 from apps.destinos.frontend import inicio, listado, detalle
+from apps.metricas.views import EventosView, panel as panel_metricas
 
 
 def vista_legal(plantilla):
@@ -34,6 +35,7 @@ urlpatterns = [
     path('mis-viajes/', TemplateView.as_view(template_name='comunidad/viajes.html'), name='mis-viajes'),
     # Antes de admin.site.urls para que el admin no la tome como una app.
     path('admin/moderacion/', admin.site.admin_view(cola_moderacion), name='cola-moderacion'),
+    path('admin/metricas/', admin.site.admin_view(panel_metricas), name='panel-metricas'),
     path('admin/', admin.site.urls),
 
     # Documentación de la API. La vista "split" no usa scripts en línea, que la CSP bloquearía.
@@ -41,6 +43,7 @@ urlpatterns = [
     path('api/v1/docs/', SpectacularSwaggerSplitView.as_view(url_name='esquema-api'), name='docs-api'),
 
     # API v1
+    path('api/v1/eventos/', EventosView.as_view(), name='eventos'),
     path('api/v1/', include('apps.comunidad.urls')),
     path('perfil/', TemplateView.as_view(template_name='comunidad/perfil.html'), name='perfil'),
     path('recuperar/', TemplateView.as_view(template_name='comunidad/recuperar.html'), name='recuperar'),

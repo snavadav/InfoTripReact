@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 from apps.destinos.models import Destino
+from apps.metricas.models import registrar
 from .models import Aporte
 from .serializers import AporteSerializer, ReporteSerializer
 from .selectors import publicados
@@ -29,6 +30,7 @@ class PublicarView(generics.ListCreateAPIView):
         try:
             with transaction.atomic():
                 serializer.save(autor=self.request.user, destino=destino, estado='pendiente')
+                registrar('aporte_enviado', usuario=self.request.user, destino=destino.slug)
         except IntegrityError:
             raise serializers.ValidationError('Ya tienes una reseña de este destino. Edítala desde tu perfil.')
 
@@ -76,5 +78,6 @@ class ReportarView(generics.CreateAPIView):
         try:
             with transaction.atomic():
                 serializer.save(autor=self.request.user, aporte=aporte)
+                registrar('reporte_enviado', usuario=self.request.user, destino=aporte.destino.slug)
         except IntegrityError:
             raise serializers.ValidationError('Ya reportaste este aporte.')

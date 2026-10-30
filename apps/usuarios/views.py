@@ -13,6 +13,7 @@ from rest_framework_simplejwt.exceptions    import TokenError
 from rest_framework_simplejwt.tokens        import RefreshToken
 from django.db                   import IntegrityError, transaction
 
+from apps.metricas.models import registrar
 from .models      import Usuario
 from .sesion      import COOKIE_REFRESH, borrar_cookie_refresh, exigir_csrf
 from .serializers import RegistroSerializer, UsuarioPerfilSerializer, CambiarPasswordSerializer
@@ -41,7 +42,7 @@ class RegistroView(generics.CreateAPIView):
         if not Usuario.objects.filter(email__iexact=serializer.validated_data['email']).exists():
             try:
                 with transaction.atomic():
-                    serializer.save()
+                    registrar('registro_completado', usuario=serializer.save())
             except IntegrityError:
                 pass  # Registro simultáneo del mismo correo: la cuenta ya existe.
 
