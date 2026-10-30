@@ -96,3 +96,21 @@ class DocumentacionApiTests(TestCase):
         respuesta = self.client.get('/api/v1/docs/')
         self.assertEqual(respuesta.status_code, 200)
         self.assertNotRegex(respuesta.content.decode(), r'<script(?![^>]*\ssrc=)[^>]*>')
+
+
+class PaginasDeErrorTests(TestCase):
+    def test_404_en_espanol_con_salida(self):
+        respuesta = self.client.get('/no-existe/')
+        self.assertEqual(respuesta.status_code, 404)
+        self.assertContains(respuesta, 'No encontramos esta página', status_code=404)
+        self.assertContains(respuesta, 'href="/destinos/"', status_code=404)
+
+    def test_500_en_espanol_sin_depender_de_la_base_de_datos(self):
+        self.client.raise_request_exception = False
+        with patch('apps.core.views.connection.cursor', side_effect=OSError), \
+                patch('apps.core.views.JsonResponse', side_effect=RuntimeError('fallo')), \
+                self.assertLogs('django.request', 'ERROR'), self.assertLogs('infotrip.salud', 'ERROR'), \
+                self.assertNumQueries(0):
+            respuesta = self.client.get('/health/')
+        self.assertEqual(respuesta.status_code, 500)
+        self.assertContains(respuesta, 'Algo salió mal', status_code=500)

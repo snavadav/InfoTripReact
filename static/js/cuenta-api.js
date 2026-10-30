@@ -9,10 +9,21 @@
     const cookie = document.cookie.split('; ').find(item => item.startsWith('csrftoken='));
     return cookie ? decodeURIComponent(cookie.slice('csrftoken='.length)) : '';
   }
+  // Nombres legibles para los campos que devuelve la API; un campo sin nombre conocido muestra solo el mensaje.
+  const fieldNames = {
+    nombre: 'Nombre', apellido: 'Apellido', email: 'Correo', password: 'Contraseña', password2: 'Confirmación',
+    password_actual: 'Contraseña actual', password_nuevo: 'Contraseña nueva', password_nuevo2: 'Confirmación',
+    ciudad_origen: 'Ciudad de origen', bio: 'Sobre mí', foto_perfil: 'Foto de perfil', texto: 'Descripción',
+    fecha_visita: 'Fecha de visita', calificacion: 'Calificación', imagen: 'Fotografía', monto: 'Monto',
+    concepto: 'Concepto', tipo: 'Tipo', motivo: 'Motivo', campo: 'Dato', fuente: 'Fuente',
+    fecha_dato: 'Fecha de consulta', pregunta: 'Pregunta', destino: 'Destino', fecha_inicio: 'Salida',
+    fecha_fin: 'Regreso', personas: 'Viajeros', presupuesto: 'Presupuesto', gastos: 'Gastos',
+    actividades: 'Actividades', pendientes: 'Pendientes', notas: 'Notas', lugares: 'Lugares',
+  };
   function message(data) {
     if (typeof data === 'string') return data;
     if (Array.isArray(data)) return data.map(message).join('\n');
-    return Object.entries(data || {}).map(([key, value]) => `${key === 'detail' || key === 'non_field_errors' ? '' : key + ': '}${message(value)}`).join('\n');
+    return Object.entries(data || {}).map(([key, value]) => `${fieldNames[key] ? fieldNames[key] + ': ' : ''}${message(value)}`).join('\n');
   }
   async function requestAccess() {
     let response;
