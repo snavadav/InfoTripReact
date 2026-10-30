@@ -1,7 +1,14 @@
 """Reseñas de lugares y "¿Sigue abierto?": moderación, privacidad de la ubicación y baja de cuenta."""
+import shutil
+import tempfile
 from datetime import timedelta
+from decimal import Decimal
+from io import BytesIO
 
+from PIL import Image
 from django.core.cache import cache
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import override_settings
 from django.utils import timezone
 from rest_framework.test import APITestCase
 
@@ -107,6 +114,81 @@ class ResenasTests(Base):
         self.resena()
         self.resena(autor=self.leo)
         self.assertEqual([r['autor_nombre'] for r in self.client.get('/api/v1/mis-resenas-lugar/').data['results']], ['Ana'])
+
+
+def foto():
+    salida = BytesIO()
+    Image.new('RGB', (40, 30), 'teal').save(salida, format='PNG')
+    return SimpleUploadedFile('foto.png', salida.getvalue(), content_type='image/png')
+
+
+class FotoYGastoTests(Base):
+    def setUp(self):
+        super().setUp()
+        carpeta = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, carpeta, ignore_errors=True)
+        ajuste = override_settings(MEDIA_ROOT=carpeta)
+        ajuste.enable()
+        self.addCleanup(ajuste.disable)
+
+    def test_guarda_foto_limpia_con_miniatura_y_gasto(self):
+        respuesta = self.client.post(self.api + 'resenas/', {**self.datos, 'imagen': foto(), 'monto': '250.50'}, format='multipart')
+        self.assertEqual(respuesta.status_code, 201, respuesta.data)
+        resena = ResenaLugar.objects.get()
+        self.assertTrue(resena.imagen.name.endswith('.jpg'))
+        self.assertTrue(resena.miniatura)
+        self.assertEqual(resena.monto, Decimal('250.50'))
+
+    def test_rechaza_lo_que_no_es_imagen_y_montos_invalidos(self):
+        falsa = SimpleUploadedFile('falsa.jpg', b'<script>alert(1)</script>', content_type='image/jpeg')
+        self.assertEqual(self.client.post(self.api + 'resenas/', {**self.datos, 'imagen': falsa}, format='multipart').status_code, 400)
+        self.assertEqual(self.client.post(self.api + 'resenas/', {**self.datos, 'monto': '-1'}, format='json').status_code, 400)
+        self.assertFalse(ResenaLugar.objects.exists())
+
+    def test_el_gasto_solo_aplica_a_comer_y_dormir(self):
+        Lugar.objects.filter(pk=self.lugar.pk).update(tipo='farmacia', subtipo='pharmacy')
+        self.assertEqual(self.client.post(self.api + 'resenas/', {**self.datos, 'monto': '10'}, format='json').status_code, 400)
+        self.assertNotContains(self.client.get(f'/lugares/{self.lugar.pk}/'), 'name="monto"')
+
+    def test_editar_sin_foto_conserva_la_que_habia(self):
+        self.client.post(self.api + 'resenas/', {**self.datos, 'imagen': foto()}, format='multipart')
+        nombre = ResenaLugar.objects.get().imagen.name
+        self.client.patch(self.api + 'mi-opinion/', {'texto': 'Cambió'}, format='multipart')
+        self.assertEqual(ResenaLugar.objects.get().imagen.name, nombre)
+
+    def test_gasto_habitual_exige_tres_resenas_publicadas_y_recientes(self):
+        pagina = f'/lugares/{self.lugar.pk}/'
+        self.resena(monto=100)
+        self.resena(autor=self.leo, monto=300)
+        self.assertNotContains(self.client.get(pagina), 'lo habitual')
+        self.resena(autor=self.eva, monto=200, estado='pendiente')
+        self.assertNotContains(self.client.get(pagina), 'lo habitual')
+        ResenaLugar.objects.filter(autor=self.eva).update(estado='publicado')
+        self.assertContains(self.client.get(pagina), '$200 MXN')
+        self.assertContains(self.client.get(pagina), 'por persona')
+        ResenaLugar.objects.filter(autor=self.eva).update(fecha_visita=timezone.localdate() - timedelta(days=400))
+        self.assertNotContains(self.client.get(pagina), 'lo habitual')
+
+    def test_hospedaje_se_expresa_por_noche(self):
+        Lugar.objects.filter(pk=self.lugar.pk).update(tipo='dormir', subtipo='hotel')
+        self.assertContains(self.client.get(f'/lugares/{self.lugar.pk}/'), 'gastaste por noche')
+
+    def test_la_foto_publicada_se_muestra_y_la_pendiente_no(self):
+        self.client.post(self.api + 'resenas/', {**self.datos, 'imagen': foto()}, format='multipart')
+        pagina = f'/lugares/{self.lugar.pk}/'
+        self.assertNotContains(self.client.get(pagina), 'community-photo')
+        ResenaLugar.objects.update(estado='publicado')
+        self.assertContains(self.client.get(pagina), 'community-photo')
+
+    def test_baja_de_cuenta_borra_la_foto_y_el_gasto(self):
+        self.client.post(self.api + 'resenas/', {**self.datos, 'imagen': foto(), 'monto': '5'}, format='multipart')
+        resena = ResenaLugar.objects.get()
+        archivo, almacen = resena.imagen.name, resena.imagen.storage
+        with self.captureOnCommitCallbacks(execute=True):
+            anonimizar_cuenta(self.ana)
+        resena.refresh_from_db()
+        self.assertEqual((resena.imagen.name, resena.miniatura.name, resena.monto), ('', '', None))
+        self.assertFalse(almacen.exists(archivo))
 
 
 class SigueAbiertoTests(Base):

@@ -13,10 +13,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.core.geo import distancia_km
+from apps.core.imagenes import imagen_segura, miniatura_de
 from apps.destinos.models import Lugar
 from apps.metricas.models import registrar
 from .models import ConfirmacionLugar, ReporteResenaLugar, ResenaLugar
-from .selectors import estado_de_lugar, resenas_publicas_de_lugar
+from .selectors import TIPOS_CON_GASTO, estado_de_lugar, resenas_publicas_de_lugar
 from .views import AporteThrottle
 
 # Las coordenadas de un negocio son precisas; 300 m admiten el error normal de un teléfono.
@@ -37,8 +38,9 @@ class ResenaLugarSerializer(serializers.ModelSerializer):
     class Meta:
         model = ResenaLugar
         fields = ['id', 'lugar', 'lugar_nombre', 'calificacion', 'texto', 'fecha_visita', 'ubicacion_comprobada',
-                  'estado', 'estado_nombre', 'creado', 'autor_nombre', 'latitud', 'longitud']
-        read_only_fields = ['lugar', 'ubicacion_comprobada', 'estado', 'creado']
+                  'imagen', 'miniatura', 'monto', 'estado', 'estado_nombre', 'creado', 'autor_nombre', 'latitud',
+                  'longitud']
+        read_only_fields = ['lugar', 'ubicacion_comprobada', 'miniatura', 'estado', 'creado']
         validators = []
 
     def validate_fecha_visita(self, fecha):
@@ -46,7 +48,14 @@ class ResenaLugarSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('La fecha no puede estar en el futuro.')
         return fecha
 
+    def validate_imagen(self, imagen):
+        return imagen_segura(imagen) if imagen else imagen
+
     def validate(self, datos):
+        if datos.get('monto') is not None and self.context['lugar'].tipo not in TIPOS_CON_GASTO:
+            raise serializers.ValidationError({'monto': 'Este tipo de lugar no lleva gasto aproximado.'})
+        if datos.get('imagen'):
+            datos['miniatura'] = miniatura_de(datos['imagen'])
         latitud, longitud = datos.pop('latitud', None), datos.pop('longitud', None)
         if (latitud is None) != (longitud is None):
             raise serializers.ValidationError('Envía la ubicación completa o no envíes ninguna.')

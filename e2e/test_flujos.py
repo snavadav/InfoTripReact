@@ -7,6 +7,9 @@ import os
 import re
 from unittest import skipUnless
 
+from io import BytesIO
+
+from PIL import Image
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.core import mail
 from django.core.cache import cache
@@ -440,15 +443,23 @@ class FlujosTests(StaticLiveServerTestCase):
         self.pagina.click('#escribir-resena summary')
         self.pagina.fill('#resena-form [name="texto"]', 'Muy rico')
         self.pagina.fill('#resena-form [name="fecha_visita"]', '2026-01-15')
+        self.pagina.fill('#resena-form [name="monto"]', '180')
+        salida = BytesIO()
+        Image.new('RGB', (40, 30), 'teal').save(salida, format='PNG')
+        self.pagina.set_input_files('#resena-form [name="imagen"]', {'name': 'foto.png', 'mimeType': 'image/png', 'buffer': salida.getvalue()})
         self.pagina.check('#resena-form [name="comprobar"]')
         self.pagina.click('#resena-form button[type="submit"]')
         self.pagina.wait_for_selector('#resena-form .form-status:has-text("pendiente de revisión")')
         resena = sitio.resenas.get()
         self.assertTrue(resena.ubicacion_comprobada)
+        self.assertEqual(resena.monto, 180)
+        self.addCleanup(resena.miniatura.delete, False)
+        self.addCleanup(resena.imagen.delete, False)
         moderar(resena, Usuario.objects.create_superuser('m@example.com', 'Mod', 'P', CLAVE), 'publicado', 'Revisada')
         # Al volver, la página recuerda lo que respondió y muestra la reseña publicada.
         self.abrir(f'/lugares/{sitio.pk}/')
         self.pagina.wait_for_selector('.visit-badge')
+        self.pagina.wait_for_selector('.contribution-list img.community-photo')
         self.pagina.wait_for_selector('#resena-titulo:has-text("Editar mi reseña")')
         self.pagina.wait_for_selector('.estado-lugar[data-abierto="true"][aria-pressed="true"]')
         self.assertIn('Muy rico', self.pagina.inner_text('.contribution-list'))

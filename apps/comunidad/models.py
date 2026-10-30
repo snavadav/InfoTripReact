@@ -368,6 +368,12 @@ class ResenaLugar(Moderable):
     fecha_visita = models.DateField()
     # Solo el resultado: las coordenadas no se guardan.
     ubicacion_comprobada = models.BooleanField(default=False)
+    imagen = models.ImageField(upload_to='comunidad/lugares/%Y/%m/', blank=True)
+    miniatura = models.ImageField(upload_to='comunidad/lugares/miniaturas/%Y/%m/', blank=True, editable=False)
+    # Por persona o, en hospedaje, por noche. Solo donde compararlo tiene sentido: comer y dormir.
+    monto = models.DecimalField(
+        max_digits=9, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(Decimal(0))]
+    )
     estado = models.CharField(max_length=12, choices=ESTADOS, default='pendiente')
     creado = models.DateTimeField(auto_now_add=True)
     actualizado = models.DateTimeField(auto_now=True)

@@ -43,6 +43,7 @@
     form.elements.calificacion.value = resena.calificacion;
     form.elements.texto.value = resena.texto;
     form.elements.fecha_visita.value = resena.fecha_visita;
+    if (form.elements.monto) form.elements.monto.value = resena.monto ?? '';
     document.getElementById('resena-acceso').textContent = `Estado de tu reseña: ${resena.estado_nombre}. Si la editas, vuelve a revisión.`;
   }
   function ubicacion() {
@@ -59,12 +60,17 @@
     evento.preventDefault();
     if (!InfoTrip.hasSession()) { pedirEntrar(form.querySelector('.form-status'), 'Entra para enviar tu reseña.'); return; }
     InfoTrip.submit(form, async aviso => {
-      const cuerpo = {calificacion: Number(form.elements.calificacion.value), texto: form.elements.texto.value, fecha_visita: form.elements.fecha_visita.value};
+      // FormData: puede llevar una foto. Lo que va vacío no se envía, para no borrar lo que ya estaba.
+      const cuerpo = new FormData(form);
+      cuerpo.delete('comprobar');
+      if (!form.elements.imagen.files.length) cuerpo.delete('imagen');
+      if (form.elements.monto && !form.elements.monto.value) cuerpo.delete('monto');
       const comprobar = form.elements.comprobar.checked;
-      if (comprobar) Object.assign(cuerpo, await ubicacion());
+      if (comprobar) Object.entries(await ubicacion()).forEach(([campo, valor]) => cuerpo.set(campo, valor));
       const resena = await InfoTrip.api(tieneResena ? `${api}mi-opinion/` : `${api}resenas/`, {method: tieneResena ? 'PATCH' : 'POST', body: cuerpo});
       mostrarPropia(resena);
       form.elements.comprobar.checked = false;
+      form.elements.imagen.value = '';
       aviso.textContent = comprobar && !resena.ubicacion_comprobada
         ? 'Recibida y pendiente de revisión. No estás lo bastante cerca para comprobar tu ubicación, así que irá sin esa etiqueta.'
         : 'Recibida. Quedó pendiente de revisión; aparecerá cuando se publique.';

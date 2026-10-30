@@ -279,6 +279,19 @@ def con_resumen_de_resenas(lugares):
     )
 
 
+TIPOS_CON_GASTO = ('comer', 'dormir')
+
+
+def gasto_de_lugar(lugar):
+    """Lo habitual según las reseñas del último año. Con pocas sería la opinión de una o dos personas."""
+    montos = list(resenas_publicas_de_lugar(lugar).filter(
+        monto__isnull=False, fecha_visita__gte=timezone.localdate() - timedelta(days=365),
+    ).values_list('monto', flat=True))
+    if len(montos) < MINIMO_REPORTES:
+        return None
+    return {'mediana': median(montos), 'minimo': min(montos), 'maximo': max(montos), 'cantidad': len(montos)}
+
+
 def estado_de_lugar(lugar):
     """Respuestas del último año a "¿Sigue abierto?". Una sola persona no basta para sugerir un cierre."""
     respuestas = list(ConfirmacionLugar.objects.filter(

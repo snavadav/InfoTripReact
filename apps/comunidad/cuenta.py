@@ -32,13 +32,17 @@ def anonimizar_cuenta(usuario):
     """Debe ejecutarse en una transacción. Los archivos se borran solo si esta se confirma."""
     archivos = [archivo for aporte in Aporte.objects.filter(autor=usuario).exclude(imagen='')
                 for archivo in (aporte.imagen, aporte.miniatura) if archivo]
+    archivos += [archivo for resena in ResenaLugar.objects.filter(autor=usuario).exclude(imagen='')
+                 for archivo in (resena.imagen, resena.miniatura) if archivo]
     if usuario.foto_perfil:
         archivos.append(usuario.foto_perfil)
     Aporte.objects.filter(autor=usuario).update(
         estado='retirado', texto=TEXTO_ELIMINADO, imagen='', miniatura=''
     )
     Colaboracion.objects.filter(autor=usuario).update(estado='oculto', texto=TEXTO_ELIMINADO, fuente='')
-    ResenaLugar.objects.filter(autor=usuario).update(estado='retirado', texto=TEXTO_ELIMINADO)
+    ResenaLugar.objects.filter(autor=usuario).update(
+        estado='retirado', texto=TEXTO_ELIMINADO, imagen='', miniatura='', monto=None
+    )
     # Lo ya aprobado es un dato del lugar, no de la persona: se queda. Lo pendiente ya no se publicará.
     PropuestaLugar.objects.filter(autor=usuario, estado='pendiente').update(estado='oculto')
     PropuestaLugar.objects.filter(autor=usuario).update(nota='')

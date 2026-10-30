@@ -17,7 +17,7 @@ from apps.comunidad.models import Aporte, Colaboracion
 from apps.comunidad.selectors import (
     MINIMO_CRONISTA, MINIMO_REPORTES, SLUGS_PUEBLOS, aportes_publicos, con_info_reciente, costos_de_destino,
     costos_por_destino, cronistas, estado_de_lugar, ficha_practica, misiones_por_destino, preguntas_publicas,
-    resenas_publicas_de_lugar, resumen,
+    gasto_de_lugar, resenas_publicas_de_lugar, resumen, TIPOS_CON_GASTO,
 )
 from .filtros import filtrar_destinos
 from .lugares import activos as lugares_activos, cercanos_de_destino
@@ -326,6 +326,8 @@ def lugar_detalle(request, pk):
            'descripcion': f'{sitio.get_subtipo_display()} en Jalisco: ubicación, contacto y reseñas de viajeros.'}
     return render(request, 'destinos/lugar.html', {
         'sitio': sitio, 'seo': seo, 'estado': estado_de_lugar(sitio), 'hoy': timezone.localdate().isoformat(),
+        'gasto': gasto_de_lugar(sitio), 'lleva_gasto': sitio.tipo in TIPOS_CON_GASTO,
+        'unidad_de_gasto': 'por noche' if sitio.tipo == 'dormir' else 'por persona',
         'resenas': Paginator(resenas_publicas_de_lugar(sitio), 10).get_page(request.GET.get('resenas')),
         'como_llegar': 'https://www.google.com/maps/dir/?' + urlencode(
             {'api': 1, 'destination': f'{sitio.latitud},{sitio.longitud}'}),

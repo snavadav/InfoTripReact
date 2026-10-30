@@ -7,7 +7,7 @@
   <a class="back-link" href="{% url 'destinos-listado' %}">← Explorar el mapa</a>
   <header class="detail-heading">
     <div><span class="eyebrow">{{ sitio.get_subtipo_display }}{% if sitio.municipio %} · {{ sitio.municipio.nombre }}{% endif %}</span><h1>{{ sitio.nombre }}</h1>
-      <p class="lugar-nota">{% if sitio.num_resenas %}<strong>{{ sitio.calificacion_promedio|floatformat:1 }} / 5</strong> · {{ sitio.num_resenas }} reseña{{ sitio.num_resenas|pluralize }}{% else %}Sin reseñas todavía{% endif %}</p></div>
+      <p class="lugar-nota">{% if sitio.num_resenas %}<strong>{{ sitio.calificacion_promedio|floatformat:1 }} / 5</strong> · {{ sitio.num_resenas }} reseña{{ sitio.num_resenas|pluralize }}{% else %}Sin reseñas todavía{% endif %}{% if gasto %} · <strong>${{ gasto.mediana|floatformat:"-2g" }} MXN</strong> {{ unidad_de_gasto }}, lo habitual según {{ gasto.cantidad }} reseñas (entre ${{ gasto.minimo|floatformat:"-2g" }} y ${{ gasto.maximo|floatformat:"-2g" }}){% endif %}</p></div>
     <a class="directions-button" href="{{ como_llegar }}" target="_blank" rel="noopener noreferrer">Cómo llegar ↗<span class="sr-only"> (abre Google Maps en otra pestaña)</span></a>
   </header>
   {% if estado.posible_cierre %}<p class="lugar-aviso" role="status">Varias personas dicen que este lugar ya cerró. Confírmalo antes de ir.</p>{% endif %}
@@ -42,6 +42,8 @@
         <label>Calificación<select name="calificacion"><option value="5">5 · Excelente</option><option value="4">4 · Muy bueno</option><option value="3">3 · Bueno</option><option value="2">2 · Regular</option><option value="1">1 · Malo</option></select></label>
         <label>Tu experiencia<textarea name="texto" required maxlength="2000" rows="3"></textarea></label>
         <label>Fecha de visita<input name="fecha_visita" type="date" required max="{{ hoy }}"></label>
+        {% if lleva_gasto %}<label>¿Cuánto gastaste {{ unidad_de_gasto }}? MXN (opcional)<input name="monto" type="number" min="0" max="9999999.99" step="0.01"></label>{% endif %}
+        <label>Fotografía (opcional; JPEG, PNG o WebP, máximo 5 MB)<input name="imagen" type="file" accept="image/jpeg,image/png,image/webp"></label>
         <label class="check-label"><input name="comprobar" type="checkbox"> Estoy aquí: confirmar con mi ubicación (no se guarda)</label>
         <div class="contribution-actions"><button type="submit">Enviar a revisión</button><button type="button" id="resena-retirar" hidden>Retirar mi reseña</button></div>
         <p class="form-status" role="status"></p>
@@ -50,7 +52,8 @@
     <div class="contribution-list">
       {% for resena in resenas %}<article class="community-box">
         <div class="contribution-heading"><h3>{{ resena.autor.nombre }}{% if resena.ubicacion_comprobada %} <span class="visit-badge">Comprobó su ubicación</span>{% endif %}</h3><span>{{ resena.fecha_visita|date:'d/m/Y' }}</span></div>
-        <p class="rating">{{ resena.calificacion }} / 5</p>
+        <p class="rating">{{ resena.calificacion }} / 5{% if resena.monto is not None %} · ${{ resena.monto|floatformat:"-2g" }} MXN {{ unidad_de_gasto }}{% endif %}</p>
+        {% if resena.imagen %}<a href="{{ resena.imagen.url }}" target="_blank" rel="noopener"><img class="community-photo" src="{% if resena.miniatura %}{{ resena.miniatura.url }}{% else %}{{ resena.imagen.url }}{% endif %}" alt="Fotografía de {{ sitio.nombre }} compartida por {{ resena.autor.nombre }}" loading="lazy"></a>{% endif %}
         <p class="contribution-text">{{ resena.texto|linebreaksbr }}</p>
         <details><summary>Reportar reseña</summary><form class="report-form community-form" data-url="/api/v1/resenas-lugar/{{ resena.pk }}/reportar/"><label>Motivo<textarea name="motivo" required maxlength="1000" rows="2"></textarea></label><button type="submit">Enviar reporte</button><p class="form-status" role="status"></p></form></details>
       </article>{% empty %}<p class="community-box">Todavía no hay reseñas publicadas. Si conoces este lugar, cuéntale al siguiente viajero cómo te fue.</p>{% endfor %}
