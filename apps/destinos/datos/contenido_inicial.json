@@ -1,0 +1,1766 @@
+[
+ {
+  "nombre": "Ajijic Museo de Arte",
+  "destino": null,
+  "municipio": "Chapala",
+  "latitud": 20.300133,
+  "longitud": -103.272431,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Priv. Flores Magón 3-A",
+  "descripcion": "Ajijic Museo de Arte fundada por Efrén González, creada para conservar, preservar, investigar, compartir y exhibir arte creado en Ajijic y sus alrededores de la Ribera de Chapala, creada por artistas locales, mexicanos y extranjeros. El Museo está rodeado de murales hechos por artistas locales. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=2245",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a domingos de 10 a 17 h.",
+   "precios": "Entrada general: $40., estudiantes: $40.",
+   "contacto": "Teléfono: 33 1703 3942, 33 1887 4927"
+  }
+ },
+ {
+  "nombre": "Casa Museo López Portillo",
+  "destino": "casa-museo-lopez-portillo",
+  "municipio": "Guadalajara",
+  "latitud": 20.679277,
+  "longitud": -103.346774,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Liceo 177",
+  "descripcion": "Está ubicado en una finca construida a finales del siglo XVIII, en la cual vivieron el historiador José López Portillo y Weber, el gobernador José López Portillo y Serrano y el escritor José López Portillo y Rojas. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1019",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a sábado de 10 a 17 hrs. Domingos de 10 a 15 hrs.",
+   "precios": "Entrada libre",
+   "contacto": "Teléfono: 33 1201 8720"
+  }
+ },
+ {
+  "nombre": "Casa Museo de Doña Conchita Encarnación",
+  "destino": "casa-museo-dona-conchita-encarnacion",
+  "municipio": "San Sebastián del Oeste",
+  "latitud": 20.76118,
+  "longitud": -104.852093,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Juárez 2",
+  "descripcion": "Doña Conchita Encarnación es la fundadora y propietaria del único museo que existe en San Sebastián del Oeste. Muestra documentos y artículos antiguos propiedad de su familia, una de las más pudientes de la comunidad durante la época minera previa a la Revolución Mexicana de 1910. El inmueble donde se ubica este museo es uno de los más viejos del lugar. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=518",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Lunes a domingo de 10:30 a 15 hrs. y de 17 a 20 hrs.",
+   "contacto": "Teléfono: 322 297 2860"
+  }
+ },
+ {
+  "nombre": "Museo Cabañas",
+  "destino": "instituto-cultural-cabanas",
+  "municipio": "Guadalajara",
+  "latitud": 20.676545,
+  "longitud": -103.337599,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Cabañas 8, Plaza Tapatía",
+  "descripcion": "El Instituto Cultural Cabañas es una admirable obra arquitectónica que se empezó a construir en el año de 1805. Es de estilo neoclásico y fue diseñado por el arquitecto Manuel Tolsá, a petición del entonces obispo de Guadalajara, don Juan Cruz Ruiz de Cabañas. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1027",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a domingo de 10:00 a 17:00 h.",
+   "precios": "Entrada general $80 Presentando identificación oficial o licencia de manejo nacional: $55 Maestros, estudiantes, adultos mayores y niños de 6 a 12 años: $30 Martes entrada libre.",
+   "contacto": "Teléfono: 33 3668 1642 ext. 31014, 33 3668 1645"
+  }
+ },
+ {
+  "nombre": "Museo Casa Carlos Terrés",
+  "destino": "museo-casa-carlos-agustin-terres",
+  "municipio": "Lagos de Moreno",
+  "latitud": 21.349831,
+  "longitud": -101.943193,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Priv. Alfonso de Alba 269",
+  "descripcion": "Museo en Lagos de Moreno, Jalisco. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=2580",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a domingo de 10 a 17 h.",
+   "precios": "Entrada general $30, niños, adultos mayores y estudiantes con credencial $15.",
+   "contacto": "Teléfono: 474 742 58 40"
+  }
+ },
+ {
+  "nombre": "Museo Centro Interpretativo Guachimontones",
+  "destino": "museo-de-guachimontones",
+  "municipio": "Teuchitlán",
+  "latitud": 20.692401,
+  "longitud": -103.839561,
+  "categoria": "Ciudad y cultura",
+  "direccion": "CP 46760",
+  "descripcion": "Espacio dedicado a la conservación y difusión del recinto arqueológico guachimontones a través de estrategias interpretativas. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1841",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a domingo de 9 a 17 h Tercera edad y menores de 12 años entradas libre",
+   "precios": "Entrada general: $30 Estudiantes y maestros $15",
+   "contacto": "Teléfono: 384 109 0388 · https://museosdejalisco.com/espacio-guachimontones/"
+  }
+ },
+ {
+  "nombre": "Museo Cristero /Centro de Estudios Cristeros Alfredo Hernández Quezada",
+  "destino": "centro-de-estudios-cristeros-alfredo-hernandez-quesada",
+  "municipio": "Encarnación de Díaz",
+  "latitud": 21.527983,
+  "longitud": -102.239817,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Cjón. Jáuregui 101",
+  "descripcion": "El museo fue inaugurado el 20 de mayo de 2005 y reúne cerca de 120 piezas, 350 documentos históricos y 240 horas de grabación. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=596",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a domingo de 10 a 18 hrs.",
+   "precios": "Entrada libre",
+   "contacto": "Teléfono: (475) 953 64 53 · https://sc.jalisco.gob.mx/patrimonio/museos/museo-cristero-centro-de-estudios-cristeros-alfredo-hernandez-quezada"
+  }
+ },
+ {
+  "nombre": "Museo Histórico Naval de Puerto Vallarta",
+  "destino": "museo-historico-naval",
+  "municipio": "Puerto Vallarta",
+  "latitud": 20.608534,
+  "longitud": -105.236349,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Zaragoza 4",
+  "descripcion": "Este museo muestra la historia de México en relación con el mar, a partir de la conquista y hasta la época moderna. La colección permanente exhibe: pinturas, maquetas, fotografías, documentos, cartografías, modelos a escala e instrumentos de navegación. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1256",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "De martes a domingo de 10 a 17 hrs. Entrada libre a personas con capacidades diferentes y niños menores de 6 años",
+   "precios": "Entrada general $ 45, niños $ 30",
+   "contacto": "Teléfono: 322 223 53 57"
+  }
+ },
+ {
+  "nombre": "Museo Los Abuelos",
+  "destino": "museum-los-abuelos",
+  "municipio": "Tequila",
+  "latitud": 20.885519,
+  "longitud": -103.839242,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Vicente Albino Rojas 22",
+  "descripcion": "Abrió sus puertas en 1985, con el objetivo de dar a conocer los orígenes del tequila y la historia de la familia Sauza, quien durante tres generaciones, de 1873 a 1985, se dedicó a la producción y promoción de esta bebida. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=19",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a domingo de 10 a 18 hrs.",
+   "precios": "Entrada general: $10",
+   "contacto": "Teléfono: (374) 742 02 47 · https://sc.jalisco.gob.mx/patrimonio/museos/museo-de-los-abuelos"
+  }
+ },
+ {
+  "nombre": "Museo Municipal de Tepatitlán",
+  "destino": "museo-municipal-de-tepatitlan",
+  "municipio": "Tepatitlán de Morelos",
+  "latitud": 20.812209,
+  "longitud": -102.758158,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Hidalgo 197",
+  "descripcion": "Espacio dedicado a preservar y difundir la historia, cultura, tradiciones y patrimonio de Tepatitlán de Morelos. A través de sus colecciones y exposiciones, permite conocer la identidad y memoria de nuestro municipio. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=74",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a viernes 10 a 18 h Sábado a lunes de 10 a 16 h",
+   "precios": "Entrada libre",
+   "contacto": "Teléfono: 378 788 8700 ext. 8862 · https://www.tepatitlan.gob.mx/museo/"
+  }
+ },
+ {
+  "nombre": "Museo Nacional de la Cerámica Jorge Wilmot",
+  "destino": "museo-naciona-de-la-ceramica",
+  "municipio": "Tonalá",
+  "latitud": 20.62661,
+  "longitud": -103.24307,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Constitución 104",
+  "descripcion": "Está ubicado en una finca construida en 1960. El museo fue inaugurado en el año de 1985 y remodelado en 1998 por el Ayuntamiento de Tonalá. Reabrió sus puertas el 30 de noviembre de ese año, con un concepto museográfico de la maestra Gladys Abascal, con el apoyo del Instituto Nacional Indigenista (INI) y del Museo Regional de Guadalajara. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=270",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a domingo de 10 a 18 h",
+   "precios": "Entrada libre",
+   "contacto": "Teléfono: 333 586 6000 ext. 1520 · https://sc.jalisco.gob.mx/patrimonio/museos/museo-nacional-de-la-ceramica-jorge-wilmot"
+  }
+ },
+ {
+  "nombre": "Museo Nacional del Tequila (MUNAT)",
+  "destino": "museo-nacional-del-tequila",
+  "municipio": "Tequila",
+  "latitud": 20.884352,
+  "longitud": -103.839507,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Ramón Corona 34",
+  "descripcion": "Abrió sus puertas al público el 29 de enero de 2000. El inmueble que lo alberga data de finales del siglo XIX, construida durante el porfiriato. Su distribución es típica de las casas señoriales de la clase dominante del periodo. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1029",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Miércoles a lunes de 9 a 18 h Martes cerrado",
+   "precios": "Entrada libre"
+  }
+ },
+ {
+  "nombre": "Museo Panteón de Belén",
+  "destino": "museo-panteon-de-belen",
+  "municipio": "Guadalajara",
+  "latitud": 20.687804,
+  "longitud": -103.345347,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Belén 684",
+  "descripcion": "Inaugurado el 1 de enero de 2010. El Panteón de Santa Paula, ahora conocido como Panteón de Belén, fue construido en 1848 por el arquitecto Manuel Gómez Ibarra, a solicitud del obispo Diego de Aranda y Carpinteiro. El Museo del Panteón de Belén es un muestrario de la arquitectura funeraria de diversas épocas. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1611",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a sábado en horario de 10, 11, 13 y 14 hrs.",
+   "precios": "Entrada General $ 37 Estudiantes y Profesores, Niños menores de 4 a 12 años, personas de la tercera edad y personas con alguna discapacidad con credencial vigente $ 18",
+   "contacto": "Teléfono: 33 1001 5299, 33 1374 0134"
+  }
+ },
+ {
+  "nombre": "Museo Regional Cristero",
+  "destino": "museo-regional-cristero",
+  "municipio": "San Julián",
+  "latitud": 21.011628,
+  "longitud": -102.181346,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Onofre García Pérez 88",
+  "descripcion": "Espacio adaptado para dar a conocer los valores y costumbres de la localidad. Trata en especial el tema de La Cristiada. Exhibe objetos antiguos de usos diario, maquetas del poblado e indumentaria utilizada por los curas de la localidad. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1757",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a viernes de 9 a 19 h Sábado y domingo de 10 a 13 h",
+   "contacto": "Teléfono: 347 718 25 39, 347 718 00 01 · https://sanjulian.gob.mx/"
+  }
+ },
+ {
+  "nombre": "Museo Regional de Guadalajara",
+  "destino": "museo-regional-de-guadalajara",
+  "municipio": "Guadalajara",
+  "latitud": 20.677719,
+  "longitud": -103.346325,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Liceo 60",
+  "descripcion": "La sede de este museo se ubica en uno de los edificios más emblemáticos de la región, el cual fue construido entre 1742 y 1758 y ha funcionado como cárcel, cuartel, liceo de varones, biblioteca pública y conservatorio. En 1918, fue abierto al público como Museo de Bellas Artes. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1030",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a domingo de 9:30 a 17:30 h Sábado y domingo de 9 h a 16 h Entrada gratuita (aplica únicamente al presentar credencial oficial vigente): menores de 12 años, estudiantes, docentes, personas adultas mayores y personas con discapacidad",
+   "precios": "Entrada general: $100 Entrada libre: domingos (solo para nacionales) La utilización de dispositivos de fotografía o de videograbación está sujeta al pago de derechos",
+   "contacto": "Teléfono: 33 3614 5257, 33 3614 9957"
+  }
+ },
+ {
+  "nombre": "Museo Regional de la Cerámica",
+  "destino": "museo-regional-de-la-ceramica",
+  "municipio": "San Pedro Tlaquepaque",
+  "latitud": 20.639071,
+  "longitud": -103.3144,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Independencia 237",
+  "descripcion": "Su principal objetivo es el rescate, la preservación y el fomento de las artesanías propias de la entidad, en especial de la cerámica. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=250",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a sábado de 11 a 17 h",
+   "precios": "Domingo entrada libre",
+   "contacto": "Teléfono: 333 635 5404, 333 860 1177"
+  }
+ },
+ {
+  "nombre": "Museo Silvestre Vargas",
+  "destino": "museo-silvestre-vargas",
+  "municipio": "Tecalitlán",
+  "latitud": 19.469929,
+  "longitud": -103.307373,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Victoria 42",
+  "descripcion": "Museo en Tecalitlán, Jalisco. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=448",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Lunes a sabado de 9 a 19 hrs. Domingos de 9 a 15 hrs.",
+   "precios": "Entrada libre",
+   "contacto": "Teléfono: (371) 418 33 07, 418 01 69 ext. 114"
+  }
+ },
+ {
+  "nombre": "Museo de Arte Sacro de Lagos de Moreno",
+  "destino": "museo-de-arte-sacro-lagos-de-moreno",
+  "municipio": "Lagos de Moreno",
+  "latitud": 21.356167,
+  "longitud": -101.930965,
+  "categoria": "Ciudad y cultura",
+  "direccion": "José Rosas Moreno s/n",
+  "descripcion": "El museo se encuentra en una edificación de los siglos XVIII y XIX, anexo a la Parroquia de la Asunción, imponente templo barroco considerado una joya arquitectónica de México. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1462",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a domingo de 11 a 17 h",
+   "precios": "Entrada general: $15 adulto y $5 niños, estudiantes e INAPAN",
+   "contacto": "Teléfono: 474 116 2490"
+  }
+ },
+ {
+  "nombre": "Museo de Cera de Guadalajara",
+  "destino": "museo-de-cera-guadalajara",
+  "municipio": "Guadalajara",
+  "latitud": 20.676562,
+  "longitud": -103.34517,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Morelos 217",
+  "descripcion": "Museo en Guadalajara, Jalisco. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1083",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Todos los días del año de 11 a 19 hrs.",
+   "precios": "dos boletos Adulto - $160 Niño/Inapam - $140",
+   "contacto": "Teléfono: 33 3614 8487, 33 3614 0187 · http://www.museodecera.com.mx/"
+  }
+ },
+ {
+  "nombre": "Museo de Historia de Ocotlán",
+  "destino": "museo-de-antropologia-e-historia-de-ocotlan",
+  "municipio": "Ocotlán",
+  "latitud": 20.345132,
+  "longitud": -102.774568,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Miguel Hidalgo 3",
+  "descripcion": "El Museo de Historia de Ocotlán comenzó sus operaciones el 15 de abril de 1975, en un espacio facilitado temporalmente al interior del Palacio Municipal. A partir de 1980 la nueva sede del Museo sería la finca numero 3 de la calle Hidalgo, lugar en donde hasta estas fechas se localiza tan importante centro cultural de la región. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1086",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a viernes de 10 a 19 h, sábado y domingo de 10 a 21 h",
+   "precios": "Entrada libre",
+   "contacto": "Teléfono: 392 922 03 04, 392 109 77 07 · https://www.museosdeocotlan.org/museo-de-historia/"
+  }
+ },
+ {
+  "nombre": "Museo de Las Ánimas",
+  "destino": "museo-de-las-animas",
+  "municipio": "Encarnación de Díaz",
+  "latitud": 21.533329,
+  "longitud": -102.23635,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Prol. Concordia 96",
+  "descripcion": "El museo fue inaugurado en agosto de 2003 en un edificio construido ex profeso a un costado del bello panteón del Señor de la Misericordia en la cabecera municipal; nos presenta la muerte vista desde la medicina, la religión, la antropología, la historia y el arte. Único en su género en Jalisco. a región occidente del país. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1082",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a domingo de 10 a 18 hrs.",
+   "contacto": "Teléfono: 475 953 19 67"
+  }
+ },
+ {
+  "nombre": "Museo de Nuestra Señora del Rosario de Talpa",
+  "destino": "museo-de-nuestra-senora-del-rosario-de-talpa",
+  "municipio": "Talpa de Allende",
+  "latitud": 20.380942,
+  "longitud": -104.821379,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Vicente Guerrero 6",
+  "descripcion": "El museo fue inaugurado el 12 de mayo de 1995. Su arquitectura es de estilo colonial, el diseño y la construcción han tomado en cuenta las técnicas y materiales locales y en general los valores estéticos de la tradición mexicana (como tejas, ladrillos, madera, etc.). En el museo, los visitantes pueden observar objetos y obras literarias. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=62",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a domingos de 9 a 14:30 hrs.",
+   "precios": "Entrada general $45. Niños $42.50",
+   "contacto": "Teléfono: 388 385 04 81, 388 385 00 48"
+  }
+ },
+ {
+  "nombre": "Museo de Paleontología de Guadalajara Federico A. Solórzano Barreto",
+  "destino": "museo-de-paleontologia-de-guadalajara",
+  "municipio": "Guadalajara",
+  "latitud": 20.659104,
+  "longitud": -103.346279,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Av. Dr. R. Michel 520",
+  "descripcion": "Se localiza en el área del Parque Agua Azul anteriormente funcionó como museo infantil, coordinado por el DIF Jalisco. Fue remodelado durante los años de 1999 y 2000 por el arquitecto Xavier Massimi Malo. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=394",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a viernes de 9:30 a 17 hrs. Sábado de 10 a 17 hrs. Domingo de 11 a 15:30 hrs.",
+   "contacto": "Teléfono: 33 1201 8330"
+  }
+ },
+ {
+  "nombre": "Museo de Ripley Aunque Ud. No lo Crea¡¡¡ de Guadalajara",
+  "destino": "museo-de-ripley-s-aunque-usted-no-lo-crea",
+  "municipio": "Guadalajara",
+  "latitud": 20.676557,
+  "longitud": -103.345232,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Morelos 217",
+  "descripcion": "La vida de Robert Ripley fue una increíble aventura. Durante treinta y cinco años exploró lo raro y fue testigo de lo sorprendente. Ripley fue un incansable viajero que visitó más de 200 países, encontrando lugares remotos y desconocidos. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1569",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Lunes a domingo de 11 a 19 hrs. Museo de Ripley y Museo de Cera",
+   "precios": "Adultos $95 Niños,INAPAM, estudiantes y profesores con credencial vigente $ 85 Boleto combinado: $ 160 adultos $ 140 niños, INAPAM, estudiantes y profesores con credencial vigente.",
+   "contacto": "Teléfono: 33 3614 8487 · https://museodecera.com.mx/museo-de-ripley-gdl"
+  }
+ },
+ {
+  "nombre": "Museo de Sitio del Palacio de Gobierno",
+  "destino": "palacio-de-gobierno",
+  "municipio": "Guadalajara",
+  "latitud": 20.676084,
+  "longitud": -103.346184,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Ramón Corona 31",
+  "descripcion": "El proyecto para crear este museo surgió en el 2010, en el marco de los preparativos de las celebraciones en Jalisco por el Bicentenario de la Independencia y el Centenario de la Revolución Mexicana. El objetivo fue presentar los hechos históricos trascendentes de la historia del estado. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1488",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Entrada únicamente en recorrido guiado de martes a sábado en los horarios: 11, 12, 13 y 15 h Domingos 11 y 12 h",
+   "precios": "Entrada gratuita.",
+   "contacto": "Teléfono: 333 668 1800 ext. 34771 · https://museosdejalisco.com/espacio-museo-de-palacio-de-gobierno/#"
+  }
+ },
+ {
+  "nombre": "Museo de la Ciudad de Guadalajara",
+  "destino": "museo-de-la-ciudad-guadalajara",
+  "municipio": "Guadalajara",
+  "latitud": 20.678081,
+  "longitud": -103.352121,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Independencia 684",
+  "descripcion": "Inaugurado el 14 de febrero de 1992. Da a conocer la historia de la ciudad de Guadalajara y diversos aspectos culturales del lugar. Está ubicado en un inmueble de finales del siglo XVII, el cual formó parte del Convento de Monjas Capuchinas. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=564",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a sábado de 10:00 a 15:00 horas",
+   "precios": "Entrada libre",
+   "contacto": "Teléfono: 33 1201 8712, 33 1201 8713, 1201 8714, 1201 8715"
+  }
+ },
+ {
+  "nombre": "Museo de las Artes",
+  "destino": "museo-de-las-artes-udg",
+  "municipio": "Guadalajara",
+  "latitud": 20.674279,
+  "longitud": -103.358927,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Av. Juárez 975",
+  "descripcion": "El inmueble que lo alberga fue construido en 1914 como escuela primaria, con un diseño del ingeniero Alfredo Navarro Branca. Años después, el gobierno estatal modificó el inconcluso proyecto para convertirlo en sede del Congreso del Estado; la adecuación arquitectónica corrió a cargo de los ingenieros Aurelio Aceves y Rafael Urzúa. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=444",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a sábado de 10 a 18 hrs. Domingo de 10 a 15 hrs.",
+   "precios": "Entrada libre",
+   "contacto": "Teléfono: 33 3134 1664 · https://www.musaudg.mx/"
+  }
+ },
+ {
+  "nombre": "Museo de las Artes Populares de Jalisco",
+  "destino": "museo-de-las-artes-populares-de-jalisco",
+  "municipio": "Guadalajara",
+  "latitud": 20.679879,
+  "longitud": -103.345653,
+  "categoria": "Ciudad y cultura",
+  "direccion": "San Felipe 211",
+  "descripcion": "Museo que tiene por objetivo investigar, rescatar y difundir el arte popular del estado de Jalisco. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1022",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a sábado 11 a 17 h Domingo 11 a 14 h",
+   "precios": "Entrada libre",
+   "contacto": "Teléfono: 333 030 9779, 333 614 3891 · https://sc.jalisco.gob.mx/patrimonio/museos/museo-de-las-artes-populares-de-jalisco"
+  }
+ },
+ {
+  "nombre": "Museo del Ejército y Fuerza Aérea, Cuartel Colorado",
+  "destino": "museo-del-ejercito-y-fuerza-aerea-mexicana-cuartel-colorado",
+  "municipio": "Guadalajara",
+  "latitud": 20.669583,
+  "longitud": -103.332572,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Valentín Gómez Farías 600, Sector Reforma",
+  "descripcion": "El inmueble que lo alberga, conocido anteriormente como Cuartel Colorado , fue construido entre 1903 y 1905 con un diseño del arquitecto Antonio Aeróniz. Formaba parte de ocho cuarteles que dividían a la ciudad de Guadalajara. A lo largo de los años funcionó como albergue de tropas federales y escuela militar. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1023",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a sábado de 10:00 a 18:00 hrs. Domingos y días festivos de 10:00 a 16:00 hrs.",
+   "precios": "Entrada libre",
+   "contacto": "Teléfono: 33 3618 3974"
+  }
+ },
+ {
+  "nombre": "Museo del Periodismo y las Artes Gráficas (MUPAG)",
+  "destino": "museo-del-periodismo-y-artes-graficas",
+  "municipio": "Guadalajara",
+  "latitud": 20.679958,
+  "longitud": -103.347804,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Av. Fray Antonio Alcalde 225",
+  "descripcion": "Antes de que esa casa de cantera, vitrales y esculturas de perros existiera, estuvo la imprenta de donde salió El Despertador Americano , considerado el primer periódico independiente de América. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1024",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a domingo de 10 a 18 h",
+   "precios": "Entrada general: $20 Estudiantes y maestros con credencial e INAPAM: $10 Domingos: entrada libre",
+   "contacto": "Teléfono: 33 3613 9285, 33 1523 1746"
+  }
+ },
+ {
+  "nombre": "Museo del Premio Nacional de la Cerámica Pantaleón Panduro",
+  "destino": "museo-de-la-ceramica",
+  "municipio": "San Pedro Tlaquepaque",
+  "latitud": 20.642572,
+  "longitud": -103.312722,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Ayuntamiento de San Pedro Tlaquepaque/Centro Cultural El Refugio",
+  "descripcion": "El museo se ubica dentro del Centro Cultural El Refugio, en el área de la Capilla. Exhibe cerámica en todas las formas de expresión plástica que los alfareros de nuestro país producen. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=202",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Lunes a domingo de 10 a 19 h.",
+   "precios": "Entrada libre",
+   "contacto": "Teléfono: 33 3639 5646, 33 3562 7036 ext. 2007 · https://www.tlaquepaque.gob.mx/tlaquepaque/desglose_post.php?id=1605"
+  }
+ },
+ {
+  "nombre": "Planetario y Centro Interactivo Lunaria",
+  "destino": "lunaria",
+  "municipio": "Guadalajara",
+  "latitud": 20.695078,
+  "longitud": -103.345238,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Calle Carlos Pereira 790",
+  "descripcion": "Está enfocado a la contribución del desarrollo tecnológico, la investigación científica y la innovación, al igual que en difundir los avances científicos, tecnológicos e innovadores locales y globales. Todo con el fin de fortalecer la cultura científica y la apropiación social de la ciencia entre los tapatíos. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=2129",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Miércoles a viernes de 10:00 a 17:00 hrs. Sábados y domingos de 11:00 a 18:00 htd.",
+   "precios": "Menores $20 Adultos $80 Estudiantes, maestros, adultos mayores y personas con discapacidad, $50.(con credencial vigente)",
+   "contacto": "Teléfono: 33 2938 4801 · http://www.planetariojalisco.com/"
+  }
+ },
+ {
+  "nombre": "Acuario Ventura",
+  "destino": null,
+  "municipio": "Tlajomulco de Zúñiga",
+  "latitud": 20.559643,
+  "longitud": -103.463547,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Av. Adolfo López Mateos Sur 9900",
+  "descripcion": "Museo en Tlajomulco de Zúñiga, Jalisco. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=2405",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Lunes a viernes de 12 a 20 hrs.; sábado y domingo de 11 a 20 hrs.",
+   "precios": "Entrada desde $194.",
+   "contacto": "Teléfono: 33 2713 3368 · https://www.sealand.com.mx/guadalajara/"
+  }
+ },
+ {
+  "nombre": "Centro Cultural y Museo de la Ciudad de Lagos de Moreno",
+  "destino": null,
+  "municipio": "Lagos de Moreno",
+  "latitud": 21.35419,
+  "longitud": -101.930724,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Benito Juárez s/n",
+  "descripcion": "Museo en Lagos de Moreno, Jalisco. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=2528",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a domingo de 10 a 18 h",
+   "precios": "Entrada libre",
+   "contacto": "Teléfono: 474 741 1189"
+  }
+ },
+ {
+  "nombre": "Centro Cultural y Museo de la Ciudad de San Juan de los Lagos",
+  "destino": null,
+  "municipio": "San Juan de los Lagos",
+  "latitud": 21.354391,
+  "longitud": -101.930733,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Benito Juárez 505",
+  "descripcion": "El Museo y Centro Cultural de Lagos de Moreno se encuentra ubicado en el edificio más antiguo de la ciudad la Ex Cárcel Real de la ciudad de Lagos de Moreno, la cual cuenta con una historia de más de 400 años y que hasta el 2021 fue utilizado como cárcel municipal. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=2483",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "De martes a domingos de 10 a 17 h"
+  }
+ },
+ {
+  "nombre": "Chiconaui Museo Arqueológico de Portezuelo",
+  "destino": null,
+  "municipio": "La Barca",
+  "latitud": 20.413719,
+  "longitud": -102.517692,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Hidalgo 47",
+  "descripcion": "Exhibición de figuras antiguas de las civilizaciones asentadas en las faldas de los cerros dentro de la comunidad de Portezuelo. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1241",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Lunes a viernes de 9 a 15 hrs.",
+   "precios": "Entrada libre.",
+   "contacto": "Teléfono: 393 110 58 62, 393 120 07 78"
+  }
+ },
+ {
+  "nombre": "Galería de Juristas y Legisladores Jaliscienses y Museo de Sitio",
+  "destino": null,
+  "municipio": "Guadalajara",
+  "latitud": 20.677565,
+  "longitud": -103.345312,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Av. Hidalgo 222",
+  "descripcion": "En este museo se destacan los textos de la Declaratoria del Estado Libre y Soberano de Jalisco, del nombramiento del primer Gobernador Prisciliano Sánchez, así como una galería con las fotos de los diputados jaliscienses de esa época. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1251",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Lunes a viernes de 10:00 a 18:00 hrs.",
+   "contacto": "Teléfono: 33 3679 1563 · https://sc.jalisco.gob.mx/content/galeria-de-juristas-y-legisladores-jaliscienses-y-museo-de-sitio"
+  }
+ },
+ {
+  "nombre": "Globo, Museo de la Niñez de Guadalajara",
+  "destino": null,
+  "municipio": "Guadalajara",
+  "latitud": 20.661528,
+  "longitud": -103.343132,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Av. 5 de Febrero s/n (Unidad Administrativa Reforma)",
+  "descripcion": "Se inauguró el 30 de abril de 2000 en las instalaciones de la Unidad Administrativa Reforma, fue remodelado en el año 2002. El inmueble en el que se encuentra fue construido en 1992, donde anteriormente se ubicaba la Oficialía Mayor de Cultura. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1020",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Jueves a domingo de 10 a 18 hrs.",
+   "precios": "Entrada libre",
+   "contacto": "Teléfono: 33 3669 1390, 33 3669 1300"
+  }
+ },
+ {
+  "nombre": "Museo Arqueológico Profra. Ma. Esther de la Torre Sánchez",
+  "destino": null,
+  "municipio": "Zapotitlán de Vadillo",
+  "latitud": 19.545582,
+  "longitud": -103.814579,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Juan Ortega 25",
+  "descripcion": "Museo que exhibe una colección de piezas de arqueología de la localidad. Lleva el nombre de la profesora Esther de la Torre Sánchez, personaje ilustre que dedicó su vida al servicio de la comunidad. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1268",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Lunes a viernes de 10 a 14 y de 16 a 19 hrs.",
+   "precios": "Entrada libre",
+   "contacto": "Teléfono: 343 434 0976"
+  }
+ },
+ {
+  "nombre": "Museo Arqueológico Tlallán",
+  "destino": null,
+  "municipio": "Tala",
+  "latitud": 20.64459,
+  "longitud": -103.702499,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Nicolás Bravo 91",
+  "descripcion": "El museo fue inaugurado en 1999 en cuatro salas de la Casa de la Cultura de Tala, Jalisco, la cual fue construida en el año de 1984. Cuenta con auditorio, biblioteca y una galería para exposiciones temporales.Cuenta con tres salas permanentes: arqueología, cerámica, fertilidad, arquitectura y área pedagógica. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=89",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Lunes a sábado de 10:00 a 14:00 hrs.",
+   "contacto": "Teléfono: (384) 738 42 60"
+  }
+ },
+ {
+  "nombre": "Museo Arqueológico de Ciudad Guzmán",
+  "destino": "museo-de-las-culturas-de-occidente-ciudad-guzman-jalisco",
+  "municipio": "Zapotlán el Grande",
+  "latitud": 19.704154,
+  "longitud": -103.465519,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Dr. Ángel González 21",
+  "descripcion": "Este museo surgió por iniciativa de un grupo de artistas e intelectuales denominado Arquitrabe, del cual formó parte el escritor Juan José Arreola. En 1956, el recinto se incorporó al Instituto Nacional de Antropología e Historia (INAH) y abrió sus puertas el 16 de abril de ese año. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=56",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a domingo de 9 h a 17 h Entrada gratuita (aplica únicamente al presentar credencial oficial vigente): menores de 13 años, estudiantes, docentes y personas adultas mayores",
+   "precios": "Entrada general: $75 Entrada libre: domingos La utilización de dispositivos electrónicos para videograbación está sujeta al pago de derechos ($56)",
+   "contacto": "Teléfono: 33 3614 5416, 33 3613 8224, 341 124 73 95"
+  }
+ },
+ {
+  "nombre": "Museo Arqueológico de Mascota",
+  "destino": "museo-archeologico",
+  "municipio": "Mascota",
+  "latitud": 20.522784,
+  "longitud": -104.787006,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Allende 115",
+  "descripcion": "Este museo fue inaugurado en el año 2001 en tres salas del Centro Cultural Mascota. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=100",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a sábados de 10 a 19 h. y domingos de 10 a 14 h.",
+   "precios": "Entrada libre.",
+   "contacto": "Teléfono: 388 386 22 02, 388 386 00 52 · https://mascota.gob.mx/secciones/turismo.php"
+  }
+ },
+ {
+  "nombre": "Museo Arqueológico de San Agustín",
+  "destino": null,
+  "municipio": "Tlajomulco de Zúñiga",
+  "latitud": 20.546671,
+  "longitud": -103.467473,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Pedro Loza 127",
+  "descripcion": "Espacio de conservación arqueológica donde alberga 250 piezas. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1392",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Lunes a viernes de 9 a 20 h",
+   "precios": "Entrada libre La utilización de videocámara no tiene costo alguno",
+   "contacto": "Teléfono: 333 283 4400 · http://www.tlajomulco.gob.mx"
+  }
+ },
+ {
+  "nombre": "Museo Cihuapilli (Casa de La Virgen)",
+  "destino": "museo-cihuapili",
+  "municipio": "San Juan de los Lagos",
+  "latitud": 21.245209,
+  "longitud": -102.33323,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Diana 18 (a un costado de la Catedral Basílica)",
+  "descripcion": "Museo en San Juan de los Lagos, Jalisco. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=2484",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Lunes a viernes de 9 a 17 h Sábados y domingos de 8 a 18h.",
+   "precios": "La entrada tiene un costo de $10 pesos para adultos y $5 pesos para niños.",
+   "contacto": "Teléfono: 395 785 42 31, 395 785 1275 · https://virgendesanjuan.org/?page_id=553"
+  }
+ },
+ {
+  "nombre": "Museo Comunitario Atenquílitl",
+  "destino": null,
+  "municipio": "Atenguillo",
+  "latitud": 20.414971,
+  "longitud": -104.494441,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Independencia 18",
+  "descripcion": "Abrió sus puertas el 23 de agosto de 1993, con la finalidad de dar a conocer la historia del municipio y las piezas paleontológicas y arqueológicas halladas en la región. Exhibe antiguas herramientas de caza, labranza, carpintería y curtiduría, así como objetos de uso cotidiano, fotografías, pinturas y artesanías. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=484",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a domingos de 10 a 14:30 y de 16 a 18 hrs.",
+   "precios": "Entrada libre",
+   "contacto": "Teléfono: 388 736 88 78, 33 3617 7285 · http://www.atenguillo.gob.mx/"
+  }
+ },
+ {
+  "nombre": "Museo Comunitario Ihtollatlán",
+  "destino": null,
+  "municipio": "Poncitlán",
+  "latitud": 20.335924,
+  "longitud": -103.018553,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Santuario 1",
+  "descripcion": "Museo en Poncitlán, Jalisco. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=294",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a Domingo 9 a 16 hrs.",
+   "contacto": "Teléfono: 391 921 04 23"
+  }
+ },
+ {
+  "nombre": "Museo Comunitario Tlalchitonatiuh",
+  "destino": null,
+  "municipio": "Casimiro Castillo",
+  "latitud": 19.605352,
+  "longitud": -104.438955,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Niños Héroes 49",
+  "descripcion": "Museo inaugurado en junio de 2004, su colección es de arqueología de la localidad y de fotografías de petroglifos que abundan en la zona. Muestra material arqueológico del municipio y la región. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=392",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a sábado de 10 a 18 hrs.",
+   "contacto": "Teléfono: 317 113 9844"
+  }
+ },
+ {
+  "nombre": "Museo Comunitario del Tendido de Cristos",
+  "destino": null,
+  "municipio": "San Martín Hidalgo",
+  "latitud": 20.437897,
+  "longitud": -103.928819,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Auditorio Municipal Benito Juárez; Simon Bolívar s/n",
+  "descripcion": "Este nuevo museo se construyó en una parte del Auditorio Municipal Benito Juárez en 2022 para tener una exposición permanente del \"tendido de Cristos\". Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1139",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Lunes a Sábado de 8 a 20 hrs.",
+   "precios": "Entrada libre",
+   "contacto": "Teléfono: 385 755 11 02, 385 755 14 31, 385 755 08163, ext. 124 · https://www.sanmartindehidalgo.gob.mx/"
+  }
+ },
+ {
+  "nombre": "Museo Comunitario en San Antonio Tlayacapan",
+  "destino": null,
+  "municipio": "Chapala",
+  "latitud": 20.293611,
+  "longitud": -103.238056,
+  "categoria": "Ciudad y cultura",
+  "direccion": "González Gallo 48",
+  "descripcion": "Museo comunitario con piezas que representan a nuestro pueblo originario, todas las piezas se recibieron donadas por habitantes de nuestra comunidad y fueron ordenadas por personal del INAH y un arqueólogo particular, según su época, pues hay fósiles hasta piezas coloniales. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=2414",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a sábados de 11 a 15 h.",
+   "precios": "Costo de la entrada: Cooperación voluntaria.",
+   "contacto": "Teléfono: 33 1417 53 58, 33 1723 3440"
+  }
+ },
+ {
+  "nombre": "Museo Dr. Leonardo Oliva",
+  "destino": null,
+  "municipio": "Ahualulco de Mercado",
+  "latitud": 20.702671,
+  "longitud": -103.976412,
+  "categoria": "Ciudad y cultura",
+  "direccion": "José María Mercado 15",
+  "descripcion": "Este museo se encuentra en una bella finca de estilo colonial, en sus salas de exposición se exhiben las colecciones de arqueología, arte sacro, vida cotidiana, archivo fotográfico y partituras. Tiene un amplio patio para eventos artísticos. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1057",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Lunes a viernes de 9 a 15 hrs.",
+   "contacto": "Teléfono: (386) 752 24 45"
+  }
+ },
+ {
+  "nombre": "Museo Hacienda La Sauceda",
+  "destino": null,
+  "municipio": "Cocula",
+  "latitud": 20.450559,
+  "longitud": -103.80868,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Revolución 100",
+  "descripcion": "Es una hermosa hacienda que perteneció a los jesuitas. Al ser expulsados de la Nueva España en 1767, fe adquirida por don Francisco Javier Vizcarra, primer marqués de Pánuco. El ambiente de este museo nos remonta a la época en que vivió esta acaudalada familia, en él se exhiben muebles antiguos, pinturas, sala de juegos, etc. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1081",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Lunes a viernes de 16 a 19 h, sábado de 11 a 17 h Previa cita: 33 3105 3230 (número celular)",
+   "contacto": "Teléfono: 33 3105 3230"
+  }
+ },
+ {
+  "nombre": "Museo Hermanos Záizar",
+  "destino": null,
+  "municipio": "Tamazula de Gordiano",
+  "latitud": 19.677434,
+  "longitud": -103.257687,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Hidalgo 238",
+  "descripcion": "Este museo tiene cinco salas museográficas donde los visitantes pueden conocer datos arqueológicos y etnográficos, además de una sala dedicada a los Hermanos Záizar. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1386",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a viernes de 10:00 a 18:00 hrs., sábados de 10:00 a 15:00 hrs.",
+   "contacto": "Teléfono: (358) 416 34 44"
+  }
+ },
+ {
+  "nombre": "Museo Histórico de Guachinango",
+  "destino": null,
+  "municipio": "Guachinango",
+  "latitud": 20.577273,
+  "longitud": -104.381563,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Aldama 4, piso 2",
+  "descripcion": "Es un museo de historia local en el cual se exponen objetos relacionados con la historia de Guachinango, desde la época prehispánica hasta la actualidad. El origen de la colección es local y comunitario. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=53",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a domingo de 10 a 17 hrs.",
+   "precios": "Entrada libre",
+   "contacto": "Teléfono: (388) 736 83 22, 736 82 38"
+  }
+ },
+ {
+  "nombre": "Museo Interpretativo de Paisaje Agavero El Arenal",
+  "destino": "museo",
+  "municipio": "El Arenal",
+  "latitud": 20.770455,
+  "longitud": -103.690056,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Laura Elena Cortéz s/n",
+  "descripcion": "Es una construcción de más de 300 ños, que data de mediados del siglo XVIII, fue una importante Hacienda tequilera y se le llamó cariñosamente por los habitantes del pueblo como la Hacienda la Calavera, y como museo es la puerta de entrada al paisaje agavero. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=2147",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes-Domingo: 09:00-15:00 hrs. Lunes: cerrado",
+   "contacto": "Teléfono: 33 2437 0507"
+  }
+ },
+ {
+  "nombre": "Museo Interpretativo de Paisaje Agavero y la Minería en Magdalena",
+  "destino": null,
+  "municipio": "Magdalena",
+  "latitud": 20.907969,
+  "longitud": -103.982106,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Miguel Hidalgo 43",
+  "descripcion": "Este espacio fue inaugurado en 2016 y está ubicado en el corazón del pueblo y en una casona representativas de la historia de la región. El inmueble data de 1869 y perteneció a la familia Orendáin, como lo muestra el escudo que está en la reja de madera que da acceso al recinto. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=2148",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a domingo de 9 a 15 h",
+   "precios": "Entrada es libre",
+   "contacto": "Teléfono: 374 102 1348, 386 744 1359"
+  }
+ },
+ {
+  "nombre": "Museo Interpretativo del Paisaje Agavero y las Antiguas Tabernas de Amatitán (MIPAT)",
+  "destino": null,
+  "municipio": "Amatitán",
+  "latitud": 20.832562,
+  "longitud": -103.727519,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Juárez 28",
+  "descripcion": "Museo en Amatitán, Jalisco. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=2021",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Lunes a domingo de 10:00 a 18:00 hrs.",
+   "precios": "Entrada gratuita",
+   "contacto": "Teléfono: 374 745 04 96 · https://sc.jalisco.gob.mx/noticias-referencias/mipat"
+  }
+ },
+ {
+  "nombre": "Museo Juan Beckmann Gallardo",
+  "destino": null,
+  "municipio": "Tequila",
+  "latitud": 20.886701,
+  "longitud": -103.842658,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Centro Cultural Juan Beckmann Gallardo/José Cuervo",
+  "descripcion": "La arquitectura de este museo estuvo a cargo del arquitecto Jorge Loyzaga, que está inspirada en la arquitectura Jesuita estilo barroco prevaleciente en nuestro país durante gran parte del siglo XVII. Este recinto cuenta con la más alta tecnología en equipamiento multimedia dentro de sus exposiciones montadas en las seis salas de formato museístico. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=2074",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a domingo de 10 a 18 hrs.",
+   "precios": "Recorrido libre. Costo de recuperación: $95 a $135. Recorrido guiado. Costo de recuperación: $185.",
+   "contacto": "Teléfono: 374 742 68 40 · https://www.mundocuervo.com/esp/centro-cultural-jbg/exposiciones/"
+  }
+ },
+ {
+  "nombre": "Museo Municipal Papantzin",
+  "destino": null,
+  "municipio": "Juanacatlán",
+  "latitud": 20.505792,
+  "longitud": -103.170894,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Herrera y Cairo 84",
+  "descripcion": "Exhibe la riqueza cultural e identidad de Papantzin y de todo Juanacatlán. En este espacio se puede observar lo más representativo de los objetos prehispánicos de la región, la indumentaria tradicional de hombres y mujeres, juguetes típicos y fotografías antiguas en donde se pone en evidencia las transformaciones que ha tenido el municipio. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1244",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Lunes a viernes de 9 a 13 y de 16 a 18 h.",
+   "precios": "Entrada libre.",
+   "contacto": "Teléfono: 33 3732 3067 · https://juanacatlan.gob.mx/directorio.html"
+  }
+ },
+ {
+  "nombre": "Museo Municipal de Antropología e Historia Drs. Barba-Piña Chan",
+  "destino": null,
+  "municipio": "Valle de Guadalupe",
+  "latitud": 21.011231,
+  "longitud": -102.616729,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Silvano Barba González s/n",
+  "descripcion": "Se encuentra en un pasillo de la Presidencia municipal de Valle Guadalupe. Cuenta con alrededor de 300 piezas arqueológicas (esculturas, utensilios ceremoniales y ofrendas). Se tiene planeado trasladarlo a la Casa de la Cultura. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=32",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Lunes a viernes de 8 a 15 hrs.",
+   "precios": "Entrada libre",
+   "contacto": "Teléfono: (347) 714 00 40, 714 01 20"
+  }
+ },
+ {
+  "nombre": "Museo Oaxicar",
+  "destino": null,
+  "municipio": "Etzatlán",
+  "latitud": 20.763442,
+  "longitud": -104.079232,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Escobedo 359",
+  "descripcion": "El museo cuenta con una réplica de lo que es tumbas de tiro, en especial de un sitio con excelentes ejemplos de arquitectura funeraria representadas con sus celebres tumbas de tiro siendo la mas afanada la tumba El Frijolar , con su tiro de aproximadamente 16 metros de profundidad y sus tres recamaras interconectadas. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1237",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Lunes a viernes de 10:00 a 14:00 hrs. y de 16:00 a 20:00 hrs., Sábado de 10:00 a 14:00 hrs. y de 16:00 a 19:00 hrs. Domingo de 10:00 a 14:00 hrs.",
+   "contacto": "Teléfono: (386) 753 30 52"
+  }
+ },
+ {
+  "nombre": "Museo Pablo Valdés",
+  "destino": null,
+  "municipio": "Villa Corona",
+  "latitud": 20.418407,
+  "longitud": -103.663354,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Manuel M. Dieguez 114",
+  "descripcion": "Museo en Villa Corona, Jalisco. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=2445",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Lunes a Viernes: 8:30 a 15:00 h.",
+   "contacto": "Teléfono: 387 690 1560"
+  }
+ },
+ {
+  "nombre": "Museo Palacio Ocampo",
+  "destino": null,
+  "municipio": "Guadalajara",
+  "latitud": 20.675385,
+  "longitud": -103.349577,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Ocampo 85 esq. Av. Juárez",
+  "descripcion": "Es una casona antigua típica del centro de Guadalajara que fue adaptada como museo de exposiciones temporales, este museo es muy peculiar ya que sus exposiciones tienen una temática de horror y fantasía. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1996",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Lunes a domingo de 10 a 18 h Entrada libre: Niños menores de 6 años y personas con capacidades diferentes",
+   "precios": "Entrada general: $100 Maestros y estudiantes e INAPAM: $80",
+   "contacto": "Teléfono: 33 3613 0004, 33 4076 4201 · https://expovampiros.com/?fbclid=IwAR0fXlbc-Y6F-pA0y_de-nhnzZ3qfk2t9HYcmjaZzVkWNBEVGIrLD6RBWl0"
+  }
+ },
+ {
+  "nombre": "Museo Profr. Gustavo Ramos Jiménez",
+  "destino": null,
+  "municipio": "Zapotitlán de Vadillo",
+  "latitud": 19.477731,
+  "longitud": -103.808895,
+  "categoria": "Ciudad y cultura",
+  "direccion": "HIdalgo 1",
+  "descripcion": "Museo en Zapotitlán de Vadillo, Jalisco. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1238",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Lunes a viernes de 10 a 13 hrs. Sábados de 10 a 16 hrs.",
+   "precios": "Entrada libre"
+  }
+ },
+ {
+  "nombre": "Museo Raúl Anguiano (MURA)",
+  "destino": null,
+  "municipio": "Guadalajara",
+  "latitud": 20.665826,
+  "longitud": -103.370187,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Av. Mariano Otero 375",
+  "descripcion": "El Museo Raúl Anguiano se renueva en 2003 como proyecto para resguardar y exhibir la obra del maestro Raúl Anguiano. Tiene por misión investigar y difundir los valores estéticos de las artes visuales, tanto locales como externos, dando cabida a nuevas expresiones y participando de manera activa y efectiva en las prácticas artísticas contemporáneas. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=306",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a sábado de 10:00 a 17:00 h Domingo de 10:00 a 15:00 h",
+   "precios": "Entrada libre",
+   "contacto": "Teléfono: 33 1657 9819, 33 3801 2032, 33 1657 9942"
+  }
+ },
+ {
+  "nombre": "Museo Regional de Arqueología y Paleontología Profr. Filemón Gutiérrez Ramírez",
+  "destino": null,
+  "municipio": "Ameca",
+  "latitud": 20.548731,
+  "longitud": -104.04624,
+  "categoria": "Arqueología",
+  "direccion": "Ayuntamiento de Ameca/Centro Cultural Hilarión Romero Gil",
+  "descripcion": "Forma parte de las instalaciones de la Casa de la Cultura de Ameca, inmueble construido en 1854 y remodelado en 1976. Anteriormente funcionó como casa del curato de la parroquia de Santiago Apóstol, cuartel militar y escuela. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=88",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Lunes y sábados de 16:00 a 19:00 hrs. Martes a jueves de 10:00 a 13:00 hrs. y de 16:00 a 19.00 hrs. Viernes y domingos de 10:00 a 13:00 hrs.",
+   "precios": "Entrada libre",
+   "contacto": "Teléfono: (375) 755 89 74"
+  }
+ },
+ {
+  "nombre": "Museo Regional de Teocuitatlán de Corona",
+  "destino": null,
+  "municipio": "Teocuitatlán de Corona",
+  "latitud": 20.09204,
+  "longitud": -103.377775,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Obregón 66",
+  "descripcion": "Este museo cuenta con una colección particular de antigüedades, la cual consta de piezas de arqueología de las culturas de Occidente; algunos huesos fósiles de mamut y trozos de madera fósil, útiles de labranza, ropa y monturas de la época porfirista; así como monedas y billetes antiguos. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1432",
+  "consultado": "2026-10-30",
+  "datos": {
+   "precios": "Entrada libre",
+   "contacto": "Teléfono: 372 428 0193"
+  }
+ },
+ {
+  "nombre": "Museo Regional de las Artes de Autlán",
+  "destino": null,
+  "municipio": "Autlán de Navarro",
+  "latitud": 19.77365,
+  "longitud": -104.367338,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Morelos 47",
+  "descripcion": "De reciente fundación, el Museo y Centro Regional de las Artes de Autlán tiene por objetivo conservar, restaurar, investigar y difundir el patrimonio cultural del municipio. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1576",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a sábado de 11 a 17 h",
+   "precios": "Entrada gratuita",
+   "contacto": "Teléfono: 317 381 2695 · https://museosdejalisco.com/espacio-museo-regional-de-las-artes/"
+  }
+ },
+ {
+  "nombre": "Museo San Cristóbal Magallanes",
+  "destino": null,
+  "municipio": "Totatiche",
+  "latitud": 21.929229,
+  "longitud": -103.442673,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Magallanes 15a",
+  "descripcion": "Museo en Totatiche, Jalisco. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=515",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Lunes a viernes: 9 a 18 h Sábados: 10 a 14 h Domingos: Cerrado Entrada gratuita para menores de 12 años y adultos mayores",
+   "precios": "Entrada general: $50 Estudiantes y maestros con credencial: $30",
+   "contacto": "Teléfono: 437 964 0121"
+  }
+ },
+ {
+  "nombre": "Museo San Rodrigo Aguilar",
+  "destino": null,
+  "municipio": "Ejutla",
+  "latitud": 19.905592,
+  "longitud": -104.16116,
+  "categoria": "Ciudad y cultura",
+  "direccion": "San Miguel 3",
+  "descripcion": "Este pequeño museo presenta en tres salas pasajes históricos de la zona, que entre otras perlas expone datos, material, e imágenes de las persecuciones oficiales y muertes a civiles y párrocos cristianos y católicos a manos del gobierno del entonces general Plutarco Elías Calles, durante la Guerra Cristera. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1243",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a Domingo de 10:00 a 13:30 hrs. y de 16 a 18 hrs.",
+   "contacto": "Teléfono: (343) 431 51 76"
+  }
+ },
+ {
+  "nombre": "Museo Tomás Bobadilla Acosta",
+  "destino": null,
+  "municipio": "Cuautitlán de García Barragán",
+  "latitud": 19.476484,
+  "longitud": -104.125414,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Carr. Cuautitlán-Telcruz s/n",
+  "descripcion": "Museo en Cuautitlán de García Barragán, Jalisco. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1132",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Lunes a viernes de 9 a 16 h, sábado de 9 a 13 h",
+   "precios": "Entrada libre",
+   "contacto": "https://ilamdir.org/recurso/5683/museo-tom%C3%A1s-bobadilla-acosta"
+  }
+ },
+ {
+  "nombre": "Museo de Arqueología",
+  "destino": null,
+  "municipio": "Teuchitlán",
+  "latitud": 20.68374,
+  "longitud": -103.848298,
+  "categoria": "Arqueología",
+  "direccion": "Calle 16 de Septiembre s/n",
+  "descripcion": "Museo en Teuchitlán, Jalisco. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1088",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Lunes a viernes de 9 a 15 y de 16 a 20 hrs. Sábado de 9 a 15 hrs. Domingo de 9 a 14 hrs.",
+   "precios": "Entrada general $ 5",
+   "contacto": "Teléfono: 384 733 07 33 t"
+  }
+ },
+ {
+  "nombre": "Museo de Arqueología J. Jesús Figueroa Torres",
+  "destino": null,
+  "municipio": "Sayula",
+  "latitud": 19.884591,
+  "longitud": -103.601426,
+  "categoria": "Arqueología",
+  "direccion": "Portal Galeana 35",
+  "descripcion": "El inmueble que lo alberga fue construido en 1875 como escuela municipal y hacia 1951 fue convertido en escuela secundaria por cooperación. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=83",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Lunes a viernes de 8 a 20 h, sábados y domingos de 10 a 16 h.",
+   "precios": "Entrada libre",
+   "contacto": "Teléfono: 342 422 1065 · https://www.sayula.gob.mx/"
+  }
+ },
+ {
+  "nombre": "Museo de Arte Prehispánico",
+  "destino": null,
+  "municipio": "Mascota",
+  "latitud": 20.523915,
+  "longitud": -104.787732,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Ramón Corona 7",
+  "descripcion": "El Museo de Arte Prehispánico se encuentra ubicado en el corazón de Mascota. Fue inaugurado temporalmente en la Biblioteca del Municipio el 25 de marzo del año 2000. Una parte muy valiosa de las joyas culturales de Jalisco se encuentran resguardadas en este recinto, en el que se expone una colección de cerámica capacha. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1504",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Lunes a viernes de 10 a 19 hrs. Sábados de 8 a 14 hrs.",
+   "contacto": "Teléfono: 388 386 00 52, 388 386 22 02 · http://www.mascota.jalisco.gob.mx"
+  }
+ },
+ {
+  "nombre": "Museo de Arte Sacro de Ocotlán",
+  "destino": null,
+  "municipio": "Ocotlán",
+  "latitud": 20.346045,
+  "longitud": -102.773794,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Coronel Guerrero 52",
+  "descripcion": "Este museo dedicado al arte sacro, está ubicado al interior de la casa pastoral de la parroquia del Señor de la Misericordia y principalmente ofrece la historia del Cristo aparecido en 1847. Fue inaugurado el 3 de octubre de 2022, por el Cardenal José Francisco Robles Ortega. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=2331",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Por el momento previa cita de grupos de escuelas, visitantes y turistas",
+   "precios": "Entrada gratuita",
+   "contacto": "Teléfono: 392 922 00 03, 392 109 77 07 · https://prodigiodeocotlan.jimdofree.com/"
+  }
+ },
+ {
+  "nombre": "Museo de Arte Sacro de San Juan de Amula",
+  "destino": null,
+  "municipio": "El Limón",
+  "latitud": 19.835647,
+  "longitud": -104.082874,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Hidalgo 46",
+  "descripcion": "Fue inaugurado en junio de 2005 por iniciativa del párroco Pedro Mancilla Michel, quien donó un acervo pictórico y escultórico perteneciente a su familia. Se trata de 31 obras de pequeño y mediano formatos, de tema religioso, las cuales datan de los siglos XVII, XVIII y XIX. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1059",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Lunes a Sábado de 9 a 19 hrs.",
+   "contacto": "Teléfono: 321 373 08 87, 373 09 15, 321 373 00 90, 321 373 0028"
+  }
+ },
+ {
+  "nombre": "Museo de Ciencia y Tecnología Guillermo Santoscoy Gómez",
+  "destino": null,
+  "municipio": "Guadalajara",
+  "latitud": 20.678938,
+  "longitud": -103.375774,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Av. México 2341",
+  "descripcion": "Museo dedicado a la conservación, preservación y difusión de la Patología Clínica. Sitio donde se muestran tanto aspectos históricos a partir de mediados del siglo XIX como los avances tecnológicos más recientes para el estudio de la salud humana. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1605",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Lunes a Viernes de 9:00 a 17:00 hrs. y Sábado de 9:00 a 14:00 hrs.",
+   "contacto": "Teléfono: (33) 3669 0310 · http://www.upc.com.mx/pages/laboratorio/museo"
+  }
+ },
+ {
+  "nombre": "Museo de El Grullo",
+  "destino": null,
+  "municipio": "El Grullo",
+  "latitud": 19.80993,
+  "longitud": -104.22588,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Hidalgo 449, (interior del Centro Cultural Regional)",
+  "descripcion": "El Museo de El Grullo \"Dr. Pedro Rubio Sánchez\", museo de arqueología e historia, exhibe algunos instrumentos musicales de origen prehispánico, y una vasta colección del patrimonio arqueológico. Se exhiben instrumentos musicales tales como ocarinas y silbatos cuyo sonido se encuetra en grabaciones que están a disposición del público visitante. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=2523",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Lunes a viernes de 10 a 14 h Y de 17 a 19 h Sábado de 10 a 14 h",
+   "contacto": "Teléfono: 321 387 3273"
+  }
+ },
+ {
+  "nombre": "Museo de Metalistería Salvador Ojeda Silva",
+  "destino": null,
+  "municipio": "Sayula",
+  "latitud": 19.884443,
+  "longitud": -103.601342,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Portal Galena 35",
+  "descripcion": "Tiene como función principal exponer la belleza en la fabricación de cuchillos, navajas y cubiertos elaborados con maderas finas, cuernos de diferentes animales y metales de alta calidad, entre los que destacan el acero damasco y en algunas piezas incrustaciones de oro y plata. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1140",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Lunes a viernes de 8 a 20 h, sábados y domingos de 10 a 16 h",
+   "precios": "Entrada libre",
+   "contacto": "Teléfono: 342 422 1065 · https://www.sayula.gob.mx/"
+  }
+ },
+ {
+  "nombre": "Museo de Sitio Cocula es el Mariachi",
+  "destino": null,
+  "municipio": "Cocula",
+  "latitud": 20.365799,
+  "longitud": -103.823437,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Juárez 29",
+  "descripcion": "En la época de la demarcación de los estados de Jalisco, Colima, Nayarit, Durango, Zacatecas y Guanajuato, Don Antonio de Mendoza elaboró un mapa en una sábana de manta para definir los territorios. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=10",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a domingos de 9 a 14 h y de 16 a 18 h",
+   "contacto": "Teléfono: 377 773 0021, 377 773 00 00 ext. 132 · https://sc.jalisco.gob.mx"
+  }
+ },
+ {
+  "nombre": "Museo de Sitio Juan José Arreola",
+  "destino": "casa-taller-literario-juan-jose-arreola",
+  "municipio": "Zapotlán el Grande",
+  "latitud": 19.706401,
+  "longitud": -103.456498,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Pedro Moreno s/n",
+  "descripcion": "El Museo de Sitio Juan José Arreola ocupa una parte de la Casa que habitó el escritor. El guión museístico diseñado busca destacar la vida y obra de Juan José Arreola, mediante sus objetos personales, muebles originales e incluso especialmente elaborados para él , documentos, fotografías y libros. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1248",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a sábados de 10 a 14 h. y domingos de 10 a 14 h.",
+   "precios": "Entrada libre.",
+   "contacto": "Teléfono: 341 412 97 45, 341 105 63 84 · https://sc.jalisco.gob.mx/patrimonio/casas-de-la-cultura/casa-taller-literario-juan-jose-arreola"
+  }
+ },
+ {
+  "nombre": "Museo de Sitio del Puente de las Damas",
+  "destino": null,
+  "municipio": "Guadalajara",
+  "latitud": 20.668269,
+  "longitud": -103.350323,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Av. Cristóbal Colón 570",
+  "descripcion": "Descubierto en 2016, este vestigio arquitectónico se encuentra en la parte subterránea de la calle Colón, esquina con avenida de La Paz, en el antiguo barrio de Mexicaltzingo en Guadalajara. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=2262",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a domingo de 9:00 a 18:00 hrs.",
+   "precios": "Entrada libre"
+  }
+ },
+ {
+  "nombre": "Museo de la Cantera a cielo abierto",
+  "destino": null,
+  "municipio": "Degollado",
+  "latitud": 20.446968,
+  "longitud": -102.13493,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Morelos 150",
+  "descripcion": "Se trata de una exhibición de 12 esculturas de cantera a cielo abierto, ubicada en la Plaza Santos Degollado. Las piezas de gran formato, que miden entre 1.50 y 3.50 metros de altura, fueron realizadas por artistas nacionales y extranjeros. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1383",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Las 24 horas.",
+   "precios": "Entrada libre.",
+   "contacto": "Teléfono: 345 937 01 01 ext. 1200"
+  }
+ },
+ {
+  "nombre": "Museo de la Cultura Wixarika",
+  "destino": null,
+  "municipio": "Mezquitic",
+  "latitud": 22.394464,
+  "longitud": -103.719386,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Carr. Mezquitic-Guadalajara km 1.5",
+  "descripcion": "Este museo tiene por objeto recopilar, preservar y difundir los elementos representativos de la cultura wixarika. El material seleccionado para conformar las colecciones de exposición es una recopilación de objetos utilizados por los wixaritari en las diferentes actividades de la vida cotidiana, como sus tradiciones y rituales. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1555",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a viernes de 10 a 17 h. Sábados y domingos de 10 a 15 h.",
+   "precios": "Entrada libre",
+   "contacto": "Teléfono: 457 981 03 00 · http://www.jalisco.gob.mx/es/prensa/actividades/9484"
+  }
+ },
+ {
+  "nombre": "Museo de la Historia de la Medicina",
+  "destino": null,
+  "municipio": "Guadalajara",
+  "latitud": 20.685559,
+  "longitud": -103.345297,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Hospital 320",
+  "descripcion": "El 31 de Agosto del 2006 se inauguró el Museo de la Historia de la Medicina, cuya misión es la de fomentar la colaboración, establecer relaciones interinstitucionales, intercambiar información y desarrollar proyectos integrales para el rescate, conservación y difusión del patrimonio histórico y cultural del Hospital Civil de Guadalajara. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1331",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Lunes a viernes de 9 a 14 hrs.",
+   "precios": "Entrada libre",
+   "contacto": "Teléfono: 33 1199 4920"
+  }
+ },
+ {
+  "nombre": "Museo de la Tortura",
+  "destino": null,
+  "municipio": "Guadalajara",
+  "latitud": 20.675509,
+  "longitud": -103.345751,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Maestranza 78",
+  "descripcion": "El museo está ubicado en la segunda planta del Centro Cultura NEM. Retrocede en el tiempo para explorar el lado más sombrío de la historia humana. Las exposiciones muestran los instrumentos y relatos de eventos históricos que nos enseñan sobre justicia y crueldad. Una experiencia reflexiva y educativa para quienes buscan recorrer el pasado. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=2357",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Lunes a domingos de 10 a 19 h",
+   "precios": "Entrada general: $110 para estudiantes y maestros, $90 para INAPAM, $80 (cada uno) para grupos a partir de 10 personas.",
+   "contacto": "Teléfono: 33 3801 4924 · https://centroculturalnem.com/"
+  }
+ },
+ {
+  "nombre": "Museo de las Ciencias Naturales de la Cuenca de Sayula",
+  "destino": null,
+  "municipio": "Amacueca",
+  "latitud": 20.010861,
+  "longitud": -103.600613,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Casa de la Cultura/UG, Centro Universitario de Ciencias Biológicas y Agropecuarias (CUCBA)",
+  "descripcion": "Este espacio de ciencias naturales y arqueología difunde información de las zonas naturales que tienen un interés ecológico y arqueológico con el objetivo de fomentar el desarrollo sustentable y la revaloración del patrimonio de la región. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1129",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Lunes a viernes de 9 a 15 hrs.",
+   "contacto": "Teléfono: (372) 424 00 17"
+  }
+ },
+ {
+  "nombre": "Museo de los Altos de Jalisco, Casa Agustín Rivera",
+  "destino": null,
+  "municipio": "Lagos de Moreno",
+  "latitud": 21.354757,
+  "longitud": -101.929181,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Pedro Moreno 449, Rinconada Capuchinas",
+  "descripcion": "Este recinto, ubicado a un costado del edificio conocido como la Rinconada de las Capuchinas, fue la residencia del sacerdote y escritor Agustín Rivera, figura emblemática del siglo XIX mexicano. Después de un riguroso proceso de restauración, que inició en 2007, el espacio se habilitó como museo en 2008. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=713",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a domingo de 10 h a 18 h",
+   "precios": "Entrada libre La utilización de videocámara está sujeta al pago de derechos",
+   "contacto": "Teléfono: 33 513 8224, 474 742 8956 · https://inah.gob.mx/museos/museo-casa-agustin-rivera-altos-de-jalisco"
+  }
+ },
+ {
+  "nombre": "Museo de los Tastoanes de Tonalá (MUTA)",
+  "destino": null,
+  "municipio": "Tonalá",
+  "latitud": 20.624911,
+  "longitud": -103.239791,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Ramón Corona 73",
+  "descripcion": "El Museo de los Tastoanes abrió sus puertas en 1994, bajo el nombre de Museo Regional Tonallan, está ubicado en un inmueble construido en 1845 como casa-habitación. Alberga una colección de máscaras con una antigüedad de 20 años; esculturas; producciones audiovisuales; y piezas ganadoras de certámenes nacionales. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1031",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Lunes a domingo de 10 a 18 h",
+   "precios": "Entrada libre",
+   "contacto": "Teléfono: 331 200 3936, 333 586 6000 · http://tonalajaliscoes1.wixsite.com/tonala/museo-regional-tonallan"
+  }
+ },
+ {
+  "nombre": "Museo de sitio",
+  "destino": null,
+  "municipio": "La Barca",
+  "latitud": 20.276533,
+  "longitud": -102.549333,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Centro Cultural La Moreña/Secretaría de Cultura del Gobierno del Estado deJalisco",
+  "descripcion": "La finca conocida como La Moreña , es una joya arquitectónica que se ubica a un costado de la plaza principal de La Barca, fue construida en 1855. El museo cuenta con tres salas de ambientación y muebles del siglo XIX, sala de exposiciones temporales y el archivo del maestro José Luis Razo Zaragoza, especializada en historia de la población. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=160",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Viernes a miércoles de 10 a 14 y de 16 a 18 hrs.",
+   "precios": "Entrada libre",
+   "contacto": "Teléfono: 393 935 30 17 · https://www.jalisco.gob.mx/es/prensa/actividades/9485"
+  }
+ },
+ {
+  "nombre": "Museo del Arte en Piel",
+  "destino": null,
+  "municipio": "Puerto Vallarta",
+  "latitud": 20.607971,
+  "longitud": -105.235649,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Juarez 117",
+  "descripcion": "Exhibe indumentarias de vaqueros, jefes indígenas o guerrilleros de la Revolución Mexicana son el resultado de años de investigaciones casi antropológicas, que ha realizado Alfonso Nuño Romero, artesano creador de estos magníficos atuendos hechos de cuero. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1131",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Lunes a viernes de 10:30 a 17:00 hrs.; sábados de 10:30 a 14 hrs",
+   "precios": "Cuota voluntaria",
+   "contacto": "Teléfono: 322 220 52 80"
+  }
+ },
+ {
+  "nombre": "Museo del Centro Cultural González Gallo",
+  "destino": null,
+  "municipio": "Chapala",
+  "latitud": 20.294351,
+  "longitud": -103.182135,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Av. González Gallo 1500",
+  "descripcion": "Centro cultural orientado a partir de un enfoque de derechos humanos, género y cuidado del medio ambiente. Es un espacio dedicado a la articulación de proyectos artísticos de la región. Alberga exposiciones de arte moderno y contemporáneo y ofrece actividades de diversas disciplinas artísticas para todos los públicos. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1133",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Martes a sábados de 11 a 17 h. y domingos de 11 a 14 h.",
+   "precios": "Entrada libre.",
+   "contacto": "Teléfono: 376 765 74 24 · https://museosdejalisco.com/espacio-centro-cultural-gonzalez-gallo/"
+  }
+ },
+ {
+  "nombre": "Museo del Cuale",
+  "destino": null,
+  "municipio": "Puerto Vallarta",
+  "latitud": 20.605993,
+  "longitud": -105.232469,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Isla de los Niños del Río Cuale s/n",
+  "descripcion": "El museo se ubica en el mercado de artesanías de Puerto Vallarta. La inauguración de este recinto se dio con la exposición temporal El Galeón de Manila. La Ruta de las Especias, la cual abordó el intercambio culinario, económico y cultural que floreció en la época novohispana entre los actuales territorios de México, Filipinas y España. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1087",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Lunes a sábado de 9 h a 17 h",
+   "precios": "Entrada libre La utilización de videocámara está sujeta al pago de derechos",
+   "contacto": "Teléfono: 322 135 0762 · https://inah.gob.mx/museos/museo-arqueologico-de-puerto-vallarta-cuale"
+  }
+ },
+ {
+  "nombre": "Museo del Radio, Orígenes y Bulbos",
+  "destino": null,
+  "municipio": "Guadalajara",
+  "latitud": 20.677818,
+  "longitud": -103.35249,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Mariano de la Bárcena 79",
+  "descripcion": "Se crea este museo para acercar a la sociedad en general a la cultura y al legado detrás de la radio con su belleza e historia. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1916",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Lunes a domingo de 11:00 a 20:00 horas.",
+   "contacto": "Teléfono: 33 1538 9832, 33 3825 5462"
+  }
+ },
+ {
+  "nombre": "Tatuutsima Museo Comunitario de Arqueología e Historia",
+  "destino": null,
+  "municipio": "Huejuquilla el Alto",
+  "latitud": 22.627627,
+  "longitud": -103.897523,
+  "categoria": "Arqueología",
+  "direccion": "Guerrero s/n, frente a Plaza Hidalgo",
+  "descripcion": "Museo en Huejuquilla el Alto, Jalisco. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1085",
+  "consultado": "2026-10-30",
+  "datos": {
+   "horarios": "Lunes a viernes de 9:00 a 17:00 hrs.",
+   "precios": "El museo cobra $50 por persona",
+   "contacto": "Teléfono: (331) 326 58 70, 983 77 09 ext. 117 t · http://tatuutsima.blogspot.mx/"
+  }
+ },
+ {
+  "nombre": "Ixtépete",
+  "destino": "complejo-arqueologico-el-ixtepete",
+  "municipio": "Zapopan",
+  "latitud": 20.632281,
+  "longitud": -103.441537,
+  "categoria": "Arqueología",
+  "direccion": "Prolg. Av. Mariano Otero s/n",
+  "descripcion": "",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=zona_arqueologica&table_id=55",
+  "consultado": "2026-10-30",
+  "datos": {
+   "contacto": "Teléfono: 333 613 10 75, 333 614 54 16"
+  }
+ },
+ {
+  "nombre": "El Grillo",
+  "destino": "el-grillo",
+  "municipio": "",
+  "latitud": 20.73329,
+  "longitud": -103.369741,
+  "categoria": "Arqueología",
+  "direccion": "posterior a la Fase Tabachines con tradición de tumbas de tiro. Cronología: 500 d.C. a 900 d.C. Ubicación cronológica principal: Clásico, 500 a 700 d.C.",
+  "descripcion": "",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=zona_arqueologica&table_id=154",
+  "consultado": "2026-10-30",
+  "datos": {}
+ },
+ {
+  "nombre": "Guachimontones",
+  "destino": "guachimontones",
+  "municipio": "Teuchitlán",
+  "latitud": 20.695487,
+  "longitud": -103.836427,
+  "categoria": "Arqueología",
+  "direccion": "Pirámide Circular, Carretera Estatal 604 Guadalajara-San Marcos",
+  "descripcion": "",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=zona_arqueologica&table_id=155",
+  "consultado": "2026-10-30",
+  "datos": {
+   "contacto": "Teléfono: 33 3614 5416 , 33 3613 1075"
+  }
+ },
+ {
+  "nombre": "Catedral Basílica de Nuestra Señora de San Juan de los Lagos",
+  "destino": null,
+  "municipio": "San Juan de los Lagos",
+  "latitud": 21.245308,
+  "longitud": -102.333956,
+  "categoria": "Ciudad y cultura",
+  "direccion": "López Lara 5",
+  "descripcion": "Sin fecha que lo precise un documento, hacia el año de 1542, ya pasadas las guerras del Mixtón, llegó Nuestra Señora de San Juan, colgada al pecho de Fray Miguel de Bolonia quien entregó al Pueblo de indios de San Juan Bautista, colocándola, luego, en el altar de la Capillita del Hospital. Y, en 1666, será proclamada como la Inmaculada Concepción. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=catedral&table_id=39",
+  "consultado": "2026-10-30",
+  "datos": {
+   "contacto": "Teléfono: 395 785 1275, 395 785 2858, 395 785 0684, 395 119 1810"
+  }
+ },
+ {
+  "nombre": "Catedral Metropolitana de Guadalajara La Asunción de María",
+  "destino": null,
+  "municipio": "Guadalajara",
+  "latitud": 20.677066,
+  "longitud": -103.346996,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Av. Fray Antonio Alcalde 10",
+  "descripcion": "Se comenzó a construir en 1561 y fue consagrada en 1716. Ha experimentado muchas transformaciones. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=catedral&table_id=40",
+  "consultado": "2026-10-30",
+  "datos": {
+   "contacto": "Teléfono: 33 3614 5504, 33 3613 7168"
+  }
+ },
+ {
+  "nombre": "Catedral Santísima Trinidad de Autlán",
+  "destino": null,
+  "municipio": "Autlán de Navarro",
+  "latitud": 19.77264,
+  "longitud": -104.364471,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Calle Miguel Hidalgo 74",
+  "descripcion": "La construcción del templo que hoy conocemos como la catedral inició a finales del siglo XIX. Sin embargo, su desarrollo fue un proceso largo y pausado, marcado por diversas etapas de trabajo y detención. No fue sino hasta el siglo XX que el proyecto tomó un impulso definitivo. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=catedral&table_id=41",
+  "consultado": "2026-10-30",
+  "datos": {
+   "contacto": "Teléfono: 317 382 1228"
+  }
+ },
+ {
+  "nombre": "Catedral Josefina de Ciudad Guzmán Señor San José",
+  "destino": null,
+  "municipio": "Zapotlán el Grande",
+  "latitud": 19.703486,
+  "longitud": -103.463069,
+  "categoria": "Ciudad y cultura",
+  "direccion": "Prisciliano Sánchez 30",
+  "descripcion": "La Catedral es la sede de la Diócesis de Ciudad Guzmán y su patrono es José de Nazaret. Es un majestuoso templo religioso ubicado en el municipio de Zapotlán el Grande, en la provincia de Jalisco, México. Construida en el siglo XIX, esta catedral es un importante símbolo de la fe católica en la región. Fuente: Sistema de Información Cultural, Secretaría de Cultura.",
+  "fuente": "https://sic.cultura.gob.mx/ficha.php?table=catedral&table_id=42",
+  "consultado": "2026-10-30",
+  "datos": {
+   "contacto": "Teléfono: 341 412 1994"
+  }
+ },
+ {
+  "nombre": "isla-de-mezcala",
+  "destino": "isla-de-mezcala",
+  "municipio": "",
+  "latitud": 20.0,
+  "longitud": -103.0,
+  "categoria": null,
+  "direccion": "",
+  "descripcion": "Pequeña isla del lago de Chapala, a un kilómetro de Mezcala de la Asunción, en el municipio de Poncitlán. También se conoce como la Isla del Presidio. Con información de Wikipedia.",
+  "fuente": "https://es.wikipedia.org/wiki/Isla_de_Mezcala",
+  "consultado": "2026-10-30",
+  "datos": {}
+ },
+ {
+  "nombre": "morelos",
+  "destino": "morelos",
+  "municipio": "",
+  "latitud": 20.0,
+  "longitud": -103.0,
+  "categoria": null,
+  "direccion": "",
+  "descripcion": "Parque urbano de Guadalajara, sobre la calzada Independencia, en el centro histórico. Con información de Wikipedia.",
+  "fuente": "https://es.wikipedia.org/wiki/Parque_Morelos_(Guadalajara)",
+  "consultado": "2026-10-30",
+  "datos": {}
+ },
+ {
+  "nombre": "playa-mismaloya",
+  "destino": "playa-mismaloya",
+  "municipio": "",
+  "latitud": 20.0,
+  "longitud": -103.0,
+  "categoria": null,
+  "direccion": "",
+  "descripcion": "Playa del pequeño pueblo de Mismaloya, en la Bahía de Banderas, al sur de Puerto Vallarta por la carretera federal 200. Con información de Wikipedia.",
+  "fuente": "https://es.wikipedia.org/wiki/Mismaloya_(Puerto_Vallarta)",
+  "consultado": "2026-10-30",
+  "datos": {}
+ },
+ {
+  "nombre": "puente-matute-remus",
+  "destino": "puente-matute-remus",
+  "municipio": "",
+  "latitud": 20.0,
+  "longitud": -103.0,
+  "categoria": null,
+  "direccion": "",
+  "descripcion": "Puente atirantado de Guadalajara, en el cruce de la calzada Lázaro Cárdenas con la avenida López Mateos. Con información de Wikipedia.",
+  "fuente": "https://es.wikipedia.org/wiki/Puente_Matute_Remus",
+  "consultado": "2026-10-30",
+  "datos": {}
+ },
+ {
+  "nombre": "plaza-de-toros-monumental-fermin-espinoza-armillita",
+  "destino": "plaza-de-toros-monumental-fermin-espinoza-armillita",
+  "municipio": "",
+  "latitud": 20.0,
+  "longitud": -103.0,
+  "categoria": null,
+  "direccion": "",
+  "descripcion": "Plaza de toros de Jalostotitlán, donde se celebra el Carnaval Taurino de la ciudad. Con información de Wikipedia.",
+  "fuente": "https://es.wikipedia.org/wiki/Plaza_de_Toros_Ferm%C3%ADn_Espinosa_%C2%ABArmillita%C2%BB",
+  "consultado": "2026-10-30",
+  "datos": {}
+ },
+ {
+  "nombre": "museo-etnografico-huichol-wixarika",
+  "destino": "museo-etnografico-huichol-wixarika",
+  "municipio": "",
+  "latitud": 20.0,
+  "longitud": -103.0,
+  "categoria": null,
+  "direccion": "",
+  "descripcion": "Recinto público de Zapopan con una muestra permanente de arte huichol. Con información de Wikipedia.",
+  "fuente": "https://es.wikipedia.org/wiki/Museo_de_Arte_Huichol_Wix%C3%A1rica",
+  "consultado": "2026-10-30",
+  "datos": {}
+ },
+ {
+  "nombre": "museo-de-ciencias-ambientales",
+  "destino": "museo-de-ciencias-ambientales",
+  "municipio": "",
+  "latitud": 20.0,
+  "longitud": -103.0,
+  "categoria": null,
+  "direccion": "",
+  "descripcion": "Museo de la Universidad de Guadalajara, en Zapopan, dedicado a la divulgación y educación sobre medio ambiente y sustentabilidad. Con información de Wikipedia.",
+  "fuente": "https://es.wikipedia.org/wiki/Museo_de_Ciencias_Ambientales",
+  "consultado": "2026-10-30",
+  "datos": {}
+ }
+]

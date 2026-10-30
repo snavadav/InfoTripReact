@@ -72,6 +72,8 @@ class InterpretarTests(TestCase):
         self.assertEqual(nombre_legible("MARY'S"), "Mary's")
         self.assertEqual(nombre_legible('EL MEXICANO'), 'El Mexicano')
         self.assertTrue(es_generico('Farmacia'))
+        for nombre in ('Cooperativa Escolar', 'Club de Nutricion Herbalife', 'Tienda de Regalos', 'Comedor Industrial Norte'):
+            self.assertTrue(es_generico(nombre), nombre)
         self.assertFalse(es_generico('Farmacia Tapalpa'))
 
 

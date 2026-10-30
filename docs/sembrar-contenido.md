@@ -27,3 +27,12 @@ Un dato concreto y fechado vale más que muchos genéricos: "Museo X: martes a d
 ## Después
 
 Pide a los primeros viajeros que confirmen datos con el botón "¿Sigue vigente?". El aviso al terminar un viaje guardado también los invita a reseñar y confirmar.
+
+## Contenido de fuentes públicas
+
+`python manage.py sembrar_contenido` carga `apps/destinos/datos/contenido_inicial.json`: horarios, costos, contactos, direcciones y descripciones de museos, zonas arqueológicas y catedrales, tomados del Sistema de Información Cultural de la Secretaría de Cultura y consultados el 30 de octubre de 2026. Corre antes `cargar_destinos_iniciales` e `importar_osm`, para que los sitios que ya existen se completen en lugar de duplicarse.
+
+- Cada dato lleva su fuente y fecha, y lo firma la cuenta "Equipo InfoTrip", que no puede iniciar sesión ni aparece como cronista.
+- **Nunca crea reseñas, gastos, calificaciones ni visitas.** Solo pueden venir de personas que fueron.
+- Las fichas oficiales pueden estar atrasadas: la fecha indica cuándo se consultaron, no que sigan vigentes. Conviene confirmarlas antes de presentarlas como actuales.
+- Se puede repetir: no cambia descripciones editadas ni datos que hayan aportado otras personas.

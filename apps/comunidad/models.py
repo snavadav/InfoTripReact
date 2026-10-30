@@ -7,6 +7,8 @@ from django.urls import reverse
 from apps.destinos.models import Lugar
 
 
+# Cuenta que firma lo que viene de fuentes públicas. No es una persona: no inicia sesión ni aparece como cronista.
+CORREO_EQUIPO = 'equipo@infotrip.invalid'
 # Lo comparten aportes y reseñas de lugares; una constante para que el esquema de la API les dé un solo nombre.
 ESTADOS_CON_RETIRO = [
     ('pendiente', 'Pendiente'),

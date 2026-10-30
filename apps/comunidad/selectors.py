@@ -8,7 +8,9 @@ from statistics import median
 from django.db.models import Avg, Count, DateField, Exists, Max, Min, OuterRef, Prefetch, Q, Subquery, Value
 from django.db.models.functions import Coalesce, Greatest
 from django.utils import timezone
-from .models import Aporte, Colaboracion, Confirmacion, ConfirmacionLugar, ResenaLugar, VisitaComprobada
+from .models import (
+    Aporte, CORREO_EQUIPO, Colaboracion, Confirmacion, ConfirmacionLugar, ResenaLugar, VisitaComprobada,
+)
 
 # Lista del programa federal consultada en prensa (docs/catalogo-inicial.md): confírmala si cambia.
 # El sello se activa solo en cuanto exista un destino publicado con ese slug.
@@ -253,7 +255,8 @@ MINIMO_CRONISTA = 3
 def cronistas():
     """Por municipio, quien más datos prácticos publicó en el último año. Solo cuenta lo que pasó por moderación."""
     filas = (
-        publicas().filter(tipo='correccion', creado__gte=timezone.now() - timedelta(days=365)).order_by()
+        publicas().filter(tipo='correccion', creado__gte=timezone.now() - timedelta(days=365))
+        .exclude(autor__email=CORREO_EQUIPO).order_by()
         .values('destino__municipio__nombre', 'autor_id', 'autor__nombre').annotate(datos=Count('pk'))
         .filter(datos__gte=MINIMO_CRONISTA).order_by('destino__municipio__nombre', '-datos', 'autor_id')
     )

@@ -42,7 +42,12 @@ GENERICOS = {
     'abarrotes', 'artesanias', 'bar', 'cafe', 'cafeteria', 'cantina', 'cenaduria', 'cocina-economica', 'comida',
     'farmacia', 'fonda', 'gasolinera', 'hotel', 'lonche', 'loncheria', 'mariscos', 'motel', 'pizzeria', 'pollos',
     'restaurante', 'restaurant', 'sin-nombre', 'tacos', 'taqueria', 'tortas', 'tortas-ahogadas', 'vinos-y-licores',
+    'antojitos-mexicanos', 'menuderia', 'novedades', 'novedades-y-regalos', 'regalos', 'regalos-y-novedades',
+    'tacos-de-barbacoa', 'tienda-de-regalos', 'venta-de-comida', 'venta-de-tacos',
 }
+# El DENUE los clasifica como comida o comercio, pero un viajero no puede o no vendría a ellos.
+NO_PARA_VIAJEROS = ('comedor-', 'cooperativa', 'club-de-nutricion', 'herbalife', 'nutricion', 'cafeteria-escolar',
+                    'escuela', 'primaria', 'secundaria')
 MINUSCULAS = {'De', 'Del', 'La', 'Las', 'El', 'Los', 'Y', 'E', 'En', 'A'}
 
 
@@ -104,7 +109,7 @@ def nombre_legible(texto):
 
 def es_generico(nombre):
     slug = slugify(nombre)
-    return not slug or slug in GENERICOS or 'sin-nombre' in slug
+    return not slug or slug in GENERICOS or 'sin-nombre' in slug or any(texto in slug for texto in NO_PARA_VIAJEROS)
 
 
 def subtipo_de(registro):
