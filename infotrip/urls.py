@@ -4,6 +4,7 @@ Enrutador principal del proyecto
 """
 
 from django.contrib import admin
+from django.shortcuts import render
 from django.views.generic import TemplateView
 from django.urls import path, include
 from django.conf import settings
@@ -13,6 +14,14 @@ from apps.comunidad.cola import cola_moderacion
 from apps.core.views import salud
 from apps.usuarios.views_frontend import login_view, registro_view
 from apps.destinos.frontend import inicio, listado, detalle
+
+
+def vista_legal(plantilla):
+    # La plantilla lee el contacto en cada petición, para que `override_settings` y el entorno apliquen.
+    def vista(request):
+        return render(request, plantilla, {'contacto': settings.CONTACTO_PRIVACIDAD})
+    return vista
+
 
 urlpatterns = [
     path('health/', salud, name='salud'),
@@ -30,6 +39,8 @@ urlpatterns = [
     path('api/v1/', include('apps.comunidad.urls')),
     path('perfil/', TemplateView.as_view(template_name='comunidad/perfil.html'), name='perfil'),
     path('recuperar/', TemplateView.as_view(template_name='comunidad/recuperar.html'), name='recuperar'),
+    path('privacidad/', vista_legal('legal/privacidad.html'), name='privacidad'),
+    path('terminos/', vista_legal('legal/terminos.html'), name='terminos'),
     path('api/v1/auth/', include('apps.usuarios.urls')),
     path('api/v1/', include('apps.destinos.urls')),
 

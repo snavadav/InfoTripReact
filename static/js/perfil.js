@@ -80,6 +80,14 @@
     const user=await InfoTrip.api('/api/v1/auth/perfil/',{method:'PATCH',body});localStorage.setItem('usuario',JSON.stringify(user));
     feedback.textContent='Perfil guardado.';if(user.foto_perfil){const image=document.getElementById('profile-photo');image.src=user.foto_perfil;image.hidden=false;}
   });});
+  const removal=document.getElementById('delete-account-form');
+  removal.addEventListener('submit',event=>{event.preventDefault();
+    if(!confirm('¿Eliminar tu cuenta y tus datos? No se puede deshacer.'))return;
+    InfoTrip.submit(removal,async()=>{
+      await InfoTrip.api('/api/v1/mi-cuenta/eliminar/',{method:'POST',body:Object.fromEntries(new FormData(removal))});
+      InfoTrip.clear();window.location.assign('/');
+    });
+  });
   const password=document.getElementById('password-form');
   password.addEventListener('submit',event=>{event.preventDefault();InfoTrip.submit(password,async feedback=>{
     await InfoTrip.api('/api/v1/auth/cambiar-password/',{method:'POST',body:Object.fromEntries(new FormData(password))});

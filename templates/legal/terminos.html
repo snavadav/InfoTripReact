@@ -1,0 +1,30 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}Términos de uso — InfoTrip{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/comunidad.css' %}">{% endblock %}
+{% block content %}{% include 'partials/navBar.html' %}
+<main class="explore-shell legal-page">
+  <h1>Términos de uso</h1>
+  <p class="community-note">Versión preliminar de un proyecto académico de la Universidad de Guadalajara, pendiente de revisión legal.</p>
+
+  <h2>Qué es InfoTrip</h2>
+  <p>Un sitio para planear escapadas por Jalisco con información aportada por viajeros. No vendemos viajes ni hacemos reservaciones.</p>
+
+  <h2>La información es orientativa</h2>
+  <p>Horarios, precios y condiciones provienen de la comunidad y pueden haber cambiado. Una revisión editorial no garantiza que un dato siga vigente ni acredita una visita. Confirma con el lugar antes de viajar.</p>
+
+  <h2>Lo que compartes</h2>
+  <ul>
+    <li>Comparte solo experiencias reales y datos que puedas respaldar con una fuente.</li>
+    <li>Sube únicamente fotografías propias o que tengas derecho a publicar.</li>
+    <li>No publiques insultos, datos personales de otras personas ni publicidad.</li>
+    <li>Al publicar, nos permites mostrar ese contenido en InfoTrip mientras no lo retires.</li>
+  </ul>
+
+  <h2>Moderación</h2>
+  <p>Revisamos los aportes antes de publicarlos y podemos ocultar contenido que incumpla estos términos. Cualquier persona con cuenta puede reportar contenido publicado.</p>
+
+  <h2>Tu cuenta</h2>
+  <p>Eres responsable de lo que se haga con tu cuenta. Puedes eliminarla cuando quieras desde Mi perfil. Podemos suspender cuentas que abusen del servicio.</p>
+  {% include 'destinos/footer.html' %}
+</main>
+{% endblock %}

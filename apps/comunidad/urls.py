@@ -3,7 +3,9 @@ from .views import PublicarView, MisAportesView, EditarAporteView, ReportarView
 from .viajes import MisViajesView, ViajeView, VincularLugarView
 from .practica import ColaboracionesView, ConfirmarDatoView, FavoritosView, FavoritoView
 from .avisos import NotificacionesView, NotificacionesLeidasView
+from .cuenta import EliminarCuentaView
 urlpatterns = [
+    path('mi-cuenta/eliminar/', EliminarCuentaView.as_view(), name='eliminar-cuenta'),
     path('notificaciones/', NotificacionesView.as_view(), name='notificaciones'),
     path('notificaciones/leidas/', NotificacionesLeidasView.as_view(), name='notificaciones-leidas'),
     path('mis-viajes/<int:pk>/lugares/', VincularLugarView.as_view(), name='vincular-lugar'),

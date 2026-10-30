@@ -38,6 +38,11 @@ Tareas que no se pueden automatizar desde el código. Marca cada una al completa
   - Hecho el 29/10/2026 con `git rm --cached`.
 - [x] Opcional: para correr las pruebas de concurrencia en local, `python manage.py test --settings=infotrip.settings.test_postgres` con `DB_*` de un usuario con permiso `CREATEDB`.
 
+## Mejoras de producto
+
+- [ ] **Revisar con alguien de derecho el aviso de privacidad y los términos** (`templates/legal/`). Son un borrador, marcado así en la página.
+- [ ] **Definir `CONTACTO_PRIVACIDAD`** con un correo real. Sin él, el aviso no muestra cómo contactar al equipo.
+
 ## Generales
 
 - [ ] **Mover el proyecto fuera de OneDrive** (por ejemplo a `C:\dev\InfoTrip`). La sincronización de `.venv314`, `.venv`, `db.sqlite3` y las cachés de `uv` puede corromper archivos y ralentizar el equipo. Hacerlo con el editor y los servidores cerrados.
