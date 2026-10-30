@@ -132,6 +132,9 @@ SPECTACULAR_SETTINGS = {
 
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    # Límite global contra abuso; login, registro y aportes tienen además los suyos, más estrictos.
+    'DEFAULT_THROTTLE_CLASSES': ('apps.core.limites.LimiteAnonimo', 'apps.core.limites.LimiteUsuario'),
+    'DEFAULT_THROTTLE_RATES': {'anon': '300/min', 'user': '600/min'},
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'apps.usuarios.authentication.CorreoJWTAuthentication',
     ),

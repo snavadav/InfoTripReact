@@ -8,5 +8,6 @@ python-decouple==3.8
 redis==8.1.0
 gunicorn==26.2.0
 whitenoise==6.12.0
+sentry-sdk==2.72.0
 drf-spectacular==0.30.0
 drf-spectacular-sidecar==2026.10.1

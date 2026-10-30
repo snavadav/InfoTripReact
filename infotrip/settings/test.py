@@ -8,3 +8,5 @@ PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
 EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
 # Las pruebas que provocan fallos (SMTP, bloqueos) no deben llenar la salida; assertLogs sigue funcionando.
 LOGGING['loggers']['infotrip']['level'] = 'CRITICAL'  # noqa: F405
+# El límite global no debe interferir entre pruebas; se prueba por separado en apps/core/tests.py.
+REST_FRAMEWORK = {**REST_FRAMEWORK, 'DEFAULT_THROTTLE_CLASSES': ()}  # noqa: F405

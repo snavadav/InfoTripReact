@@ -1,0 +1,2 @@
+# Los scripts que se montan en contenedores Linux deben conservar LF también en Windows.
+*.sh text eol=lf

@@ -130,6 +130,15 @@ jobs:
           estatico=$(curl --fail --silent http://localhost:8080/destinos/ | grep -o '/static/css/[^"]*' | head -1)
           curl --fail --silent --show-error --output /dev/null "http://localhost:8080$estatico"
           curl --fail --silent --show-error --head http://localhost:8080/ | grep -i '^content-security-policy'
+      - name: Comprobar que la aplicación puede guardar fotos y nginx servirlas
+        run: |
+          docker compose --env-file .env.docker exec -T web sh -c 'echo prueba > /app/media/prueba-ci.txt'
+          curl --fail --silent --show-error http://localhost:8080/media/prueba-ci.txt
+      - name: Comprobar la copia de seguridad y su restauración
+        run: |
+          docker compose --env-file .env.docker exec -T respaldos sh -c 'PGPASSWORD="$POSTGRES_PASSWORD" pg_dump -h db -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Fc -f /respaldos/ci.dump'
+          docker compose --env-file .env.docker exec -T respaldos sh -c 'PGPASSWORD="$POSTGRES_PASSWORD" pg_restore -h db -U "$POSTGRES_USER" -d "$POSTGRES_DB" --clean --if-exists --no-owner /respaldos/ci.dump'
+          curl --fail --silent --show-error http://localhost:8080/health/
       - name: Comprobar la protección CSRF de la sesión a través de nginx
         run: |
           token=csrfprueba0123456789abcdef012345

@@ -43,6 +43,9 @@ Tareas que no se pueden automatizar desde el código. Marca cada una al completa
 - [ ] **Revisar con alguien de derecho el aviso de privacidad y los términos** (`templates/legal/`). Son un borrador, marcado así en la página.
 - [ ] **Definir `CONTACTO_PRIVACIDAD`** con un correo real. Sin él, el aviso no muestra cómo contactar al equipo.
 
+- [ ] **Sacar las copias de seguridad del servidor.** El servicio `respaldos` las guarda en un volumen local; hay que copiarlas a otro lugar ([guía](operacion.md)).
+- [ ] **Definir `SENTRY_DSN`** si quieres alertas de errores (opcional).
+
 ## Generales
 
 - [ ] **Mover el proyecto fuera de OneDrive** (por ejemplo a `C:\dev\InfoTrip`). La sincronización de `.venv314`, `.venv`, `db.sqlite3` y las cachés de `uv` puede corromper archivos y ralentizar el equipo. Hacerlo con el editor y los servidores cerrados.

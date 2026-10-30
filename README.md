@@ -225,7 +225,7 @@ Iniciar sesión tiene dos pasos: `login` envía un código al correo y `verifica
 | `python manage.py enviar_avisos` | Envía por correo los avisos de moderación pendientes; programarlo cada pocos minutos |
 | `python manage.py cargar_destinos_iniciales` | Carga opcional del catálogo inicial |
 
-Los registros van a la salida estándar. `LOG_LEVEL` ajusta el detalle, y nunca incluyen correos ni contraseñas.
+Los registros van a la salida estándar. `LOG_LEVEL` ajusta el detalle, y nunca incluyen correos ni contraseñas. Copias de seguridad, restauración y monitoreo en [la guía de operación](docs/operacion.md).
 
 ---
 
