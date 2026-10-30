@@ -14,8 +14,8 @@ from django.utils.text import slugify
 
 from apps.comunidad.models import Aporte, Colaboracion
 from apps.comunidad.selectors import (
-    MINIMO_REPORTES, aportes_publicos, con_info_reciente, costos_de_destino, costos_por_destino, ficha_practica,
-    preguntas_publicas, resumen,
+    MINIMO_CRONISTA, MINIMO_REPORTES, aportes_publicos, con_info_reciente, costos_de_destino, costos_por_destino,
+    cronistas, ficha_practica, misiones_por_destino, preguntas_publicas, resumen,
 )
 from .filtros import filtrar_destinos
 from .fotos import FOTOS_CATALOGO
@@ -271,4 +271,23 @@ def costos_indice(request):
     return render(request, 'destinos/costos_indice.html', {
         'filas': filas, 'seo': seo, 'minimo': MINIMO_REPORTES,
         'encabezados': [nombre for _, nombre in Aporte.CONCEPTOS],
+    })
+
+
+def misiones(request):
+    destinos = Destino.objects.filter(es_activo=True).select_related('municipio').order_by('nombre')
+    municipio = request.GET.get('municipio', '')
+    municipios = Municipio.objects.filter(destinos__es_activo=True).distinct().order_by('nombre')
+    if municipio:
+        destinos = destinos.filter(municipio__slug=municipio)
+    destinos = list(destinos)
+    pendientes = misiones_por_destino([destino.pk for destino in destinos])
+    filas = [{'destino': destino, **pendientes[destino.pk]} for destino in destinos
+             if pendientes[destino.pk]['faltan'] or pendientes[destino.pk]['confirmar']]
+    seo = {'titulo': 'Misiones de la comunidad: qué falta saber en Jalisco — InfoTrip',
+           'descripcion': 'Ayuda a otros viajeros: cuenta los horarios, accesos y precios que aún faltan en Jalisco.'}
+    return render(request, 'destinos/misiones.html', {
+        'pagina': Paginator(filas, 12).get_page(request.GET.get('pagina')), 'municipios': municipios,
+        'municipio_actual': municipio, 'seo': seo, 'cronistas': cronistas(), 'minimo_cronista': MINIMO_CRONISTA,
+        'total_misiones': sum(len(fila['faltan']) + len(fila['confirmar']) for fila in filas),
     })

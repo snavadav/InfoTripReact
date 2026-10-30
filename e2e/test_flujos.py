@@ -82,7 +82,7 @@ class FlujosTests(StaticLiveServerTestCase):
         self.pagina.wait_for_url(lambda url: '/login/' not in url)
 
     def test_paginas_publicas_sin_violaciones_de_csp(self):
-        for ruta in ['/', '/destinos/', '/destinos/mirador/', '/destinos/mirador/costos/', '/costos/', '/login/', '/registro/', '/api/v1/docs/', '/no-existe/']:
+        for ruta in ['/', '/destinos/', '/destinos/mirador/', '/destinos/mirador/costos/', '/costos/', '/misiones/', '/login/', '/registro/', '/api/v1/docs/', '/no-existe/']:
             with self.subTest(ruta=ruta):
                 self.abrir(ruta)
                 self.pagina.wait_for_load_state('load')
@@ -297,6 +297,12 @@ class FlujosTests(StaticLiveServerTestCase):
         self.assertTrue(self.usuario.visitas_comprobadas.filter(destino=self.destino).exists())
         self.abrir('/destinos/mirador/')
         self.pagina.wait_for_selector('#visit-check:has-text("Visita comprobada")')
+
+    def test_una_mision_abre_el_formulario_del_dato(self):
+        self.abrir('/misiones/')
+        self.pagina.click('a[href*="dato=acceso"]')
+        self.pagina.wait_for_selector('#sugerir-dato[open]')
+        self.assertEqual(self.pagina.input_value('#sugerir-dato [name="campo"]'), 'acceso')
 
     def test_guardar_favorito_y_cerrar_sesion(self):
         self.iniciar_sesion()

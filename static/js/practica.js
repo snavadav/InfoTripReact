@@ -44,6 +44,14 @@
       feedback.textContent=`Gracias. Confirmaste que sigue vigente (${data.confirmaciones} confirmación${data.confirmaciones===1?'':'es'}).`;
     }catch(error){feedback.textContent=error.message;button.disabled=false;}
   }));
+  // Enlace desde Misiones: abre el formulario con el dato elegido.
+  const pedido = new URLSearchParams(location.search).get('dato'), sugerir = document.getElementById('sugerir-dato');
+  if (pedido && sugerir) {
+    const campo = sugerir.querySelector('[name="campo"]');
+    if ([...campo.options].some(opcion => opcion.value === pedido)) campo.value = pedido;
+    sugerir.open = true;
+    sugerir.scrollIntoView();
+  }
   // Visita comprobada: las coordenadas se envían una vez para compararlas y el servidor no las guarda.
   const visit = document.getElementById('visit-check'), visitStatus = document.getElementById('visit-status');
   function visitDone(fecha){visit.disabled=true;visit.textContent='Visita comprobada';visitStatus.textContent=`La comprobaste el ${fecha}.`;}

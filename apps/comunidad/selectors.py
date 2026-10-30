@@ -146,6 +146,12 @@ def costos_por_destino():
     return {destino_id: costos for destino_id, costos in resumenes.items() if costos['hay_datos']}
 
 
+def vigencia_por_edad(edad):
+    if edad is None:
+        return 'desconocida'
+    return 'reciente' if edad <= 30 else 'por_confirmar' if edad <= 90 else 'antigua'
+
+
 def ficha_practica(destino):
     """Información aportada por personas: nunca se rellena un dato desconocido."""
     confirmaciones = confirmaciones_validas().filter(dato_id=OuterRef('pk')).order_by()
@@ -164,11 +170,7 @@ def ficha_practica(destino):
         # La vigencia cuenta desde la consulta original o desde la última confirmación, lo más reciente.
         vigente_desde = max(filter(None, [dato.fecha_dato, dato.ultima_confirmacion])) if dato else None
         edad = (hoy - vigente_desde).days if dato else None
-        vigencia = (
-            ('reciente' if edad <= 30 else 'por_confirmar' if edad <= 90 else 'antigua')
-            if edad is not None
-            else 'desconocida'
-        )
+        vigencia = vigencia_por_edad(edad)
         campos.append(
             {'nombre': label, 'dato': dato, 'historial': historial[1:], 'edad_dias': edad, 'vigencia': vigencia,
              'vigente_desde': vigente_desde}
@@ -198,3 +200,48 @@ def aportes_publicos(destino):
     """Anota `visita_comprobada`: quien lo escribió confirmó su ubicación cerca de este destino."""
     visitas = VisitaComprobada.objects.filter(autor_id=OuterRef('autor_id'), destino_id=OuterRef('destino_id'))
     return publicados().filter(destino=destino).select_related('autor').annotate(visita_comprobada=Exists(visitas))
+
+
+def misiones_por_destino(destino_ids):
+    """{destino_id: {'faltan': [...], 'confirmar': [...]}}: qué datos prácticos nadie ha contado o conviene revisar."""
+    vigentes = {}
+    for pk, destino_id, campo, fecha in dato_vigente_primero(
+        publicas().filter(destino_id__in=destino_ids, tipo='correccion')
+    ).values_list('pk', 'destino_id', 'campo', 'fecha_dato'):
+        vigentes.setdefault((destino_id, campo), (pk, fecha))
+    confirmadas = dict(
+        confirmaciones_validas().filter(dato_id__in=[pk for pk, _ in vigentes.values()]).order_by()
+        .values('dato_id').annotate(ultima=Max('fecha')).values_list('dato_id', 'ultima')
+    )
+    hoy = timezone.localdate()
+    misiones = {destino_id: {'faltan': [], 'confirmar': []} for destino_id in destino_ids}
+    for destino_id, mision in misiones.items():
+        for clave, nombre in Colaboracion.CAMPOS:
+            vigente = vigentes.get((destino_id, clave))
+            if not vigente:
+                mision['faltan'].append({'clave': clave, 'nombre': nombre})
+                continue
+            pk, fecha = vigente
+            edad = (hoy - max(filter(None, [fecha, confirmadas.get(pk)]))).days
+            if vigencia_por_edad(edad) != 'reciente':
+                mision['confirmar'].append({'clave': clave, 'nombre': nombre, 'edad_dias': edad})
+    return misiones
+
+
+# Con menos datos, el título no reconocería un aporte sostenido.
+MINIMO_CRONISTA = 3
+
+
+def cronistas():
+    """Por municipio, quien más datos prácticos publicó en el último año. Solo cuenta lo que pasó por moderación."""
+    filas = (
+        publicas().filter(tipo='correccion', creado__gte=timezone.now() - timedelta(days=365)).order_by()
+        .values('destino__municipio__nombre', 'autor_id', 'autor__nombre').annotate(datos=Count('pk'))
+        .filter(datos__gte=MINIMO_CRONISTA).order_by('destino__municipio__nombre', '-datos', 'autor_id')
+    )
+    elegidos = {}
+    for fila in filas:
+        elegidos.setdefault(fila['destino__municipio__nombre'], {
+            'municipio': fila['destino__municipio__nombre'], 'nombre': fila['autor__nombre'], 'datos': fila['datos'],
+        })
+    return list(elegidos.values())

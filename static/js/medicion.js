@@ -26,6 +26,7 @@
 
   const costos = document.querySelector('[data-costos]');
   if (costos) send('costos_vista', costos.dataset.costos);
+  if (document.querySelector('[data-misiones]')) send('misiones_vista');
 
   // Los enlaces compartidos y los de los correos de aviso llevan ?ref=…
   const ref = new URLSearchParams(location.search).get('ref');

@@ -396,3 +396,7 @@ details[open] summary::before {
   font-weight: 700;
   vertical-align: middle;
 }
+
+.misiones-filtro { max-width: 22rem; margin: 1rem 0; }
+.mision h2 { font-size: 1.15rem; }
+.mision h3 { font-size: .95rem; margin-top: .75rem; }
