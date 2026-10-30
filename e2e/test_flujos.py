@@ -165,6 +165,18 @@ class FlujosTests(StaticLiveServerTestCase):
         anonimo.close()
         self.pagina.wait_for_load_state('networkidle')
 
+    def test_los_botones_de_mis_viajes_se_pueden_pulsar(self):
+        Viaje.objects.create(autor=self.usuario, nombre='Editable', destino='Tapalpa', personas=1, presupuesto=1,
+                             fecha_inicio='2026-12-01', fecha_fin='2026-12-02')
+        self.iniciar_sesion()
+        self.abrir('/mis-viajes/')
+        self.pagina.locator('.trip-card button', has_text='Editar').click()
+        self.assertEqual(self.pagina.input_value('[name="nombre"]'), 'Editable')
+        self.pagina.on('dialog', lambda dialogo: dialogo.accept())
+        self.pagina.locator('.trip-card button', has_text='Eliminar').click()
+        self.pagina.wait_for_selector('#trip-status:has-text("eliminada")')
+        self.assertFalse(Viaje.objects.exists())
+
     def test_tras_iniciar_sesion_vuelve_a_la_ficha(self):
         self.abrir('/destinos/mirador/')
         self.pagina.click('#favorite-toggle')

@@ -155,6 +155,8 @@
   box-shadow: 0 2px 12px rgba(57, 42, 86, 0.05);
   transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
 }
+/* Tampoco aplica aquí la capa oscura de la tarjeta de destino: tapaba los botones. */
+.trip-card::after { display: none; }
 .trip-card:hover {
   border-color: #c4b5e8;
   box-shadow: 0 8px 28px rgba(57, 42, 86, 0.1);
