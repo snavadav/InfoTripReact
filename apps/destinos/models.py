@@ -81,9 +81,13 @@ TIPO_DE_SUBTIPO = {
     'restaurant': 'comer', 'fast_food': 'comer', 'cafe': 'comer', 'bar': 'comer', 'pub': 'comer',
     'hotel': 'dormir', 'motel': 'dormir', 'hostel': 'dormir', 'guest_house': 'dormir', 'apartment': 'dormir',
     'fuel': 'gasolina', 'pharmacy': 'farmacia', 'atm': 'cajero', 'bank': 'cajero',
+    # Solo tiendas útiles para quien viaja. Papelerías, ópticas o talleres serían miles de puntos que estorban.
+    'convenience': 'comprar', 'supermarket': 'comprar', 'variety_store': 'comprar', 'department_store': 'comprar',
+    'mall': 'comprar', 'bakery': 'comprar', 'pastry': 'comprar', 'confectionery': 'comprar', 'alcohol': 'comprar',
+    'wine': 'comprar', 'beverages': 'comprar', 'gift': 'comprar', 'craft': 'comprar', 'art': 'comprar',
 }
 TIPOS_DE_LUGAR = [('comer', 'Comer'), ('dormir', 'Dormir'), ('gasolina', 'Gasolina'), ('farmacia', 'Farmacia'),
-                  ('cajero', 'Cajero o banco')]
+                  ('cajero', 'Cajero o banco'), ('comprar', 'Comprar')]
 
 
 class Lugar(models.Model):
@@ -97,10 +101,15 @@ class Lugar(models.Model):
         ('pub', 'Bar'), ('hotel', 'Hotel'), ('motel', 'Motel'), ('hostel', 'Hostal'),
         ('guest_house', 'Casa de huéspedes'), ('apartment', 'Departamento'), ('fuel', 'Gasolinera'),
         ('pharmacy', 'Farmacia'), ('atm', 'Cajero'), ('bank', 'Banco'),
+        ('convenience', 'Tienda de conveniencia'), ('supermarket', 'Supermercado'), ('variety_store', 'Tienda variada'),
+        ('department_store', 'Tienda departamental'), ('mall', 'Centro comercial'), ('bakery', 'Panadería'),
+        ('pastry', 'Pastelería'), ('confectionery', 'Dulcería'), ('alcohol', 'Licorería'), ('wine', 'Vinos'),
+        ('beverages', 'Bebidas'), ('gift', 'Regalos y recuerdos'), ('craft', 'Artesanías y manualidades'),
+        ('art', 'Arte y galería'),
     ]
     nombre = models.CharField(max_length=200)
     tipo = models.CharField(max_length=10, choices=TIPOS)
-    subtipo = models.CharField(max_length=15, choices=SUBTIPOS)
+    subtipo = models.CharField(max_length=20, choices=SUBTIPOS)
     municipio = models.ForeignKey(Municipio, null=True, blank=True, on_delete=models.PROTECT, related_name='lugares')
     latitud = models.DecimalField(
         max_digits=9, decimal_places=6,

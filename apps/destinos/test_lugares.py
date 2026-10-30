@@ -10,7 +10,7 @@ from django.test import TestCase
 from rest_framework.test import APITestCase
 
 from .lugares import cerca_de
-from .models import Destino, Lugar, Municipio, Region
+from .models import Destino, Lugar, Municipio, Region, TIPO_DE_SUBTIPO
 from .osm import interpretar_lugares
 from .test_osm import TAPALPA, TLAQUEPAQUE, lugar, respuesta
 
@@ -33,6 +33,24 @@ class InterpretarTests(TestCase):
         self.assertEqual((pemex['tipo'], pemex['municipio'], pemex['telefono'], pemex['direccion']),
                          ('gasolina', 'San Pedro Tlaquepaque', '555', 'Juárez 5'))
         self.assertEqual(omitidos, 0)
+
+    def test_solo_tiendas_utiles_y_con_nombre_real(self):
+        lugares, omitidos = interpretar_lugares(respuesta(
+            lugar(1, 'Súper Tapalpa', 19.9, -103.5, shop='supermarket'),
+            lugar(2, 'Tequilas del Valle', 19.9, -103.5, shop='alcohol'),
+            lugar(3, 'Papelería Centro', 19.9, -103.5, shop='stationery'),
+            lugar(4, 'Tienda de abarrotes sin nombre', 19.9, -103.5, shop='convenience'),
+            lugar(5, 'Tiendita', 19.9, -103.5, shop='convenience'),
+            lugar(6, 'Plaza Mayor', 19.9, -103.5, shop='department_store'),
+        ))
+        self.assertEqual({(sitio['nombre'], sitio['tipo'], sitio['subtipo']) for sitio in lugares}, {
+            ('Súper Tapalpa', 'comprar', 'supermarket'), ('Tequilas del Valle', 'comprar', 'alcohol'),
+            ('Plaza Mayor', 'comprar', 'department_store'),
+        })
+        self.assertEqual(omitidos, 3)
+
+    def test_un_nombre_generico_solo_se_descarta_en_tiendas(self):
+        self.assertEqual(len(interpretar_lugares(respuesta(lugar(1, 'Bodega', 19.9, -103.5, amenity='restaurant')))[0]), 1)
 
     def test_omite_lo_que_no_aplica(self):
         lugares, omitidos = interpretar_lugares(respuesta(
@@ -193,6 +211,20 @@ class CercaTests(BaseLugares):
         self.assertEqual([sitio.nombre for sitio in cerca_de(19.95, -103.75, limite=2)], ['L0', 'L1'])
 
 
+class TiposTests(BaseLugares):
+    def test_cada_subtipo_tiene_tipo_y_nombre(self):
+        self.assertEqual({clave for clave, _ in Lugar.SUBTIPOS}, set(TIPO_DE_SUBTIPO))
+        self.assertEqual({tipo for tipo, _ in Lugar.TIPOS}, set(TIPO_DE_SUBTIPO.values()))
+        self.assertTrue(all(len(clave) <= 20 for clave in TIPO_DE_SUBTIPO))
+
+    def test_el_mapa_ofrece_comprar_y_la_propuesta_tambien(self):
+        self.assertContains(self.client.get('/destinos/'), 'data-lugar-tipo="comprar"')
+        self.assertContains(self.client.get('/lugares/proponer/'), 'value="supermarket"')
+        self.crear('Súper', tipo='comprar', subtipo='supermarket')
+        datos = self.client.get('/api/v1/lugares/', {'sur': 19.9, 'oeste': -103.8, 'norte': 20, 'este': -103.7, 'tipo': 'comprar'}).data
+        self.assertEqual(datos['resultados'][0]['tipo_nombre'], 'Comprar')
+
+
 class FichaTests(BaseLugares):
     def setUp(self):
         super().setUp()
@@ -220,6 +252,12 @@ class FichaTests(BaseLugares):
         for km, texto in [(0.34, '340 m'), (0.999, '1000 m'), (2.34, '2.3 km')]:
             sitio.distancia_km = km
             self.assertEqual(sitio.distancia_legible, texto)
+
+    def test_la_ficha_incluye_donde_comprar(self):
+        self.crear('Súper Tapalpa', tipo='comprar', subtipo='supermarket')
+        ficha = self.client.get('/destinos/centro/')
+        self.assertContains(ficha, 'Dónde comprar')
+        self.assertContains(ficha, 'Supermercado')
 
     def test_sin_lugares_no_aparece_la_seccion(self):
         self.assertNotContains(self.client.get('/destinos/centro/'), 'id="cerca-de-aqui"')

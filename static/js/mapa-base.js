@@ -36,6 +36,7 @@ window.InfoTripMapa = (() => {
     gasolina: 'M4 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16M3 21h12M7 8h4M14 12h2a2 2 0 0 1 2 2v3a1.5 1.5 0 0 0 3 0V9l-3-3',
     farmacia: 'M12 5v14M5 12h14',
     cajero: 'M3 7h18v11H3zM3 11h18M7 15h3',
+    comprar: 'M6 8h12l1 13H5zM9 8V6a3 3 0 0 1 6 0v2',
   };
 
   function iconoLugar(tipo) {

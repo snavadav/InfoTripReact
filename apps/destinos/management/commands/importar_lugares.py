@@ -1,4 +1,4 @@
-"""Importa desde OpenStreetMap dónde comer, dormir, gasolineras, farmacias y cajeros de Jalisco.
+"""Importa desde OpenStreetMap dónde comer, dormir y comprar, gasolineras, farmacias y cajeros de Jalisco.
 
 A diferencia de `importar_osm`, estos lugares se publican de inmediato: son miles y no se pueden revisar
 uno por uno. Se puede repetir para traer cambios; lo editado en el admin no se toca. Guía: docs/importar-osm.md

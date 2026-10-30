@@ -64,7 +64,7 @@ def cercanos_de_destino(destino):
     """Para la ficha: unos cuantos de cada tipo, del más próximo al más lejano. Vacíos si no hay ninguno."""
     latitud, longitud = float(destino.latitud), float(destino.longitud)
     grupos = [('Dónde comer', 'comer', 5), ('Dónde dormir', 'dormir', 5), ('Gasolina', 'gasolina', 2),
-              ('Farmacias', 'farmacia', 2), ('Cajeros y bancos', 'cajero', 2)]
+              ('Dónde comprar', 'comprar', 4), ('Farmacias', 'farmacia', 2), ('Cajeros y bancos', 'cajero', 2)]
     cerca = [{'titulo': titulo, 'lugares': cerca_de(latitud, longitud, tipo=tipo, limite=limite)}
              for titulo, tipo, limite in grupos]
     return [grupo for grupo in cerca if grupo['lugares']]

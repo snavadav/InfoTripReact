@@ -9,6 +9,8 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
+from django.utils.text import slugify
+
 from .models import TIPO_DE_SUBTIPO
 
 SERVIDOR = 'https://overpass-api.de/api/interpreter'
@@ -38,6 +40,7 @@ area["ISO3166-2"="MX-JAL"][admin_level=4]->.jalisco;
 (
   nwr["amenity"~"^(restaurant|fast_food|cafe|bar|pub|fuel|pharmacy|atm|bank)$"]["name"](area.jalisco);
   nwr["tourism"~"^(hotel|motel|hostel|guest_house|apartment)$"]["name"](area.jalisco);
+  nwr["shop"~"^(convenience|supermarket|variety_store|department_store|mall|bakery|pastry|confectionery|alcohol|wine|beverages|gift|craft|art)$"]["name"](area.jalisco);
 );
 out center tags;
 rel(area.jalisco)["boundary"="administrative"]["admin_level"="6"];
@@ -137,6 +140,25 @@ def interpretar(datos):
     return lugares, omitidos
 
 
+# Tiendas registradas sin un nombre real: en el mapa no ayudan a nadie a encontrarlas.
+NOMBRES_DE_TIENDA_GENERICOS = {
+    'abarrotes', 'bakery', 'bodega', 'dulceria', 'licoreria', 'miscelanea', 'minisuper', 'panaderia', 'pasteleria',
+    'supermercado', 'tienda', 'tienda-de-abarrotes', 'tienda-de-conveniencia', 'tiendita',
+}
+
+
+def _nombre_generico(nombre):
+    slug = slugify(nombre)
+    return slug in NOMBRES_DE_TIENDA_GENERICOS or 'sin-nombre' in slug
+
+
+def _subtipo_de(etiquetas):
+    for clave in ('amenity', 'tourism', 'shop'):
+        if etiquetas.get(clave) in TIPO_DE_SUBTIPO:
+            return etiquetas[clave]
+    return None
+
+
 def _recuadro(tramos):
     """(sur, norte, oeste, este) del contorno: descarta casi todos los municipios sin recorrer sus tramos."""
     latitudes = [punto[0] for tramo in tramos for punto in tramo]
@@ -183,9 +205,12 @@ def interpretar_lugares(datos):
         clave = f"{elemento['type']}/{elemento['id']}"
         etiquetas = elemento.get('tags', {})
         centro = elemento.get('center', elemento)
-        subtipo = etiquetas.get('amenity') if etiquetas.get('amenity') in TIPO_DE_SUBTIPO else etiquetas.get('tourism')
+        subtipo = _subtipo_de(etiquetas)
         nombre = etiquetas.get('name', '').strip()
-        if clave in vistos or not nombre or subtipo not in TIPO_DE_SUBTIPO or 'lat' not in centro:
+        if clave in vistos or not nombre or not subtipo or 'lat' not in centro:
+            omitidos += 1
+            continue
+        if TIPO_DE_SUBTIPO[subtipo] == 'comprar' and _nombre_generico(nombre):
             omitidos += 1
             continue
         vistos.add(clave)

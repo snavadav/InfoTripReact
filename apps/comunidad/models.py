@@ -435,7 +435,7 @@ class PropuestaLugar(Moderable):
     ESTADOS = [('pendiente', 'Pendiente'), ('publicado', 'Aprobada'), ('oculto', 'No publicada')]
     autor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='propuestas_lugar')
     nombre = models.CharField(max_length=200)
-    subtipo = models.CharField(max_length=15, choices=Lugar.SUBTIPOS)
+    subtipo = models.CharField(max_length=20, choices=Lugar.SUBTIPOS)
     latitud = models.DecimalField(max_digits=9, decimal_places=6)
     longitud = models.DecimalField(max_digits=9, decimal_places=6)
     direccion = models.CharField(max_length=300, blank=True)
