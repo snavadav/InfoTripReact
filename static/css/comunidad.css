@@ -384,3 +384,15 @@ details[open] summary::before {
 .costos-tabla table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 14px; }
 .costos-tabla th, .costos-tabla td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #ebe3f5; white-space: nowrap; }
 .costos-tabla thead th { font-size: 12px; }
+
+.visit-badge {
+  display: inline-block;
+  margin-left: .25rem;
+  padding: .1rem .55rem;
+  border-radius: 1rem;
+  background: #E7F6EC;
+  color: #17643A;
+  font-size: .75rem;
+  font-weight: 700;
+  vertical-align: middle;
+}

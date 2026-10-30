@@ -9,10 +9,12 @@ class AporteSerializer(serializers.ModelSerializer):
     destino_nombre = serializers.CharField(source='destino.nombre', read_only=True)
     destino_slug = serializers.CharField(source='destino.slug', read_only=True)
     estado_nombre = serializers.CharField(source='get_estado_display', read_only=True)
+    visita_comprobada = serializers.BooleanField(read_only=True, default=False)
     class Meta:
         model = Aporte
         fields = ['id', 'tipo', 'texto', 'fecha_visita', 'calificacion', 'imagen', 'monto', 'concepto',
-                  'estado', 'estado_nombre', 'creado', 'autor_nombre', 'destino_nombre', 'destino_slug']
+                  'estado', 'estado_nombre', 'creado', 'autor_nombre', 'destino_nombre', 'destino_slug',
+                  'visita_comprobada']
         read_only_fields = ['estado', 'creado']
         validators = []
 

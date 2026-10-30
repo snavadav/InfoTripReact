@@ -4,13 +4,13 @@ No crea cuentas ni requiere clave. Se puede repetir: lo ya importado no se toca,
 ediciones del equipo. Guía: docs/importar-osm.md
 """
 import json
-import math
 
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.db.models import Q
 from django.utils.text import slugify
 
+from apps.core.geo import distancia_km
 from apps.destinos.models import Categoria, Destino, Municipio, Region
 from apps.destinos.osm import TIPOS, ErrorOverpass, descargar, interpretar
 
@@ -19,13 +19,6 @@ REGION_POR_DEFECTO = 'Otras zonas de Jalisco'
 ALIAS_MUNICIPIOS = {'san-pedro-tlaquepaque': 'tlaquepaque'}
 # Un lugar con el mismo nombre a esta distancia es el mismo, no uno nuevo.
 KM_MISMO_LUGAR = 2
-
-
-def distancia_km(lat1, lon1, lat2, lon2):
-    """Aproximación suficiente para distancias cortas."""
-    alto = (lat2 - lat1) * 111
-    ancho = (lon2 - lon1) * 111 * math.cos(math.radians(lat1))
-    return math.hypot(alto, ancho)
 
 
 def texto_de(lugar):

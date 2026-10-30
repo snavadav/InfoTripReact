@@ -44,5 +44,24 @@
       feedback.textContent=`Gracias. Confirmaste que sigue vigente (${data.confirmaciones} confirmación${data.confirmaciones===1?'':'es'}).`;
     }catch(error){feedback.textContent=error.message;button.disabled=false;}
   }));
+  // Visita comprobada: las coordenadas se envían una vez para compararlas y el servidor no las guarda.
+  const visit = document.getElementById('visit-check'), visitStatus = document.getElementById('visit-status');
+  function visitDone(fecha){visit.disabled=true;visit.textContent='Visita comprobada';visitStatus.textContent=`La comprobaste el ${fecha}.`;}
+  const geoErrors={1:'No diste permiso para usar tu ubicación.',2:'Tu dispositivo no pudo obtener tu ubicación.',3:'Tu dispositivo tardó demasiado en obtener tu ubicación.'};
+  visit.addEventListener('click',()=>{
+    if(!window.InfoTripSession?.authenticated){
+      visitStatus.replaceChildren(document.createTextNode('Entra para comprobar tu visita. '));
+      const link=document.createElement('a');link.href=InfoTrip.loginUrl();link.textContent='Iniciar sesión';visitStatus.append(link);return;
+    }
+    if(!navigator.geolocation){visitStatus.textContent='Tu navegador no ofrece ubicación.';return;}
+    visit.disabled=true;visitStatus.textContent='Obteniendo tu ubicación…';
+    navigator.geolocation.getCurrentPosition(async position=>{
+      try{
+        const data=await InfoTrip.api(`/api/v1/destinos/${slug}/visita/`,{method:'POST',body:{latitud:position.coords.latitude,longitud:position.coords.longitude}});
+        visitDone(data.fecha);
+      }catch(error){visitStatus.textContent=error.message;visit.disabled=false;}
+    },error=>{visitStatus.textContent=geoErrors[error.code]||geoErrors[2];visit.disabled=false;},{timeout:15000,maximumAge:60000});
+  });
+  if(InfoTrip.hasSession())InfoTrip.api(`/api/v1/destinos/${slug}/visita/`).then(data=>{if(data.comprobada)visitDone(data.fecha);}).catch(()=>{});
   initial();
 })();

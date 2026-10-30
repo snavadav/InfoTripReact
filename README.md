@@ -221,6 +221,7 @@ La referencia completa e interactiva está en `/api/v1/docs/` (Swagger) y el esq
 | Bote | `/api/v1/mis-viajes/<id>/bote/participantes/<id>/` | DELETE |
 | Bote | `/api/v1/mis-viajes/<id>/bote/publicar/` | POST |
 | Bote | `/api/v1/botes/<invitación>/unirse/`, `/api/v1/mis-botes/` | POST, GET |
+| Visitas | `/api/v1/destinos/<slug>/visita/` | GET, POST |
 | Cuenta | `/api/v1/mi-cuenta/eliminar/` | POST |
 | Métricas | `/api/v1/eventos/` | POST |
 | Avisos | `/api/v1/notificaciones/` | GET |

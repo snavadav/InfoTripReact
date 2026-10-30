@@ -23,7 +23,8 @@ if not REDIS_URL:  # noqa: F405
 # ─── MONITOREO DE ERRORES (opcional; compatible con Sentry y GlitchTip) ────
 SENTRY_DSN = config('SENTRY_DSN', default='')
 if SENTRY_DSN:
-    sentry_sdk.init(dsn=SENTRY_DSN, send_default_pii=False, traces_sample_rate=0)
+    # Sin el cuerpo de las peticiones: una ubicación enviada para comprobar una visita nunca debe guardarse.
+    sentry_sdk.init(dsn=SENTRY_DSN, send_default_pii=False, traces_sample_rate=0, max_request_body_size='never')
 
 # ─── ARCHIVOS ESTÁTICOS ───────────────────────────────────────
 # WhiteNoise con nombres con hash y compresión: caché de larga duración sin servir versiones viejas.

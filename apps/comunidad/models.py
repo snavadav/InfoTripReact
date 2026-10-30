@@ -308,3 +308,15 @@ class GastoReal(models.Model):
     class Meta:
         ordering = ['-fecha', '-pk']
         constraints = [models.CheckConstraint(condition=models.Q(monto__gt=0), name='gasto_real_monto_positivo')]
+
+
+class VisitaComprobada(models.Model):
+    """La persona estaba cerca del destino en esta fecha. No guarda coordenadas, a propósito."""
+    autor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='visitas_comprobadas')
+    destino = models.ForeignKey('destinos.Destino', on_delete=models.CASCADE, related_name='visitas_comprobadas')
+    fecha = models.DateField()
+    creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-fecha', '-pk']
+        constraints = [models.UniqueConstraint(fields=['autor', 'destino'], name='una_visita_por_destino')]

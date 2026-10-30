@@ -7,6 +7,7 @@ from .bote import (
     BoteView, GastoBoteView, GastosBoteView, MisBotesView, ParticipanteBoteView, PublicarBoteView, UnirseBoteView,
 )
 from .cuenta import EliminarCuentaView
+from .visitas import VisitaView
 urlpatterns = [
     path('mi-cuenta/eliminar/', EliminarCuentaView.as_view(), name='eliminar-cuenta'),
     path('notificaciones/', NotificacionesView.as_view(), name='notificaciones'),
@@ -21,6 +22,7 @@ urlpatterns = [
     path('mis-viajes/<int:pk>/bote/publicar/', PublicarBoteView.as_view(), name='bote-publicar'),
     path('botes/<uuid:enlace>/unirse/', UnirseBoteView.as_view(), name='bote-unirse'),
     path('mis-botes/', MisBotesView.as_view(), name='mis-botes'),
+    path('destinos/<slug:slug>/visita/', VisitaView.as_view(), name='visita'),
     path('destinos/<slug:slug>/colaboraciones/', ColaboracionesView.as_view(), name='colaboraciones'),
     path('colaboraciones/<int:pk>/confirmar/', ConfirmarDatoView.as_view(), name='confirmar-dato'),
     path('colaboraciones/<int:pk>/reportar/', ReportarColaboracionView.as_view(), name='reportar-colaboracion'),

@@ -8,7 +8,7 @@ from apps.destinos.models import Destino
 from apps.metricas.models import registrar
 from .models import Aporte
 from .serializers import AporteSerializer, ReporteSerializer
-from .selectors import publicados
+from .selectors import aportes_publicos, publicados
 
 
 class AporteThrottle(UserRateThrottle):
@@ -24,7 +24,7 @@ class PublicarView(generics.ListCreateAPIView):
         return super().get_throttles() if self.request.method == 'POST' else []
     def get_queryset(self):
         destino = get_object_or_404(Destino, slug=self.kwargs['slug'], es_activo=True)
-        return publicados().filter(destino=destino).select_related('autor', 'destino')
+        return aportes_publicos(destino).select_related('destino')
     def perform_create(self, serializer):
         destino = get_object_or_404(Destino, slug=self.kwargs['slug'], es_activo=True)
         try:

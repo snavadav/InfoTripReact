@@ -287,6 +287,17 @@ class FlujosTests(StaticLiveServerTestCase):
         self.pagina.wait_for_selector('#bote-publicar-estado:has-text("1 gasto enviado")')
         self.assertTrue(Aporte.objects.get().anonimo)
 
+    def test_comprobar_una_visita_con_la_ubicacion(self):
+        self.contexto.grant_permissions(['geolocation'])
+        self.contexto.set_geolocation({'latitude': 19.901, 'longitude': -103.701})
+        self.iniciar_sesion()
+        self.abrir('/destinos/mirador/')
+        self.pagina.click('#visit-check')
+        self.pagina.wait_for_selector('#visit-check:has-text("Visita comprobada")')
+        self.assertTrue(self.usuario.visitas_comprobadas.filter(destino=self.destino).exists())
+        self.abrir('/destinos/mirador/')
+        self.pagina.wait_for_selector('#visit-check:has-text("Visita comprobada")')
+
     def test_guardar_favorito_y_cerrar_sesion(self):
         self.iniciar_sesion()
         self.abrir('/destinos/mirador/')

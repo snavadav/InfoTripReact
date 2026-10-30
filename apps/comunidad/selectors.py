@@ -8,7 +8,7 @@ from statistics import median
 from django.db.models import Avg, Count, DateField, Exists, Max, Min, OuterRef, Prefetch, Q, Subquery, Value
 from django.db.models.functions import Coalesce, Greatest
 from django.utils import timezone
-from .models import Aporte, Colaboracion, Confirmacion
+from .models import Aporte, Colaboracion, Confirmacion, VisitaComprobada
 
 
 def publicados():
@@ -195,4 +195,6 @@ def preguntas_publicas(destino):
 
 
 def aportes_publicos(destino):
-    return publicados().filter(destino=destino).select_related('autor')
+    """Anota `visita_comprobada`: quien lo escribió confirmó su ubicación cerca de este destino."""
+    visitas = VisitaComprobada.objects.filter(autor_id=OuterRef('autor_id'), destino_id=OuterRef('destino_id'))
+    return publicados().filter(destino=destino).select_related('autor').annotate(visita_comprobada=Exists(visitas))
