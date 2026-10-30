@@ -67,7 +67,8 @@ class Command(BaseCommand):
 
         existentes = {lugar.denue_id: lugar for lugar in Lugar.objects.exclude(denue_id=None)}
         rejilla = Rejilla()
-        for fila in Lugar.objects.filter(denue_id=None).values_list('nombre', 'latitud', 'longitud'):
+        # Incluye lo ya importado del DENUE: si no, al repetir se crearía lo que antes se descartó por parecido.
+        for fila in Lugar.objects.values_list('nombre', 'latitud', 'longitud'):
             rejilla.agregar(*fila)
         municipios, nuevos, cambiados, protegidos, duplicados = {}, [], [], 0, 0
         # atomic: un fallo a mitad no deja una importación parcial; al simular siempre se revierte.

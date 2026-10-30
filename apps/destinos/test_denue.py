@@ -131,6 +131,14 @@ class ComandoTests(TestCase):
         self.assertEqual(Lugar.objects.get().telefono, '555')
         self.assertIn('Actualizados: 1', salida)
 
+    def test_repetir_no_crea_lo_que_antes_se_descarto_por_parecido(self):
+        parecidos = (registro(1, nombre='HOTEL SIERRA'), registro(2, nombre='HOTEL SIERRA AZUL', Latitud='19.9451'))
+        self.assertIn('Creados 1', self.importar(*parecidos))
+        salida = self.importar(*parecidos)
+        self.assertIn('Creados 0', salida)
+        self.assertIn('Ya existían: 1', salida)
+        self.assertEqual(Lugar.objects.count(), 1)
+
     def test_no_duplica_lo_que_ya_existe_de_osm(self):
         self.osm()
         self.assertIn('Ya existían: 1', self.importar(registro()))
