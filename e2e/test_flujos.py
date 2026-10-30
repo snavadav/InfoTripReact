@@ -385,8 +385,9 @@ class FlujosTests(StaticLiveServerTestCase):
         for _ in range(4):
             self.pagina.click('#next-place')
         caja = self.pagina.locator('.discovery-card[aria-pressed="true"]').bounding_box()
-        self.assertGreaterEqual(caja['x'], 0)
-        self.assertLessEqual(caja['x'] + caja['width'], 375)
+        # Margen de un píxel: el navegador redondea la posición al desplazar.
+        self.assertGreaterEqual(caja['x'], -1)
+        self.assertLessEqual(caja['x'] + caja['width'], 376)
 
     def test_el_mapa_se_identifica_ante_openstreetmap(self):
         # Sin Referer, el servidor responde 403 y pinta "Access blocked" en cada cuadro del mapa.
