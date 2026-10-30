@@ -1,7 +1,9 @@
 from django.contrib import admin
 from django.db import transaction
 from django.utils import timezone
-from .models import Aporte, Colaboracion, Confirmacion, Decision, Reporte, ReporteColaboracion, RevisionColaboracion
+from .models import (
+    Aporte, Colaboracion, Confirmacion, Decision, InteresNegocio, Reporte, ReporteColaboracion, RevisionColaboracion,
+)
 from .moderacion import moderar
 
 
@@ -160,3 +162,13 @@ class ConfirmacionAdmin(admin.ModelAdmin):
     readonly_fields = ['dato', 'autor', 'fecha', 'creado']
     def has_add_permission(self, request): return False
     def has_change_permission(self, request, obj=None): return False
+
+
+@admin.register(InteresNegocio)
+class InteresNegocioAdmin(admin.ModelAdmin):
+    """Solo se marca como atendido; se puede borrar si la persona lo pide."""
+    list_display = ['negocio', 'municipio', 'contacto', 'correo', 'atendido', 'creado']
+    list_filter = ['atendido', 'municipio']
+    search_fields = ['negocio', 'correo', 'municipio']
+    readonly_fields = ['negocio', 'contacto', 'correo', 'telefono', 'municipio', 'mensaje', 'creado']
+    def has_add_permission(self, request): return False

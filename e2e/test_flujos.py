@@ -11,7 +11,7 @@ from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.core import mail
 from django.core.cache import cache
 
-from apps.comunidad.models import Aporte, Viaje
+from apps.comunidad.models import Aporte, InteresNegocio, Viaje
 from apps.destinos.models import Destino, Municipio, Region
 from apps.metricas.models import Evento
 from apps.usuarios.models import Usuario
@@ -82,7 +82,7 @@ class FlujosTests(StaticLiveServerTestCase):
         self.pagina.wait_for_url(lambda url: '/login/' not in url)
 
     def test_paginas_publicas_sin_violaciones_de_csp(self):
-        for ruta in ['/', '/destinos/', '/destinos/mirador/', '/destinos/mirador/costos/', '/costos/', '/misiones/', '/pasaporte/', '/login/', '/registro/', '/api/v1/docs/', '/no-existe/']:
+        for ruta in ['/', '/destinos/', '/destinos/mirador/', '/destinos/mirador/costos/', '/costos/', '/misiones/', '/pasaporte/', '/negocios/', '/login/', '/registro/', '/api/v1/docs/', '/no-existe/']:
             with self.subTest(ruta=ruta):
                 self.abrir(ruta)
                 self.pagina.wait_for_load_state('load')
@@ -320,6 +320,17 @@ class FlujosTests(StaticLiveServerTestCase):
         self.pagina.wait_for_selector('#pasaporte-retirar:not([hidden])')
         self.abrir(f'/pasaporte/{self.usuario.pasaporte.enlace}/')
         self.pagina.wait_for_selector('.passport-stamp--done')
+
+    def test_un_negocio_deja_sus_datos_sin_cuenta(self):
+        self.abrir('/negocios/')
+        self.pagina.fill('[name="negocio"]', 'Hostal Sierra')
+        self.pagina.fill('[name="contacto"]', 'Eva')
+        self.pagina.fill('[name="correo"]', 'eva@example.com')
+        self.pagina.fill('[name="municipio"]', 'Tapalpa')
+        self.pagina.check('[name="acepto"]')
+        self.pagina.click('#negocios-form button[type="submit"]')
+        self.pagina.wait_for_selector('#negocios-form .form-status:has-text("Gracias")')
+        self.assertEqual(InteresNegocio.objects.get().negocio, 'Hostal Sierra')
 
     def test_guardar_favorito_y_cerrar_sesion(self):
         self.iniciar_sesion()

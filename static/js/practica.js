@@ -54,7 +54,7 @@
   }
   // Visita comprobada: las coordenadas se envían una vez para compararlas y el servidor no las guarda.
   const visit = document.getElementById('visit-check'), visitStatus = document.getElementById('visit-status');
-  function visitDone(fecha){visit.disabled=true;visit.textContent='Visita comprobada';visitStatus.textContent=`La comprobaste el ${fecha}.`;}
+  function visitDone(fecha){visit.disabled=true;visit.textContent='Visita comprobada';visitStatus.textContent=`La comprobaste el ${new Date(`${fecha}T00:00:00`).toLocaleDateString('es-MX')}.`;}
   const geoErrors={1:'No diste permiso para usar tu ubicación.',2:'Tu dispositivo no pudo obtener tu ubicación.',3:'Tu dispositivo tardó demasiado en obtener tu ubicación.'};
   visit.addEventListener('click',()=>{
     if(!window.InfoTripSession?.authenticated){

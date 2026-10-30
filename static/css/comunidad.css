@@ -408,3 +408,9 @@ details[open] summary::before {
 .passport-stamp--done { border: 2px solid #17643A; background: #E7F6EC; }
 .passport-stamp--done .passport-state { color: #17643A; font-weight: 700; }
 .passport-card { padding: 1.25rem; border-radius: 1.25rem; background: #F3EFFF; margin-bottom: 1rem; }
+
+.campo-trampa { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.community-form label.negocios-acepto { display: block; }
+.community-form label.negocios-acepto input { display: inline; width: auto; margin: 0 .4rem 0 0; vertical-align: middle; }
+.community-form .form-status:empty { display: none; }
+.passport-stamp a { color: inherit; }

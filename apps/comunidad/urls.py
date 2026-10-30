@@ -7,6 +7,7 @@ from .bote import (
     BoteView, GastoBoteView, GastosBoteView, MisBotesView, ParticipanteBoteView, PublicarBoteView, UnirseBoteView,
 )
 from .cuenta import EliminarCuentaView
+from .negocios import InteresNegocioView
 from .pasaporte import CompartirPasaporteView, MiPasaporteView
 from .visitas import VisitaView
 urlpatterns = [
@@ -24,6 +25,7 @@ urlpatterns = [
     path('botes/<uuid:enlace>/unirse/', UnirseBoteView.as_view(), name='bote-unirse'),
     path('mis-botes/', MisBotesView.as_view(), name='mis-botes'),
     path('destinos/<slug:slug>/visita/', VisitaView.as_view(), name='visita'),
+    path('negocios/interes/', InteresNegocioView.as_view(), name='interes-negocio'),
     path('mi-pasaporte/', MiPasaporteView.as_view(), name='mi-pasaporte'),
     path('mi-pasaporte/compartir/', CompartirPasaporteView.as_view(), name='compartir-pasaporte'),
     path('destinos/<slug:slug>/colaboraciones/', ColaboracionesView.as_view(), name='colaboraciones'),

@@ -53,3 +53,9 @@ Tareas que no se pueden automatizar desde el código. Marca cada una al completa
 
 - [ ] **Mover el proyecto fuera de OneDrive** (por ejemplo a `C:\dev\InfoTrip`). La sincronización de `.venv314`, `.venv`, `db.sqlite3` y las cachés de `uv` puede corromper archivos y ralentizar el equipo. Hacerlo con el editor y los servidores cerrados.
 - [ ] **Decidir qué hacer con los entornos virtuales duplicados** (`.venv` y `.venv314`) y las carpetas `.uv-cache` y `.runtime-python` de la carpeta superior. No se borró nada.
+
+## Funciones de viajeros
+
+- Contrastar los 12 Pueblos Mágicos con la lista oficial y publicar las fichas de Cocula, Sayula y Temacapulín con coordenadas verificadas (ver `docs/catalogo-inicial.md`).
+- Revisar los textos nuevos de privacidad y términos: bote, ubicación, pasaporte y negocios.
+- Revisar en `/admin/comunidad/interesnegocio/` los negocios que dejen sus datos y borrarlos si lo piden.

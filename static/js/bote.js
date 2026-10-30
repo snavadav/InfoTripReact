@@ -7,6 +7,7 @@
   const conceptos = {comida: 'Comida', transporte: 'Transporte', entrada: 'Entradas', alojamiento: 'Alojamiento', otros: 'Otros'};
   let bote = null, editando = null;
 
+  const fechaLegible = fecha => new Date(`${fecha}T00:00:00`).toLocaleDateString('es-MX');
   const dinero = valor => new Intl.NumberFormat('es-MX', {style: 'currency', currency: 'MXN'}).format(Number(valor));
   function nodo(tag, texto, clase) {
     const el = document.createElement(tag);
@@ -64,7 +65,7 @@
       const tarjeta = nodo('article', null, 'bote-gasto');
       tarjeta.append(nodo('h3', `${gasto.descripcion} · ${dinero(gasto.monto)}`));
       const reparto = gasto.entre.length === bote.participantes.length ? 'todos' : gasto.entre.map(nombreDe).join(', ');
-      tarjeta.append(nodo('p', `${conceptos[gasto.concepto]} · ${gasto.fecha} · pagó ${nombreDe(gasto.pagado_por)} · entre ${reparto}`));
+      tarjeta.append(nodo('p', `${conceptos[gasto.concepto]} · ${fechaLegible(gasto.fecha)} · pagó ${nombreDe(gasto.pagado_por)} · entre ${reparto}`));
       if (gasto.publicado) tarjeta.append(nodo('p', 'Enviado a revisión para otros viajeros', 'community-note'));
       if (gasto.puede_editar) {
         const acciones = nodo('div', null, 'trip-actions');

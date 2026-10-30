@@ -328,3 +328,21 @@ class PasaporteCompartido(models.Model):
     usuario = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='pasaporte')
     enlace = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     creado = models.DateTimeField(auto_now_add=True)
+
+
+class InteresNegocio(models.Model):
+    """Un negocio dejó sus datos para platicar. Solo los ve el personal; se pueden borrar desde el admin."""
+    negocio = models.CharField(max_length=150)
+    contacto = models.CharField(max_length=100)
+    correo = models.EmailField()
+    telefono = models.CharField(max_length=30, blank=True)
+    municipio = models.CharField(max_length=100)
+    mensaje = models.TextField(max_length=1000, blank=True)
+    atendido = models.BooleanField(default=False)
+    creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-creado', '-pk']
+
+    def __str__(self):
+        return f'{self.negocio} · {self.municipio}'

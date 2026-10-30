@@ -107,6 +107,7 @@ class PaginaTests(MisionesBase):
         self.assertContains(pagina, '/destinos/lugar/?dato=horarios#sugerir-dato')
         self.assertContains(pagina, f'{len(Colaboracion.CAMPOS) * 2} misiones')
         self.assertContains(pagina, 'data-misiones')
+        self.assertContains(pagina, 'js/medicion.js', count=1)
 
     def test_no_muestra_ocultos(self):
         self.crear_destino('Importado', self.tapalpa, es_activo=False)
