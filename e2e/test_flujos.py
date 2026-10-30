@@ -11,7 +11,7 @@ from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.core import mail
 from django.core.cache import cache
 
-from apps.comunidad.models import Aporte, InteresNegocio, Viaje
+from apps.comunidad.models import Aporte, InteresNegocio, PropuestaLugar, Viaje
 from apps.comunidad.moderacion import moderar
 from apps.destinos.models import Destino, Lugar, Municipio, Region
 from apps.metricas.models import Evento
@@ -83,7 +83,7 @@ class FlujosTests(StaticLiveServerTestCase):
         self.pagina.wait_for_url(lambda url: '/login/' not in url)
 
     def test_paginas_publicas_sin_violaciones_de_csp(self):
-        for ruta in ['/', '/destinos/', '/destinos/mirador/', '/destinos/mirador/costos/', '/costos/', '/misiones/', '/pasaporte/', '/negocios/', '/login/', '/registro/', '/api/v1/docs/', '/no-existe/']:
+        for ruta in ['/', '/destinos/', '/destinos/mirador/', '/destinos/mirador/costos/', '/costos/', '/misiones/', '/pasaporte/', '/negocios/', '/lugares/proponer/', '/login/', '/registro/', '/api/v1/docs/', '/no-existe/']:
             with self.subTest(ruta=ruta):
                 self.abrir(ruta)
                 self.pagina.wait_for_load_state('load')
@@ -452,6 +452,31 @@ class FlujosTests(StaticLiveServerTestCase):
         self.pagina.wait_for_selector('#resena-titulo:has-text("Editar mi reseña")')
         self.pagina.wait_for_selector('.estado-lugar[data-abierto="true"][aria-pressed="true"]')
         self.assertIn('Muy rico', self.pagina.inner_text('.contribution-list'))
+
+    def test_proponer_un_lugar_y_aprobarlo(self):
+        Lugar.objects.create(nombre='Fonda Doña Ana', tipo='comer', subtipo='restaurant', latitud=19.9, longitud=-103.7)
+        self.contexto.grant_permissions(['geolocation'], origin=self.live_server_url)
+        self.contexto.set_geolocation({'latitude': 19.9, 'longitude': -103.7})
+        self.iniciar_sesion()
+        self.abrir('/lugares/proponer/')
+        self.pagina.fill('#propuesta-form [name="nombre"]', 'Fonda Dona Ana')
+        self.pagina.select_option('#propuesta-form [name="subtipo"]', 'restaurant')
+        # Sin punto no se envía nada.
+        self.pagina.click('#propuesta-form button[type="submit"]')
+        self.pagina.wait_for_selector('#propuesta-form .form-status:has-text("marcar dónde")')
+        self.pagina.click('#propuesta-ubicacion')
+        self.pagina.wait_for_selector('#propuesta-punto:has-text("Arrastra")')
+        # Ya existe algo parecido: pregunta antes de guardar.
+        self.pagina.click('#propuesta-form button[type="submit"]')
+        self.pagina.wait_for_selector('#propuesta-parecidos:not([hidden])')
+        self.assertIn('Fonda Doña Ana', self.pagina.inner_text('#propuesta-parecidos-lista'))
+        self.assertFalse(PropuestaLugar.objects.exists())
+        self.pagina.click('#propuesta-distinto')
+        self.pagina.wait_for_selector('#propuesta-form .form-status:has-text("Recibimos")')
+        propuesta = PropuestaLugar.objects.get()
+        moderar(propuesta, Usuario.objects.create_superuser('m@example.com', 'Mod', 'P', CLAVE), 'publicado', 'Revisada')
+        self.abrir(f'/lugares/{propuesta.lugar_id}/')
+        self.pagina.wait_for_selector('text=Agregado por la comunidad')
 
     def test_guardar_favorito_y_cerrar_sesion(self):
         self.iniciar_sesion()

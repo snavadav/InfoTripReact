@@ -59,6 +59,7 @@
       </section>
       {% include 'destinos/tarjetas.html' %}
       {% if pagina.has_other_pages %}<nav class="pagination" aria-label="Páginas de destinos">{% if pagina.has_previous %}<a href="?{{ filtros }}&page={{ pagina.previous_page_number }}">← Anterior</a>{% endif %}<span>{{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>{% if pagina.has_next %}<a href="?{{ filtros }}&page={{ pagina.next_page_number }}">Siguiente →</a>{% endif %}</nav>{% endif %}
+      <p class="explorer-enlace"><a href="{% url 'proponer-lugar' %}">¿Falta un lugar en el mapa? Propónlo →</a></p>
       <p class="explorer-enlace"><a href="{% url 'costos-indice' %}">¿Cuánto cuesta cada destino? Compara gastos reales →</a></p>
       {% include 'destinos/footer.html' %}
     </div>

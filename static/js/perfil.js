@@ -71,6 +71,20 @@
       });
     } catch(error){target.append(node('p',error.message));}
   }
+  async function loadPlaceProposals() {
+    const target=document.getElementById('my-place-proposals');
+    try {
+      const data=await InfoTrip.api('/api/v1/lugares/propuestas/');
+      if(!data.results.length)target.append(node('p','Todavía no has propuesto lugares.'));
+      data.results.forEach(item=>{
+        const row=node('article',null,'community-box');
+        if(item.lugar&&item.estado==='publicado'){const link=node('a',item.nombre);link.href=`/lugares/${item.lugar}/`;row.append(link);}
+        else row.append(node('strong',item.nombre));
+        row.append(node('p',item.estado_nombre));
+        target.append(row);
+      });
+    } catch(error){target.append(node('p',error.message));}
+  }
   // Avisos: los no leídos se marcan como leídos una vez mostrados.
   async function loadNotices() {
     const notices=document.getElementById('my-notices');
@@ -115,7 +129,7 @@
       form.elements.avisos_correo.checked=user.avisos_correo;
       document.getElementById('profile-email').textContent=`${user.email} · ${user.es_verificado?'Correo confirmado':'Correo pendiente'}`;
       if(user.foto_perfil){const image=document.getElementById('profile-photo');image.src=user.foto_perfil;image.hidden=false;}
-      document.getElementById('profile-content').hidden=false;status.textContent='';await Promise.all([loadNotices(),load(),loadPlaceReviews()]);
+      document.getElementById('profile-content').hidden=false;status.textContent='';await Promise.all([loadNotices(),load(),loadPlaceReviews(),loadPlaceProposals()]);
     }catch(error){status.textContent=error.message;document.getElementById('profile-login').hidden=false;}
   })();
 })();

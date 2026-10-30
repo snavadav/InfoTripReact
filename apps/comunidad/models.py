@@ -4,6 +4,7 @@ from django.conf import settings
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.urls import reverse
+from apps.destinos.models import Lugar
 
 
 # Lo comparten aportes y reseñas de lugares; una constante para que el esquema de la API les dé un solo nombre.
@@ -427,3 +428,48 @@ class ConfirmacionLugar(models.Model):
     class Meta:
         ordering = ['-fecha', '-pk']
         constraints = [models.UniqueConstraint(fields=['lugar', 'autor'], name='una_confirmacion_de_lugar_por_persona')]
+
+
+class PropuestaLugar(Moderable):
+    """Un lugar que falta en el mapa. El Lugar público se crea al aprobarla; el nombre del autor no se muestra."""
+    ESTADOS = [('pendiente', 'Pendiente'), ('publicado', 'Aprobada'), ('oculto', 'No publicada')]
+    autor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='propuestas_lugar')
+    nombre = models.CharField(max_length=200)
+    subtipo = models.CharField(max_length=15, choices=Lugar.SUBTIPOS)
+    latitud = models.DecimalField(max_digits=9, decimal_places=6)
+    longitud = models.DecimalField(max_digits=9, decimal_places=6)
+    direccion = models.CharField(max_length=300, blank=True)
+    telefono = models.CharField(max_length=60, blank=True)
+    sitio_web = models.URLField(max_length=300, blank=True)
+    horario = models.CharField(max_length=200, blank=True)
+    # Solo para el equipo: nunca se publica.
+    nota = models.TextField(max_length=500, blank=True)
+    estado = models.CharField(max_length=12, choices=ESTADOS, default='pendiente')
+    lugar = models.OneToOneField('destinos.Lugar', null=True, blank=True, on_delete=models.PROTECT,
+                                 related_name='propuesta', editable=False)
+    creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-creado', '-pk']
+        verbose_name = 'propuesta de lugar'
+        verbose_name_plural = 'propuestas de lugares'
+
+    def __str__(self):
+        return f'{self.nombre} · {self.get_subtipo_display()}'
+
+    def registrar_moderacion(self, **campos):
+        return self.revisiones.create(**campos)
+
+    def enlace_publicado(self):
+        return reverse('lugar-detalle', kwargs={'pk': self.lugar_id})
+
+    def aviso_para_autor(self, anterior, estado):
+        if estado == 'publicado':
+            return f'Aprobamos tu propuesta: {self.nombre} ya está en el mapa.'
+        if estado == 'oculto':
+            return f'Revisamos tu propuesta de {self.nombre} y no la publicamos.'
+        return None
+
+
+class RevisionPropuestaLugar(RegistroModeracion):
+    propuesta = models.ForeignKey(PropuestaLugar, on_delete=models.PROTECT, related_name='revisiones')

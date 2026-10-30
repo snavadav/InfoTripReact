@@ -76,6 +76,12 @@ class Destino(models.Model):
         return self.nombre
 
 
+# Subtipo de OpenStreetMap → tipo de Lugar.
+TIPO_DE_SUBTIPO = {
+    'restaurant': 'comer', 'fast_food': 'comer', 'cafe': 'comer', 'bar': 'comer', 'pub': 'comer',
+    'hotel': 'dormir', 'motel': 'dormir', 'hostel': 'dormir', 'guest_house': 'dormir', 'apartment': 'dormir',
+    'fuel': 'gasolina', 'pharmacy': 'farmacia', 'atm': 'cajero', 'bank': 'cajero',
+}
 TIPOS_DE_LUGAR = [('comer', 'Comer'), ('dormir', 'Dormir'), ('gasolina', 'Gasolina'), ('farmacia', 'Farmacia'),
                   ('cajero', 'Cajero o banco')]
 

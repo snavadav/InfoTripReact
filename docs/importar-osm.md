@@ -70,3 +70,7 @@ python manage.py importar_lugares
 - Repetirlo trae los cambios de OpenStreetMap. Lo que edites en `/admin/destinos/lugar/` queda protegido y no se pisa. Para retirar un lugar, ocúltalo.
 - `--retirar-ausentes` oculta lo que ya no aparece en OpenStreetMap. No lo uses si la descarga parece incompleta.
 - Pocos lugares traen horario o teléfono: la página los muestra como registrados y pide confirmar antes de ir.
+
+## Lugares propuestos por la comunidad
+
+Las personas proponen lugares en `/lugares/proponer/`. Se revisan en `/admin/moderacion/`, donde se ven los parecidos a menos de 150 m y se puede corregir lo escrito antes de aprobar. Al aprobar se crea el lugar con `osm_id` vacío: así queda separado de lo que viene de OpenStreetMap y la importación nunca lo toca. El municipio se toma de lo publicado más cercano y se puede corregir en el admin.

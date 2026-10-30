@@ -12,6 +12,7 @@
 <details class="community-box"><summary>Eliminar mi cuenta</summary><p>Se borrarán tu perfil, viajes, favoritos y aportes. No se puede deshacer.</p><form id="delete-account-form" class="community-form"><label>Confirma tu contraseña<input name="password" type="password" required autocomplete="current-password"></label><button type="submit">Eliminar mi cuenta</button><p class="form-status" role="status"></p></form></details>
 <section class="community-section" aria-labelledby="notices-title"><h2 id="notices-title">Avisos</h2><p class="community-note">Novedades de tus aportes, tus viajes y tus lugares guardados.</p><div id="my-notices"></div></section>
 <section class="community-section"><h2>Mis reseñas de lugares</h2><div id="my-place-reviews"></div></section>
+<section class="community-section"><h2>Lugares que propuse</h2><p class="community-note"><a href="/lugares/proponer/">Proponer otro lugar →</a></p><div id="my-place-proposals"></div></section>
 <section class="community-section"><h2>Mis aportes</h2><p class="community-note">Puedes editar o retirar tus aportes. Cada edición requiere una nueva revisión.</p><div id="my-contributions"></div><button type="button" id="more-contributions" hidden>Cargar más</button></section>
 </div><a id="profile-login" href="/login/" hidden>Iniciar sesión</a>{% include 'destinos/footer.html' %}</main>{% endblock %}
 {% block extra_js %}<script src="{% static 'js/cuenta-api.js' %}"></script><script src="{% static 'js/perfil.js' %}"></script>{% endblock %}

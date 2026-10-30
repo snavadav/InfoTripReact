@@ -9,6 +9,7 @@ from .bote import (
 from .cuenta import EliminarCuentaView
 from .negocios import InteresNegocioView
 from .pasaporte import CompartirPasaporteView, MiPasaporteView
+from .propuestas_lugar import PropuestasLugarView
 from .resenas_lugar import (
     EstadoLugarView, MiOpinionLugarView, MisResenasLugarView, ReportarResenaLugarView, ResenasLugarView,
 )
@@ -29,6 +30,7 @@ urlpatterns = [
     path('mis-botes/', MisBotesView.as_view(), name='mis-botes'),
     path('destinos/<slug:slug>/visita/', VisitaView.as_view(), name='visita'),
     path('negocios/interes/', InteresNegocioView.as_view(), name='interes-negocio'),
+    path('lugares/propuestas/', PropuestasLugarView.as_view(), name='lugar-propuestas'),
     path('lugares/<int:pk>/resenas/', ResenasLugarView.as_view(), name='lugar-resenas'),
     path('lugares/<int:pk>/mi-opinion/', MiOpinionLugarView.as_view(), name='lugar-mi-opinion'),
     path('lugares/<int:pk>/estado/', EstadoLugarView.as_view(), name='lugar-estado'),

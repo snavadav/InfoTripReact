@@ -5,7 +5,8 @@ from django.urls import reverse
 from datetime import timedelta
 from django.utils import timezone
 from .models import (
-    Aporte, Colaboracion, ConfirmacionLugar, Reporte, ReporteColaboracion, ReporteResenaLugar, ResenaLugar,
+    Aporte, Colaboracion, ConfirmacionLugar, PropuestaLugar, Reporte, ReporteColaboracion, ReporteResenaLugar,
+    ResenaLugar,
 )
 
 POR_SECCION = 10
@@ -47,6 +48,11 @@ def cola_moderacion(request):
             'Reportes de información abiertos', ReporteColaboracion, '?resuelto__exact=0',
             ReporteColaboracion.objects.filter(resuelto=False).select_related('colaboracion__destino'),
             lambda r: f'Reporte sobre {r.colaboracion.get_tipo_display().lower()} · {r.colaboracion.destino.nombre}'))
+    if request.user.has_perm('comunidad.view_propuestalugar'):
+        secciones.append(seccion(
+            'Lugares propuestos', PropuestaLugar, '?estado__exact=pendiente',
+            PropuestaLugar.objects.filter(estado='pendiente').select_related('autor'),
+            lambda p: f'{p.nombre} · {p.get_subtipo_display()} · {p.autor.nombre}'))
     if request.user.has_perm('comunidad.view_resenalugar'):
         secciones.append(seccion(
             'Reseñas de lugares pendientes', ResenaLugar, '?estado__exact=pendiente',

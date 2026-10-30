@@ -168,7 +168,8 @@ class ColaModeracionTests(DatosModeracion):
         self.assertEqual(respuesta.status_code, 200)
         totales = {s['titulo']: s['total'] for s in respuesta.context['secciones']}
         self.assertEqual(totales, {'Aportes pendientes': 2, 'Colaboraciones pendientes': 1, 'Reportes abiertos': 1,
-                                   'Reportes de información abiertos': 0, 'Reseñas de lugares pendientes': 0,
+                                   'Reportes de información abiertos': 0, 'Lugares propuestos': 0,
+                                   'Reseñas de lugares pendientes': 0,
                                    'Reportes de reseñas de lugares abiertos': 0,
                                    'Lugares que alguien dice que cerraron (últimos 90 días)': 0})
         primero = respuesta.context['secciones'][0]['elementos'][0]

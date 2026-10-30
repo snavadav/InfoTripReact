@@ -9,6 +9,8 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
+from .models import TIPO_DE_SUBTIPO
+
 SERVIDOR = 'https://overpass-api.de/api/interpreter'
 AGENTE = 'InfoTrip-proyecto-academico/1.0 (https://github.com/snavadav/InfoTripReact)'
 SEGUNDOS_MAXIMOS = 360
@@ -41,13 +43,6 @@ out center tags;
 rel(area.jalisco)["boundary"="administrative"]["admin_level"="6"];
 out geom;
 """
-
-# Etiqueta de OSM → tipo de Lugar.
-TIPOS_DE_LUGAR = {
-    'restaurant': 'comer', 'fast_food': 'comer', 'cafe': 'comer', 'bar': 'comer', 'pub': 'comer',
-    'hotel': 'dormir', 'motel': 'dormir', 'hostel': 'dormir', 'guest_house': 'dormir', 'apartment': 'dormir',
-    'fuel': 'gasolina', 'pharmacy': 'farmacia', 'atm': 'cajero', 'bank': 'cajero',
-}
 
 # Etiqueta de OSM → (nombre en una frase, categoría del catálogo o None si no hay una clara).
 TIPOS = {
@@ -188,9 +183,9 @@ def interpretar_lugares(datos):
         clave = f"{elemento['type']}/{elemento['id']}"
         etiquetas = elemento.get('tags', {})
         centro = elemento.get('center', elemento)
-        subtipo = etiquetas.get('amenity') if etiquetas.get('amenity') in TIPOS_DE_LUGAR else etiquetas.get('tourism')
+        subtipo = etiquetas.get('amenity') if etiquetas.get('amenity') in TIPO_DE_SUBTIPO else etiquetas.get('tourism')
         nombre = etiquetas.get('name', '').strip()
-        if clave in vistos or not nombre or subtipo not in TIPOS_DE_LUGAR or 'lat' not in centro:
+        if clave in vistos or not nombre or subtipo not in TIPO_DE_SUBTIPO or 'lat' not in centro:
             omitidos += 1
             continue
         vistos.add(clave)
@@ -199,7 +194,7 @@ def interpretar_lugares(datos):
             omitidos += 1
             continue
         lugares.append({
-            'osm_id': clave, 'nombre': nombre[:200], 'tipo': TIPOS_DE_LUGAR[subtipo], 'subtipo': subtipo,
+            'osm_id': clave, 'nombre': nombre[:200], 'tipo': TIPO_DE_SUBTIPO[subtipo], 'subtipo': subtipo,
             'municipio': municipio, 'latitud': round(centro['lat'], 6), 'longitud': round(centro['lon'], 6),
             'direccion': _direccion(etiquetas), 'sitio_web': _sitio_web(etiquetas),
             'telefono': (etiquetas.get('phone') or etiquetas.get('contact:phone') or '').strip()[:60],

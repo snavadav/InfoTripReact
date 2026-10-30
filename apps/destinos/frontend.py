@@ -22,7 +22,7 @@ from apps.comunidad.selectors import (
 from .filtros import filtrar_destinos
 from .lugares import activos as lugares_activos, cercanos_de_destino
 from .fotos import FOTOS_CATALOGO
-from .models import Destino, Categoria, Municipio, Region, Servicio
+from .models import Destino, Categoria, Lugar, Municipio, Region, Servicio, TIPO_DE_SUBTIPO
 from .seo import seo_de_destino
 from .views import destinos_publicos
 
@@ -330,3 +330,12 @@ def lugar_detalle(request, pk):
         'como_llegar': 'https://www.google.com/maps/dir/?' + urlencode(
             {'api': 1, 'destination': f'{sitio.latitud},{sitio.longitud}'}),
     })
+
+
+def proponer_lugar(request):
+    # "pub" y "bar" se ven igual para quien propone: basta una opción.
+    opciones = [(clave, nombre) for clave, nombre in Lugar.SUBTIPOS if clave != 'pub']
+    return render(request, 'destinos/proponer_lugar.html', {'subtipos': [
+        {'nombre': nombre, 'opciones': [opcion for opcion in opciones if TIPO_DE_SUBTIPO[opcion[0]] == tipo]}
+        for tipo, nombre in Lugar.TIPOS
+    ]})

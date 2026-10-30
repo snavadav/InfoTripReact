@@ -211,3 +211,11 @@ a.trip-card img, .photo-placeholder { width: 76px; height: 76px; border-radius: 
 .estado-lugar[aria-pressed="true"] { border-color: var(--acento); color: var(--acento); }
 #estado-mensaje { color: var(--texto-2); font-size: .875rem; }
 #estado-mensaje:empty { display: none; }
+
+/* Proponer un lugar */
+.propuesta-intro { max-width: 640px; margin: .4rem 0 1rem; color: var(--texto-2); }
+.propuesta-layout > .community-box { margin-top: 0; }
+#propuesta-mapa { cursor: crosshair; }
+#propuesta-punto { font-size: .75rem; }
+.propuesta-parecidos { padding: .75rem; border: 1px solid var(--aviso); border-radius: var(--radio-s); background: var(--aviso-suave); font-size: .875rem; }
+.propuesta-parecidos ul { margin: .35rem 0 .6rem; }

@@ -21,6 +21,7 @@
         {% if sitio.horario %}<p>Horario registrado: {{ sitio.horario }}</p>{% endif %}
         {% if not sitio.direccion and not sitio.telefono and not sitio.sitio_web and not sitio.horario %}<p>Aún no tenemos dirección, teléfono ni horario de este lugar.</p>{% endif %}
         <p class="coordinates">{{ sitio.latitud }}, {{ sitio.longitud }}</p>
+        {% if not sitio.osm_id %}<p class="community-note">Agregado por la comunidad y revisado por el equipo. Puede estar desactualizado.</p>{% endif %}
         {% if sitio.osm_id %}<p class="community-note">Datos de © <a href="https://www.openstreetmap.org/{{ sitio.osm_id }}" target="_blank" rel="noopener noreferrer">colaboradores de OpenStreetMap</a> (<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">ODbL</a>). Pueden estar desactualizados.</p>{% endif %}
       </section>
       <section id="sigue-abierto"><h2>¿Sigue abierto?</h2>

@@ -1,0 +1,40 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}Proponer un lugar — InfoTrip{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/comunidad.css' %}"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""><link rel="stylesheet" href="{% static 'css/mapa.css' %}">{% endblock %}
+{% block content %}{% include 'partials/navBar.html' %}
+<main class="explore-shell detail-shell">
+  <a class="back-link" href="{% url 'destinos-listado' %}">← Explorar el mapa</a>
+  <span class="eyebrow">Falta en el mapa</span>
+  <h1>Proponer un lugar</h1>
+  <p class="propuesta-intro">¿Conoces un restaurante, un hotel o un servicio que no aparece? Márcalo y, cuando el equipo lo revise, lo verán los demás viajeros.</p>
+  <p id="propuesta-acceso" class="lugar-aviso" hidden>Necesitas <a href="{% url 'login' %}">iniciar sesión</a> para enviar una propuesta.</p>
+  <div class="detail-layout propuesta-layout">
+    <section>
+      <div id="propuesta-mapa" class="ficha-mapa ficha-mapa--grande" aria-label="Mapa: pulsa donde está el lugar"></div>
+      <div class="contribution-actions"><button type="button" id="propuesta-ubicacion">Usar mi ubicación</button><span id="propuesta-punto" class="coordinates" role="status">Pulsa el mapa donde está el lugar.</span></div>
+    </section>
+    <form id="propuesta-form" class="community-box community-form">
+      <label>Nombre del lugar<input name="nombre" required maxlength="200" autocomplete="off"></label>
+      <label>¿Qué es?<select name="subtipo" required>
+        {% for grupo in subtipos %}<optgroup label="{{ grupo.nombre }}">{% for clave, nombre in grupo.opciones %}<option value="{{ clave }}">{{ nombre }}</option>{% endfor %}</optgroup>{% endfor %}
+      </select></label>
+      <label>Dirección (opcional)<input name="direccion" maxlength="300"></label>
+      <label>Teléfono (opcional)<input name="telefono" type="tel" maxlength="60"></label>
+      <label>Sitio web (opcional)<input name="sitio_web" type="url" maxlength="300" placeholder="https://"></label>
+      <label>Horario (opcional)<input name="horario" maxlength="200" placeholder="Lunes a sábado, 9 a 18 h"></label>
+      <label>Nota para el equipo (opcional)<textarea name="nota" maxlength="500" rows="2" placeholder="Cómo lo conoces o cualquier aclaración"></textarea></label>
+      <p class="community-note">El nombre, el punto y los datos se publicarán tal como los apruebe el equipo; tu nombre no aparece. Escribe lo que conoces de primera mano y no copies datos de otros sitios de mapas o reseñas.</p>
+      <div id="propuesta-parecidos" class="propuesta-parecidos" hidden>
+        <p><strong>¿Es alguno de estos?</strong> Ya tenemos lugares parecidos muy cerca:</p>
+        <ul id="propuesta-parecidos-lista"></ul>
+        <button type="button" id="propuesta-distinto">No, es otro lugar: enviar</button>
+      </div>
+      <button type="submit">Enviar a revisión</button>
+      <p class="form-status" role="status"></p>
+    </form>
+  </div>
+  {% include 'destinos/footer.html' %}
+</main>
+{% endblock %}
+{% block extra_js %}<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script><script src="{% static 'js/mapa-base.js' %}" defer></script><script src="{% static 'js/cuenta-api.js' %}"></script><script src="{% static 'js/proponer-lugar.js' %}" defer></script>{% endblock %}
