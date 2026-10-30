@@ -1,0 +1,29 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}Pasaporte de Pueblos Mágicos de Jalisco — InfoTrip{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/comunidad.css' %}">{% endblock %}
+{% block content %}{% include 'partials/navBar.html' %}
+<main class="explore-shell legal-page" id="pasaporte">
+  <a class="back-link" href="{% url 'destinos-listado' %}">← Explorar destinos</a>
+  <span class="eyebrow">PASAPORTE DE JALISCO</span>
+  <h1>Los Pueblos Mágicos de Jalisco</h1>
+  <p>Abre la ficha de un pueblo cuando estés allí y comprueba tu visita con tu ubicación: ganas su sello. Tu ubicación solo se compara con la del lugar y no se guarda.</p>
+  <p id="pasaporte-progreso" role="status"><a href="{% url 'login' %}">Inicia sesión</a> para ver tus sellos.</p>
+  <div class="passport-grid">
+    {% for sello in sellos %}
+    <article class="passport-stamp" data-sello="{{ sello.slug }}">
+      <h2>{% if sello.disponible %}<a href="{% url 'destino-detalle' sello.slug %}">{{ sello.nombre }}</a>{% else %}{{ sello.nombre }}{% endif %}</h2>
+      <p class="passport-state">{% if sello.disponible %}Sin sello{% else %}Aún sin ficha en InfoTrip{% endif %}</p>
+    </article>
+    {% endfor %}
+  </div>
+  <section class="community-box" id="pasaporte-compartir" hidden>
+    <h2>Comparte tu pasaporte</h2>
+    <p>El enlace muestra tu nombre y qué pueblos llevas, sin fechas. Puedes retirarlo cuando quieras.</p>
+    <div class="contribution-actions"><button id="pasaporte-enlace" type="button">Compartir mi pasaporte</button><button id="pasaporte-retirar" type="button" hidden>Dejar de compartir</button></div>
+    <p id="pasaporte-estado" role="status"></p>
+  </section>
+  <p class="community-note">Una ubicación se puede falsear: el pasaporte es un juego, no una constancia oficial. InfoTrip no está afiliado a la Secretaría de Turismo ni al programa Pueblos Mágicos.</p>
+  {% include 'destinos/footer.html' %}
+</main>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/cuenta-api.js' %}"></script><script src="{% static 'js/pasaporte.js' %}" defer></script>{% endblock %}

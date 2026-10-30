@@ -20,3 +20,15 @@ def imagen_segura(archivo):
         return ContentFile(salida.getvalue(), name=f'{uuid4().hex}.jpg')
     except (UnidentifiedImageError, OSError, ValueError, Image.DecompressionBombError):
         raise serializers.ValidationError('No pudimos leer la imagen.')
+
+
+def miniatura_de(contenido):
+    """JPEG de hasta 800 px para tarjetas y listas, a partir de una imagen ya validada por imagen_segura()."""
+    contenido.seek(0)
+    with Image.open(contenido) as imagen:
+        copia = imagen.convert('RGB')
+        copia.thumbnail((800, 800))
+        salida = BytesIO()
+        copia.save(salida, format='JPEG', quality=75, optimize=True)
+    contenido.seek(0)
+    return ContentFile(salida.getvalue(), name=f'{uuid4().hex}.jpg')

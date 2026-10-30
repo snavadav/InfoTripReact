@@ -1,4 +1,6 @@
 from datetime import timedelta
+from django.core.management import call_command
+from io import StringIO
 from decimal import Decimal
 from io import BytesIO
 from tempfile import TemporaryDirectory
@@ -182,8 +184,53 @@ class ComunidadTests(APITestCase):
         from django.core.management import call_command
         from io import StringIO
         call_command('cargar_destinos_iniciales',stdout=StringIO())
-        self.assertEqual(Destino.objects.count(),6)
+        self.assertEqual(Destino.objects.count(),16)
         tequila=Destino.objects.get(slug='tequila');tequila.es_activo=False;tequila.descripcion='Edición propia';tequila.save()
         call_command('cargar_destinos_iniciales',stdout=StringIO())
         tequila.refresh_from_db();self.assertFalse(tequila.es_activo);self.assertEqual(tequila.descripcion,'Edición propia')
-        self.assertEqual(Destino.objects.count(),6)
+        self.assertEqual(Destino.objects.count(),16)
+
+
+class MiniaturasTests(APITestCase):
+    def setUp(self):
+        self.temp = TemporaryDirectory()
+        self.override = override_settings(MEDIA_ROOT=self.temp.name)
+        self.override.enable()
+        self.addCleanup(self.temp.cleanup)
+        self.addCleanup(self.override.disable)
+        self.user = Usuario.objects.create_user('foto@example.com', 'Ana', 'P', 'Clave-segura-483!', es_verificado=True)
+        token = RefreshToken.for_user(self.user)
+        token['correo_confirmado'] = True
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + str(token.access_token))
+        municipio = Municipio.objects.create(nombre='M', slug='m', region=Region.objects.create(nombre='R', slug='r'))
+        self.destino = Destino.objects.create(nombre='D', slug='d', municipio=municipio, descripcion='-', latitud=20, longitud=-103)
+
+    def subir(self):
+        imagen = BytesIO()
+        Image.new('RGB', (2000, 1000), 'blue').save(imagen, 'PNG')
+        return self.client.post('/api/v1/destinos/d/aportes/', {
+            'tipo': 'foto', 'texto': 'Foto', 'fecha_visita': str(timezone.localdate()),
+            'imagen': SimpleUploadedFile('a.png', imagen.getvalue(), content_type='image/png')}, format='multipart')
+
+    def test_subir_una_foto_crea_su_miniatura_y_las_paginas_la_usan(self):
+        self.assertEqual(self.subir().status_code, 201)
+        aporte = Aporte.objects.get()
+        with Image.open(aporte.miniatura.path) as miniatura:
+            self.assertEqual((miniatura.width, miniatura.format), (800, 'JPEG'))
+        with Image.open(aporte.imagen.path) as original:
+            self.assertEqual(original.width, 2000)
+        Aporte.objects.update(estado='publicado')
+        self.assertContains(self.client.get('/destinos/d/'), f'src="{aporte.miniatura.url}"')
+        self.assertContains(self.client.get('/destinos/'), f'src="{aporte.miniatura.url}"')
+
+    def test_el_comando_completa_fotos_antiguas_y_se_puede_repetir(self):
+        self.subir()
+        aporte = Aporte.objects.get()
+        Aporte.objects.update(miniatura='')
+        call_command('generar_miniaturas', stdout=StringIO())
+        aporte.refresh_from_db()
+        self.assertTrue(aporte.miniatura)
+        nombre = aporte.miniatura.name
+        call_command('generar_miniaturas', stdout=StringIO())
+        aporte.refresh_from_db()
+        self.assertEqual(aporte.miniatura.name, nombre)

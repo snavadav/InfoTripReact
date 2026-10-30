@@ -4,10 +4,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex">
   <title>InfoTrip — Crear cuenta</title>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
   <style>
+    /* Foco visible al navegar con teclado (accesibilidad). */
+    :focus-visible { outline: 2px solid #5835C4 !important; outline-offset: 2px; }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
@@ -15,9 +18,9 @@
       --bg-soft:   #F7F3EE;
       --primary:   #6741D9;
       --primary-h: #5835C4;
-      --accent:    #F76707;
+      --accent:    #C2500A;
       --ink:       #1F1635;
-      --muted:     #9B8FAF;
+      --muted:     #6F6385;
       --border:    #E8E0F5;
       --tag-bg:    #F3EFFF;
       --error:     #D94141;
@@ -266,7 +269,7 @@
 
     .btn-submit {
       width: 100%;
-      background: linear-gradient(135deg, var(--accent), #E05A00);
+      background: linear-gradient(135deg, var(--accent), #A64407);
       color: #fff;
       border: none;
       font-family: inherit;
@@ -283,7 +286,7 @@
       gap: .5rem;
     }
     .btn-submit:hover {
-      background: linear-gradient(135deg, #E05A00, #C94E00);
+      background: linear-gradient(135deg, #A64407, #C94E00);
       transform: translateY(-1px);
       box-shadow: 0 8px 24px rgba(247,103,7,.45);
     }
@@ -381,28 +384,16 @@
       <form id="registroForm">
         {% csrf_token %}
 
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label" for="nombre">Nombre</label>
-            <input class="form-input" type="text" id="nombre" name="nombre" placeholder="Tu nombre" required />
-            <span class="field-error" id="nombreError"></span>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="apellido">Apellido</label>
-            <input class="form-input" type="text" id="apellido" name="apellido" placeholder="Tu apellido" required />
-            <span class="field-error" id="apellidoError"></span>
-          </div>
+        <div class="form-group">
+          <label class="form-label" for="nombre">Nombre</label>
+          <input class="form-input" type="text" id="nombre" name="nombre" placeholder="Como quieres aparecer en tus aportes" required autocomplete="given-name" />
+          <span class="field-error" id="nombreError"></span>
         </div>
 
         <div class="form-group">
           <label class="form-label" for="email">Correo electrónico</label>
           <input class="form-input" type="email" id="email" name="email" placeholder="tu@correo.com" required autocomplete="email" />
           <span class="field-error" id="emailError"></span>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="ciudad_origen">Ciudad de origen <span style="color:var(--muted);font-weight:400">(opcional)</span></label>
-          <input class="form-input" type="text" id="ciudad_origen" name="ciudad_origen" placeholder="Ej: Guadalajara" />
         </div>
 
         <div class="form-group">
@@ -415,11 +406,7 @@
           <span class="field-error" id="passwordError"></span>
         </div>
 
-        <div class="form-group">
-          <label class="form-label" for="password2">Confirmar contraseña</label>
-          <input class="form-input" type="password" id="password2" name="password2" placeholder="Repite tu contraseña" required autocomplete="new-password" />
-          <span class="field-error" id="password2Error"></span>
-        </div>
+        <label class="show-password"><input type="checkbox" id="showPassword"> Mostrar contraseña</label>
 
         <p class="privacy-note">
           Al registrarte aceptas nuestro <a href="/privacidad/">aviso de privacidad</a> y los <a href="/terminos/">términos de uso</a> conforme a la LFPDPPP.
@@ -444,6 +431,7 @@
 </div>
 
 <script src="{% static 'js/registro.js' %}"></script>
+<script src="{% static 'js/medicion.js' %}" defer></script>
 
 </body>
 </html>

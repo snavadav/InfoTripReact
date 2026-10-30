@@ -1,4 +1,5 @@
 """Producción: falla al arrancar si falta configuración crítica en lugar de usar valores inseguros."""
+import sentry_sdk
 from django.core.exceptions import ImproperlyConfigured
 
 from .base import *  # noqa: F403
@@ -18,6 +19,12 @@ if not REDIS_URL:  # noqa: F405
         'Define REDIS_URL (por ejemplo redis://localhost:6379/0): con varios procesos, una caché '
         'local por proceso multiplica los límites de intentos de login.'
     )
+
+# ─── MONITOREO DE ERRORES (opcional; compatible con Sentry y GlitchTip) ────
+SENTRY_DSN = config('SENTRY_DSN', default='')
+if SENTRY_DSN:
+    # Sin el cuerpo de las peticiones: una ubicación enviada para comprobar una visita nunca debe guardarse.
+    sentry_sdk.init(dsn=SENTRY_DSN, send_default_pii=False, traces_sample_rate=0, max_request_body_size='never')
 
 # ─── ARCHIVOS ESTÁTICOS ───────────────────────────────────────
 # WhiteNoise con nombres con hash y compresión: caché de larga duración sin servir versiones viejas.

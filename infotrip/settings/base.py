@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sitemaps',
 
     # Terceros
     'rest_framework',
@@ -57,6 +58,7 @@ INSTALLED_APPS = [
     'apps.usuarios',
     'apps.destinos',
     'apps.comunidad',
+    'apps.metricas',
 ]
 
 # ─── MIDDLEWARE ───────────────────────────────────────────────
@@ -87,6 +89,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'apps.core.contexto.seo',
             ],
         },
     },
@@ -130,6 +133,9 @@ SPECTACULAR_SETTINGS = {
 
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    # Límite global contra abuso; login, registro y aportes tienen además los suyos, más estrictos.
+    'DEFAULT_THROTTLE_CLASSES': ('apps.core.limites.LimiteAnonimo', 'apps.core.limites.LimiteUsuario'),
+    'DEFAULT_THROTTLE_RATES': {'anon': '300/min', 'user': '600/min'},
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'apps.usuarios.authentication.CorreoJWTAuthentication',
     ),
@@ -201,6 +207,9 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='InfoTrip <no-reply@lo
 
 PUBLIC_BASE_URL = config('PUBLIC_BASE_URL', default='http://127.0.0.1:8000').rstrip('/')
 PASSWORD_RESET_TIMEOUT = 3600
+
+# Correo que aparece en el aviso de privacidad para solicitudes sobre datos personales.
+CONTACTO_PRIVACIDAD = config('CONTACTO_PRIVACIDAD', default='')
 
 # ─── REGISTRO (LOGGING) ───────────────────────────────────────
 # Todo va a la salida estándar (12-factor): Docker, systemd o la plataforma lo recogen.

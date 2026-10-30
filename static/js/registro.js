@@ -28,6 +28,10 @@ pwdInput.addEventListener('input', () => {
   strengthText.style.color = lvl.color;
 });
 
+document.getElementById('showPassword').addEventListener('change', event => {
+  pwdInput.type = event.target.checked ? 'text' : 'password';
+});
+
 // Submit
 const form      = document.getElementById('registroForm');
 const submitBtn = document.getElementById('submitBtn');
@@ -61,18 +65,13 @@ form.addEventListener('submit', async (e) => {
   clearFieldErrors();
 
   const pwd  = document.getElementById('password').value;
-  const pwd2 = document.getElementById('password2').value;
-  if (pwd !== pwd2) { showFieldError('password2', 'Las contraseñas no coinciden.'); return; }
 
   setLoading(true);
 
   const body = {
-    nombre:        document.getElementById('nombre').value,
-    apellido:      document.getElementById('apellido').value,
-    email:         document.getElementById('email').value,
-    ciudad_origen: document.getElementById('ciudad_origen').value,
-    password:      pwd,
-    password2:     pwd2,
+    nombre:   document.getElementById('nombre').value,
+    email:    document.getElementById('email').value,
+    password: pwd,
   };
 
   try {
@@ -84,7 +83,10 @@ form.addEventListener('submit', async (e) => {
     const data = await res.json();
 
     if (res.ok) {
-      window.location.href = '/login/?registro=1';
+      // El código ya va en camino: la página de acceso muestra directamente dónde escribirlo.
+      sessionStorage.setItem('infotrip_desafio', JSON.stringify({...data, email: body.email}));
+      const next = new URLSearchParams(location.search).get('next');
+      window.location.href = `/login/?registro=1${next ? `&next=${encodeURIComponent(next)}` : ''}`;
     } else {
       // Errores por campo
       Object.entries(data).forEach(([key, val]) => {

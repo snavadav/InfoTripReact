@@ -1,7 +1,8 @@
 """Planes privados y presupuestos introducidos por el viajero, en MXN."""
+import uuid
 from decimal import Decimal, ROUND_HALF_UP
 from django.db import transaction
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework import generics, serializers
 from rest_framework.permissions import IsAuthenticated
@@ -9,6 +10,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import Viaje
 from apps.destinos.models import Destino
+from apps.metricas.models import registrar
 
 
 def pesos(valor):
@@ -70,9 +72,10 @@ class ViajeSerializer(serializers.ModelSerializer):
             'lugares',
             'lugares_detalle',
             'resumen',
+            'enlace_publico',
             'actualizado',
         ]
-        read_only_fields = ['id', 'actualizado']
+        read_only_fields = ['id', 'actualizado', 'enlace_publico']
 
     def validate(self, attrs):
         start = attrs.get('fecha_inicio', getattr(self.instance, 'fecha_inicio', None))
@@ -113,6 +116,7 @@ class MisViajesView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(autor=self.request.user)
+        registrar('viaje_guardado', usuario=self.request.user)
 
 
 class ViajeView(generics.RetrieveUpdateDestroyAPIView):
@@ -141,3 +145,33 @@ class VincularLugarView(APIView):
             viaje.lugares.add(destino)
             viaje.save(update_fields=['actualizado'])
         return Response({'detail': 'Lugar agregado a la escapada.'})
+
+
+class CompartirViajeView(APIView):
+    """POST crea el enlace de solo lectura de una escapada propia; DELETE deja de compartirla."""
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(request=None, responses={200: inline_serializer('EnlaceDeViaje', fields={
+        'enlace_publico': serializers.UUIDField(),
+    })})
+    def post(self, request, pk):
+        viaje = get_object_or_404(Viaje, pk=pk, autor=request.user)
+        if not viaje.enlace_publico:
+            viaje.enlace_publico = uuid.uuid4()
+            viaje.save(update_fields=['enlace_publico'])
+        return Response({'enlace_publico': viaje.enlace_publico})
+
+    @extend_schema(responses={204: None})
+    def delete(self, request, pk):
+        Viaje.objects.filter(pk=pk, autor=request.user).update(enlace_publico=None)
+        return Response(status=204)
+
+
+def viaje_publico(request, enlace):
+    """Vista de solo lectura. No muestra notas, pendientes, presupuesto total ni el correo de quien organiza."""
+    viaje = get_object_or_404(Viaje.objects.select_related('autor').prefetch_related('lugares'),
+                              enlace_publico=enlace, autor__es_activo=True)
+    return render(request, 'comunidad/viaje_publico.html', {
+        'viaje': viaje, 'resumen': ViajeSerializer().get_resumen(viaje),
+        'lugares': [lugar for lugar in viaje.lugares.all() if lugar.es_activo],
+    })

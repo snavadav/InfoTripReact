@@ -1,4 +1,5 @@
 """Información aportada por personas: nunca se rellena un dato desconocido."""
+from django.db import IntegrityError, transaction
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema, inline_serializer
@@ -6,10 +7,11 @@ from rest_framework import generics, serializers
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Colaboracion, Confirmacion, Favorito
+from .models import Colaboracion, Confirmacion, Favorito, ReporteColaboracion
 from .selectors import confirmaciones_validas, dato_vigente, publicas
 from .views import AporteThrottle
 from apps.destinos.models import Destino
+from apps.metricas.models import registrar
 
 
 class ColaboracionSerializer(serializers.ModelSerializer):
@@ -72,7 +74,9 @@ class ColaboracionesView(generics.ListCreateAPIView):
         return publicas().filter(destino=self.destino()).exclude(tipo='respuesta').select_related('autor')
 
     def perform_create(self, serializer):
-        serializer.save(autor=self.request.user, destino=self.destino(), estado='pendiente')
+        destino = self.destino()
+        serializer.save(autor=self.request.user, destino=destino, estado='pendiente')
+        registrar('dato_enviado', usuario=self.request.user, destino=destino.slug)
 
 
 class FavoritoSerializer(serializers.ModelSerializer):
@@ -108,7 +112,9 @@ class FavoritoView(APIView):
     @extend_schema(request=None, responses={200: EstadoFavoritoSerializer})
     def put(self, request, slug):
         destino = get_object_or_404(Destino, slug=slug, es_activo=True)
-        Favorito.objects.get_or_create(autor=request.user, destino=destino)
+        _, creado = Favorito.objects.get_or_create(autor=request.user, destino=destino)
+        if creado:
+            registrar('favorito_guardado', usuario=request.user, destino=destino.slug)
         return Response({'favorito': True})
 
     @extend_schema(responses={204: None})
@@ -133,5 +139,31 @@ class ConfirmarDatoView(APIView):
             raise serializers.ValidationError('Hay una versión más reciente de este dato. Confirma esa versión.')
         hoy = timezone.localdate()
         Confirmacion.objects.update_or_create(dato=dato, autor=request.user, defaults={'fecha': hoy})
+        registrar('dato_confirmado', usuario=request.user, destino=dato.destino.slug)
         total = confirmaciones_validas().filter(dato=dato).count()
         return Response({'confirmaciones': total, 'fecha': hoy})
+
+
+class ReporteColaboracionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ReporteColaboracion
+        fields = ['id', 'motivo', 'resuelto', 'creado']
+        read_only_fields = ['resuelto', 'creado']
+
+
+class ReportarColaboracionView(generics.CreateAPIView):
+    """POST: reporta un dato práctico, una pregunta o una respuesta publicados por otra persona."""
+    permission_classes = [IsAuthenticated]
+    serializer_class = ReporteColaboracionSerializer
+    throttle_classes = [AporteThrottle]
+
+    def perform_create(self, serializer):
+        colaboracion = get_object_or_404(publicas(), pk=self.kwargs['pk'])
+        if colaboracion.autor_id == self.request.user.pk:
+            raise serializers.ValidationError('No puedes reportar tu propio aporte.')
+        try:
+            with transaction.atomic():
+                serializer.save(autor=self.request.user, colaboracion=colaboracion)
+                registrar('reporte_enviado', usuario=self.request.user, destino=colaboracion.destino.slug)
+        except IntegrityError:
+            raise serializers.ValidationError('Ya reportaste esta información.')

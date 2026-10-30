@@ -1,0 +1,16 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}Te invitaron a un bote — InfoTrip{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/comunidad.css' %}">{% endblock %}
+{% block content %}{% include 'partials/navBar.html' %}
+<main class="explore-shell legal-page">
+  <span class="eyebrow">BOTE DE LA ESCAPADA</span>
+  <h1>{{ viaje.autor.nombre }} te invitó a «{{ viaje.nombre }}»</h1>
+  <p>Anoten lo que gastó cada quien y InfoTrip calcula quién le debe a quién. Las demás personas del bote verán tu nombre y lo que anotes.</p>
+  <div class="community-box">
+    <button id="bote-unirse" type="button" data-enlace="{{ viaje.enlace_bote }}">Unirme al bote</button>
+    <p id="bote-unirse-estado" role="status"></p>
+  </div>
+  {% include 'destinos/footer.html' %}
+</main>{% endblock %}
+{% block extra_js %}<script src="{% static 'js/cuenta-api.js' %}"></script><script src="{% static 'js/bote-unirse.js' %}" defer></script>{% endblock %}

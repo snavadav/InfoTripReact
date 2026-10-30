@@ -38,7 +38,24 @@ Tareas que no se pueden automatizar desde el código. Marca cada una al completa
   - Hecho el 29/10/2026 con `git rm --cached`.
 - [x] Opcional: para correr las pruebas de concurrencia en local, `python manage.py test --settings=infotrip.settings.test_postgres` con `DB_*` de un usuario con permiso `CREATEDB`.
 
+## Mejoras de producto
+
+- [ ] **Revisar con alguien de derecho el aviso de privacidad y los términos** (`templates/legal/`). Son un borrador, marcado así en la página.
+- [ ] **Definir `CONTACTO_PRIVACIDAD`** con un correo real. Sin él, el aviso no muestra cómo contactar al equipo.
+
+- [ ] **Sacar las copias de seguridad del servidor.** El servicio `respaldos` las guarda en un volumen local; hay que copiarlas a otro lugar ([guía](operacion.md)).
+- [ ] **Definir `SENTRY_DSN`** si quieres alertas de errores (opcional).
+
+- [ ] **Sembrar datos prácticos** en los destinos: [guía](sembrar-contenido.md). Sin ellos, las fichas dicen "Sin confirmar" y el sitio aporta poco valor.
+- [ ] **Confirmar el origen de `tequila.jpg` y `ptVallarta.jpg`**: ya estaban en el proyecto sin autor ni licencia documentados. Si no son propias, hay que sustituirlas.
+
 ## Generales
 
 - [ ] **Mover el proyecto fuera de OneDrive** (por ejemplo a `C:\dev\InfoTrip`). La sincronización de `.venv314`, `.venv`, `db.sqlite3` y las cachés de `uv` puede corromper archivos y ralentizar el equipo. Hacerlo con el editor y los servidores cerrados.
 - [ ] **Decidir qué hacer con los entornos virtuales duplicados** (`.venv` y `.venv314`) y las carpetas `.uv-cache` y `.runtime-python` de la carpeta superior. No se borró nada.
+
+## Funciones de viajeros
+
+- Contrastar los 12 Pueblos Mágicos con la lista oficial y publicar las fichas de Cocula, Sayula y Temacapulín con coordenadas verificadas (ver `docs/catalogo-inicial.md`).
+- Revisar los textos nuevos de privacidad y términos: bote, ubicación, pasaporte y negocios.
+- Revisar en `/admin/comunidad/interesnegocio/` los negocios que dejen sus datos y borrarlos si lo piden.

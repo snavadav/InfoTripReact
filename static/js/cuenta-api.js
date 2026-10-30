@@ -19,6 +19,8 @@
     fecha_dato: 'Fecha de consulta', pregunta: 'Pregunta', destino: 'Destino', fecha_inicio: 'Salida',
     fecha_fin: 'Regreso', personas: 'Viajeros', presupuesto: 'Presupuesto', gastos: 'Gastos',
     actividades: 'Actividades', pendientes: 'Pendientes', notas: 'Notas', lugares: 'Lugares',
+    negocio: 'Negocio', contacto: 'Tu nombre', correo: 'Correo', telefono: 'Teléfono', municipio: 'Municipio',
+    mensaje: 'Mensaje', acepto: 'Autorización', descripcion: 'Descripción', fecha: 'Fecha', noches: 'Noches', pagado_por: 'Quién pagó', entre: 'Entre quiénes',
   };
   function message(data) {
     if (typeof data === 'string') return data;
@@ -65,5 +67,18 @@
     const status = form.querySelector('.form-status'); status.textContent='Procesando…';
     try {await operation(status);} catch(error) {status.textContent=error.message;} finally {if(button) button.disabled=false;}
   }
-  window.InfoTrip = {api, clear, hasSession, submit};
+  function loginUrl() { return `/login/?next=${encodeURIComponent(location.pathname + location.search + location.hash)}`; }
+  // Comparte con el menú del dispositivo o copia el enlace. Devuelve qué decirle a la persona ('' si canceló).
+  async function share(title, url, destino = '') {
+    try {
+      if (navigator.share) await navigator.share({title, url});
+      else await navigator.clipboard.writeText(url);
+    } catch (error) {
+      if (error.name === 'AbortError') return '';
+      return `Copia este enlace: ${url}`;
+    }
+    window.InfoTripMedicion?.send('enlace_compartido', destino);
+    return navigator.share ? 'Enlace compartido.' : 'Enlace copiado.';
+  }
+  window.InfoTrip = {api, clear, hasSession, loginUrl, share, submit};
 })();

@@ -1,0 +1,44 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}InfoTrip para negocios locales de Jalisco{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/comunidad.css' %}">{% endblock %}
+{% block content %}{% include 'partials/navBar.html' %}
+<main class="explore-shell legal-page">
+  <span class="eyebrow">PARA NEGOCIOS LOCALES</span>
+  <h1>¿Tienes un negocio en una zona turística de Jalisco?</h1>
+  <p>Hostales, restaurantes, guías y comercios: queremos saber qué te serviría para que los viajeros te encuentren con información correcta.</p>
+
+  <section class="community-box">
+    <h2>Lo que estamos explorando</h2>
+    <ul>
+      <li><strong>Tu ficha, con tus datos:</strong> corregir horarios y precios con la etiqueta "dato del negocio".</li>
+      <li><strong>Alertas:</strong> un aviso cuando la información de tu zona se quede vieja.</li>
+      <li><strong>Lo que preguntan los viajeros:</strong> saberlo y poder responderles.</li>
+    </ul>
+    <p class="community-note">Son ideas en prueba: todavía no existen y pueden cambiar según lo que nos cuentes.</p>
+  </section>
+
+  <section class="community-box">
+    <h2>Lo que nunca cambiaría</h2>
+    <p>Un pago jamás movería reseñas, orden en los resultados, moderación ni visibilidad. Si algún día hay contenido pagado, irá marcado como tal.</p>
+  </section>
+
+  <section class="community-box">
+    <h2>Platiquemos</h2>
+    <p>InfoTrip es un proyecto académico de la Universidad de Guadalajara. <strong>Hoy no vendemos nada ni cobramos.</strong> Déjanos tus datos solo si quieres conversar.</p>
+    <form id="negocios-form" class="community-form">
+      <label>Nombre del negocio<input name="negocio" maxlength="150" required></label>
+      <label>Tu nombre<input name="contacto" maxlength="100" required autocomplete="name"></label>
+      <label>Correo<input name="correo" type="email" maxlength="254" required autocomplete="email"></label>
+      <label>Teléfono (opcional)<input name="telefono" type="tel" maxlength="30" autocomplete="tel"></label>
+      <label>Municipio<input name="municipio" maxlength="100" required placeholder="Tapalpa"></label>
+      <label>¿Qué te gustaría que hiciera InfoTrip por tu negocio? (opcional)<textarea name="mensaje" maxlength="1000" rows="3"></textarea></label>
+      <label class="campo-trampa" aria-hidden="true">Sitio web<input name="sitio_web" tabindex="-1" autocomplete="off"></label>
+      <label class="negocios-acepto"><input name="acepto" type="checkbox" required> Autorizo que guarden estos datos para contactarme, según el <a href="{% url 'privacidad' %}">aviso de privacidad</a>.</label>
+      <button type="submit">Enviar</button>
+      <p class="form-status" role="status"></p>
+    </form>
+  </section>
+  {% include 'destinos/footer.html' %}
+</main>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/cuenta-api.js' %}"></script><script src="{% static 'js/negocios.js' %}" defer></script>{% endblock %}

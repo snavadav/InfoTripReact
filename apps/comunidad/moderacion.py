@@ -1,9 +1,13 @@
 """Moderación de contenido comunitario (aportes y colaboraciones) con una sola regla."""
 import logging
+from datetime import timedelta
 from django.urls import reverse
-from .models import Notificacion
+from django.utils import timezone
+from apps.metricas.models import registrar
+from .models import Aporte, Favorito, Notificacion
 
 registro = logging.getLogger('infotrip.moderacion')
+TEXTO_NOVEDAD = 'Hay información nueva sobre'
 
 
 def moderar(objeto, moderador, estado, motivo, registrar_sin_cambio=False):
@@ -27,6 +31,10 @@ def moderar(objeto, moderador, estado, motivo, registrar_sin_cambio=False):
                   moderador.pk)
     if cambia:
         avisar_al_autor(objeto, anterior, estado)
+        if estado == 'publicado' and getattr(objeto, 'tipo', '') in ('correccion', 'resena'):
+            avisar_a_quienes_lo_guardaron(objeto)
+        if estado == 'publicado' and isinstance(objeto, Aporte):
+            registrar('aporte_publicado', usuario=objeto.autor, destino=objeto.destino.slug)
     return cambia
 
 
@@ -36,3 +44,19 @@ def avisar_al_autor(objeto, anterior, estado):
     if texto:
         enlace = reverse('destino-detalle', kwargs={'slug': objeto.destino.slug}) if estado == 'publicado' else ''
         Notificacion.objects.create(usuario=objeto.autor, texto=texto, enlace=enlace, correo_pendiente=True)
+
+
+def avisar_a_quienes_lo_guardaron(objeto):
+    """Novedad en un lugar guardado. Como mucho un aviso por persona y lugar a la semana, para no cansar."""
+    destino = objeto.destino
+    enlace = reverse('destino-detalle', kwargs={'slug': destino.slug})
+    recientes = Notificacion.objects.filter(
+        enlace=enlace, texto__startswith=TEXTO_NOVEDAD, creado__gte=timezone.now() - timedelta(days=7),
+    ).values('usuario')
+    personas = (Favorito.objects.filter(destino=destino, autor__es_activo=True).exclude(autor=objeto.autor)
+                .exclude(autor__in=recientes).values_list('autor', flat=True))
+    Notificacion.objects.bulk_create([
+        Notificacion(usuario_id=persona, texto=f'{TEXTO_NOVEDAD} {destino.nombre}, uno de tus lugares guardados.',
+                     enlace=enlace, correo_pendiente=True)
+        for persona in personas
+    ])

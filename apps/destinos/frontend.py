@@ -12,12 +12,15 @@ from django.templatetags.static import static
 from django.utils import timezone
 from django.utils.text import slugify
 
-from apps.comunidad.models import Colaboracion
+from apps.comunidad.models import Aporte, Colaboracion
 from apps.comunidad.selectors import (
-    aportes_publicos, con_info_reciente, ficha_practica, preguntas_publicas, resumen,
+    MINIMO_CRONISTA, MINIMO_REPORTES, SLUGS_PUEBLOS, aportes_publicos, con_info_reciente, costos_de_destino,
+    costos_por_destino, cronistas, ficha_practica, misiones_por_destino, preguntas_publicas, resumen,
 )
 from .filtros import filtrar_destinos
+from .fotos import FOTOS_CATALOGO
 from .models import Destino, Categoria, Municipio, Region, Servicio
+from .seo import seo_de_destino
 from .views import destinos_publicos
 
 
@@ -58,7 +61,8 @@ FOTOS = {lugar['slug']: (lugar['imagen'], lugar['alt']) for lugar in INSPIRACION
 
 def presentar(destino):
     categorias = [categoria.nombre for categoria in destino.categorias.all()]
-    foto, alt = FOTOS.get(destino.slug, ('', ''))
+    catalogo = FOTOS_CATALOGO.get(destino.slug)
+    foto, alt = (catalogo['imagen'], catalogo['alt']) if catalogo else FOTOS.get(destino.slug, ('', ''))
     fotos = getattr(destino, 'fotos_publicas', [])
     return {
         'nombre': destino.nombre, 'slug': destino.slug, 'descripcion': destino.descripcion,
@@ -68,6 +72,10 @@ def presentar(destino):
         'direccion': destino.direccion, 'latitud': str(destino.latitud), 'longitud': str(destino.longitud),
         'imagen': foto, 'foto_url': fotos[0].imagen.url if fotos else '',
         'alt': fotos[0].texto if fotos else alt, 'editorial': False,
+        'credito': None if fotos else catalogo,
+        'osm_url': f'https://www.openstreetmap.org/{destino.osm_id}' if destino.osm_id else '',
+        'miniatura_url': (fotos[0].miniatura.url if fotos and fotos[0].miniatura else
+                          static(catalogo['miniatura']) if catalogo and not fotos else ''),
     }
 
 
@@ -75,6 +83,7 @@ def completar(lugar):
     lugar = dict(lugar)
     lugar['url'] = reverse('destino-detalle', kwargs={'slug': lugar['slug']})
     lugar['foto_url'] = lugar.get('foto_url') or (static(lugar['imagen']) if lugar['imagen'] else '')
+    lugar['miniatura_url'] = lugar.get('miniatura_url') or lugar['foto_url']
     if lugar['editorial']:
         # En inspiración se busca el nombre del lugar; no se inventa un punto GPS.
         destino_maps = f"{lugar['nombre']}, Jalisco, México"
@@ -142,13 +151,14 @@ class ExploracionForm(forms.Form):
 
     def __init__(self, *args, editorial=False, **kwargs):
         super().__init__(*args, **kwargs)
-        for campo, modelo in [
-            ('categoria', Categoria),
-            ('municipio', Municipio),
-            ('region', Region),
-            ('servicio', Servicio),
+        # Solo lo que tiene destinos publicados: un filtro sin resultados no le sirve a nadie.
+        for campo, modelo, relacion in [
+            ('categoria', Categoria, 'destinos__es_activo'),
+            ('municipio', Municipio, 'destinos__es_activo'),
+            ('region', Region, 'municipios__destinos__es_activo'),
+            ('servicio', Servicio, 'destinos__es_activo'),
         ]:
-            opciones = list(modelo.objects.values_list('slug', 'nombre'))
+            opciones = list(modelo.objects.filter(**{relacion: True}).distinct().values_list('slug', 'nombre'))
             if editorial and campo != 'servicio':
                 opciones = sorted({(slugify(lugar[campo]), lugar[campo]) for lugar in INSPIRACION})
             self.fields[campo].choices = [('', 'Todos')] + opciones
@@ -199,7 +209,7 @@ def listado(request):
             'q': texto,
             'formulario': formulario,
             'categoria': datos.get('categoria', ''),
-            'filtros': urlencode({k: v for k, v in datos.items() if v is not None and v != ''}),
+            'filtros': urlencode({k: v for k, v in datos.items() if v not in (None, '', False)}),
             'puntos_mapa': puntos,
             'editorial': editorial,
         },
@@ -215,11 +225,69 @@ def detalle(request, slug):
     else:
         destino = get_object_or_404(destinos_publicos(con_fotos=True), slug=slug)
         lugar = presentar(destino)
-    contexto = {'lugar': completar(lugar), 'hoy': timezone.localdate().isoformat()}
+    lugar = completar(lugar)
+    contexto = {'lugar': lugar, 'hoy': timezone.localdate().isoformat(), 'da_sello': slug in SLUGS_PUEBLOS}
     if destino is not None:
         contexto['practica'] = ficha_practica(destino)
         contexto['campos_practicos'] = Colaboracion.CAMPOS
         contexto['preguntas'] = Paginator(preguntas_publicas(destino), 8).get_page(request.GET.get('preguntas'))
         contexto['resumen'] = resumen(destino)
         contexto['aportes'] = Paginator(aportes_publicos(destino), 9).get_page(request.GET.get('aportes'))
+    contexto['seo'] = seo_de_destino(lugar, contexto.get('resumen'))
     return render(request, 'destinos/detalle.html', contexto)
+
+
+def creditos(request):
+    return render(request, 'legal/creditos.html', {'fotos': FOTOS_CATALOGO.values()})
+
+
+def costos_destino(request, slug):
+    destino = get_object_or_404(destinos_publicos(con_fotos=True), slug=slug)
+    lugar = completar(presentar(destino))
+    costos = costos_de_destino(destino)
+    seo = seo_de_destino(lugar)
+    seo['titulo'] = f"¿Cuánto cuesta ir a {lugar['nombre']}? Gastos reales de viajeros — InfoTrip"
+    seo['descripcion'] = descripcion_de_costos(lugar['nombre'], costos)
+    return render(request, 'destinos/costos.html', {
+        'lugar': lugar, 'costos': costos, 'seo': seo, 'minimo': MINIMO_REPORTES,
+    })
+
+
+def descripcion_de_costos(nombre, costos):
+    if costos['dia']:
+        return (f"Un día típico cuesta cerca de ${costos['dia']['total']:,.0f} MXN por persona en {nombre}, "
+                'según gastos reportados por viajeros en el último año.')
+    return f'Gastos reportados por viajeros en {nombre}: entrada, comida, alojamiento y transporte.'
+
+
+def costos_indice(request):
+    costos = costos_por_destino()
+    # Por concepto y por nombre: un ranking de totales compararía destinos con datos distintos.
+    filas = [{'destino': destino, 'montos': [fila['mediana'] for fila in costos[destino.pk]['conceptos']]}
+             for destino in Destino.objects.filter(pk__in=costos, es_activo=True).order_by('nombre')]
+    seo = {'titulo': '¿Cuánto cuesta viajar por Jalisco? — InfoTrip',
+           'descripcion': ('Compara lo que gastaron viajeros en destinos de Jalisco: '
+                           'entrada, comida, alojamiento y transporte.')}
+    return render(request, 'destinos/costos_indice.html', {
+        'filas': filas, 'seo': seo, 'minimo': MINIMO_REPORTES,
+        'encabezados': [nombre for _, nombre in Aporte.CONCEPTOS],
+    })
+
+
+def misiones(request):
+    destinos = Destino.objects.filter(es_activo=True).select_related('municipio').order_by('nombre')
+    municipio = request.GET.get('municipio', '')
+    municipios = Municipio.objects.filter(destinos__es_activo=True).distinct().order_by('nombre')
+    if municipio:
+        destinos = destinos.filter(municipio__slug=municipio)
+    destinos = list(destinos)
+    pendientes = misiones_por_destino([destino.pk for destino in destinos])
+    filas = [{'destino': destino, **pendientes[destino.pk]} for destino in destinos
+             if pendientes[destino.pk]['faltan'] or pendientes[destino.pk]['confirmar']]
+    seo = {'titulo': 'Misiones de la comunidad: qué falta saber en Jalisco — InfoTrip',
+           'descripcion': 'Ayuda a otros viajeros: cuenta los horarios, accesos y precios que aún faltan en Jalisco.'}
+    return render(request, 'destinos/misiones.html', {
+        'pagina': Paginator(filas, 12).get_page(request.GET.get('pagina')), 'municipios': municipios,
+        'municipio_actual': municipio, 'seo': seo, 'cronistas': cronistas(), 'minimo_cronista': MINIMO_CRONISTA,
+        'total_misiones': sum(len(fila['faltan']) + len(fila['confirmar']) for fila in filas),
+    })

@@ -7,7 +7,7 @@
 3. `POST /api/v1/auth/verificar-codigo/` recibe `desafio` y `codigo` como cadenas. Solo al acertar entrega `access`, `refresh` y `usuario`, marca `es_verificado` y actualiza `ultimo_acceso`.
 4. Reenviar usa nuevamente login con las credenciales. Hay que esperar 60 segundos; el nuevo desafío sustituye al anterior. El navegador conserva las credenciales solo en memoria mientras está abierto ese paso.
 
-Se requiere un código en cada inicio de sesión, incluso en cuentas verificadas. Confirma el control del buzón en ese momento, no la identidad legal ni la autenticidad de las reseñas. Django Admin conserva su inicio de sesión de personal independiente.
+Se requiere un código en cada inicio de sesión, incluso en cuentas verificadas, salvo que la persona marque "Recordar este dispositivo": entonces basta la contraseña durante 30 días en ese navegador. Cambiar la contraseña o el correo anula el recuerdo. Confirma el control del buzón en ese momento, no la identidad legal ni la autenticidad de las reseñas. Django Admin conserva su inicio de sesión de personal independiente.
 
 ## Probar ahora, sin correo real
 

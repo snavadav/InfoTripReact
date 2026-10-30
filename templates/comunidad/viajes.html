@@ -1,12 +1,13 @@
 {% extends 'base.html' %}{% load static %}
 {% block title %}Planear escapada — InfoTrip{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
 {% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/comunidad.css' %}"><link rel="stylesheet" href="{% static 'css/viajes.css' %}">{% endblock %}
 {% block content %}{% include 'partials/navBar.html' %}
 <main class="explore-shell trips-shell">
   <span class="eyebrow">DEL PLAN A LA ESCAPADA</span><h1 data-trip-label>Planear escapada</h1><p>Organiza tu salida y descubre cómo se reparte el presupuesto.</p>
   <p id="trip-status" role="status"></p><p id="trip-login" hidden><a href="{% url 'login' %}">Inicia sesión</a> para guardar y consultar tus viajes.</p>
   <div class="trips-layout">
-    <section aria-labelledby="saved-title"><div class="trips-heading"><h2 id="saved-title">Tus escapadas</h2><button id="new-trip" type="button">+ Crear</button></div><div id="saved-trips"></div><button id="more-trips" type="button" hidden>Cargar más</button></section>
+    <section aria-labelledby="saved-title"><div class="trips-heading"><h2 id="saved-title">Tus escapadas</h2><button id="new-trip" type="button">+ Crear</button></div><div id="saved-trips"></div><button id="more-trips" type="button" hidden>Cargar más</button><div id="joined-pots" hidden></div></section>
     <section class="community-box" aria-labelledby="editor-title">
       <h2 id="editor-title">Nueva escapada</h2>
       <form id="trip-form" class="community-form">

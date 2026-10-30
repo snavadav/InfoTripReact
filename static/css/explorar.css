@@ -302,7 +302,7 @@
 }
 .result-count {
   font-size: 13px;
-  color: #8a7d96;
+  color: #6F6385;
   margin: 20px 0 16px;
   font-weight: 500;
 }
@@ -432,7 +432,7 @@
   padding: 18px 0;
   margin-top: 32px;
   font-size: 10px;
-  color: #9a8ca8;
+  color: #6F6385;
 }
 
 /* ── Paginación ── */
@@ -464,7 +464,7 @@
 }
 .pagination span {
   font-size: 13px;
-  color: #8a7d96;
+  color: #6F6385;
   font-weight: 500;
 }
 
@@ -632,11 +632,11 @@
 .detail-information .coordinates {
   font-size: 11px;
   margin-top: 6px;
-  color: #9a8ca8;
+  color: #6F6385;
   font-family: monospace;
 }
 .editorial-note {
-  color: #9a8ca8;
+  color: #6F6385;
   font-size: 11px;
   line-height: 1.7;
   margin-top: 12px;
@@ -758,4 +758,17 @@
 @media (prefers-reduced-motion: reduce) {
   .trip-card > img { transition: none; }
   .trip-card { transition: none; }
+}
+
+/* Panel de filtros: plegable en móvil (filtros.js), siempre abierto en escritorio. */
+.filters-panel > summary {
+  cursor: pointer;
+  font-weight: 700;
+  padding: 12px 16px;
+  background: #fff;
+  border-radius: 14px;
+  margin-bottom: 12px;
+}
+@media (min-width: 768px) {
+  .filters-panel > summary { display: none; }
 }

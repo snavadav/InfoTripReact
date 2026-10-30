@@ -34,12 +34,16 @@ class DestinoSerializer(serializers.ModelSerializer):
     municipio = MunicipioSerializer(read_only=True)
     categorias = CategoriaSerializer(many=True, read_only=True)
     servicios = ServicioSerializer(many=True, read_only=True)
+    atribucion = serializers.SerializerMethodField()
+
+    def get_atribucion(self, destino) -> str | None:
+        return '© colaboradores de OpenStreetMap, ODbL' if destino.osm_id else None
 
     class Meta:
         model = Destino
         fields = [
             'id', 'nombre', 'slug', 'descripcion', 'municipio', 'categorias',
-            'servicios', 'direccion', 'latitud', 'longitud', 'fecha_actualizacion',
+            'servicios', 'direccion', 'latitud', 'longitud', 'fecha_actualizacion', 'atribucion',
         ]
 
 

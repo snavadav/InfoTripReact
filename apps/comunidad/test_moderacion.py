@@ -73,9 +73,10 @@ class MigracionHistorialTests(TransactionTestCase):
 
     def migrar(self, objetivo):
         executor = MigrationExecutor(connection)
-        executor.loader.build_graph()
+        # Solo comunidad retrocede: las demás apps siguen al día, y su estado debe reflejarlo.
+        otras = [nodo for nodo in executor.loader.graph.leaf_nodes() if nodo[0] != 'comunidad']
         executor.migrate(objetivo)
-        return executor.loader.project_state(objetivo).apps
+        return executor.loader.project_state(otras + objetivo).apps
 
     def tearDown(self):
         # Deja la base en la última migración para las demás pruebas.
@@ -166,7 +167,8 @@ class ColaModeracionTests(DatosModeracion):
         respuesta = self.client.get('/admin/moderacion/')
         self.assertEqual(respuesta.status_code, 200)
         totales = {s['titulo']: s['total'] for s in respuesta.context['secciones']}
-        self.assertEqual(totales, {'Aportes pendientes': 2, 'Colaboraciones pendientes': 1, 'Reportes abiertos': 1})
+        self.assertEqual(totales, {'Aportes pendientes': 2, 'Colaboraciones pendientes': 1, 'Reportes abiertos': 1,
+                                   'Reportes de información abiertos': 0})
         primero = respuesta.context['secciones'][0]['elementos'][0]
         self.assertEqual(primero['enlace'], f'/admin/comunidad/aporte/{antiguo.pk}/change/')
         self.assertContains(self.client.get('/admin/'), 'href="/admin/moderacion/"')

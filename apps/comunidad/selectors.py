@@ -4,10 +4,29 @@ Es la única puerta de `destinos` hacia `comunidad`: este módulo solo depende d
 comunidad y conoce los destinos por su clave foránea, así que nunca importa código de `destinos`.
 """
 from datetime import date, timedelta
+from statistics import median
 from django.db.models import Avg, Count, DateField, Exists, Max, Min, OuterRef, Prefetch, Q, Subquery, Value
 from django.db.models.functions import Coalesce, Greatest
 from django.utils import timezone
-from .models import Aporte, Colaboracion, Confirmacion
+from .models import Aporte, Colaboracion, Confirmacion, VisitaComprobada
+
+# Lista del programa federal consultada en prensa (docs/catalogo-inicial.md): confírmala si cambia.
+# El sello se activa solo en cuanto exista un destino publicado con ese slug.
+PUEBLOS_MAGICOS = [
+    ('ajijic', 'Ajijic'),
+    ('cocula', 'Cocula'),
+    ('lagos-de-moreno', 'Lagos de Moreno'),
+    ('mascota', 'Mascota'),
+    ('mazamitla', 'Mazamitla'),
+    ('san-sebastian-del-oeste', 'San Sebastián del Oeste'),
+    ('sayula', 'Sayula'),
+    ('talpa-de-allende', 'Talpa de Allende'),
+    ('tapalpa', 'Tapalpa'),
+    ('temacapulin', 'Temacapulín'),
+    ('tequila', 'Tequila'),
+    ('tlaquepaque', 'Tlaquepaque'),
+]
+SLUGS_PUEBLOS = [slug for slug, _ in PUEBLOS_MAGICOS]
 
 
 def publicados():
@@ -94,6 +113,63 @@ def resumen(destino):
     return {'resenas': resenas, 'gastos': gastos}
 
 
+# Con menos reportes, una cifra sería la opinión de una o dos personas.
+MINIMO_REPORTES = 3
+CONCEPTOS_DEL_DIA = ('entrada', 'comida', 'transporte')
+
+
+def _gastos_recientes():
+    return publicados().filter(tipo='gasto', fecha_visita__gte=timezone.localdate() - timedelta(days=365))
+
+
+def _resumir_costos(filas):
+    """`filas`: (concepto, monto, fecha_visita). Bajo el mínimo de reportes no expone ninguna cifra."""
+    por_concepto = {}
+    for concepto, monto, fecha in filas:
+        por_concepto.setdefault(concepto, []).append((monto, fecha))
+    conceptos = []
+    for clave, nombre in Aporte.CONCEPTOS:
+        reportes = por_concepto.get(clave, [])
+        suficiente = len(reportes) >= MINIMO_REPORTES
+        montos = [monto for monto, _ in reportes]
+        conceptos.append({
+            'clave': clave, 'nombre': nombre, 'cantidad': len(reportes), 'suficiente': suficiente,
+            'mediana': median(montos) if suficiente else None,
+            'minimo': min(montos) if suficiente else None,
+            'maximo': max(montos) if suficiente else None,
+            'ultima_fecha': max(fecha for _, fecha in reportes) if suficiente else None,
+        })
+    del_dia = [fila for fila in conceptos if fila['suficiente'] and fila['clave'] in CONCEPTOS_DEL_DIA]
+    return {
+        'conceptos': conceptos,
+        'hay_datos': any(fila['suficiente'] for fila in conceptos),
+        # Con un solo concepto no es un día: "solo comida" parecería más barato que "comida y transporte".
+        'dia': {'total': sum(fila['mediana'] for fila in del_dia),
+                'incluye': [fila['clave'] for fila in del_dia]} if len(del_dia) >= 2 else None,
+        'alojamiento': next((f for f in conceptos if f['clave'] == 'alojamiento' and f['suficiente']), None),
+    }
+
+
+def costos_de_destino(destino):
+    return _resumir_costos(
+        _gastos_recientes().filter(destino=destino).values_list('concepto', 'monto', 'fecha_visita'))
+
+
+def costos_por_destino():
+    """{destino_id: costos} de los destinos con datos suficientes, en una sola consulta."""
+    por_destino = {}
+    for destino_id, *fila in _gastos_recientes().values_list('destino_id', 'concepto', 'monto', 'fecha_visita'):
+        por_destino.setdefault(destino_id, []).append(fila)
+    resumenes = {destino_id: _resumir_costos(filas) for destino_id, filas in por_destino.items()}
+    return {destino_id: costos for destino_id, costos in resumenes.items() if costos['hay_datos']}
+
+
+def vigencia_por_edad(edad):
+    if edad is None:
+        return 'desconocida'
+    return 'reciente' if edad <= 30 else 'por_confirmar' if edad <= 90 else 'antigua'
+
+
 def ficha_practica(destino):
     """Información aportada por personas: nunca se rellena un dato desconocido."""
     confirmaciones = confirmaciones_validas().filter(dato_id=OuterRef('pk')).order_by()
@@ -112,11 +188,7 @@ def ficha_practica(destino):
         # La vigencia cuenta desde la consulta original o desde la última confirmación, lo más reciente.
         vigente_desde = max(filter(None, [dato.fecha_dato, dato.ultima_confirmacion])) if dato else None
         edad = (hoy - vigente_desde).days if dato else None
-        vigencia = (
-            ('reciente' if edad <= 30 else 'por_confirmar' if edad <= 90 else 'antigua')
-            if edad is not None
-            else 'desconocida'
-        )
+        vigencia = vigencia_por_edad(edad)
         campos.append(
             {'nombre': label, 'dato': dato, 'historial': historial[1:], 'edad_dias': edad, 'vigencia': vigencia,
              'vigente_desde': vigente_desde}
@@ -143,4 +215,51 @@ def preguntas_publicas(destino):
 
 
 def aportes_publicos(destino):
-    return publicados().filter(destino=destino).select_related('autor')
+    """Anota `visita_comprobada`: quien lo escribió confirmó su ubicación cerca de este destino."""
+    visitas = VisitaComprobada.objects.filter(autor_id=OuterRef('autor_id'), destino_id=OuterRef('destino_id'))
+    return publicados().filter(destino=destino).select_related('autor').annotate(visita_comprobada=Exists(visitas))
+
+
+def misiones_por_destino(destino_ids):
+    """{destino_id: {'faltan': [...], 'confirmar': [...]}}: qué datos prácticos nadie ha contado o conviene revisar."""
+    vigentes = {}
+    for pk, destino_id, campo, fecha in dato_vigente_primero(
+        publicas().filter(destino_id__in=destino_ids, tipo='correccion')
+    ).values_list('pk', 'destino_id', 'campo', 'fecha_dato'):
+        vigentes.setdefault((destino_id, campo), (pk, fecha))
+    confirmadas = dict(
+        confirmaciones_validas().filter(dato_id__in=[pk for pk, _ in vigentes.values()]).order_by()
+        .values('dato_id').annotate(ultima=Max('fecha')).values_list('dato_id', 'ultima')
+    )
+    hoy = timezone.localdate()
+    misiones = {destino_id: {'faltan': [], 'confirmar': []} for destino_id in destino_ids}
+    for destino_id, mision in misiones.items():
+        for clave, nombre in Colaboracion.CAMPOS:
+            vigente = vigentes.get((destino_id, clave))
+            if not vigente:
+                mision['faltan'].append({'clave': clave, 'nombre': nombre})
+                continue
+            pk, fecha = vigente
+            edad = (hoy - max(filter(None, [fecha, confirmadas.get(pk)]))).days
+            if vigencia_por_edad(edad) != 'reciente':
+                mision['confirmar'].append({'clave': clave, 'nombre': nombre, 'edad_dias': edad})
+    return misiones
+
+
+# Con menos datos, el título no reconocería un aporte sostenido.
+MINIMO_CRONISTA = 3
+
+
+def cronistas():
+    """Por municipio, quien más datos prácticos publicó en el último año. Solo cuenta lo que pasó por moderación."""
+    filas = (
+        publicas().filter(tipo='correccion', creado__gte=timezone.now() - timedelta(days=365)).order_by()
+        .values('destino__municipio__nombre', 'autor_id', 'autor__nombre').annotate(datos=Count('pk'))
+        .filter(datos__gte=MINIMO_CRONISTA).order_by('destino__municipio__nombre', '-datos', 'autor_id')
+    )
+    elegidos = {}
+    for fila in filas:
+        elegidos.setdefault(fila['destino__municipio__nombre'], {
+            'municipio': fila['destino__municipio__nombre'], 'nombre': fila['autor__nombre'], 'datos': fila['datos'],
+        })
+    return list(elegidos.values())

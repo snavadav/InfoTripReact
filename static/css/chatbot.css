@@ -263,7 +263,7 @@
 
 /* ── Focus ── */
 .trip-chat :focus-visible {
-  outline: 3px solid #f76707;
+  outline: 3px solid #C2500A;
   outline-offset: 2px;
   border-radius: 8px;
 }
@@ -286,4 +286,12 @@
 @media (prefers-reduced-motion: reduce) {
   .trip-chat-toggle span { animation: none; }
   .trip-chat-panel { animation: none; }
+}
+
+/* En móvil el botón del chat es solo un icono, para no tapar el contenido. */
+@media (max-width: 480px) {
+  .trip-chat-toggle { width: 52px; height: 52px; padding: 0; justify-content: center; }
+  .trip-chat-toggle .trip-chat-label {
+    position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+  }
 }

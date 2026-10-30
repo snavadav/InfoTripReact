@@ -2,7 +2,8 @@
 import logging
 from django.core.cache import cache
 from django.db import connection
-from django.http import JsonResponse
+from django.conf import settings
+from django.http import HttpResponse, JsonResponse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
@@ -29,3 +30,11 @@ def salud(request):
         componentes['cache'] = 'error'
     sano = all(valor == 'ok' for valor in componentes.values())
     return JsonResponse({'estado': 'ok' if sano else 'error', **componentes}, status=200 if sano else 503)
+
+
+@require_GET
+def robots(request):
+    privadas = ['/admin/', '/api/', '/perfil/', '/favoritos/', '/mis-viajes/', '/login/', '/registro/', '/recuperar/']
+    lineas = ['User-agent: *', *[f'Disallow: {ruta}' for ruta in privadas],
+              f'Sitemap: {settings.PUBLIC_BASE_URL}/sitemap.xml']
+    return HttpResponse('\n'.join(lineas) + '\n', content_type='text/plain')

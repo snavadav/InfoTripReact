@@ -55,6 +55,8 @@ class Destino(models.Model):
         validators=[MinValueValidator(Decimal('-180')), MaxValueValidator(Decimal('180'))],
     )
     es_activo = models.BooleanField(default=True)
+    # Procedencia de OpenStreetMap (por ejemplo, node/123). Su licencia exige dar crédito e identificar estos datos.
+    osm_id = models.CharField(max_length=30, null=True, blank=True, unique=True, editable=False)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_actualizacion = models.DateTimeField(auto_now=True)
 

@@ -1,0 +1,29 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}¿Cuánto cuesta viajar por Jalisco? Gastos reales de viajeros — InfoTrip{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/comunidad.css' %}">{% endblock %}
+{% block content %}{% include 'partials/navBar.html' %}
+<main class="explore-shell legal-page">
+  <a class="back-link" href="{% url 'destinos-listado' %}">← Explorar destinos</a>
+  <h1>¿Cuánto cuesta viajar por Jalisco?</h1>
+  <p>Lo habitual según los gastos que reportaron viajeros en el último año, en pesos mexicanos. Solo damos una cifra con al menos {{ minimo }} reportes; "—" significa que aún no hay suficientes.</p>
+  {% if filas %}
+  <div class="costos-tabla">
+    <table>
+      <thead><tr><th scope="col">Destino</th>{% for encabezado in encabezados %}<th scope="col">{{ encabezado }}</th>{% endfor %}</tr></thead>
+      <tbody>
+        {% for fila in filas %}
+        <tr>
+          <th scope="row"><a href="{% url 'destino-costos' fila.destino.slug %}">{{ fila.destino.nombre }}</a></th>
+          {% for monto in fila.montos %}<td>{% if monto is not None %}${{ monto|floatformat:"-2g" }}{% else %}—{% endif %}</td>{% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="community-box"><p>Todavía no hay destinos con suficientes reportes. <a href="{% url 'destinos-listado' %}">Elige uno que conozcas</a> y reporta lo que gastaste.</p></div>
+  {% endif %}
+  <p class="community-note">No son cotizaciones ni precios oficiales. Confirma con cada lugar antes de viajar.</p>
+  {% include 'destinos/footer.html' %}
+</main>
+{% endblock %}

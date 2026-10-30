@@ -10,7 +10,7 @@ Plataforma web colaborativa para la gestión de información turística y valida
 
 ## ¿Qué es InfoTrip?
 
-InfoTrip centraliza información turística verificada por la comunidad. Los viajeros pueden consultar destinos, precios reales, reseñas verificadas y rutas de acceso — todo sin publicidad ni contenido patrocinado.
+InfoTrip reúne información turística aportada por viajeros y revisada antes de publicarse. Se pueden consultar destinos, gastos reportados, reseñas y cómo llegar, sin publicidad ni contenido patrocinado. La revisión no acredita una visita: conviene confirmar con el lugar antes de viajar.
 
 ---
 
@@ -179,8 +179,17 @@ docker compose --env-file .env.docker down
 | `/login/`, `/registro/`, `/recuperar/` | Acceso a la cuenta |
 | `/perfil/` | Datos personales, avisos de moderación y aportes propios |
 | `/favoritos/`, `/mis-viajes/` | Lugares guardados y planes de viaje |
+| `/mis-viajes/<id>/bote/`, `/botes/<invitación>/` | Bote de la escapada: gastos reales del grupo y quién le debe a quién |
 | `/admin/` | Administración del catálogo, usuarios y moderación |
 | `/admin/moderacion/` | Cola de moderación con contadores (personal) |
+| `/admin/metricas/` | Embudos, retención y fichas útiles (personal) |
+| `/escapadas/<id>/` | Escapada compartida, de solo lectura y sin cuenta |
+| `/pasaporte/`, `/pasaporte/<enlace>/` | Pasaporte de Pueblos Mágicos: un sello por visita comprobada y tarjeta para compartir |
+| `/negocios/` | Interés de negocios locales; sin cobros, se revisa en el admin |
+| `/misiones/` | Misiones de la comunidad: qué dato falta o conviene confirmar, y cronistas por municipio |
+| `/costos/`, `/destinos/<slug>/costos/` | ¿Cuánto cuesta ir?: gastos reales, con un mínimo de 3 reportes por concepto |
+| `/privacidad/`, `/terminos/`, `/creditos/` | Avisos legales y créditos de fotografías |
+| `/baja-avisos/` | Dejar de recibir correos de novedades, desde el enlace de cada correo |
 
 ### API
 
@@ -202,12 +211,25 @@ La referencia completa e interactiva está en `/api/v1/docs/` (Swagger) y el esq
 | Aportes | `/api/v1/aportes/<id>/` | GET, PATCH, DELETE |
 | Aportes | `/api/v1/aportes/<id>/reportar/` | POST |
 | Información práctica | `/api/v1/destinos/<slug>/colaboraciones/` | GET, POST |
-| Información práctica | `/api/v1/colaboraciones/<id>/confirmar/` | POST |
+| Información práctica | `/api/v1/colaboraciones/<id>/confirmar/`, `/reportar/` | POST |
 | Favoritos | `/api/v1/favoritos/` | GET |
 | Favoritos | `/api/v1/favoritos/<slug>/` | GET, PUT, DELETE |
 | Viajes | `/api/v1/mis-viajes/` | GET, POST |
 | Viajes | `/api/v1/mis-viajes/<id>/` | GET, PATCH, DELETE |
 | Viajes | `/api/v1/mis-viajes/<id>/lugares/` | POST |
+| Viajes | `/api/v1/mis-viajes/<id>/compartir/` | POST, DELETE |
+| Bote | `/api/v1/mis-viajes/<id>/bote/` | GET, POST, DELETE |
+| Bote | `/api/v1/mis-viajes/<id>/bote/gastos/` | POST |
+| Bote | `/api/v1/mis-viajes/<id>/bote/gastos/<id>/` | PATCH, DELETE |
+| Bote | `/api/v1/mis-viajes/<id>/bote/participantes/<id>/` | DELETE |
+| Bote | `/api/v1/mis-viajes/<id>/bote/publicar/` | POST |
+| Bote | `/api/v1/botes/<invitación>/unirse/`, `/api/v1/mis-botes/` | POST, GET |
+| Visitas | `/api/v1/destinos/<slug>/visita/` | GET, POST |
+| Negocios | `/api/v1/negocios/interes/` | POST |
+| Pasaporte | `/api/v1/mi-pasaporte/` | GET |
+| Pasaporte | `/api/v1/mi-pasaporte/compartir/` | POST, DELETE |
+| Cuenta | `/api/v1/mi-cuenta/eliminar/` | POST |
+| Métricas | `/api/v1/eventos/` | POST |
 | Avisos | `/api/v1/notificaciones/` | GET |
 | Avisos | `/api/v1/notificaciones/leidas/` | POST |
 
@@ -215,17 +237,20 @@ La referencia completa e interactiva está en `/api/v1/docs/` (Swagger) y el esq
 
 ### Sesión
 
-Iniciar sesión tiene dos pasos: `login` envía un código al correo y `verificar-codigo` lo valida. Esta última responde con el token `access` y guarda el refresh token en una cookie `HttpOnly`, que JavaScript no puede leer. `token/refresh` y `logout` usan esa cookie, no reciben el token en el cuerpo y exigen la cabecera `X-CSRFToken` con el valor de la cookie `csrftoken`. El navegador conserva el `access` solo en memoria y pide uno nuevo al cargar cada página privada. En `localStorage` solo queda `usuario`, que sirve para mostrar el nombre en la interfaz.
+Registrarse o iniciar sesión envía un código al correo, y `verificar-codigo` lo valida. Con `recordar: true`, ese navegador solo necesitará la contraseña durante 30 días. `verificar-codigo` responde con el token `access` y guarda el refresh token en una cookie `HttpOnly`, que JavaScript no puede leer. `token/refresh` y `logout` usan esa cookie, no reciben el token en el cuerpo y exigen la cabecera `X-CSRFToken` con el valor de la cookie `csrftoken`. El navegador conserva el `access` solo en memoria y pide uno nuevo al cargar cada página privada. En `localStorage` solo queda `usuario`, que sirve para mostrar el nombre en la interfaz.
 
 ### Operación
 
 | Ruta o comando | Descripción |
 |---|---|
 | `/health/` | Estado de la base de datos y la caché: 200 si responden, 503 si no |
-| `python manage.py enviar_avisos` | Envía por correo los avisos de moderación pendientes; programarlo cada pocos minutos |
+| `python manage.py enviar_avisos` | Crea las invitaciones tras un viaje y envía los avisos pendientes; programarlo cada pocos minutos |
+| `python manage.py generar_miniaturas` | Crea las miniaturas de fotos anteriores a este campo; basta una vez |
+| `python manage.py purgar_eventos` | Borra los eventos de uso de más de 13 meses |
 | `python manage.py cargar_destinos_iniciales` | Carga opcional del catálogo inicial |
+| `python manage.py importar_osm` | Importa lugares de OpenStreetMap, ocultos hasta publicarlos; gratis y sin cuenta ([guía](docs/importar-osm.md)) |
 
-Los registros van a la salida estándar. `LOG_LEVEL` ajusta el detalle, y nunca incluyen correos ni contraseñas.
+Los registros van a la salida estándar. `LOG_LEVEL` ajusta el detalle, y nunca incluyen correos ni contraseñas. Copias de seguridad, restauración y monitoreo en [la guía de operación](docs/operacion.md).
 
 ---
 
@@ -263,7 +288,9 @@ La dependencia entre módulos va en un solo sentido: `destinos` usa `comunidad` 
 
 ## 🔄 Flujo de commits
 
-Trabaja en una rama y abre un pull request contra `master`. La CI revisa cada PR: ruff, `pip-audit`, pruebas en PostgreSQL con Redis y en SQLite, `check --deploy` y la imagen de Docker.
+Trabaja en una rama y abre un pull request contra `master`. La CI revisa cada PR: ruff, `pip-audit`, pruebas en PostgreSQL con Redis y en SQLite, flujos en un navegador real, `check --deploy` y la imagen de Docker.
+
+Para correr los flujos de navegador en tu equipo: `playwright install chromium`, y después `E2E=1 python manage.py test e2e --settings=infotrip.settings.test`.
 
 ```bash
 git switch -c mi-cambio
@@ -314,7 +341,7 @@ Para desarrollo con SQLite (sin PostgreSQL), selecciona explícitamente `setting
 .\.venv314\Scripts\python.exe -B manage.py runserver --settings=infotrip.settings_local
 ```
 
-El comando de carga agrega cinco localidades sin sobrescribir registros existentes. Fuentes y alcance de sus coordenadas en [catálogo inicial](docs/catalogo-inicial.md). Las credenciales del administrador las eliges al ejecutar `createsuperuser`.
+El comando de carga agrega 15 localidades sin sobrescribir registros existentes. Fuentes y alcance de sus coordenadas en [catálogo inicial](docs/catalogo-inicial.md). Las credenciales del administrador las eliges al ejecutar `createsuperuser`.
 
 Pruebas:
 

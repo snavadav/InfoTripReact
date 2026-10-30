@@ -1,0 +1,18 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}Correos de novedades — InfoTrip{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/comunidad.css' %}">{% endblock %}
+{% block content %}{% include 'partials/navBar.html' %}
+<main class="explore-shell legal-page">
+  <h1>Correos de novedades</h1>
+  {% if hecho %}
+  <p>Listo: ya no te enviaremos estos correos. Seguirás recibiendo los códigos de acceso y la recuperación de contraseña. Puedes volver a activarlos en <a href="{% url 'perfil' %}">Mi perfil</a>.</p>
+  {% elif valido %}
+  <p>¿Quieres dejar de recibir por correo las novedades de tus aportes, viajes y lugares guardados?</p>
+  <form method="post" class="community-form">{% csrf_token %}<input type="hidden" name="t" value="{{ token }}"><button type="submit">Dejar de recibirlos</button></form>
+  {% else %}
+  <p>Este enlace no es válido. Puedes gestionar tus correos en <a href="{% url 'perfil' %}">Mi perfil</a>.</p>
+  {% endif %}
+  {% include 'destinos/footer.html' %}
+</main>
+{% endblock %}

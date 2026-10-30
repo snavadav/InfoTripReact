@@ -2,7 +2,7 @@
 from django.contrib import admin
 from django.shortcuts import render
 from django.urls import reverse
-from .models import Aporte, Colaboracion, Reporte
+from .models import Aporte, Colaboracion, Reporte, ReporteColaboracion
 
 POR_SECCION = 10
 
@@ -38,5 +38,10 @@ def cola_moderacion(request):
             'Reportes abiertos', Reporte, '?resuelto__exact=0',
             Reporte.objects.filter(resuelto=False).select_related('aporte__destino'),
             lambda r: f'Reporte sobre {r.aporte.get_tipo_display().lower()} · {r.aporte.destino.nombre}'))
+    if request.user.has_perm('comunidad.view_reportecolaboracion'):
+        secciones.append(seccion(
+            'Reportes de información abiertos', ReporteColaboracion, '?resuelto__exact=0',
+            ReporteColaboracion.objects.filter(resuelto=False).select_related('colaboracion__destino'),
+            lambda r: f'Reporte sobre {r.colaboracion.get_tipo_display().lower()} · {r.colaboracion.destino.nombre}'))
     contexto = {**admin.site.each_context(request), 'title': 'Cola de moderación', 'secciones': secciones}
     return render(request, 'admin/cola_moderacion.html', contexto)

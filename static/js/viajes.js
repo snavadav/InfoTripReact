@@ -9,6 +9,17 @@
   const status = document.getElementById('trip-status');
   const more = document.getElementById('more-trips');
   let current = null, dirty = false, next = null, saving = false;
+  // Borrador de una escapada nueva: sobrevive a salir de la página, por ejemplo para iniciar sesión.
+  const DRAFT_KEY = 'infotrip_borrador_viaje';
+  function saveDraft() {
+    if (current) return;
+    const draft = Object.fromEntries(['nombre', 'destino', 'fecha_inicio', 'fecha_fin', 'personas', 'presupuesto'].map(key => [key, form.elements[key].value]));
+    Object.assign(draft, {gastos: readExpenses(), lugares_detalle: places}, agendaPayload());
+    try { localStorage.setItem(DRAFT_KEY, JSON.stringify(draft)); } catch { /* Sin espacio: se pierde solo el borrador. */ }
+  }
+  function loadDraft() {
+    try { return JSON.parse(localStorage.getItem(DRAFT_KEY)); } catch { return null; }
+  }
   const money = cents => new Intl.NumberFormat('es-MX', {style:'currency', currency:'MXN'}).format(cents / 100);
   const cents = value => Math.round(Number(value || 0) * 100);
   function node(tag, text) { const el = document.createElement(tag); if(text) el.textContent = text; return el; }
@@ -85,6 +96,23 @@
     const card=node('article');card.className='trip-card';card.append(node('h3',item.nombre),node('p',item.destino),node('p',`${item.fecha_inicio} → ${item.fecha_fin} · ${item.personas} viajeros`),node('p',`Estimado: ${money(cents(item.resumen.total))}`));
     const actions=node('div');actions.className='trip-actions';
     actions.append(button('Editar',()=>edit(item)),button('Duplicar',()=>edit(item,true)));
+    const shareTrip=button('Compartir',async()=>{
+      try{
+        const data=await InfoTrip.api(`/api/v1/mis-viajes/${item.id}/compartir/`,{method:'POST'});
+        item.enlace_publico=data.enlace_publico;stopSharing.hidden=false;
+        const feedback=await InfoTrip.share(item.nombre,`${location.origin}/escapadas/${data.enlace_publico}/?ref=compartido`);
+        if(feedback)status.textContent=feedback;
+      }catch(error){status.textContent=error.message;}
+    });
+    const stopSharing=button('Dejar de compartir',async()=>{
+      try{await InfoTrip.api(`/api/v1/mis-viajes/${item.id}/compartir/`,{method:'DELETE'});item.enlace_publico=null;stopSharing.hidden=true;status.textContent='El enlace anterior ya no funciona.';}
+      catch(error){status.textContent=error.message;}
+    });
+    stopSharing.hidden=!item.enlace_publico;
+    actions.append(shareTrip,stopSharing,button('Bote del grupo',async()=>{
+      try{await InfoTrip.api(`/api/v1/mis-viajes/${item.id}/bote/`,{method:'POST'});location.href=`/mis-viajes/${item.id}/bote/`;}
+      catch(error){status.textContent=error.message;}
+    }));
     const remove=button('Eliminar',async()=>{
       if(saving)return;
       if(!confirm(`¿Eliminar la escapada «${item.nombre}»?`))return;
@@ -92,6 +120,14 @@
       remove.disabled=true;
       try{await InfoTrip.api(`/api/v1/mis-viajes/${item.id}/`,{method:'DELETE'});if(current===item.id){dirty=false;edit();}await load();status.textContent='Escapada eliminada.';}catch(error){status.textContent=error.message;}finally{remove.disabled=false;}
     });actions.append(remove);card.append(actions);list.append(card);
+  }
+  async function loadPots() {
+    const target=document.getElementById('joined-pots');
+    try{
+      const pots=(await InfoTrip.api('/api/v1/mis-botes/')).filter(pot=>!pot.es_organizador);
+      target.hidden=!pots.length;target.replaceChildren(node('h3','Botes en los que participas'));
+      pots.forEach(pot=>{const row=node('p'),link=node('a',`${pot.nombre} · ${pot.personas} personas`);link.href=`/mis-viajes/${pot.id}/bote/`;row.append(link);target.append(row);});
+    }catch{target.hidden=true;}
   }
   async function load(append=false) {
     more.disabled=true;
@@ -101,11 +137,13 @@
   }
   document.getElementById('add-activity').addEventListener('click',()=>{addActivity();dirty=true;activities.lastElementChild?.querySelector('[name="titulo"]').focus();});
   document.getElementById('add-task').addEventListener('click',()=>{addTask();dirty=true;tasks.lastElementChild?.querySelector('[name="texto"]').focus();});
-  form.addEventListener('input',()=>{dirty=true;form.elements.fecha_fin.min=form.elements.fecha_inicio.value;calculate();});
+  form.addEventListener('input',()=>{dirty=true;form.elements.fecha_fin.min=form.elements.fecha_inicio.value;calculate();saveDraft();});
   document.getElementById('add-expense').addEventListener('click',()=>{addExpense();dirty=true;expenses.lastElementChild?.querySelector('input').focus();});
-  document.getElementById('new-trip').addEventListener('click',()=>edit());
+  document.getElementById('new-trip').addEventListener('click',()=>{if(!mayLeave())return;dirty=false;edit();localStorage.removeItem(DRAFT_KEY);});
   more.addEventListener('click',()=>load(true));
-  window.addEventListener('beforeunload',event=>{if(dirty){event.preventDefault();event.returnValue='';}});
+  // Una escapada nueva queda en el borrador; solo se avisa al salir con cambios de una ya guardada.
+  window.addEventListener('pagehide',()=>{if(dirty)saveDraft();});
+  window.addEventListener('beforeunload',event=>{if(dirty&&current){event.preventDefault();event.returnValue='';}});
   form.addEventListener('submit',event=>{
     event.preventDefault();
     const body=Object.fromEntries(['nombre','destino','fecha_inicio','fecha_fin','personas','presupuesto'].map(key=>[key,form.elements[key].value]));body.personas=Number(body.personas);body.gastos=readExpenses();Object.assign(body,agendaPayload());
@@ -115,6 +153,7 @@
     InfoTrip.submit(form,async feedback=>{
       const saved=await InfoTrip.api(current?`/api/v1/mis-viajes/${current}/`:'/api/v1/mis-viajes/',{method:current?'PATCH':'POST',body});
       current=saved.id;
+      localStorage.removeItem(DRAFT_KEY);
       const now=Object.fromEntries(['nombre','destino','fecha_inicio','fecha_fin','personas','presupuesto'].map(key=>[key,form.elements[key].value]));now.personas=Number(now.personas);now.gastos=readExpenses();Object.assign(now,agendaPayload());
       dirty=JSON.stringify(now)!==snapshot;
       document.getElementById('editor-title').textContent='Editar escapada';feedback.textContent=dirty?'Guardado. Tienes cambios posteriores pendientes de guardar.':'Escapada guardada en tu cuenta.';await load();
@@ -123,7 +162,9 @@
   showPlaces();
   const suggested=new URLSearchParams(location.search).get('destino');
   if(suggested){form.elements.destino.value=suggested.slice(0,200);form.elements.nombre.value=('Escapada a '+suggested).slice(0,120);dirty=true;}
+  const draft=suggested?null:loadDraft();
+  if(draft){edit(draft);dirty=true;status.textContent=InfoTrip.hasSession()?'Recuperamos tu borrador. Guárdalo para conservarlo en tu cuenta.':'Recuperamos tu borrador. Inicia sesión para guardarlo.';}
   calculate();
-  if(InfoTrip.hasSession())load();
+  if(InfoTrip.hasSession())load().then(loadPots);
   else {document.getElementById('trip-login').hidden=false;list.append(node('p','Inicia sesión para ver tus escapadas. Puedes probar el presupuesto antes de entrar.'));}
 })();

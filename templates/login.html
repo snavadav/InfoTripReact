@@ -4,10 +4,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex">
   <title>InfoTrip — Iniciar sesión</title>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
   <style>
+    /* Foco visible al navegar con teclado (accesibilidad). */
+    :focus-visible { outline: 2px solid #5835C4 !important; outline-offset: 2px; }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
@@ -15,9 +18,9 @@
       --bg-soft:   #F7F3EE;
       --primary:   #6741D9;
       --primary-h: #5835C4;
-      --accent:    #F76707;
+      --accent:    #C2500A;
       --ink:       #1F1635;
-      --muted:     #9B8FAF;
+      --muted:     #6F6385;
       --border:    #E8E0F5;
       --tag-bg:    #F3EFFF;
       --error:     #D94141;
@@ -392,6 +395,7 @@
           <input class="form-input" id="loginCode" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" minlength="6" autocomplete="one-time-code" placeholder="000000" required aria-describedby="codeHelp">
           <p id="codeHelp" style="font-size:.8rem;line-height:1.6;color:#675975">Escribe los 6 dígitos de tu código de acceso. El código caduca en 10 minutos; tienes hasta 5 intentos.</p>
         </div>
+        <label class="remember-device" style="display:flex;gap:8px;align-items:center;font-size:.85rem;margin-bottom:14px"><input type="checkbox" id="rememberDevice"> Recordar este dispositivo 30 días y no pedir código. No lo marques en un equipo compartido.</label>
         <button type="submit" class="btn-submit" id="verifyBtn">Verificar e iniciar sesión</button>
         <div style="display:flex;gap:16px;justify-content:space-between;margin-top:18px">
           <button type="button" id="resendBtn" disabled>Reenviar código</button>

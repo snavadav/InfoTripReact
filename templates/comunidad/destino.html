@@ -1,12 +1,13 @@
 {% load static %}
 <section class="community-section" aria-labelledby="community-title">
   <h2 id="community-title">Lo que cuentan los viajeros</h2>
-  <p class="community-note">Experiencias aportadas por la comunidad y revisadas antes de publicarse. La revisión no acredita una visita.</p>
+  <p class="community-note">Experiencias aportadas por la comunidad y revisadas antes de publicarse. La revisión no acredita una visita; "Comprobó su ubicación" indica que la persona confirmó estar cerca del lugar, aunque una ubicación se puede falsear.</p>
   {% if lugar.editorial %}<div class="community-box"><p>Esta ficha es de inspiración. Los aportes se habilitan cuando el destino se registra en el catálogo.</p><a href="/destinos/">Explorar destinos</a></div>{% else %}
   <div class="community-stats"><div><strong>{% if resumen.resenas.cantidad %}{{ resumen.resenas.promedio|floatformat:1 }} / 5{% else %}Sin calificaciones{% endif %}</strong><p>{{ resumen.resenas.cantidad }} reseña{{ resumen.resenas.cantidad|pluralize }} publicada{{ resumen.resenas.cantidad|pluralize }}</p></div>
   {% for gasto in resumen.gastos %}<div><strong>${{ gasto.promedio|floatformat:2 }} MXN</strong><p>{{ gasto.nombre }} · {{ gasto.cantidad }} reporte{{ gasto.cantidad|pluralize }}</p><small>Entre ${{ gasto.minimo|floatformat:2 }} y ${{ gasto.maximo|floatformat:2 }}</small></div>{% empty %}<div><strong>Sin gastos recientes</strong><p>Comparte cuánto gastaste en tu visita.</p></div>{% endfor %}</div>
   <p class="community-note">Precios orientativos por concepto, calculados con gastos de los últimos 365 días; no son cotizaciones ni el costo total del viaje.</p>
-  <details class="community-box"><summary>Compartir mi experiencia</summary>
+  <p><a href="{% url 'destino-costos' lugar.slug %}">¿Cuánto cuesta ir a {{ lugar.nombre }}? →</a></p>
+  <details class="community-box" id="reportar-gasto"><summary>Compartir mi experiencia</summary>
     <p id="aporte-access-note">Necesitas <a href="/login/">iniciar sesión y confirmar tu correo</a>. Tu aporte quedará pendiente de revisión.</p>
     <form id="contribution-form" class="community-form" data-destination="{{ lugar.slug }}">
       <label>¿Qué compartirás?<select name="tipo"><option value="resena">Reseña</option><option value="foto">Fotografía</option><option value="gasto">Gasto</option></select></label>
@@ -21,9 +22,9 @@
   </details>
   <div class="contribution-list">
     {% for aporte in aportes %}<article class="community-box">
-      <div class="contribution-heading"><h3>{{ aporte.get_tipo_display }} · {{ aporte.autor.nombre }}</h3><span>{{ aporte.fecha_visita|date:'d/m/Y' }}</span></div>
+      <div class="contribution-heading"><h3>{{ aporte.get_tipo_display }} · {{ aporte.nombre_publico }}{% if aporte.visita_comprobada %} <span class="visit-badge">Comprobó su ubicación</span>{% endif %}</h3><span>{{ aporte.fecha_visita|date:'d/m/Y' }}</span></div>
       {% if aporte.tipo == 'resena' %}<p class="rating">{{ aporte.calificacion }} / 5</p>{% endif %}
-      {% if aporte.tipo == 'foto' %}<a href="{{ aporte.imagen.url }}" target="_blank" rel="noopener"><img class="community-photo" src="{{ aporte.imagen.url }}" alt="{{ aporte.texto }}" loading="lazy"></a>{% endif %}
+      {% if aporte.tipo == 'foto' %}<a href="{{ aporte.imagen.url }}" target="_blank" rel="noopener"><img class="community-photo" src="{% if aporte.miniatura %}{{ aporte.miniatura.url }}{% else %}{{ aporte.imagen.url }}{% endif %}" alt="{{ aporte.texto }}" loading="lazy"></a>{% endif %}
       {% if aporte.tipo == 'gasto' %}<p class="rating">${{ aporte.monto|floatformat:2 }} MXN · {{ aporte.get_concepto_display }}</p>{% endif %}
       <p class="contribution-text">{{ aporte.texto|linebreaksbr }}</p>
       <details><summary>Reportar información</summary><form class="report-form community-form" data-id="{{ aporte.pk }}"><label>Motivo<textarea name="motivo" required maxlength="1000" rows="2"></textarea></label><button type="submit">Enviar reporte</button><p class="form-status" role="status"></p></form></details>

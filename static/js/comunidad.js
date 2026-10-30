@@ -10,6 +10,11 @@
       });
     }
     tipo.addEventListener('change', sync); sync();
+    // Enlace "Reporta lo que gastaste": abre el formulario ya en el tipo correcto.
+    if (location.hash === '#reportar-gasto') {
+      tipo.value = 'gasto'; sync();
+      document.getElementById('reportar-gasto').open = true;
+    }
     form.addEventListener('submit', event => {
       event.preventDefault();
       InfoTrip.submit(form, async status => {
@@ -21,7 +26,7 @@
   document.querySelectorAll('.report-form').forEach(form => form.addEventListener('submit', event => {
     event.preventDefault();
     InfoTrip.submit(form, async status => {
-      await InfoTrip.api(`/api/v1/aportes/${form.dataset.id}/reportar/`, {method:'POST', body:{motivo:form.elements.motivo.value}});
+      await InfoTrip.api(form.dataset.url || `/api/v1/aportes/${form.dataset.id}/reportar/`, {method:'POST', body:{motivo:form.elements.motivo.value}});
       form.reset(); status.textContent='Reporte recibido. El equipo lo revisará.';
     });
   }));

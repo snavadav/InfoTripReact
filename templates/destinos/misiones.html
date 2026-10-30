@@ -1,0 +1,45 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}Misiones de la comunidad: qué falta saber en Jalisco — InfoTrip{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/comunidad.css' %}">{% endblock %}
+{% block content %}{% include 'partials/navBar.html' %}
+<main class="explore-shell legal-page" data-misiones>
+  <a class="back-link" href="{% url 'destinos-listado' %}">← Explorar destinos</a>
+  <span class="eyebrow">MISIONES DE LA COMUNIDAD</span>
+  <h1>¿Qué falta saber aquí?</h1>
+  <p>Si conoces un lugar, ayuda al siguiente viajero: cuenta lo que falta o confirma lo que puede haber cambiado. Todo pasa por revisión antes de publicarse. No hay pagos ni premios, solo el reconocimiento de la comunidad.</p>
+
+  <section class="community-box" aria-labelledby="cronistas-titulo">
+    <h2 id="cronistas-titulo">Cronistas</h2>
+    <p class="community-note">Quien más datos prácticos publicó en un municipio durante el último año, con un mínimo de {{ minimo_cronista }}.</p>
+    {% if cronistas %}<ul>{% for cronista in cronistas %}<li><strong>Cronista de {{ cronista.municipio }}:</strong> {{ cronista.nombre }} · {{ cronista.datos }} datos</li>{% endfor %}</ul>
+    {% else %}<p>Todavía no hay cronistas. El tuyo puede ser el primer nombre de esta lista.</p>{% endif %}
+  </section>
+
+  <form method="get" class="community-form misiones-filtro">
+    <label>Municipio<select name="municipio">
+      <option value="">Todos</option>
+      {% for municipio in municipios %}<option value="{{ municipio.slug }}"{% if municipio.slug == municipio_actual %} selected{% endif %}>{{ municipio.nombre }}</option>{% endfor %}
+    </select></label>
+    <button type="submit">Filtrar</button>
+  </form>
+  <p>{% if total_misiones %}<strong>{% if total_misiones == 1 %}1 misión{% else %}{{ total_misiones }} misiones{% endif %}</strong> en {{ pagina.paginator.count }} lugar{{ pagina.paginator.count|pluralize:",es" }}.{% else %}No hay misiones pendientes aquí.{% endif %}</p>
+
+  {% for fila in pagina %}
+  <article class="community-box mision">
+    <h2><a href="{% url 'destino-detalle' fila.destino.slug %}">{{ fila.destino.nombre }}</a></h2>
+    <p class="community-note">{{ fila.destino.municipio.nombre }}</p>
+    {% if fila.faltan %}<h3>Nadie lo ha contado todavía</h3>
+    <ul>{% for campo in fila.faltan %}<li><a href="{% url 'destino-detalle' fila.destino.slug %}?dato={{ campo.clave }}#sugerir-dato">{{ campo.nombre }}</a></li>{% endfor %}</ul>{% endif %}
+    {% if fila.confirmar %}<h3>¿Sigue vigente?</h3>
+    <ul>{% for campo in fila.confirmar %}<li><a href="{% url 'destino-detalle' fila.destino.slug %}#practical-info">{{ campo.nombre }}</a> · hace {{ campo.edad_dias }} días</li>{% endfor %}</ul>{% endif %}
+  </article>
+  {% endfor %}
+
+  {% if pagina.has_other_pages %}<nav class="pagination" aria-label="Páginas de misiones">
+    {% if pagina.has_previous %}<a href="?municipio={{ municipio_actual }}&amp;pagina={{ pagina.previous_page_number }}">Anterior</a>{% endif %}
+    <span>{{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+    {% if pagina.has_next %}<a href="?municipio={{ municipio_actual }}&amp;pagina={{ pagina.next_page_number }}">Siguiente</a>{% endif %}
+  </nav>{% endif %}
+  {% include 'destinos/footer.html' %}
+</main>
+{% endblock %}

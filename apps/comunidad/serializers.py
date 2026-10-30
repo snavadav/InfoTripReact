@@ -1,18 +1,20 @@
 from django.utils import timezone
 from rest_framework import serializers
 from .models import Aporte, Reporte
-from apps.core.imagenes import imagen_segura
+from apps.core.imagenes import imagen_segura, miniatura_de
 
 
 class AporteSerializer(serializers.ModelSerializer):
-    autor_nombre = serializers.CharField(source='autor.nombre', read_only=True)
+    autor_nombre = serializers.CharField(source='nombre_publico', read_only=True)
     destino_nombre = serializers.CharField(source='destino.nombre', read_only=True)
     destino_slug = serializers.CharField(source='destino.slug', read_only=True)
     estado_nombre = serializers.CharField(source='get_estado_display', read_only=True)
+    visita_comprobada = serializers.BooleanField(read_only=True, default=False)
     class Meta:
         model = Aporte
         fields = ['id', 'tipo', 'texto', 'fecha_visita', 'calificacion', 'imagen', 'monto', 'concepto',
-                  'estado', 'estado_nombre', 'creado', 'autor_nombre', 'destino_nombre', 'destino_slug']
+                  'estado', 'estado_nombre', 'creado', 'autor_nombre', 'destino_nombre', 'destino_slug',
+                  'visita_comprobada']
         read_only_fields = ['estado', 'creado']
         validators = []
 
@@ -44,6 +46,8 @@ class AporteSerializer(serializers.ModelSerializer):
         ]:
             if tipo != requerido_por and datos.get(campo) not in (None, ''):
                 raise serializers.ValidationError({campo: 'Este campo no corresponde al tipo de aporte.'})
+        if datos.get('imagen'):
+            datos['miniatura'] = miniatura_de(datos['imagen'])
         return datos
 
 

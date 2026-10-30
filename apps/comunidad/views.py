@@ -5,9 +5,10 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 from apps.destinos.models import Destino
+from apps.metricas.models import registrar
 from .models import Aporte
 from .serializers import AporteSerializer, ReporteSerializer
-from .selectors import publicados
+from .selectors import aportes_publicos, publicados
 
 
 class AporteThrottle(UserRateThrottle):
@@ -23,12 +24,13 @@ class PublicarView(generics.ListCreateAPIView):
         return super().get_throttles() if self.request.method == 'POST' else []
     def get_queryset(self):
         destino = get_object_or_404(Destino, slug=self.kwargs['slug'], es_activo=True)
-        return publicados().filter(destino=destino).select_related('autor', 'destino')
+        return aportes_publicos(destino).select_related('destino')
     def perform_create(self, serializer):
         destino = get_object_or_404(Destino, slug=self.kwargs['slug'], es_activo=True)
         try:
             with transaction.atomic():
                 serializer.save(autor=self.request.user, destino=destino, estado='pendiente')
+                registrar('aporte_enviado', usuario=self.request.user, destino=destino.slug)
         except IntegrityError:
             raise serializers.ValidationError('Ya tienes una reseña de este destino. Edítala desde tu perfil.')
 
@@ -76,5 +78,6 @@ class ReportarView(generics.CreateAPIView):
         try:
             with transaction.atomic():
                 serializer.save(autor=self.request.user, aporte=aporte)
+                registrar('reporte_enviado', usuario=self.request.user, destino=aporte.destino.slug)
         except IntegrityError:
             raise serializers.ValidationError('Ya reportaste este aporte.')

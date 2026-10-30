@@ -7,12 +7,16 @@ from django.core.cache import cache
 from django.core.management import call_command
 from django.test import TestCase, override_settings
 from django.utils import timezone
+from redis.exceptions import RedisError
 from rest_framework.test import APITestCase
 
 from apps.comunidad.models import Aporte
 from apps.comunidad.moderacion import moderar
+from apps.core.limites import LimiteAnonimo
 from apps.destinos.models import Destino, Municipio, Region
+from apps.destinos.views import RegionListView
 from apps.usuarios.models import Usuario
+from infotrip.settings import base
 
 
 class SaludTests(TestCase):
@@ -114,3 +118,21 @@ class PaginasDeErrorTests(TestCase):
             respuesta = self.client.get('/health/')
         self.assertEqual(respuesta.status_code, 500)
         self.assertContains(respuesta, 'Algo salió mal', status_code=500)
+
+
+class LimiteGlobalTests(TestCase):
+    def setUp(self):
+        cache.clear()
+
+    def test_configurado_en_la_base(self):
+        self.assertEqual(base.REST_FRAMEWORK['DEFAULT_THROTTLE_CLASSES'],
+                         ('apps.core.limites.LimiteAnonimo', 'apps.core.limites.LimiteUsuario'))
+
+    def test_limita_y_tolera_la_caida_de_redis(self):
+        limite = type('LimitePrueba', (LimiteAnonimo,), {'rate': '2/min'})
+        with patch.object(RegionListView, 'throttle_classes', [limite]):
+            self.assertEqual([self.client.get('/api/v1/regiones/').status_code for _ in range(3)], [200, 200, 429])
+            cache.clear()
+            with patch.object(limite, 'get_cache_key', side_effect=RedisError('caído')), \
+                    self.assertLogs('infotrip.salud', 'ERROR'):
+                self.assertEqual(self.client.get('/api/v1/regiones/').status_code, 200)

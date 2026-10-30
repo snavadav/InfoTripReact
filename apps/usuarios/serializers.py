@@ -13,24 +13,25 @@ class RegistroSerializer(serializers.ModelSerializer):
     """Serializer para registro de nuevo usuario."""
 
     password  = serializers.CharField(write_only=True, validators=[validate_password])
-    password2 = serializers.CharField(write_only=True, label='Confirmar contraseña')
+    # Opcional: el formulario pide la contraseña una vez, con opción de mostrarla.
+    password2 = serializers.CharField(write_only=True, required=False, label='Confirmar contraseña')
 
     class Meta:
         model  = Usuario
         fields = ['nombre', 'apellido', 'email', 'password', 'password2', 'ciudad_origen']
         # Sin validador de unicidad: un correo ya registrado no debe revelarse (S3).
-        extra_kwargs = {'email': {'validators': []}}
+        extra_kwargs = {'email': {'validators': []}, 'apellido': {'required': False, 'allow_blank': True}}
 
     def validate_email(self, value):
         return normalizar_email(value)
 
     def validate(self, data):
-        if data['password'] != data['password2']:
+        if 'password2' in data and data['password'] != data['password2']:
             raise serializers.ValidationError({'password': 'Las contraseñas no coinciden.'})
         return data
 
     def create(self, validated_data):
-        validated_data.pop('password2')
+        validated_data.pop('password2', None)
         password = validated_data.pop('password')
         usuario  = Usuario(**validated_data)
         usuario.set_password(password)
@@ -53,7 +54,7 @@ class UsuarioPerfilSerializer(serializers.ModelSerializer):
         fields = [
             'uuid', 'nombre', 'apellido', 'nombre_completo',
             'email', 'foto_perfil', 'ciudad_origen', 'bio',
-            'es_verificado', 'fecha_registro',
+            'es_verificado', 'fecha_registro', 'avisos_correo',
         ]
         read_only_fields = ['uuid', 'email', 'es_verificado', 'fecha_registro']
 

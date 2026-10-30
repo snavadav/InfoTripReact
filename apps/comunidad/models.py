@@ -1,3 +1,4 @@
+import uuid
 from decimal import Decimal
 from django.conf import settings
 from django.db import models
@@ -17,6 +18,12 @@ class Viaje(models.Model):
     pendientes = models.JSONField(default=list)
     notas = models.TextField(max_length=3000, blank=True)
     lugares = models.ManyToManyField('destinos.Destino', blank=True, related_name='viajes_guardados')
+    # Cuándo se invitó al viajero a contar cómo le fue; una sola vez por escapada.
+    recordatorio_enviado = models.DateTimeField(null=True, blank=True)
+    # Enlace de solo lectura para quien organiza con otras personas; vacío si no se comparte.
+    enlace_publico = models.UUIDField(null=True, blank=True, unique=True, editable=False)
+    # Invitación al bote; distinta del enlace público porque esta da acceso a los gastos del grupo.
+    enlace_bote = models.UUIDField(null=True, blank=True, unique=True, editable=False)
     actualizado = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -120,11 +127,14 @@ class Aporte(Moderable):
         null=True, blank=True, validators=[MinValueValidator(1), MaxValueValidator(5)]
     )
     imagen = models.ImageField(upload_to='comunidad/%Y/%m/', blank=True)
+    miniatura = models.ImageField(upload_to='comunidad/miniaturas/%Y/%m/', blank=True, editable=False)
     monto = models.DecimalField(
         max_digits=9, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(Decimal(0))]
     )
     concepto = models.CharField(max_length=15, choices=CONCEPTOS, blank=True)
     estado = models.CharField(max_length=12, choices=ESTADOS, default='pendiente')
+    # Se publica sin el nombre del autor, por ejemplo los gastos de un bote. La moderación sí lo ve.
+    anonimo = models.BooleanField(default=False)
     creado = models.DateTimeField(auto_now_add=True)
     actualizado = models.DateTimeField(auto_now=True)
 
@@ -156,13 +166,26 @@ class Aporte(Moderable):
     def registrar_moderacion(self, **campos):
         return self.decisiones.create(**campos)
 
+    @property
+    def nombre_publico(self):
+        return 'Viajero anónimo' if self.anonimo else self.autor.nombre
 
-class Reporte(models.Model):
-    aporte = models.ForeignKey(Aporte, on_delete=models.PROTECT, related_name='reportes')
+
+class ReporteBase(models.Model):
+    """Alguien avisa de un problema con contenido publicado. Lo resuelve el personal desde el admin."""
     autor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     motivo = models.TextField(max_length=1000)
     resuelto = models.BooleanField(default=False)
+    resuelto_en = models.DateTimeField(null=True, blank=True)
     creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        abstract = True
+
+
+class Reporte(ReporteBase):
+    aporte = models.ForeignKey(Aporte, on_delete=models.PROTECT, related_name='reportes')
+
     class Meta:
         ordering = ['-creado']
         constraints = [models.UniqueConstraint(fields=['aporte', 'autor'], name='un_reporte_por_autor')]
@@ -219,6 +242,16 @@ class Colaboracion(Moderable):
         return self.revisiones.create(**campos)
 
 
+class ReporteColaboracion(ReporteBase):
+    colaboracion = models.ForeignKey(Colaboracion, on_delete=models.PROTECT, related_name='reportes')
+
+    class Meta:
+        ordering = ['-creado']
+        constraints = [
+            models.UniqueConstraint(fields=['colaboracion', 'autor'], name='un_reporte_de_colaboracion_por_autor'),
+        ]
+
+
 class RevisionColaboracion(RegistroModeracion):
     colaboracion = models.ForeignKey(Colaboracion, on_delete=models.PROTECT, related_name='revisiones')
 
@@ -237,3 +270,79 @@ class Confirmacion(models.Model):
     class Meta:
         ordering = ['-fecha', '-pk']
         constraints = [models.UniqueConstraint(fields=['dato', 'autor'], name='una_confirmacion_por_persona')]
+
+
+class Participante(models.Model):
+    """Persona que se unió al bote de una escapada. Sin usuario: su cuenta se eliminó, pero sus cuentas siguen."""
+    viaje = models.ForeignKey(Viaje, on_delete=models.CASCADE, related_name='participantes')
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name='botes')
+    creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['pk']
+        constraints = [models.UniqueConstraint(fields=['viaje', 'usuario'], name='un_participante_por_bote')]
+
+    @property
+    def nombre(self):
+        return self.usuario.nombre if self.usuario else 'Cuenta eliminada'
+
+
+class GastoReal(models.Model):
+    """Lo que alguien del grupo ya pagó, repartido en partes iguales entre `entre`."""
+    CONCEPTOS = [*Aporte.CONCEPTOS, ('otros', 'Otros')]
+    viaje = models.ForeignKey(Viaje, on_delete=models.CASCADE, related_name='gastos_reales')
+    # RESTRICT y no PROTECT: permite borrar el viaje completo, pero no a una persona con gastos.
+    pagado_por = models.ForeignKey(Participante, on_delete=models.RESTRICT, related_name='pagados')
+    entre = models.ManyToManyField(Participante, related_name='compartidos')
+    registrado_por = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name='+')
+    descripcion = models.CharField(max_length=120)
+    concepto = models.CharField(max_length=15, choices=CONCEPTOS)
+    monto = models.DecimalField(max_digits=9, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))])
+    fecha = models.DateField()
+    noches = models.PositiveSmallIntegerField(default=1, validators=[MinValueValidator(1), MaxValueValidator(365)])
+    destino = models.ForeignKey('destinos.Destino', null=True, blank=True, on_delete=models.SET_NULL, related_name='+')
+    # El aporte que se envió a revisión, para no publicarlo dos veces.
+    aporte = models.OneToOneField(Aporte, null=True, blank=True, on_delete=models.SET_NULL, related_name='gasto_real',
+                                  editable=False)
+    creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-fecha', '-pk']
+        constraints = [models.CheckConstraint(condition=models.Q(monto__gt=0), name='gasto_real_monto_positivo')]
+
+
+class VisitaComprobada(models.Model):
+    """La persona estaba cerca del destino en esta fecha. No guarda coordenadas, a propósito."""
+    autor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='visitas_comprobadas')
+    destino = models.ForeignKey('destinos.Destino', on_delete=models.CASCADE, related_name='visitas_comprobadas')
+    fecha = models.DateField()
+    creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-fecha', '-pk']
+        constraints = [models.UniqueConstraint(fields=['autor', 'destino'], name='una_visita_por_destino')]
+
+
+class PasaporteCompartido(models.Model):
+    """Existe solo mientras la persona comparte su pasaporte; borrarlo invalida el enlace."""
+    usuario = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='pasaporte')
+    enlace = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    creado = models.DateTimeField(auto_now_add=True)
+
+
+class InteresNegocio(models.Model):
+    """Un negocio dejó sus datos para platicar. Solo los ve el personal; se pueden borrar desde el admin."""
+    negocio = models.CharField(max_length=150)
+    contacto = models.CharField(max_length=100)
+    correo = models.EmailField()
+    telefono = models.CharField(max_length=30, blank=True)
+    municipio = models.CharField(max_length=100)
+    mensaje = models.TextField(max_length=1000, blank=True)
+    atendido = models.BooleanField(default=False)
+    creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-creado', '-pk']
+
+    def __str__(self):
+        return f'{self.negocio} · {self.municipio}'

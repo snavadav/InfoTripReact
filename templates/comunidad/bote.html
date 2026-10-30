@@ -1,0 +1,55 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}Bote de la escapada — InfoTrip{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/comunidad.css' %}"><link rel="stylesheet" href="{% static 'css/viajes.css' %}">{% endblock %}
+{% block content %}{% include 'partials/navBar.html' %}
+<main class="explore-shell trips-shell" id="bote" data-viaje="{{ view.kwargs.pk }}">
+  <a class="back-link" href="{% url 'mis-viajes' %}">← Mis viajes</a>
+  <span class="eyebrow">BOTE DE LA ESCAPADA</span>
+  <h1 id="bote-nombre">Cargando…</h1>
+  <p id="bote-estado" role="status"></p>
+  <p id="bote-login" hidden><a href="{% url 'login' %}">Inicia sesión</a> para ver este bote.</p>
+  <div id="bote-contenido" hidden>
+    <section class="community-box" id="bote-invitar" hidden>
+      <h2>Invita a tu grupo</h2>
+      <p>Quien tenga este enlace y una cuenta puede unirse, ver los gastos y anotar los suyos.</p>
+      <div class="trip-actions"><button id="bote-compartir" type="button">Copiar invitación</button><button id="bote-revocar" type="button">Dejar de invitar</button></div>
+    </section>
+    <section class="community-box">
+      <h2>Quién le debe a quién</h2>
+      <p>Total del grupo: <strong id="bote-total"></strong></p>
+      <div id="bote-transferencias"></div>
+      <h3>Personas</h3>
+      <div id="bote-personas"></div>
+    </section>
+    <section class="community-box">
+      <h2 id="bote-form-titulo">Anotar un gasto</h2>
+      <form id="bote-form" class="community-form">
+        <label>Descripción<input name="descripcion" maxlength="120" required placeholder="Cena del sábado"></label>
+        <label>Concepto<select name="concepto">
+          <option value="comida">Comida</option><option value="transporte">Transporte</option><option value="entrada">Entradas</option><option value="alojamiento">Alojamiento</option><option value="otros">Otros</option>
+        </select></label>
+        <label>Monto total en MXN<input name="monto" type="number" min="0.01" max="9999999.99" step="0.01" required></label>
+        <label>Fecha<input name="fecha" type="date" required></label>
+        <label id="bote-noches" hidden>Noches que cubre<input name="noches" type="number" min="1" max="365" step="1" value="1"></label>
+        <label>Lugar (necesario para compartirlo con otros viajeros)<select name="destino"></select></label>
+        <label>¿Quién pagó?<select name="pagado_por" required></select></label>
+        <fieldset class="bote-entre"><legend>¿Entre quiénes se reparte?</legend><div id="bote-entre"></div></fieldset>
+        <div class="trip-actions"><button type="submit">Guardar gasto</button><button id="bote-cancelar" type="button" hidden>Cancelar</button></div>
+        <p class="form-status" role="status"></p>
+      </form>
+    </section>
+    <section class="community-box">
+      <h2>Gastos</h2>
+      <div id="bote-gastos"></div>
+    </section>
+    <section class="community-box" id="bote-publicar" hidden>
+      <h2>Ayuda a otros viajeros</h2>
+      <p>Publica estos gastos para que otros sepan cuánto cuesta ir. Se envían a revisión <strong>sin nombres ni descripciones</strong>: solo el lugar, el concepto, la fecha y el monto por persona, o por noche en el caso del alojamiento. Los gastos sin lugar o de tipo "Otros" no se publican.</p>
+      <button id="bote-publicar-boton" type="button">Enviar gastos a revisión</button>
+      <p id="bote-publicar-estado" role="status"></p>
+    </section>
+  </div>
+  {% include 'destinos/footer.html' %}
+</main>{% endblock %}
+{% block extra_js %}<script src="{% static 'js/cuenta-api.js' %}"></script><script src="{% static 'js/bote.js' %}" defer></script>{% endblock %}

@@ -10,4 +10,4 @@
 {% endif %}
 {% endblock %}
 
-{% block nav-global %}{% if user.is_active and user.is_staff %}<a href="{% url 'cola-moderacion' %}" class="cola-moderacion">Cola de moderación</a>{% endif %}{% endblock %}
+{% block nav-global %}{% if user.is_active and user.is_staff %}<a href="{% url 'cola-moderacion' %}" class="cola-moderacion">Cola de moderación</a> · <a href="{% url 'panel-metricas' %}">Métricas</a>{% endif %}{% endblock %}

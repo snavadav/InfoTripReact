@@ -13,8 +13,10 @@ from rest_framework_simplejwt.exceptions    import TokenError
 from rest_framework_simplejwt.tokens        import RefreshToken
 from django.db                   import IntegrityError, transaction
 
+from apps.metricas.models import registrar
 from .models      import Usuario
 from .sesion      import COOKIE_REFRESH, borrar_cookie_refresh, exigir_csrf
+from .verificacion import enviar_codigo, responder_a_correo_existente
 from .serializers import RegistroSerializer, UsuarioPerfilSerializer, CambiarPasswordSerializer
 
 
@@ -27,7 +29,7 @@ class RegistroThrottle(AnonRateThrottle):
 class RegistroView(generics.CreateAPIView):
     """
     POST /api/v1/auth/registro/
-    Crea un usuario sin emitir tokens; debe verificar su correo al iniciar sesión.
+    Crea un usuario y le envía el código para verificar su correo y entrar.
     La respuesta es la misma si el correo ya tenía cuenta, para no revelarlo.
     """
     authentication_classes = []
@@ -38,21 +40,17 @@ class RegistroView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        if not Usuario.objects.filter(email__iexact=serializer.validated_data['email']).exists():
+        email = serializer.validated_data['email']
+        usuario = None
+        if not Usuario.objects.filter(email__iexact=email).exists():
             try:
                 with transaction.atomic():
-                    serializer.save()
+                    usuario = serializer.save()
+                    registrar('registro_completado', usuario=usuario)
             except IntegrityError:
                 pass  # Registro simultáneo del mismo correo: la cuenta ya existe.
-
-        return Response(
-            {
-                'mensaje': ('Registro recibido. Inicia sesión con tu correo y contraseña '
-                            'para verificar tu cuenta con un código.'),
-                'requiere_verificacion': True,
-            },
-            status=status.HTTP_201_CREATED,
-        )
+        datos = enviar_codigo(usuario) if usuario else responder_a_correo_existente(email)
+        return Response(datos, status=status.HTTP_201_CREATED)
 
 
 # ─── LOGOUT ───────────────────────────────────────────────────
