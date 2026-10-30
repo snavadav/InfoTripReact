@@ -90,8 +90,7 @@
     setBusy(true);
     try {
       const data = await post('/api/v1/auth/verificar-codigo/', {desafio: challenge, codigo: document.getElementById('loginCode').value.trim()});
-      localStorage.setItem('access_token', data.access);
-      localStorage.setItem('refresh_token', data.refresh);
+      // El refresh token llega como cookie HttpOnly; el access token se pide de nuevo en cada página.
       localStorage.setItem('usuario', JSON.stringify(data.usuario));
       credentials = null;
       document.getElementById('password').value = '';

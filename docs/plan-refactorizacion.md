@@ -37,7 +37,7 @@ Plan acordado el 22/10/2026 a partir de la revisión de arquitectura. Rama: `ref
 - [x] `LOGGING` y loggers en fallos de SMTP, decisiones de moderación e intentos de login bloqueados; endpoint `/health/`.
 - [x] Aviso por correo al autor cuando se modera su contenido, enviado por el comando `enviar_avisos` fuera de la petición del admin y con registro de fallos.
 - [x] OpenAPI con drf-spectacular (`/api/v1/docs/` y `/api/v1/esquema/`) y README actualizado.
-- [ ] S6, segunda parte: refresh token en una cookie `HttpOnly` con protección CSRF y access token solo en memoria, en lugar de `localStorage`. Cambia el login, el refresco, el logout y los JS que leen el token.
+- [x] S6, segunda parte: refresh token en una cookie `HttpOnly`, `Secure` en producción y `SameSite=Strict`, con protección CSRF en el refresco y el logout, y access token solo en memoria. El refresh token rota como mucho una vez al día (`apps/usuarios/sesion.py`).
 
 ## Cierre
 

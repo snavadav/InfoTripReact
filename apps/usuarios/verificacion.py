@@ -21,8 +21,11 @@ from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
 from .authentication import CorreoJWTAuthentication
+from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.utils import aware_utcnow, datetime_from_epoch
+from .sesion import COOKIE_REFRESH, borrar_cookie_refresh, exigir_csrf, guardar_cookie_refresh
 from rest_framework_simplejwt.views import TokenRefreshView
 
 from .models import CodigoAcceso, Usuario
@@ -162,7 +165,7 @@ class VerificarCodigoView(APIView):
     throttle_classes = [VerificacionThrottle]
 
     @extend_schema(request=CodigoSerializer, responses={200: inline_serializer('SesionIniciada', fields={
-        'access': serializers.CharField(), 'refresh': serializers.CharField(), 'usuario': UsuarioPerfilSerializer(),
+        'access': serializers.CharField(), 'usuario': UsuarioPerfilSerializer(),
     })})
     def post(self, request):
         datos = CodigoSerializer(data=request.data)
@@ -191,17 +194,53 @@ class VerificarCodigoView(APIView):
             usuario.save(update_fields=['es_verificado', 'ultimo_acceso'])
             refresh = RefreshToken.for_user(usuario)
             refresh['correo_confirmado'] = True
-            return Response({'access': str(refresh.access_token), 'refresh': str(refresh),
-                             'usuario': UsuarioPerfilSerializer(usuario, context={'request': request}).data})
+            respuesta = Response({'access': str(refresh.access_token),
+                                  'usuario': UsuarioPerfilSerializer(usuario, context={'request': request}).data})
+            guardar_cookie_refresh(request, respuesta, refresh)
+            return respuesta
+
+
+# La sesión se extiende con el uso, pero el refresh token cambia como mucho una vez al día.
+ROTAR_REFRESH_CADA = timedelta(days=1)
 
 
 class CorreoRefreshSerializer(TokenRefreshSerializer):
     def validate(self, attrs):
         token = self.token_class(attrs['refresh'])
         CorreoJWTAuthentication().get_user(token)
-        return super().validate(attrs)
+        datos = super().validate(attrs)
+        if aware_utcnow() - datetime_from_epoch(token['iat']) >= ROTAR_REFRESH_CADA:
+            token.blacklist()
+            token.set_jti()
+            token.set_exp()
+            token.set_iat()
+            token.outstand()
+            datos['refresh'] = str(token)
+        return datos
 
 
 class CorreoRefreshView(TokenRefreshView):
+    """Entrega un access token nuevo a partir de la cookie de sesión; no recibe el token en el cuerpo."""
     serializer_class = CorreoRefreshSerializer
     authentication_classes = []
+
+    @extend_schema(request=None, responses={200: inline_serializer('AccessRenovado', fields={
+        'access': serializers.CharField(),
+    })})
+    def post(self, request, *args, **kwargs):
+        exigir_csrf(request)
+        refresh = request.COOKIES.get(COOKIE_REFRESH)
+        if not refresh:
+            return Response({'detail': 'No hay una sesión activa.'}, status=401)
+        serializador = self.get_serializer(data={'refresh': refresh})
+        try:
+            serializador.is_valid(raise_exception=True)
+        except (TokenError, AuthenticationFailed):
+            respuesta = Response({'detail': 'Tu sesión terminó. Inicia sesión nuevamente.'}, status=401)
+            borrar_cookie_refresh(respuesta)
+            return respuesta
+        datos = serializador.validated_data
+        respuesta = Response({'access': datos['access']})
+        if 'refresh' in datos:
+            guardar_cookie_refresh(request, respuesta, datos['refresh'])
+        return respuesta

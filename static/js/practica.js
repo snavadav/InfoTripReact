@@ -5,7 +5,7 @@
   let favorite = false;
   function display(){toggle.textContent=favorite?'Quitar de favoritos':'Guardar lugar';toggle.setAttribute('aria-pressed',String(favorite));}
   async function initial(){
-    try{if(localStorage.getItem('access_token')){favorite=(await InfoTrip.api(`/api/v1/favoritos/${slug}/`)).favorito;display();}}
+    try{if(InfoTrip.hasSession()){favorite=(await InfoTrip.api(`/api/v1/favoritos/${slug}/`)).favorito;display();}}
     catch(error){status.textContent=error.message;}
     finally{toggle.disabled=false;}
   }

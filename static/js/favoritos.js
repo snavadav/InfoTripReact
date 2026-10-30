@@ -109,13 +109,13 @@
       }
     } catch (error) {
       status.textContent = error.message;
-      document.getElementById('favorites-login').hidden = !!localStorage.getItem('access_token');
+      document.getElementById('favorites-login').hidden = InfoTrip.hasSession();
     } finally {
       more.disabled = false;
     }
   }
 
   more.addEventListener('click', load);
-  if (localStorage.getItem('access_token')) load();
+  if (InfoTrip.hasSession()) load();
   else document.getElementById('favorites-login').hidden = false;
 })();

@@ -14,6 +14,7 @@ from rest_framework_simplejwt.tokens        import RefreshToken
 from django.db                   import IntegrityError, transaction
 
 from .models      import Usuario
+from .sesion      import COOKIE_REFRESH, borrar_cookie_refresh, exigir_csrf
 from .serializers import RegistroSerializer, UsuarioPerfilSerializer, CambiarPasswordSerializer
 
 
@@ -58,30 +59,28 @@ class RegistroView(generics.CreateAPIView):
 class LogoutView(APIView):
     """
     POST /api/v1/auth/logout/
-    Invalida el refresh token (blacklist).
+    Invalida el refresh token de la cookie de sesión (blacklist) y borra la cookie.
+    No pide access token: al abrir una página aún no hay uno en memoria.
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
+    authentication_classes = []
 
-    @extend_schema(
-        request=inline_serializer('SolicitudLogout', fields={'refresh': serializers.CharField()}),
-        responses={200: inline_serializer('SesionCerrada', fields={'mensaje': serializers.CharField()})},
-    )
+    @extend_schema(request=None, responses={
+        200: inline_serializer('SesionCerrada', fields={'mensaje': serializers.CharField()}),
+    })
     def post(self, request):
-        refresh_token = request.data.get('refresh') if hasattr(request.data, 'get') else None
+        exigir_csrf(request)
+        refresh_token = request.COOKIES.get(COOKIE_REFRESH)
         if not refresh_token:
-            return Response(
-                {'error': 'Se requiere el refresh token.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({'error': 'No hay una sesión activa.'}, status=status.HTTP_400_BAD_REQUEST)
         # Solo se capturan errores del token: cualquier otro fallo debe verse, no convertirse en un 400.
         try:
-            RefreshToken(str(refresh_token)).blacklist()
-            return Response({'mensaje': 'Sesión cerrada correctamente.'})
+            RefreshToken(refresh_token).blacklist()
+            respuesta = Response({'mensaje': 'Sesión cerrada correctamente.'})
         except TokenError:
-            return Response(
-                {'error': 'Token inválido o ya expirado.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            respuesta = Response({'error': 'Token inválido o ya expirado.'}, status=status.HTTP_400_BAD_REQUEST)
+        borrar_cookie_refresh(respuesta)
+        return respuesta
 
 
 # ─── PERFIL ───────────────────────────────────────────────────
@@ -116,4 +115,7 @@ class CambiarPasswordView(APIView):
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response({'mensaje': 'Contraseña actualizada correctamente.'})
+        # Cambiar la contraseña revoca los tokens; la cookie ya no sirve.
+        respuesta = Response({'mensaje': 'Contraseña actualizada correctamente.'})
+        borrar_cookie_refresh(respuesta)
+        return respuesta

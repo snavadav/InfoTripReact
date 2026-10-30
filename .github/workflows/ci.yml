@@ -112,6 +112,14 @@ jobs:
           estatico=$(curl --fail --silent http://localhost:8080/destinos/ | grep -o '/static/css/[^"]*' | head -1)
           curl --fail --silent --show-error --output /dev/null "http://localhost:8080$estatico"
           curl --fail --silent --show-error --head http://localhost:8080/ | grep -i '^content-security-policy'
+      - name: Comprobar la protección CSRF de la sesión a través de nginx
+        run: |
+          token=csrfprueba0123456789abcdef012345
+          origen=http://localhost:8080
+          ruta=$origen/api/v1/auth/logout/
+          test "$(curl -s -o /dev/null -w '%{http_code}' -X POST $ruta)" = 403
+          test "$(curl -s -o /dev/null -w '%{http_code}' -X POST -H "Cookie: csrftoken=$token" -H "X-CSRFToken: $token" -H "Origin: https://ajeno.example" $ruta)" = 403
+          test "$(curl -s -o /dev/null -w '%{http_code}' -X POST -H "Cookie: csrftoken=$token" -H "X-CSRFToken: $token" -H "Origin: $origen" $ruta)" = 400
       - name: Registros si algo falló
         if: failure()
         run: docker compose --env-file .env.docker logs --no-color

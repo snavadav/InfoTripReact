@@ -24,7 +24,7 @@ Tareas que no se pueden automatizar desde el código. Marca cada una al completa
   - Configuración SMTP real (`EMAIL_BACKEND` smtp, `EMAIL_HOST`, credenciales).
   - `REDIS_URL`: producción no arranca sin ella.
   - Sin Docker, programar `python manage.py enviar_avisos` cada pocos minutos. Con Docker lo hace el servicio `avisos`.
-  - HTTPS: terminar TLS en nginx o en el balanceador; `docker/nginx.conf` solo escucha HTTP. Con `.env.docker` real, quitar `SECURE_SSL_REDIRECT=False` y `SECURE_HSTS_SECONDS=0`.
+  - HTTPS: terminar TLS en nginx o en el balanceador; `docker/nginx.conf` solo escucha HTTP. Con `.env.docker` real, quitar `SECURE_SSL_REDIRECT=False` y `SECURE_HSTS_SECONDS=0`, y definir `DETRAS_DE_PROXY_HTTPS=True`. Si el TLS termina en un balanceador delante de nginx, seguir el comentario de `docker/nginx.conf`; de lo contrario, el refresco de sesión y el logout responderán 403.
   - `/media/`: el volumen `media` guarda las fotos de los usuarios; incluirlo en las copias de seguridad junto con la base de datos.
 
 ## Fase 2

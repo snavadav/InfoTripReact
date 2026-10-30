@@ -1,7 +1,7 @@
 (() => {
   const form = document.getElementById('contribution-form');
   if (form) {
-    if (localStorage.getItem('access_token')) document.getElementById('aporte-access-note').textContent='Tu aporte quedará pendiente de revisión. Puedes gestionarlo desde Mi perfil.';
+    if (InfoTrip.hasSession()) document.getElementById('aporte-access-note').textContent='Tu aporte quedará pendiente de revisión. Puedes gestionarlo desde Mi perfil.';
     const tipo = form.elements.tipo;
     function sync() {
       form.querySelectorAll('[data-type]').forEach(label => {

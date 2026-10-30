@@ -213,6 +213,10 @@ La referencia completa e interactiva está en `/api/v1/docs/` (Swagger) y el esq
 
 `/api/v1/destinos/` admite los filtros `q`, `categoria`, `municipio`, `region`, `servicio`, `calificacion_min`, `concepto`, `precio_max`, `datos_recientes` y `orden=recientes`.
 
+### Sesión
+
+Iniciar sesión tiene dos pasos: `login` envía un código al correo y `verificar-codigo` lo valida. Esta última responde con el token `access` y guarda el refresh token en una cookie `HttpOnly`, que JavaScript no puede leer. `token/refresh` y `logout` usan esa cookie, no reciben el token en el cuerpo y exigen la cabecera `X-CSRFToken` con el valor de la cookie `csrftoken`. El navegador conserva el `access` solo en memoria y pide uno nuevo al cargar cada página privada. En `localStorage` solo queda `usuario`, que sirve para mostrar el nombre en la interfaz.
+
 ### Operación
 
 | Ruta o comando | Descripción |

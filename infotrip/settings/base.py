@@ -158,10 +158,15 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME':  timedelta(hours=2),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'CHECK_REVOKE_TOKEN': True,
-    'ROTATE_REFRESH_TOKENS':  True,
+    # La rotación la decide CorreoRefreshSerializer: como mucho una vez al día. Hacerlo en cada
+    # refresco crearía una fila por página visitada y dos pestañas se invalidarían entre sí.
+    'ROTATE_REFRESH_TOKENS':  False,
     'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
+# Cookie del refresh token (apps/usuarios/sesion.py); solo por HTTPS en producción.
+REFRESH_COOKIE_SECURE = False
 
 # ─── INTERNACIONALIZACIÓN ─────────────────────────────────────
 LANGUAGE_CODE = 'es-mx'

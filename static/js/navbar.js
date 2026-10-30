@@ -19,9 +19,12 @@ mobileMenu.querySelectorAll('a').forEach(link => {
 });
 
 // ── Sesión ──
+// Las sesiones anteriores a la cookie HttpOnly guardaban los tokens aquí: se retiran y se vuelve a iniciar sesión.
+if (localStorage.getItem('refresh_token')) ['access_token', 'refresh_token', 'usuario'].forEach(key => localStorage.removeItem(key));
+
 let usuario = null;
 try {usuario = JSON.parse(localStorage.getItem('usuario') || 'null');} catch {}
-if (!usuario || typeof usuario.nombre !== 'string' || typeof usuario.apellido !== 'string' || !localStorage.getItem('access_token')) usuario = null;
+if (!usuario || typeof usuario.nombre !== 'string' || typeof usuario.apellido !== 'string') usuario = null;
 
 if (usuario) {
   const inicial = usuario.nombre.charAt(0).toUpperCase();
@@ -49,14 +52,10 @@ document.getElementById('nav-user').prepend(profileLink);
 
 // ── Logout ──
 function doLogout() {
-  const refresh = localStorage.getItem('refresh_token');
   fetch('/api/v1/auth/logout/', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('access_token'), 'X-CSRFToken': getCookie('csrftoken') },
-    body: JSON.stringify({ refresh })
+    headers: { 'X-CSRFToken': getCookie('csrftoken') },
   }).finally(() => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
     localStorage.removeItem('usuario');
     window.location.href = '/';
   });
