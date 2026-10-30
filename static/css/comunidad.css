@@ -1,6 +1,7 @@
 /* Contenido de la comunidad, cuentas, pasaporte, misiones y formularios en panel. */
 .community-section { margin-top: 2rem; }
 .community-section > h2 { margin-bottom: .4rem; }
+#practical-title { margin-top: 1.75rem; }
 .community-box {
   margin-top: .75rem;
   padding: 1.1rem;

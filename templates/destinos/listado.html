@@ -4,40 +4,89 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/explorar.css' %}">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" integrity="sha256-YU3qCpj/P06tdPBJGPax0bm6Q1wltfwjsho5TR4+TYc=" crossorigin="">
 <link rel="stylesheet" href="{% static 'css/mapa.css' %}">
 {% endblock %}
 {% block content %}
 {% include 'partials/navBar.html' %}
-<main class="explore-shell results-shell">
-  <a class="back-link" href="{% url 'index' %}">← Volver al inicio</a>
-  <div class="results-header"><div><span class="eyebrow">TU PRÓXIMA ESCAPADA</span><h1>Explora Jalisco</h1></div><p>Encuentra un lugar. Acércate en el mapa. Prepara tu visita.</p></div>
-  <p><a href="{% url 'costos-indice' %}">¿Cuánto cuesta cada destino? Compara gastos reales →</a></p>
-  <details class="filters-panel" id="filters-panel" data-activos="{% if filtros or formulario.errors %}true{% else %}false{% endif %}" open>
-  <summary>Buscar y filtrar</summary>
-  <form class="explore-filters" action="{% url 'destinos-listado' %}" role="search">
-    {% for campo in formulario %}<div class="filter-field"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{{ campo.errors }}</div>{% endfor %}
-    <div class="filter-actions"><button type="submit">Buscar</button><a href="{% url 'destinos-listado' %}">Limpiar filtros</a></div>
-  </form>
-  </details>
-  <p class="editorial-note">El filtro y el orden por información reciente usan la fecha de consulta indicada por la comunidad o la última vez que alguien confirmó el dato. No garantiza que el dato siga vigente; confirma horarios, precios y condiciones antes de viajar.</p>
-  <p class="editorial-note">Los precios comparan aportes publicados de los últimos 365 días por concepto. Los destinos sin datos no aparecen al filtrar por precio o calificación.</p>
-  <div class="map-toolbar"><p class="result-count">{{ pagina.paginator.count }} resultado{{ pagina.paginator.count|pluralize }}{% if q %} para «{{ q }}»{% endif %}</p><button type="button" id="toggle-map" aria-expanded="false" aria-controls="map-panel" hidden>Ver mapa</button></div>
-  <section id="map-panel" hidden aria-label="Mapa de destinos">
-    <div class="map-tools"><button type="button" id="locate-me">Usar mi ubicación</button><button type="button" id="fit-results">Ver resultados</button><span>El mapa muestra los destinos de esta página.</span></div>
-    <p id="map-status" role="status" aria-live="polite">Abre un marcador para consultar el destino.</p>
-    {% if editorial %}<p class="editorial-note">Las fichas de inspiración aún no tienen coordenadas registradas. Puedes consultar su ubicación desde el detalle.</p>{% endif %}
+<main class="explorer">
+  <h1 class="sr-only">Explora Jalisco</h1>
+  <aside class="explorer-side" aria-label="Búsqueda y resultados">
+    <div class="explorer-head">
+      <form class="explore-filters" action="{% url 'destinos-listado' %}" role="search">
+        <div class="explorer-search">
+          <label class="sr-only" for="{{ formulario.q.id_for_label }}">{{ formulario.q.label }}</label>
+          {{ formulario.q }}
+          <button type="submit">Buscar</button>
+        </div>
+        {{ formulario.q.errors }}
+        <div class="filter-chips" role="group" aria-label="Categorías">
+          <a href="{% url 'destinos-listado' %}{% if q %}?q={{ q|urlencode }}{% endif %}"{% if not categoria %} aria-current="true"{% endif %}>Todo</a>
+          {% for slug, nombre in formulario.categoria.field.choices %}{% if slug %}<a href="?{% if q %}q={{ q|urlencode }}&amp;{% endif %}categoria={{ slug }}"{% if categoria == slug %} aria-current="true"{% endif %}>{{ nombre }}</a>{% endif %}{% endfor %}
+        </div>
+        <details class="filters-panel" id="filters-panel" data-activos="{% if filtros_activos or formulario.errors %}true{% else %}false{% endif %}" open>
+          <summary>Más filtros</summary>
+          <div class="filter-grid">
+            {% for campo in formulario %}{% if campo.name != 'q' %}<div class="filter-field{% if campo.name == 'datos_recientes' %} filter-field--check{% endif %}"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{{ campo.errors }}</div>{% endif %}{% endfor %}
+          </div>
+          <div class="filter-actions"><button type="submit">Aplicar</button><a href="{% url 'destinos-listado' %}">Limpiar filtros</a></div>
+          <p class="editorial-note">La información reciente usa la fecha de consulta o la última confirmación de la comunidad: no garantiza que siga vigente. Los precios comparan aportes publicados de los últimos 365 días; los destinos sin datos no aparecen al filtrar por precio o calificación.</p>
+        </details>
+      </form>
+      <div class="map-toolbar">
+        <p class="result-count">{{ pagina.paginator.count }} resultado{{ pagina.paginator.count|pluralize }}{% if q %} para «{{ q }}»{% endif %}</p>
+        <div class="map-tools">
+          <button type="button" id="locate-me">Mi ubicación</button>
+          <button type="button" id="fit-results">Ver todos</button>
+          <button type="button" id="toggle-map" aria-expanded="true" aria-controls="map-panel" hidden>Ocultar mapa</button>
+        </div>
+      </div>
+    </div>
+    <div class="explorer-list">
+      <noscript><p class="editorial-note">Activa JavaScript para ver el mapa. Puedes buscar y abrir los destinos con los enlaces siguientes.</p></noscript>
+      {% if editorial %}<p class="editorial-note">Las fichas de inspiración aún no tienen coordenadas registradas. Puedes consultar su ubicación desde el detalle.</p>{% endif %}
+      <section id="route-panel" class="route-panel" aria-labelledby="route-title" hidden>
+        <div class="route-heading"><h2 id="route-title">Tu recorrido</h2><button type="button" id="route-clear">Vaciar</button></div>
+        <ol id="route-stops"></ol>
+        <p class="editorial-note">En el mapa se une con líneas rectas. La ruta real por carretera la calcula Google Maps.</p>
+        <div class="route-actions"><a class="boton boton-primario" id="route-open" href="#" target="_blank" rel="noopener noreferrer">Abrir ruta ↗<span class="sr-only"> (abre Google Maps en otra pestaña)</span></a><button type="button" id="route-fit">Ver en el mapa</button><a class="boton" id="route-trip" href="{% url 'mis-viajes' %}">Crear escapada</a></div>
+      </section>
+      {% include 'destinos/tarjetas.html' %}
+      {% if pagina.has_other_pages %}<nav class="pagination" aria-label="Páginas de destinos">{% if pagina.has_previous %}<a href="?{{ filtros }}&page={{ pagina.previous_page_number }}">← Anterior</a>{% endif %}<span>{{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>{% if pagina.has_next %}<a href="?{{ filtros }}&page={{ pagina.next_page_number }}">Siguiente →</a>{% endif %}</nav>{% endif %}
+      <p class="explorer-enlace"><a href="{% url 'costos-indice' %}">¿Cuánto cuesta cada destino? Compara gastos reales →</a></p>
+      {% include 'destinos/footer.html' %}
+    </div>
+  </aside>
+  <section id="map-panel" aria-label="Mapa de destinos">
     <div id="destinations-map" aria-label="Mapa interactivo de Jalisco"></div>
+    <p id="map-status" class="sr-only" role="status" aria-live="polite"></p>
+    <article id="place-panel" class="place-panel" aria-labelledby="place-name" hidden>
+      <button type="button" id="place-close" aria-label="Cerrar">×</button>
+      <img id="place-photo" alt="" hidden>
+      <div class="place-panel-cuerpo">
+        <span class="place-category" id="place-category"></span>
+        <h2 id="place-name"></h2>
+        <p id="place-where"></p>
+        <p class="place-coordinates" id="place-coordinates"></p>
+        <p class="place-description" id="place-description"></p>
+        <div class="place-actions">
+          <a class="boton boton-primario" id="place-detail">Ver ficha</a>
+          <a class="boton" id="place-directions" target="_blank" rel="noopener noreferrer">Cómo llegar ↗<span class="sr-only"> (abre Google Maps en otra pestaña)</span></a>
+          <button type="button" id="place-favorite" aria-pressed="false">Guardar</button>
+          <button type="button" id="place-route" aria-pressed="false">Agregar al recorrido</button>
+        </div>
+        <p class="place-status" id="place-status" role="status"></p>
+      </div>
+    </article>
   </section>
-  <noscript><p class="editorial-note">Activa JavaScript para ver el mapa. Puedes buscar y abrir los destinos con los enlaces siguientes.</p></noscript>
-  {% include 'destinos/tarjetas.html' %}
-  {% if puntos_mapa %}<div class="map-links" aria-label="Localizar un resultado">{% for lugar in puntos_mapa %}<button type="button" data-map-slug="{{ lugar.slug }}" hidden>Ubicar {{ lugar.nombre }}</button>{% endfor %}</div>{% endif %}
-  {% if pagina.has_other_pages %}<nav class="pagination" aria-label="Páginas de destinos">{% if pagina.has_previous %}<a href="?{{ filtros }}&page={{ pagina.previous_page_number }}">← Anterior</a>{% endif %}<span>Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>{% if pagina.has_next %}<a href="?{{ filtros }}&page={{ pagina.next_page_number }}">Siguiente →</a>{% endif %}</nav>{% endif %}
-  {% include 'destinos/footer.html' %}
 </main>
 {{ puntos_mapa|json_script:"map-places" }}
 {% endblock %}
 {% block extra_js %}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" integrity="sha256-Hk4dIpcqOSb0hZjgyvFOP+cEmDXUKKNE/tT542ZbNQg=" crossorigin="" defer></script>
+<script src="{% static 'js/cuenta-api.js' %}"></script>
+<script src="{% static 'js/mapa-base.js' %}" defer></script>
 <script src="{% static 'js/filtros.js' %}" defer></script>
 <script src="{% static 'js/mapa.js' %}" defer></script>
 {% endblock %}

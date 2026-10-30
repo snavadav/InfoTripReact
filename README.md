@@ -179,6 +179,7 @@ docker compose --env-file .env.docker down
 | `/login/`, `/registro/`, `/recuperar/` | Acceso a la cuenta |
 | `/perfil/` | Datos personales, avisos de moderación y aportes propios |
 | `/favoritos/`, `/mis-viajes/` | Lugares guardados y planes de viaje |
+| `/destinos/` (mapa) | Explorador con todos los resultados en el mapa, ficha rápida, favoritos y recorrido guardado en el navegador |
 | `/mis-viajes/<id>/bote/`, `/botes/<invitación>/` | Bote de la escapada: gastos reales del grupo y quién le debe a quién |
 | `/admin/` | Administración del catálogo, usuarios y moderación |
 | `/admin/moderacion/` | Cola de moderación con contadores (personal) |

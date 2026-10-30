@@ -5,6 +5,7 @@ import unicodedata
 
 from django import forms
 from django.core.paginator import Paginator
+from django.db.models import F
 from django.http import Http404
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
@@ -94,8 +95,25 @@ def completar(lugar):
     return lugar
 
 
+def primero_lo_curado(destinos):
+    """Lo registrado por el equipo antes que lo importado: es lo que tiene descripción y fotografía."""
+    return destinos.order_by(F('osm_id').asc(nulls_first=True), 'nombre', 'pk')
+
+
+def punto_de_mapa(destino):
+    """Solo lo que el mapa pinta al abrir: con cientos de puntos, cada campo se nota en el tamaño de la página."""
+    lugar = completar(presentar(destino))
+    return {
+        'slug': lugar['slug'], 'nombre': lugar['nombre'], 'municipio': lugar['municipio'], 'region': lugar['region'],
+        'categoria': lugar['categoria'], 'categorias': lugar['categorias'],
+        'latitud': lugar['latitud'], 'longitud': lugar['longitud'],
+        'url': lugar['url'], 'maps_url': lugar['maps_url'], 'miniatura_url': lugar['miniatura_url'],
+        'destacado': bool(lugar['miniatura_url']),
+    }
+
+
 def inicio(request):
-    lugares = [presentar(destino) for destino in destinos_publicos(con_fotos=True)[:12]]
+    lugares = [presentar(destino) for destino in primero_lo_curado(destinos_publicos(con_fotos=True))[:12]]
     # La selección editorial solo se usa en una instalación sin destinos (ni siquiera inactivos).
     if not lugares and not Destino.objects.exists():
         lugares = INSPIRACION
@@ -103,6 +121,7 @@ def inicio(request):
     return render(request, 'index.html', {
         'lugares': [completar(lugar) for lugar in seleccion],
         'exploracion': [completar(lugar) for lugar in lugares],
+        'puntos_mapa': [punto_de_mapa(destino) for destino in destinos_publicos(con_fotos=True)],
         'categorias_inicio': sorted({categoria for lugar in lugares for categoria in lugar['categorias']}),
     })
 
@@ -140,7 +159,7 @@ class ExploracionForm(forms.Form):
     )
     orden = forms.ChoiceField(
         label='Ordenar por', required=False,
-        choices=[('', 'Nombre'), ('recientes', 'Información práctica más reciente')],
+        choices=[('', 'Destacados primero'), ('recientes', 'Información práctica más reciente')],
     )
 
     def clean(self):
@@ -193,13 +212,16 @@ def listado(request):
     else:
         queryset = con_info_reciente(destinos_publicos(con_fotos=True))
         resultados = filtrar_destinos(queryset, datos) if valido else queryset.none()
+        if not datos.get('orden'):
+            resultados = primero_lo_curado(resultados)
     pagina = Paginator(resultados, 8).get_page(request.GET.get('page'))
     lugares = []
     for destino in pagina:
         lugar = completar(destino if isinstance(destino, dict) else presentar(destino))
         lugar['tiene_info_reciente'] = getattr(destino, 'tiene_info_reciente', False)
         lugares.append(lugar)
-    puntos = [lugar for lugar in lugares if not lugar['editorial']]
+    # El mapa muestra todos los resultados, no solo los de esta página de la lista.
+    puntos = [] if editorial else [punto_de_mapa(destino) for destino in resultados]
     return render(
         request,
         'destinos/listado.html',
@@ -210,6 +232,7 @@ def listado(request):
             'formulario': formulario,
             'categoria': datos.get('categoria', ''),
             'filtros': urlencode({k: v for k, v in datos.items() if v not in (None, '', False)}),
+            'filtros_activos': any(v not in (None, '', False) for k, v in datos.items() if k != 'q'),
             'puntos_mapa': puntos,
             'editorial': editorial,
         },

@@ -1,10 +1,13 @@
 <div class="trip-grid">
   {% for lugar in lugares %}
-  <a class="trip-card" href="{{ lugar.url }}">
-    {% if lugar.foto_url %}<img src="{{ lugar.miniatura_url }}" alt="{{ lugar.alt }}" width="800" height="480" loading="lazy" decoding="async">{% else %}<div class="photo-placeholder" aria-hidden="true">↗</div>{% endif %}
-    <span class="trip-tag">{{ lugar.categoria }}</span>
-    {% if lugar.tiene_info_reciente %}<span class="trip-freshness">Información práctica consultada recientemente</span>{% endif %}
-    <div class="trip-card-caption"><div><span>{% if lugar.editorial %}INSPIRACIÓN · {% endif %}JALISCO</span><h3>{{ lugar.nombre }}</h3></div><span class="trip-arrow" aria-hidden="true">↗</span></div>
+  <a class="trip-card" href="{{ lugar.url }}"{% if not lugar.editorial %} data-slug="{{ lugar.slug }}"{% endif %}>
+    {% if lugar.foto_url %}<img src="{{ lugar.miniatura_url }}" alt="{{ lugar.alt }}" width="800" height="480" loading="lazy" decoding="async">{% else %}<div class="photo-placeholder" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21zM12 11.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg></div>{% endif %}
+    <div class="trip-card-caption">
+      <h3>{{ lugar.nombre }}</h3>
+      <span>{% if lugar.editorial %}Inspiración · {% endif %}{{ lugar.municipio }}</span>
+      <span class="trip-tag">{{ lugar.categoria }}</span>
+      {% if lugar.tiene_info_reciente %}<span class="trip-freshness">Información práctica reciente</span>{% endif %}
+    </div>
   </a>
   {% empty %}
   <div class="empty-catalog"><h2>No hay destinos para mostrar</h2><p>{% if q or categoria %}Prueba otro nombre o consulta todos los destinos.{% else %}Estamos preparando nuevos lugares para tu próxima escapada.{% endif %}</p>{% if q or categoria %}<a href="{% url 'destinos-listado' %}">Ver todos</a>{% endif %}</div>

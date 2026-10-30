@@ -226,7 +226,7 @@ class FlujosTests(StaticLiveServerTestCase):
         self.assertLess(self.pagina.locator('.trip-card').first.bounding_box()['y'], 812)
         self.assertFalse(self.pagina.locator('#filters-panel').evaluate('panel => panel.open'))
         self.assertEqual(self.pagina.evaluate('document.documentElement.scrollWidth'), 375)
-        self.abrir('/destinos/?q=mirador')
+        self.abrir('/destinos/?concepto=comida')
         self.assertTrue(self.pagina.locator('#filters-panel').evaluate('panel => panel.open'))
         self.abrir('/')
         pequenos = self.pagina.evaluate('''[...document.querySelectorAll('main button, main input, main select')]
@@ -331,6 +331,62 @@ class FlujosTests(StaticLiveServerTestCase):
         self.pagina.click('#negocios-form button[type="submit"]')
         self.pagina.wait_for_selector('#negocios-form .form-status:has-text("Gracias")')
         self.assertEqual(InteresNegocio.objects.get().negocio, 'Hostal Sierra')
+
+    def test_elegir_en_el_mapa_guardar_y_armar_un_recorrido(self):
+        Destino.objects.create(nombre='Cascada', slug='cascada', municipio=self.destino.municipio, descripcion='Salto de agua',
+                               latitud=19.95, longitud=-103.75)
+        self.iniciar_sesion()
+        self.abrir('/destinos/')
+        self.pagina.wait_for_selector('.pin', state='attached')
+        self.pagina.click('.trip-card[data-slug="mirador"]')
+        self.pagina.wait_for_selector('#place-panel:not([hidden])')
+        self.assertEqual(self.pagina.inner_text('#place-name'), 'Mirador')
+        self.pagina.wait_for_selector('#place-description:has-text("Lugar de prueba")')
+        self.assertIn('/destinos/mirador/', self.pagina.get_attribute('#place-detail', 'href'))
+        self.pagina.click('#place-favorite')
+        self.pagina.wait_for_selector('#place-status:has-text("Guardado")')
+        self.assertTrue(self.usuario.favoritos.filter(destino=self.destino).exists())
+        self.pagina.click('#place-route')
+        self.pagina.click('.trip-card[data-slug="cascada"]')
+        self.pagina.wait_for_selector('#place-name:has-text("Cascada")')
+        self.pagina.click('#place-route')
+        self.assertEqual(self.pagina.locator('#route-stops li').count(), 2)
+        self.pagina.wait_for_selector('path.linea-recorrido', state='attached')
+        ruta = self.pagina.get_attribute('#route-open', 'href')
+        self.assertIn('google.com/maps/dir', ruta)
+        self.assertIn('waypoints=19.9', ruta)
+        # El recorrido sobrevive a recargar; solo está en este navegador.
+        self.pagina.reload()
+        self.pagina.wait_for_selector('#route-panel:not([hidden])')
+        self.pagina.click('#route-clear')
+        self.assertTrue(self.pagina.is_hidden('#route-panel'))
+
+    def test_el_tema_se_cambia_y_se_recuerda(self):
+        self.contexto.close()
+        self.contexto = self.navegador.new_context(color_scheme='light')
+        self.pagina = self.contexto.new_page()
+        self.abrir('/destinos/')
+        self.assertEqual(self.pagina.evaluate('document.documentElement.dataset.theme'), 'light')
+        fondo_claro = self.pagina.evaluate("getComputedStyle(document.querySelector('.explorer-side')).backgroundColor")
+        self.pagina.click('#navbar [data-theme-toggle]')
+        self.assertEqual(self.pagina.evaluate('document.documentElement.dataset.theme'), 'dark')
+        self.assertNotEqual(self.pagina.evaluate("getComputedStyle(document.querySelector('.explorer-side')).backgroundColor"), fondo_claro)
+        self.assertIn('invert', self.pagina.evaluate("getComputedStyle(document.querySelector('.leaflet-tile-pane')).filter"))
+        self.abrir('/login/')
+        self.assertEqual(self.pagina.evaluate('document.documentElement.dataset.theme'), 'dark')
+
+    def test_en_movil_la_tarjeta_elegida_queda_a_la_vista(self):
+        for numero in range(6):
+            Destino.objects.create(nombre=f'Lugar {numero}', slug=f'lugar-{numero}', municipio=self.destino.municipio,
+                                   descripcion='-', latitud=19.9, longitud=-103.7)
+        self.pagina.set_viewport_size({'width': 375, 'height': 812})
+        self.abrir('/')
+        self.pagina.wait_for_selector('.discovery-card')
+        for _ in range(4):
+            self.pagina.click('#next-place')
+        caja = self.pagina.locator('.discovery-card[aria-pressed="true"]').bounding_box()
+        self.assertGreaterEqual(caja['x'], 0)
+        self.assertLessEqual(caja['x'] + caja['width'], 375)
 
     def test_guardar_favorito_y_cerrar_sesion(self):
         self.iniciar_sesion()
