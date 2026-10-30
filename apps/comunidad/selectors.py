@@ -4,6 +4,7 @@ Es la única puerta de `destinos` hacia `comunidad`: este módulo solo depende d
 comunidad y conoce los destinos por su clave foránea, así que nunca importa código de `destinos`.
 """
 from datetime import date, timedelta
+from statistics import median
 from django.db.models import Avg, Count, DateField, Exists, Max, Min, OuterRef, Prefetch, Q, Subquery, Value
 from django.db.models.functions import Coalesce, Greatest
 from django.utils import timezone
@@ -92,6 +93,57 @@ def resumen(destino):
     for gasto in gastos:
         gasto['nombre'] = etiquetas[gasto['concepto']]
     return {'resenas': resenas, 'gastos': gastos}
+
+
+# Con menos reportes, una cifra sería la opinión de una o dos personas.
+MINIMO_REPORTES = 3
+CONCEPTOS_DEL_DIA = ('entrada', 'comida', 'transporte')
+
+
+def _gastos_recientes():
+    return publicados().filter(tipo='gasto', fecha_visita__gte=timezone.localdate() - timedelta(days=365))
+
+
+def _resumir_costos(filas):
+    """`filas`: (concepto, monto, fecha_visita). Bajo el mínimo de reportes no expone ninguna cifra."""
+    por_concepto = {}
+    for concepto, monto, fecha in filas:
+        por_concepto.setdefault(concepto, []).append((monto, fecha))
+    conceptos = []
+    for clave, nombre in Aporte.CONCEPTOS:
+        reportes = por_concepto.get(clave, [])
+        suficiente = len(reportes) >= MINIMO_REPORTES
+        montos = [monto for monto, _ in reportes]
+        conceptos.append({
+            'clave': clave, 'nombre': nombre, 'cantidad': len(reportes), 'suficiente': suficiente,
+            'mediana': median(montos) if suficiente else None,
+            'minimo': min(montos) if suficiente else None,
+            'maximo': max(montos) if suficiente else None,
+            'ultima_fecha': max(fecha for _, fecha in reportes) if suficiente else None,
+        })
+    del_dia = [fila for fila in conceptos if fila['suficiente'] and fila['clave'] in CONCEPTOS_DEL_DIA]
+    return {
+        'conceptos': conceptos,
+        'hay_datos': any(fila['suficiente'] for fila in conceptos),
+        # Con un solo concepto no es un día: "solo comida" parecería más barato que "comida y transporte".
+        'dia': {'total': sum(fila['mediana'] for fila in del_dia),
+                'incluye': [fila['clave'] for fila in del_dia]} if len(del_dia) >= 2 else None,
+        'alojamiento': next((f for f in conceptos if f['clave'] == 'alojamiento' and f['suficiente']), None),
+    }
+
+
+def costos_de_destino(destino):
+    return _resumir_costos(
+        _gastos_recientes().filter(destino=destino).values_list('concepto', 'monto', 'fecha_visita'))
+
+
+def costos_por_destino():
+    """{destino_id: costos} de los destinos con datos suficientes, en una sola consulta."""
+    por_destino = {}
+    for destino_id, *fila in _gastos_recientes().values_list('destino_id', 'concepto', 'monto', 'fecha_visita'):
+        por_destino.setdefault(destino_id, []).append(fila)
+    resumenes = {destino_id: _resumir_costos(filas) for destino_id, filas in por_destino.items()}
+    return {destino_id: costos for destino_id, costos in resumenes.items() if costos['hay_datos']}
 
 
 def ficha_practica(destino):

@@ -10,7 +10,7 @@ class Evento(models.Model):
     """
     # Los envía el navegador sin sesión; son los únicos que acepta POST /api/v1/eventos/.
     DEL_NAVEGADOR = ['registro_iniciado', 'ficha_vista', 'dato_practico_visto', 'enlace_compartido',
-                     'visita_por_enlace', 'clic_en_aviso']
+                     'visita_por_enlace', 'clic_en_aviso', 'costos_vista']
     DEL_SERVIDOR = ['registro_completado', 'login_completado', 'aporte_enviado', 'aporte_publicado',
                     'dato_enviado', 'dato_confirmado', 'reporte_enviado', 'viaje_guardado', 'favorito_guardado']
 

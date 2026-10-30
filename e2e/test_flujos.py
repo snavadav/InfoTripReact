@@ -13,6 +13,7 @@ from django.core.cache import cache
 
 from apps.comunidad.models import Viaje
 from apps.destinos.models import Destino, Municipio, Region
+from apps.metricas.models import Evento
 from apps.usuarios.models import Usuario
 
 CLAVE = 'Prueba-segura-493!'
@@ -81,7 +82,7 @@ class FlujosTests(StaticLiveServerTestCase):
         self.pagina.wait_for_url(lambda url: '/login/' not in url)
 
     def test_paginas_publicas_sin_violaciones_de_csp(self):
-        for ruta in ['/', '/destinos/', '/destinos/mirador/', '/login/', '/registro/', '/api/v1/docs/', '/no-existe/']:
+        for ruta in ['/', '/destinos/', '/destinos/mirador/', '/destinos/mirador/costos/', '/costos/', '/login/', '/registro/', '/api/v1/docs/', '/no-existe/']:
             with self.subTest(ruta=ruta):
                 self.abrir(ruta)
                 self.pagina.wait_for_load_state('load')
@@ -176,6 +177,14 @@ class FlujosTests(StaticLiveServerTestCase):
         self.pagina.locator('.trip-card button', has_text='Eliminar').click()
         self.pagina.wait_for_selector('#trip-status:has-text("eliminada")')
         self.assertFalse(Viaje.objects.exists())
+
+    def test_reportar_un_gasto_desde_la_pagina_de_costos(self):
+        self.abrir('/destinos/mirador/costos/')
+        self.pagina.click('a[href$="#reportar-gasto"]')
+        self.pagina.wait_for_selector('#contribution-form select[name="concepto"]', state='visible')
+        self.assertEqual(self.pagina.input_value('#contribution-form select[name="tipo"]'), 'gasto')
+        self.pagina.wait_for_load_state('networkidle')
+        self.assertTrue(Evento.objects.filter(nombre='costos_vista', destino='mirador').exists())
 
     def test_tras_iniciar_sesion_vuelve_a_la_ficha(self):
         self.abrir('/destinos/mirador/')

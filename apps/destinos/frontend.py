@@ -12,9 +12,10 @@ from django.templatetags.static import static
 from django.utils import timezone
 from django.utils.text import slugify
 
-from apps.comunidad.models import Colaboracion
+from apps.comunidad.models import Aporte, Colaboracion
 from apps.comunidad.selectors import (
-    aportes_publicos, con_info_reciente, ficha_practica, preguntas_publicas, resumen,
+    MINIMO_REPORTES, aportes_publicos, con_info_reciente, costos_de_destino, costos_por_destino, ficha_practica,
+    preguntas_publicas, resumen,
 )
 from .filtros import filtrar_destinos
 from .fotos import FOTOS_CATALOGO
@@ -236,3 +237,36 @@ def detalle(request, slug):
 
 def creditos(request):
     return render(request, 'legal/creditos.html', {'fotos': FOTOS_CATALOGO.values()})
+
+
+def costos_destino(request, slug):
+    destino = get_object_or_404(destinos_publicos(con_fotos=True), slug=slug)
+    lugar = completar(presentar(destino))
+    costos = costos_de_destino(destino)
+    seo = seo_de_destino(lugar)
+    seo['titulo'] = f"¿Cuánto cuesta ir a {lugar['nombre']}? Gastos reales de viajeros — InfoTrip"
+    seo['descripcion'] = descripcion_de_costos(lugar['nombre'], costos)
+    return render(request, 'destinos/costos.html', {
+        'lugar': lugar, 'costos': costos, 'seo': seo, 'minimo': MINIMO_REPORTES,
+    })
+
+
+def descripcion_de_costos(nombre, costos):
+    if costos['dia']:
+        return (f"Un día típico cuesta cerca de ${costos['dia']['total']:,.0f} MXN por persona en {nombre}, "
+                'según gastos reportados por viajeros en el último año.')
+    return f'Gastos reportados por viajeros en {nombre}: entrada, comida, alojamiento y transporte.'
+
+
+def costos_indice(request):
+    costos = costos_por_destino()
+    # Por concepto y por nombre: un ranking de totales compararía destinos con datos distintos.
+    filas = [{'destino': destino, 'montos': [fila['mediana'] for fila in costos[destino.pk]['conceptos']]}
+             for destino in Destino.objects.filter(pk__in=costos, es_activo=True).order_by('nombre')]
+    seo = {'titulo': '¿Cuánto cuesta viajar por Jalisco? — InfoTrip',
+           'descripcion': ('Compara lo que gastaron viajeros en destinos de Jalisco: '
+                           'entrada, comida, alojamiento y transporte.')}
+    return render(request, 'destinos/costos_indice.html', {
+        'filas': filas, 'seo': seo, 'minimo': MINIMO_REPORTES,
+        'encabezados': [nombre for _, nombre in Aporte.CONCEPTOS],
+    })

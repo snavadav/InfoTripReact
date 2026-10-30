@@ -24,6 +24,9 @@
     }
   }
 
+  const costos = document.querySelector('[data-costos]');
+  if (costos) send('costos_vista', costos.dataset.costos);
+
   // Los enlaces compartidos y los de los correos de aviso llevan ?ref=…
   const ref = new URLSearchParams(location.search).get('ref');
   if (ref === 'compartido') send('visita_por_enlace', destino);

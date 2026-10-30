@@ -1,0 +1,40 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}{{ seo.titulo }}{% endblock %}
+{% block robots %}{% if not costos.hay_datos %}<meta name="robots" content="noindex">{% endif %}{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/comunidad.css' %}">{% endblock %}
+{% block content %}{% include 'partials/navBar.html' %}
+<main class="explore-shell legal-page" data-costos="{{ lugar.slug }}">
+  <a class="back-link" href="{{ lugar.url }}">← {{ lugar.nombre }}</a>
+  <span class="eyebrow">{{ lugar.municipio }} · {{ lugar.region }}</span>
+  <h1>¿Cuánto cuesta ir a {{ lugar.nombre }}?</h1>
+
+  {% if costos.dia %}
+  <section class="community-stats" aria-label="Resumen de costos">
+    <div><strong>${{ costos.dia.total|floatformat:"-2g" }} MXN</strong><p>Un día típico por persona</p><small>Suma de {{ costos.dia.incluye|join:", " }}. No incluye lo que no aparece aquí.</small></div>
+    {% if costos.alojamiento %}<div><strong>${{ costos.alojamiento.mediana|floatformat:"-2g" }} MXN</strong><p>Alojamiento por noche</p><small>Aparte del día típico.</small></div>{% endif %}
+  </section>
+  {% elif costos.hay_datos %}
+  <p class="community-note">Aún no hay suficientes conceptos para estimar un día típico. Mira abajo lo que sí se ha reportado.</p>
+  {% else %}
+  <div class="community-box"><p>Todavía no hay suficientes reportes para dar una cifra honesta. Publicamos un concepto cuando tiene al menos {{ minimo }} reportes del último año.</p></div>
+  {% endif %}
+
+  <h2>Lo que reportan los viajeros</h2>
+  {% for concepto in costos.conceptos %}
+  <article class="community-box">
+    <h3>{{ concepto.nombre }}</h3>
+    {% if concepto.suficiente %}
+    <p><strong>${{ concepto.mediana|floatformat:"-2g" }} MXN</strong> es lo habitual, entre ${{ concepto.minimo|floatformat:"-2g" }} y ${{ concepto.maximo|floatformat:"-2g" }}</p>
+    <p class="community-note">{{ concepto.cantidad }} reportes · el más reciente, de una visita del {{ concepto.ultima_fecha|date:'d/m/Y' }}</p>
+    {% else %}
+    <p>Sin cifra todavía: {{ concepto.cantidad }} de {{ minimo }} reportes necesarios.</p>
+    {% endif %}
+  </article>
+  {% endfor %}
+
+  <p><a href="{{ lugar.url }}#reportar-gasto">¿Ya fuiste? Reporta lo que gastaste →</a></p>
+  <p class="community-note">Son gastos reportados por viajeros en el último año y revisados antes de publicarse. No son cotizaciones ni precios oficiales. "Lo habitual" es la mediana: la mitad de los reportes está por debajo y la mitad por encima. Confirma con el lugar antes de viajar.</p>
+  <p><a href="{% url 'costos-indice' %}">Comparar con otros destinos →</a></p>
+  {% include 'destinos/footer.html' %}
+</main>
+{% endblock %}

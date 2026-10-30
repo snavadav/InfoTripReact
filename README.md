@@ -183,6 +183,7 @@ docker compose --env-file .env.docker down
 | `/admin/moderacion/` | Cola de moderación con contadores (personal) |
 | `/admin/metricas/` | Embudos, retención y fichas útiles (personal) |
 | `/escapadas/<id>/` | Escapada compartida, de solo lectura y sin cuenta |
+| `/costos/`, `/destinos/<slug>/costos/` | ¿Cuánto cuesta ir?: gastos reales, con un mínimo de 3 reportes por concepto |
 | `/privacidad/`, `/terminos/`, `/creditos/` | Avisos legales y créditos de fotografías |
 | `/baja-avisos/` | Dejar de recibir correos de novedades, desde el enlace de cada correo |
 

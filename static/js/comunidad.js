@@ -10,6 +10,11 @@
       });
     }
     tipo.addEventListener('change', sync); sync();
+    // Enlace "Reporta lo que gastaste": abre el formulario ya en el tipo correcto.
+    if (location.hash === '#reportar-gasto') {
+      tipo.value = 'gasto'; sync();
+      document.getElementById('reportar-gasto').open = true;
+    }
     form.addEventListener('submit', event => {
       event.preventDefault();
       InfoTrip.submit(form, async status => {

@@ -379,3 +379,8 @@ details[open] summary::before {
 
 .community-form label.check-label { display: flex; flex-direction: row; gap: 8px; align-items: center; }
 .community-form label.check-label input { width: auto; min-height: 0; }
+
+.costos-tabla { overflow-x: auto; margin: 16px 0; }
+.costos-tabla table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 14px; }
+.costos-tabla th, .costos-tabla td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #ebe3f5; white-space: nowrap; }
+.costos-tabla thead th { font-size: 12px; }

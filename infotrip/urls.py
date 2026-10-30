@@ -14,9 +14,9 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerSplitVie
 from apps.comunidad.cola import cola_moderacion
 from apps.comunidad.viajes import viaje_publico
 from apps.core.views import robots, salud
-from apps.destinos.sitemaps import DestinosSitemap, PaginasSitemap
+from apps.destinos.sitemaps import CostosSitemap, DestinosSitemap, PaginasSitemap
 from apps.usuarios.views_frontend import baja_avisos, login_view, registro_view
-from apps.destinos.frontend import creditos, inicio, listado, detalle
+from apps.destinos.frontend import costos_destino, costos_indice, creditos, inicio, listado, detalle
 from apps.metricas.views import EventosView, panel as panel_metricas
 
 
@@ -30,7 +30,8 @@ def vista_legal(plantilla):
 urlpatterns = [
     path('health/', salud, name='salud'),
     path('robots.txt', robots, name='robots'),
-    path('sitemap.xml', sitemap, {'sitemaps': {'paginas': PaginasSitemap, 'destinos': DestinosSitemap}},
+    path('sitemap.xml', sitemap,
+         {'sitemaps': {'paginas': PaginasSitemap, 'destinos': DestinosSitemap, 'costos': CostosSitemap}},
          name='django.contrib.sitemaps.views.sitemap'),
     path('favoritos/', TemplateView.as_view(template_name='comunidad/favoritos.html'), name='favoritos'),
     path('mis-viajes/', TemplateView.as_view(template_name='comunidad/viajes.html'), name='mis-viajes'),
@@ -59,6 +60,8 @@ urlpatterns = [
     # Frontend
     path('destinos/', listado, name='destinos-listado'),
     path('destinos/<slug:slug>/', detalle, name='destino-detalle'),
+    path('destinos/<slug:slug>/costos/', costos_destino, name='destino-costos'),
+    path('costos/', costos_indice, name='costos-indice'),
     path('',          inicio,         name='index'),
     path('login/',    login_view,    name='login'),
     path('registro/', registro_view, name='registro'),

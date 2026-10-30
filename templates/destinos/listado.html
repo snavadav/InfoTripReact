@@ -11,6 +11,7 @@
 <main class="explore-shell results-shell">
   <a class="back-link" href="{% url 'index' %}">← Volver al inicio</a>
   <div class="results-header"><div><span class="eyebrow">TU PRÓXIMA ESCAPADA</span><h1>Explora Jalisco</h1></div><p>Encuentra un lugar. Acércate en el mapa. Prepara tu visita.</p></div>
+  <p><a href="{% url 'costos-indice' %}">¿Cuánto cuesta cada destino? Compara gastos reales →</a></p>
   <details class="filters-panel" id="filters-panel" data-activos="{% if filtros or formulario.errors %}true{% else %}false{% endif %}" open>
   <summary>Buscar y filtrar</summary>
   <form class="explore-filters" action="{% url 'destinos-listado' %}" role="search">
