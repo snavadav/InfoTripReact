@@ -28,6 +28,8 @@ SECURE_CSP = {
     'img-src': [CSP.SELF, 'data:', 'https://tile.openstreetmap.org', 'https://unpkg.com'],
     # unpkg: las herramientas de desarrollo del navegador descargan el source map de Leaflet.
     'connect-src': [CSP.SELF, 'https://unpkg.com'],
+    # Vista "Mapa" de la portada (mapa_embed en apps/destinos/frontend.py).
+    'frame-src': ['https://maps.google.com', 'https://www.google.com'],
     'object-src': [CSP.NONE],
     'base-uri': [CSP.SELF],
     'form-action': [CSP.SELF],

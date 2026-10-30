@@ -150,6 +150,11 @@ class PoliticaDeContenidoTests(TestCase):
             self.assertNotIn("'unsafe-inline'", script_src.group(1), ruta)
             self.assertIn("object-src 'none'", politica, ruta)
 
+    def test_csp_permite_el_mapa_de_la_portada(self):
+        # Sin frame-src, default-src 'self' bloquea el iframe de Google Maps de la vista "Mapa".
+        politica = self.client.get('/').headers['Content-Security-Policy']
+        self.assertIn('https://maps.google.com', re.search(r'frame-src ([^;]*)', politica).group(1))
+
     def test_plantillas_no_tienen_scripts_en_linea(self):
         # Con la CSP, un <script> sin src no se ejecutaría: el código va en static/js/.
         for plantilla in Path(settings.BASE_DIR, 'templates').rglob('*.html'):
