@@ -2,6 +2,7 @@
 from decimal import Decimal, ROUND_HALF_UP
 from django.db import transaction
 from django.shortcuts import get_object_or_404
+from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework import generics, serializers
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -48,7 +49,7 @@ class ViajeSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Uno de los destinos ya no está disponible.')
         return values
 
-    def get_lugares_detalle(self, obj):
+    def get_lugares_detalle(self, obj) -> list[dict]:
         return [{'id': d.pk, 'nombre': d.nombre, 'slug': d.slug, 'activo': d.es_activo} for d in obj.lugares.all()]
 
 
@@ -93,7 +94,7 @@ class ViajeSerializer(serializers.ModelSerializer):
         # JSON guarda importes como texto decimal para evitar redondeos binarios.
         return [{**g, 'monto': str(g['monto'])} for g in gastos]
 
-    def get_resumen(self, obj):
+    def get_resumen(self, obj) -> dict[str, str]:
         total = sum((Decimal(g['monto']) * g['cantidad'] * (obj.personas if g['reparto'] == 'individual' else 1)
                      for g in obj.gastos), Decimal('0'))
         return {
@@ -126,6 +127,10 @@ class ViajeView(generics.RetrieveUpdateDestroyAPIView):
 class VincularLugarView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        request=inline_serializer('LugarAVincular', fields={'slug': serializers.SlugField(max_length=220)}),
+        responses={200: inline_serializer('LugarVinculado', fields={'detail': serializers.CharField()})},
+    )
     def post(self, request, pk):
         slug = serializers.SlugField(max_length=220).run_validation(request.data.get('slug'))
         with transaction.atomic():

@@ -90,3 +90,31 @@ jobs:
         env:
           SECRET_KEY: ci-${{ github.run_id }}-clave-de-prueba-solo-para-check-deploy-no-secreta
           ALLOWED_HOSTS: infotrip.example.mx
+
+  docker:
+    name: Imagen Docker y despliegue con compose
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configuración de prueba (valores aleatorios, solo para esta ejecución)
+        run: |
+          clave=$(python3 -c "import secrets; print(secrets.token_urlsafe(60))")
+          contrasena=$(python3 -c "import secrets; print(secrets.token_urlsafe(24))")
+          sed -e "s|^SECRET_KEY=.*|SECRET_KEY=$clave|" \
+              -e "s|^POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=$contrasena|" \
+              -e "s|^DB_PASSWORD=.*|DB_PASSWORD=$contrasena|" .env.docker.example > .env.docker
+      - name: Construir y levantar
+        run: docker compose --env-file .env.docker up --build --detach --wait --wait-timeout 180
+      - name: Comprobar a través de nginx
+        run: |
+          curl --fail --silent --show-error http://localhost:8080/health/
+          curl --fail --silent --show-error --output /dev/null http://localhost:8080/destinos/
+          estatico=$(curl --fail --silent http://localhost:8080/destinos/ | grep -o '/static/css/[^"]*' | head -1)
+          curl --fail --silent --show-error --output /dev/null "http://localhost:8080$estatico"
+          curl --fail --silent --show-error --head http://localhost:8080/ | grep -i '^content-security-policy'
+      - name: Registros si algo falló
+        if: failure()
+        run: docker compose --env-file .env.docker logs --no-color
+      - name: Apagar
+        if: always()
+        run: docker compose --env-file .env.docker down --volumes

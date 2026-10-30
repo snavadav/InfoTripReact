@@ -13,6 +13,7 @@ from django.core.mail import send_mail
 from django.db import transaction
 from django.utils import timezone
 from django.utils.crypto import constant_time_compare, salted_hmac
+from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework import serializers
 from rest_framework.exceptions import APIException, AuthenticationFailed, Throttled
 from rest_framework.permissions import AllowAny
@@ -92,6 +93,11 @@ class LoginView(APIView):
     authentication_classes = []
     throttle_classes = [LoginThrottle]
 
+    @extend_schema(request=CredencialesSerializer, responses={200: inline_serializer('DesafioLogin', fields={
+        'requiere_codigo': serializers.BooleanField(), 'desafio': serializers.UUIDField(),
+        'expira_en': serializers.IntegerField(), 'reenviar_en': serializers.IntegerField(),
+        'modo_prueba': serializers.BooleanField(), 'mensaje': serializers.CharField(),
+    })})
     def post(self, request):
         datos = CredencialesSerializer(data=request.data)
         datos.is_valid(raise_exception=True)
@@ -155,6 +161,9 @@ class VerificarCodigoView(APIView):
     authentication_classes = []
     throttle_classes = [VerificacionThrottle]
 
+    @extend_schema(request=CodigoSerializer, responses={200: inline_serializer('SesionIniciada', fields={
+        'access': serializers.CharField(), 'refresh': serializers.CharField(), 'usuario': UsuarioPerfilSerializer(),
+    })})
     def post(self, request):
         datos = CodigoSerializer(data=request.data)
         datos.is_valid(raise_exception=True)

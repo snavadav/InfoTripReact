@@ -1,6 +1,7 @@
 """Información aportada por personas: nunca se rellena un dato desconocido."""
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework import generics, serializers
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
@@ -92,18 +93,25 @@ class FavoritosView(generics.ListAPIView):
         return Favorito.objects.filter(autor=self.request.user).select_related('destino')
 
 
+class EstadoFavoritoSerializer(serializers.Serializer):
+    favorito = serializers.BooleanField()
+
+
 class FavoritoView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(responses={200: EstadoFavoritoSerializer})
     def get(self, request, slug):
         destino = get_object_or_404(Destino, slug=slug, es_activo=True)
         return Response({'favorito': Favorito.objects.filter(autor=request.user, destino=destino).exists()})
 
+    @extend_schema(request=None, responses={200: EstadoFavoritoSerializer})
     def put(self, request, slug):
         destino = get_object_or_404(Destino, slug=slug, es_activo=True)
         Favorito.objects.get_or_create(autor=request.user, destino=destino)
         return Response({'favorito': True})
 
+    @extend_schema(responses={204: None})
     def delete(self, request, slug):
         Favorito.objects.filter(autor=request.user, destino__slug=slug).delete()
         return Response(status=204)
@@ -114,6 +122,9 @@ class ConfirmarDatoView(APIView):
     permission_classes = [IsAuthenticated]
     throttle_classes = [AporteThrottle]
 
+    @extend_schema(request=None, responses={200: inline_serializer('DatoConfirmado', fields={
+        'confirmaciones': serializers.IntegerField(), 'fecha': serializers.DateField(),
+    })})
     def post(self, request, pk):
         dato = get_object_or_404(publicas().filter(tipo='correccion'), pk=pk)
         if dato.autor_id == request.user.pk:

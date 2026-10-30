@@ -48,6 +48,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
+    'drf_spectacular',
+    'drf_spectacular_sidecar',
 
     # InfoTrip apps
     'apps.usuarios',
@@ -58,6 +60,8 @@ INSTALLED_APPS = [
 # ─── MIDDLEWARE ───────────────────────────────────────────────
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # Sirve /static/ desde gunicorn en producción (los archivos de usuarios, /media/, los sirve nginx).
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.csp.ContentSecurityPolicyMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -112,7 +116,18 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # ─── DJANGO REST FRAMEWORK ───────────────────────────────────
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'API de InfoTrip',
+    'DESCRIPTION': 'Información turística de Jalisco verificada por la comunidad.',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    # Swagger UI desde archivos propios: la CSP no permite cargarlo de un CDN.
+    'SWAGGER_UI_DIST': 'SIDECAR',
+    'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
+}
+
 REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'apps.usuarios.authentication.CorreoJWTAuthentication',
     ),

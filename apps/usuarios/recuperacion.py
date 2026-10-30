@@ -6,6 +6,7 @@ from django.core.mail import send_mail
 from django.db import transaction
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework import serializers
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -33,6 +34,9 @@ class RecuperarView(APIView):
     authentication_classes = []
     permission_classes = [AllowAny]
     throttle_classes = [RecuperacionThrottle]
+    @extend_schema(request=SolicitudSerializer, responses={200: inline_serializer('RecuperacionSolicitada', fields={
+        'mensaje': serializers.CharField(), 'modo_prueba': serializers.BooleanField(),
+    })})
     def post(self, request):
         datos = SolicitudSerializer(data=request.data)
         datos.is_valid(raise_exception=True)
@@ -63,6 +67,9 @@ class RestablecerView(APIView):
     authentication_classes = []
     permission_classes = [AllowAny]
     throttle_classes = [RecuperacionThrottle]
+    @extend_schema(request=ConfirmacionSerializer, responses={200: inline_serializer('ContrasenaRestablecida', fields={
+        'mensaje': serializers.CharField(),
+    })})
     def post(self, request):
         datos = ConfirmacionSerializer(data=request.data)
         datos.is_valid(raise_exception=True)

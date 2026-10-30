@@ -1,4 +1,5 @@
 """Avisos internos al usuario (cambios de estado de sus aportes y colaboraciones)."""
+from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework import generics, serializers
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -29,6 +30,9 @@ class NotificacionesView(generics.ListAPIView):
 class NotificacionesLeidasView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(request=None, responses={200: inline_serializer('AvisosLeidos', fields={
+        'no_leidas': serializers.IntegerField(),
+    })})
     def post(self, request):
         Notificacion.objects.filter(usuario=request.user, leida=False).update(leida=True)
         return Response({'no_leidas': 0})

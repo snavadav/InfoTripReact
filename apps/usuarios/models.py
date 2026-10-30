@@ -81,7 +81,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
         super().save(*args, **kwargs)
 
     @property
-    def nombre_completo(self):
+    def nombre_completo(self) -> str:
         return f'{self.nombre} {self.apellido}'
 
     # Requerido por Django admin

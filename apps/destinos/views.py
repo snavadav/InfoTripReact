@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import generics
 from rest_framework.permissions import AllowAny
 
@@ -17,6 +18,7 @@ def destinos_publicos(con_fotos=False):
     return con_foto_publica(queryset) if con_fotos else queryset
 
 
+@extend_schema_view(get=extend_schema(parameters=[FiltrosDestinoSerializer]))
 class DestinoListView(generics.ListAPIView):
     permission_classes = [AllowAny]
     serializer_class = DestinoSerializer

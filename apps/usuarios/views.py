@@ -3,7 +3,8 @@ InfoTrip — apps/usuarios/views.py
 Vistas de autenticación: registro, login, perfil, logout
 """
 
-from rest_framework              import status, generics
+from drf_spectacular.utils import extend_schema, inline_serializer
+from rest_framework              import serializers, status, generics
 from rest_framework.views        import APIView
 from rest_framework.response     import Response
 from rest_framework.permissions  import IsAuthenticated, AllowAny
@@ -61,6 +62,10 @@ class LogoutView(APIView):
     """
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        request=inline_serializer('SolicitudLogout', fields={'refresh': serializers.CharField()}),
+        responses={200: inline_serializer('SesionCerrada', fields={'mensaje': serializers.CharField()})},
+    )
     def post(self, request):
         refresh_token = request.data.get('refresh') if hasattr(request.data, 'get') else None
         if not refresh_token:
@@ -101,6 +106,9 @@ class CambiarPasswordView(APIView):
     """
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(request=CambiarPasswordSerializer, responses={200: inline_serializer('ContrasenaCambiada', fields={
+        'mensaje': serializers.CharField(),
+    })})
     def post(self, request):
         serializer = CambiarPasswordSerializer(
             data=request.data,

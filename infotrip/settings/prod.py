@@ -19,6 +19,14 @@ if not REDIS_URL:  # noqa: F405
         'local por proceso multiplica los límites de intentos de login.'
     )
 
+# ─── ARCHIVOS ESTÁTICOS ───────────────────────────────────────
+# WhiteNoise con nombres con hash y compresión: caché de larga duración sin servir versiones viejas.
+# Requiere `collectstatic` (lo hace el Dockerfile al construir la imagen).
+STORAGES = {
+    'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+    'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage'},
+}
+
 # ─── HTTPS ────────────────────────────────────────────────────
 SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=True, cast=bool)
 # El chequeo de salud de Docker o del balanceador llega por HTTP desde dentro de la red.

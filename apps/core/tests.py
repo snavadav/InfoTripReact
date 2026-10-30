@@ -1,8 +1,10 @@
 """Fase 5: endpoint de salud y registros (logging) en los puntos clave."""
 from smtplib import SMTPException
+from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
 from django.core.cache import cache
+from django.core.management import call_command
 from django.test import TestCase, override_settings
 from django.utils import timezone
 from rest_framework.test import APITestCase
@@ -73,3 +75,24 @@ class RegistrosTests(APITestCase):
         with self.assertLogs('infotrip.moderacion', 'INFO') as registros:
             moderar(aporte, moderador, 'publicado', 'Revisado')
         self.assertIn(f'Aporte {aporte.pk}: pendiente → publicado por el moderador {moderador.pk}', registros.output[0])
+
+
+class DocumentacionApiTests(TestCase):
+    def test_esquema_valido_y_sin_avisos(self):
+        # --fail-on-warn hace fallar la prueba si una vista nueva queda sin documentar.
+        with TemporaryDirectory() as carpeta:
+            call_command('spectacular', '--validate', '--fail-on-warn', '--file', f'{carpeta}/esquema.yml')
+
+    def test_esquema_publico_con_las_rutas_y_la_autenticacion(self):
+        esquema = self.client.get('/api/v1/esquema/', HTTP_ACCEPT='application/json').json()
+        for ruta in ['/api/v1/destinos/', '/api/v1/auth/login/', '/api/v1/colaboraciones/{id}/confirmar/',
+                     '/api/v1/notificaciones/']:
+            self.assertIn(ruta, esquema['paths'])
+        self.assertEqual(esquema['components']['securitySchemes']['jwt']['scheme'], 'bearer')
+        parametros = {p['name'] for p in esquema['paths']['/api/v1/destinos/']['get']['parameters']}
+        self.assertLessEqual({'q', 'categoria', 'orden', 'datos_recientes'}, parametros)
+
+    def test_swagger_compatible_con_la_csp(self):
+        respuesta = self.client.get('/api/v1/docs/')
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertNotRegex(respuesta.content.decode(), r'<script(?![^>]*\ssrc=)[^>]*>')
