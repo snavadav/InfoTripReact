@@ -6,10 +6,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Algo salió mal — InfoTrip</title>
   <style>
-    body { font-family: system-ui, sans-serif; background: #F7F3EE; color: #1F1635; margin: 0; padding: 16px; }
-    main { max-width: 480px; margin: 15vh auto 0; background: #fff; border-radius: 16px; padding: 32px; }
+    :root { color-scheme: light dark; }
+    body { font-family: system-ui, sans-serif; background: #F4F5F6; color: #14171A; margin: 0; padding: 16px; }
+    main { max-width: 480px; margin: 15vh auto 0; background: #fff; border-radius: 12px; padding: 32px; }
     h1 { font-size: 1.5rem; margin: 0 0 12px; }
-    a { color: #5835C4; }
+    a { color: #0A7564; }
+    @media (prefers-color-scheme: dark) {
+      body { background: #0D0F11; color: #F2F4F5; }
+      main { background: #15181B; }
+      a { color: #41D1B1; }
+    }
   </style>
 </head>
 <body>
