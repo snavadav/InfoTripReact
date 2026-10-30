@@ -15,6 +15,7 @@ from rest_framework.views import APIView
 
 from apps.comunidad.selectors import con_resumen_de_resenas
 from apps.core.geo import distancia_km
+from .denue import ATRIBUCION as ATRIBUCION_DENUE
 from .models import Lugar
 
 KM_POR_GRADO = 111.32
@@ -45,19 +46,25 @@ def cerca_de(latitud, longitud, radio_km=RADIO_CERCA_KM, tipo='', limite=MAXIMO_
     """Los lugares más próximos, con `distancia_km`. El recuadro evita calcular la distancia a todos."""
     grados_lat = radio_km / KM_POR_GRADO
     grados_lng = radio_km / (KM_POR_GRADO * max(cos(radians(latitud)), 0.01))
-    candidatos = activos().filter(
-        latitud__range=(latitud - grados_lat, latitud + grados_lat),
+    candidatos = Lugar.objects.filter(
+        es_activo=True, latitud__range=(latitud - grados_lat, latitud + grados_lat),
         longitud__range=(longitud - grados_lng, longitud + grados_lng),
     )
     if tipo:
         candidatos = candidatos.filter(tipo=tipo)
-    resultados = []
-    for lugar in candidatos:
-        lugar.distancia_km = round(distancia_km(latitud, longitud, float(lugar.latitud), float(lugar.longitud)), 2)
-        if lugar.distancia_km <= radio_km:
-            resultados.append(lugar)
+    # En una ciudad el recuadro abarca miles: primero se eligen los más próximos y solo de esos se trae todo.
+    distancias = []
+    for pk, lat, lng in candidatos.values_list('pk', 'latitud', 'longitud'):
+        distancia = round(distancia_km(latitud, longitud, float(lat), float(lng)), 2)
+        if distancia <= radio_km:
+            distancias.append((distancia, pk))
+    distancias.sort()
+    elegidos = dict((pk, distancia) for distancia, pk in distancias[:limite])
+    resultados = list(activos().filter(pk__in=elegidos))
+    for lugar in resultados:
+        lugar.distancia_km = elegidos[lugar.pk]
     resultados.sort(key=lambda lugar: (lugar.distancia_km, lugar.pk))
-    return resultados[:limite]
+    return resultados
 
 
 def cercanos_de_destino(destino):
@@ -94,6 +101,8 @@ class LugarSerializer(serializers.ModelSerializer):
         return f'https://www.openstreetmap.org/{lugar.osm_id}' if lugar.osm_id else ''
 
     def get_atribucion(self, lugar) -> str | None:
+        if lugar.denue_id:
+            return ATRIBUCION_DENUE
         return '© colaboradores de OpenStreetMap, ODbL' if lugar.osm_id else None
 
 

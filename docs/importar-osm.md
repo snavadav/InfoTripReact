@@ -78,3 +78,22 @@ Las personas proponen lugares en `/lugares/proponer/`. Se revisan en `/admin/mod
 ## Qué tiendas se importan
 
 De las 7,719 tiendas con nombre que había en Jalisco el 30 de octubre de 2026, solo se traen las útiles para quien viaja: conveniencia, supermercados, tiendas variadas y departamentales, centros comerciales, panaderías, pastelerías, dulcerías, licorerías, vinos, bebidas, regalos, artesanías y arte. Se omiten las demás (por ejemplo 1,658 papelerías, ópticas, purificadoras y talleres) y las registradas sin un nombre real, como "Papeleria sin nombre". Para agregar un tipo, súmalo a `TIPO_DE_SUBTIPO` y `Lugar.SUBTIPOS` y a la consulta de `apps/destinos/osm.py`.
+
+## Negocios del DENUE (INEGI)
+
+El [DENUE](https://www.inegi.org.mx/servicios/api_denue.html) agrega muchos negocios y más datos de contacto que OpenStreetMap, sobre todo fuera de las ciudades. Necesita una clave gratuita, en `.env` como `DENUE_TOKEN`:
+
+```bash
+python manage.py importar_denue --simular --guardar denue.json
+```
+
+```bash
+python manage.py importar_denue --archivo denue.json
+```
+
+- **Qué trae:** hospedaje, comida, gasolineras, farmacias, bancos, supermercados, departamentales, artesanías y licorerías.
+- **Qué omite:** los miles de negocios de otros giros, los nombres genéricos ("Restaurante"), los puestos semifijos y, en la zona metropolitana de Guadalajara, la comida con hasta 5 empleados. Sin ese filtro serían más de 50 mil puntos de comida.
+- **Privacidad:** no se importan correos ni razones sociales, que pueden ser datos de una persona.
+- **Duplicados:** lo que ya existe de OpenStreetMap o de la comunidad, con nombre parecido a menos de 100 m, no se vuelve a crear.
+- **Clave:** va en la dirección de cada consulta, así que el comando nunca la muestra en errores y el sitio no consulta el DENUE durante una visita. El archivo de `--guardar` no la contiene.
+- **Licencia:** los [términos de INEGI](https://www.inegi.org.mx/inegi/terminos.html) permiten reutilizar los datos, también con fines comerciales, si se cita la fuente, se avisa de las transformaciones y no se presenta como postura del INEGI. La ficha, la API y `/creditos/` ya lo hacen.

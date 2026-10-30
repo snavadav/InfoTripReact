@@ -163,6 +163,9 @@ def configurar_cache(redis_url):
     return {'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache', 'LOCATION': 'infotrip'}}
 
 
+# Clave del DENUE (INEGI), solo para el comando importar_denue. Va en la URL de cada consulta: nunca al navegador.
+DENUE_TOKEN = config('DENUE_TOKEN', default='')
+
 REDIS_URL = config('REDIS_URL', default='')
 CACHES = configurar_cache(REDIS_URL)
 

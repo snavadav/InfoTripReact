@@ -93,7 +93,8 @@ TIPOS_DE_LUGAR = [('comer', 'Comer'), ('dormir', 'Dormir'), ('gasolina', 'Gasoli
 class Lugar(models.Model):
     """Dónde comer, dormir, cargar gasolina, etc. No es un destino: no tiene ficha, misiones ni sello.
 
-    Lo importado de OpenStreetMap se identifica con `osm_id`, porque su licencia (ODbL) exige dar crédito.
+    Lo importado se identifica con `osm_id` (OpenStreetMap, ODbL) o `denue_id` (INEGI), porque ambos exigen dar
+    crédito. Sin ninguno de los dos, el lugar lo propuso la comunidad.
     """
     TIPOS = TIPOS_DE_LUGAR
     SUBTIPOS = [
@@ -125,6 +126,8 @@ class Lugar(models.Model):
     horario = models.CharField(max_length=200, blank=True)
     es_activo = models.BooleanField(default=True)
     osm_id = models.CharField(max_length=30, null=True, blank=True, unique=True, editable=False)
+    # Procedencia del DENUE del INEGI; sus términos también exigen citar la fuente.
+    denue_id = models.CharField(max_length=20, null=True, blank=True, unique=True, editable=False)
     # Editado por el equipo: la siguiente importación no debe pisar la corrección.
     protegido = models.BooleanField(default=False, editable=False)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
