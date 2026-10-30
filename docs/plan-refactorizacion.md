@@ -33,10 +33,10 @@ Plan acordado el 22/10/2026 a partir de la revisión de arquitectura. Rama: `ref
 
 ## Fase 5: despliegue, observabilidad y documentación (recomendación 10)
 
-- [ ] `Dockerfile` (gunicorn y WhiteNoise) y `docker-compose.yml` (app, PostgreSQL y Redis); plan para servir `media/`.
-- [ ] `LOGGING` y loggers en fallos de SMTP, decisiones de moderación e intentos de login bloqueados; endpoint `/health/`.
-- [ ] Aviso por correo al autor cuando se modera su contenido, enviado fuera de la petición del admin (cola de tareas o comando programado) y con registro de fallos.
-- [ ] OpenAPI con drf-spectacular y README actualizado.
+- [x] `Dockerfile` (gunicorn y WhiteNoise) y `docker-compose.yml` (app, PostgreSQL, Redis, nginx y envío de avisos). nginx sirve `media/` desde un volumen compartido. La CI construye la imagen y la prueba de punta a punta.
+- [x] `LOGGING` y loggers en fallos de SMTP, decisiones de moderación e intentos de login bloqueados; endpoint `/health/`.
+- [x] Aviso por correo al autor cuando se modera su contenido, enviado por el comando `enviar_avisos` fuera de la petición del admin y con registro de fallos.
+- [x] OpenAPI con drf-spectacular (`/api/v1/docs/` y `/api/v1/esquema/`) y README actualizado.
 - [ ] S6, segunda parte: refresh token en una cookie `HttpOnly` con protección CSRF y access token solo en memoria, en lugar de `localStorage`. Cambia el login, el refresco, el logout y los JS que leen el token.
 
 ## Cierre

@@ -22,6 +22,10 @@ Tareas que no se pueden automatizar desde el código. Marca cada una al completa
   - `SECURE_HSTS_SECONDS=3600` al principio; subir a `31536000` cuando todo funcione por HTTPS.
   - `PUBLIC_BASE_URL` con `https://` y el dominio real.
   - Configuración SMTP real (`EMAIL_BACKEND` smtp, `EMAIL_HOST`, credenciales).
+  - `REDIS_URL`: producción no arranca sin ella.
+  - Sin Docker, programar `python manage.py enviar_avisos` cada pocos minutos. Con Docker lo hace el servicio `avisos`.
+  - HTTPS: terminar TLS en nginx o en el balanceador; `docker/nginx.conf` solo escucha HTTP. Con `.env.docker` real, quitar `SECURE_SSL_REDIRECT=False` y `SECURE_HSTS_SECONDS=0`.
+  - `/media/`: el volumen `media` guarda las fotos de los usuarios; incluirlo en las copias de seguridad junto con la base de datos.
 
 ## Fase 2
 
