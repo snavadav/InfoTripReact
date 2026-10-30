@@ -51,12 +51,23 @@
     }
     return box;
   }
-  function draw(places) {
-    cluster.clearLayers();
-    markerByPlace = new Map();
+  // Con `conservar`, solo cambia lo necesario: mover el mapa recarga la zona, y abrir un recuadro cerca
+  // del borde mueve el mapa; si se redibujara todo, el recuadro se cerraría justo al abrirse.
+  function draw(places, {conservar = false} = {}) {
+    if (conservar) {
+      const vigentes = new Set(places.map(place => place.id));
+      markerByPlace.forEach((marker, id) => {
+        if (vigentes.has(id) || marker.isPopupOpen()) return;
+        cluster.removeLayer(marker);
+        markerByPlace.delete(id);
+      });
+    } else {
+      cluster.clearLayers();
+      markerByPlace = new Map();
+    }
     places.forEach(place => {
       const position = InfoTripMapa.coordenadas(place);
-      if (!position) return;
+      if (!position || markerByPlace.has(place.id)) return;
       const marker = L.marker(position, {icon: InfoTripMapa.iconoLugar(place.tipo), title: place.nombre, alt: place.nombre});
       marker.bindPopup(() => details(place));
       markerByPlace.set(place.id, marker);
@@ -85,7 +96,7 @@
       const response = await fetch(`/api/v1/lugares/?${params}`, {signal: zoneRequest.signal});
       if (!response.ok) throw new Error();
       const data = await response.json();
-      draw(data.resultados);
+      draw(data.resultados, {conservar: true});
       hint.textContent = data.truncado ? 'Hay más lugares aquí: acércate para verlos todos.'
         : data.resultados.length ? '' : 'No tenemos lugares de este tipo en esta zona.';
       hint.hidden = !hint.textContent;
@@ -168,6 +179,7 @@
     nearbyPanel.hidden = true;
     nearbyButton.setAttribute('aria-pressed', 'false');
     if (userLayer) { map.removeLayer(userLayer); userLayer = null; }
+    draw([]);
     loadZone();
   });
 
@@ -175,7 +187,7 @@
     activeType = activeType === button.dataset.lugarTipo ? '' : button.dataset.lugarTipo;
     typeButtons.forEach(other => other.setAttribute('aria-pressed', String(other.dataset.lugarTipo === activeType)));
     if (nearbyPoint) askNearby();
-    else loadZone();
+    else { draw([]); loadZone(); }
   }));
 
   // Enlace "Ver qué hay cerca" de la portada: la persona acaba de pedirlo.

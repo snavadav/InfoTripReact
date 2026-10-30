@@ -430,6 +430,21 @@ class FlujosTests(StaticLiveServerTestCase):
         self.pagina.wait_for_selector('.lugar-popup:has-text("Fonda Doña Ana")')
         self.assertEqual(self.pagina.get_attribute('.lugar-popup a[href^="tel:"]', 'href'), 'tel:331234')
 
+    def test_mover_el_mapa_no_cierra_el_lugar_abierto(self):
+        Lugar.objects.create(nombre='Fonda Doña Ana', tipo='comer', subtipo='restaurant', latitud=19.9, longitud=-103.7)
+        self.abrir('/destinos/')
+        self.pagina.wait_for_selector('.pin', state='attached')
+        self.pagina.evaluate('InfoTripExplorador.map.setView([19.9, -103.7], 15, {animate: false})')
+        self.pagina.click('[data-lugar-tipo="comer"]')
+        self.pagina.wait_for_selector('.pin-lugar', state='attached')
+        self.pagina.click('.pin-lugar')
+        self.pagina.wait_for_selector('.lugar-popup:has-text("Fonda Doña Ana")')
+        # Abrir un recuadro cerca del borde mueve el mapa, y moverlo recarga los lugares de la zona.
+        self.pagina.evaluate('InfoTripExplorador.map.panBy([20, 20], {animate: false})')
+        self.pagina.wait_for_load_state('networkidle')
+        self.pagina.wait_for_timeout(600)
+        self.assertTrue(self.pagina.is_visible('.lugar-popup:has-text("Fonda Doña Ana")'))
+
     def test_resenar_un_lugar_y_responder_si_sigue_abierto(self):
         sitio = Lugar.objects.create(nombre='Fonda Doña Ana', tipo='comer', subtipo='restaurant', latitud=19.901, longitud=-103.701,
                                      osm_id='node/1')
