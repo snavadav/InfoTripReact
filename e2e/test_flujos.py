@@ -388,6 +388,17 @@ class FlujosTests(StaticLiveServerTestCase):
         self.assertGreaterEqual(caja['x'], 0)
         self.assertLessEqual(caja['x'] + caja['width'], 375)
 
+    def test_el_mapa_se_identifica_ante_openstreetmap(self):
+        # Sin Referer, el servidor responde 403 y pinta "Access blocked" en cada cuadro del mapa.
+        peticiones = []
+        self.pagina.on('request', lambda p: peticiones.append(p) if 'tile.openstreetmap.org' in p.url else None)
+        self.abrir('/destinos/')
+        self.pagina.wait_for_selector('.leaflet-tile', state='attached')
+        self.pagina.wait_for_load_state('networkidle')
+        self.assertTrue(peticiones)
+        for peticion in peticiones:
+            self.assertEqual(peticion.all_headers().get('referer'), self.live_server_url + '/')
+
     def test_guardar_favorito_y_cerrar_sesion(self):
         self.iniciar_sesion()
         self.abrir('/destinos/mirador/')

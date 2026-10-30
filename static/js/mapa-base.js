@@ -35,6 +35,9 @@ window.InfoTripMapa = (() => {
     mapa.attributionControl.setPrefix(false);
     const fondo = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
+      // OpenStreetMap exige saber qué sitio pide el mapa, y el sitio no envía Referer a otros dominios
+      // (Referrer-Policy: same-origin). Solo aquí se envía el dominio, nunca la ruta de la página.
+      referrerPolicy: 'strict-origin-when-cross-origin',
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(mapa);
     if (alFallarFondo) fondo.on('tileerror', alFallarFondo);
