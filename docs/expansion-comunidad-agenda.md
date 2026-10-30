@@ -5,6 +5,7 @@
 - `/destinos/<slug>/`: información práctica, fuentes, fecha de consulta, versiones anteriores, correcciones, preguntas y respuestas. Los campos sin aportes publicados muestran «Sin confirmar».
 - `/favoritos/`: favoritos privados; quitar un lugar, abrir su ficha, iniciar una nueva escapada o agregarlo a una ya guardada. La lista de viajes carga por páginas.
 - `/mis-viajes/`: lugares vinculados, actividades por día y horario, notas y pendientes. Se guardan junto con el presupuesto. Las actividades usan días relativos: día 1 equivale a la fecha de salida. Cambiar las fechas no puede dejar actividades fuera del viaje.
+- `/destinos/`: el filtro «Con información práctica consultada en los últimos 90 días» permite priorizar fichas con una corrección comunitaria reciente. Cada dato práctico indica si su consulta fue hace 30 días o menos, entre 31 y 90 días, o hace más de 90 días. Son señales orientativas, no garantías de vigencia; confirma directamente con la fuente.
 - El menú y Mi perfil tienen accesos a favoritos. Desde la ficha se puede prellenar una nueva escapada con el nombre del destino; para vincular el registro de catálogo, agregarlo desde favoritos a un viaje guardado.
 
 ## Información y moderación

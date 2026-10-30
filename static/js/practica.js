@@ -5,7 +5,7 @@
   let favorite = false;
   function display(){toggle.textContent=favorite?'Quitar de favoritos':'Guardar lugar';toggle.setAttribute('aria-pressed',String(favorite));}
   async function initial(){
-    try{if(localStorage.getItem('access_token')){favorite=(await InfoTrip.api(`/api/v1/favoritos/${slug}/`)).favorito;display();}}
+    try{if(InfoTrip.hasSession()){favorite=(await InfoTrip.api(`/api/v1/favoritos/${slug}/`)).favorito;display();}}
     catch(error){status.textContent=error.message;}
     finally{toggle.disabled=false;}
   }
@@ -26,6 +26,19 @@
       await InfoTrip.api(`/api/v1/destinos/${slug}/colaboraciones/`,{method:'POST',body});
       form.reset();feedback.textContent='Gracias. Tu aporte quedó pendiente de revisión; aparecerá cuando sea publicado.';
     });
+  }));
+  // "¿Sigue vigente?": confirmar renueva la fecha de vigencia del dato sin pasar por moderación.
+  document.querySelectorAll('.confirm-data').forEach(button=>button.addEventListener('click',async()=>{
+    const feedback=button.parentElement.nextElementSibling;
+    if(!window.InfoTripSession?.authenticated){
+      feedback.replaceChildren(document.createTextNode('Entra para confirmar este dato. '));
+      const link=document.createElement('a');link.href='/login/';link.textContent='Iniciar sesión';feedback.append(link);return;
+    }
+    button.disabled=true;
+    try{
+      const data=await InfoTrip.api(`/api/v1/colaboraciones/${button.dataset.dato}/confirmar/`,{method:'POST'});
+      feedback.textContent=`Gracias. Confirmaste que sigue vigente (${data.confirmaciones} confirmación${data.confirmaciones===1?'':'es'}).`;
+    }catch(error){feedback.textContent=error.message;button.disabled=false;}
   }));
   initial();
 })();

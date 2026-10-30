@@ -1,9 +1,18 @@
 """Planes privados y presupuestos introducidos por el viajero, en MXN."""
 from decimal import Decimal, ROUND_HALF_UP
+from django.db import transaction
+from django.shortcuts import get_object_or_404
+from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework import generics, serializers
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from .models import Viaje
 from apps.destinos.models import Destino
+
+
+def pesos(valor):
+    return str(valor.quantize(Decimal('.01'), rounding=ROUND_HALF_UP))
 
 
 class GastoSerializer(serializers.Serializer):
@@ -40,13 +49,29 @@ class ViajeSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Uno de los destinos ya no está disponible.')
         return values
 
-    def get_lugares_detalle(self, obj):
+    def get_lugares_detalle(self, obj) -> list[dict]:
         return [{'id': d.pk, 'nombre': d.nombre, 'slug': d.slug, 'activo': d.es_activo} for d in obj.lugares.all()]
 
 
     class Meta:
         model = Viaje
-        fields = ['id', 'nombre', 'destino', 'fecha_inicio', 'fecha_fin', 'personas', 'presupuesto', 'gastos', 'actividades', 'pendientes', 'notas', 'lugares', 'lugares_detalle', 'resumen', 'actualizado']
+        fields = [
+            'id',
+            'nombre',
+            'destino',
+            'fecha_inicio',
+            'fecha_fin',
+            'personas',
+            'presupuesto',
+            'gastos',
+            'actividades',
+            'pendientes',
+            'notas',
+            'lugares',
+            'lugares_detalle',
+            'resumen',
+            'actualizado',
+        ]
         read_only_fields = ['id', 'actualizado']
 
     def validate(self, attrs):
@@ -56,7 +81,9 @@ class ViajeSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({'fecha_fin': 'El regreso no puede ser anterior a la salida.'})
         actividades = attrs.get('actividades', getattr(self.instance, 'actividades', []))
         if start and end and any(a['dia'] > (end - start).days + 1 for a in actividades):
-            raise serializers.ValidationError({'actividades': 'Cada actividad debe estar dentro de los días del viaje.'})
+            raise serializers.ValidationError(
+                {'actividades': 'Cada actividad debe estar dentro de los días del viaje.'}
+            )
         if len(attrs.get('lugares', [])) > 100:
             raise serializers.ValidationError({'lugares': 'Puedes vincular hasta 100 lugares.'})
         if 'actividades' in attrs:
@@ -67,10 +94,14 @@ class ViajeSerializer(serializers.ModelSerializer):
         # JSON guarda importes como texto decimal para evitar redondeos binarios.
         return [{**g, 'monto': str(g['monto'])} for g in gastos]
 
-    def get_resumen(self, obj):
-        total = sum((Decimal(g['monto']) * g['cantidad'] * (obj.personas if g['reparto'] == 'individual' else 1) for g in obj.gastos), Decimal('0'))
-        money = lambda value: str(value.quantize(Decimal('.01'), rounding=ROUND_HALF_UP))
-        return {'total': money(total), 'por_persona': money(total / obj.personas), 'disponible': money(obj.presupuesto - total)}
+    def get_resumen(self, obj) -> dict[str, str]:
+        total = sum((Decimal(g['monto']) * g['cantidad'] * (obj.personas if g['reparto'] == 'individual' else 1)
+                     for g in obj.gastos), Decimal('0'))
+        return {
+            'total': pesos(total),
+            'por_persona': pesos(total / obj.personas),
+            'disponible': pesos(obj.presupuesto - total),
+        }
 
 
 class MisViajesView(generics.ListCreateAPIView):
@@ -93,15 +124,13 @@ class ViajeView(generics.RetrieveUpdateDestroyAPIView):
         return Viaje.objects.filter(autor=self.request.user).prefetch_related('lugares')
 
 
-from django.db import transaction
-from django.shortcuts import get_object_or_404
-from rest_framework.views import APIView
-from rest_framework.response import Response
-
-
 class VincularLugarView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        request=inline_serializer('LugarAVincular', fields={'slug': serializers.SlugField(max_length=220)}),
+        responses={200: inline_serializer('LugarVinculado', fields={'detail': serializers.CharField()})},
+    )
     def post(self, request, pk):
         slug = serializers.SlugField(max_length=220).run_validation(request.data.get('slug'))
         with transaction.atomic():

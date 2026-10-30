@@ -1,7 +1,9 @@
-from django.db.models import Q, Prefetch
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import generics
 from rest_framework.permissions import AllowAny
 
+from apps.comunidad.selectors import con_foto_publica
+from .filtros import filtrar_destinos
 from .models import Categoria, Destino, Municipio, Region, Servicio
 from .serializers import (
     CategoriaSerializer, DestinoSerializer, FiltrosDestinoSerializer,
@@ -13,13 +15,10 @@ def destinos_publicos(con_fotos=False):
     queryset = Destino.objects.filter(es_activo=True).select_related(
         'municipio__region',
     ).prefetch_related('categorias', 'servicios')
-    if con_fotos:
-        from apps.comunidad.models import Aporte
-        fotos = Aporte.objects.filter(tipo='foto', estado='publicado', autor__es_activo=True).order_by('-creado', '-pk')[:1]
-        queryset = queryset.prefetch_related(Prefetch('aportes', queryset=fotos, to_attr='fotos_publicas'))
-    return queryset
+    return con_foto_publica(queryset) if con_fotos else queryset
 
 
+@extend_schema_view(get=extend_schema(parameters=[FiltrosDestinoSerializer]))
 class DestinoListView(generics.ListAPIView):
     permission_classes = [AllowAny]
     serializer_class = DestinoSerializer
@@ -27,23 +26,7 @@ class DestinoListView(generics.ListAPIView):
     def get_queryset(self):
         filtros = FiltrosDestinoSerializer(data=self.request.query_params)
         filtros.is_valid(raise_exception=True)
-        datos = filtros.validated_data
-        queryset = destinos_publicos()
-        if datos.get('q'):
-            texto = datos['q']
-            queryset = queryset.filter(
-                Q(nombre__icontains=texto) | Q(descripcion__icontains=texto)
-                | Q(municipio__nombre__icontains=texto)
-            )
-        campos = {
-            'categoria': 'categorias__slug', 'municipio': 'municipio__slug',
-            'region': 'municipio__region__slug', 'servicio': 'servicios__slug',
-        }
-        for parametro, campo in campos.items():
-            if parametro in datos:
-                queryset = queryset.filter(**{campo: datos[parametro]})
-        from apps.comunidad.filtros import filtrar_comunidad
-        return filtrar_comunidad(queryset, datos).distinct()
+        return filtrar_destinos(destinos_publicos(), filtros.validated_data)
 
 
 class DestinoDetailView(generics.RetrieveAPIView):

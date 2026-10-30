@@ -5,7 +5,8 @@ Serializers para registro, login y perfil de usuario
 
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
-from .models import Usuario
+from apps.core.imagenes import imagen_segura
+from .models import Usuario, normalizar_email
 
 
 class RegistroSerializer(serializers.ModelSerializer):
@@ -17,6 +18,11 @@ class RegistroSerializer(serializers.ModelSerializer):
     class Meta:
         model  = Usuario
         fields = ['nombre', 'apellido', 'email', 'password', 'password2', 'ciudad_origen']
+        # Sin validador de unicidad: un correo ya registrado no debe revelarse (S3).
+        extra_kwargs = {'email': {'validators': []}}
+
+    def validate_email(self, value):
+        return normalizar_email(value)
 
     def validate(self, data):
         if data['password'] != data['password2']:
@@ -39,7 +45,6 @@ class UsuarioPerfilSerializer(serializers.ModelSerializer):
     bio = serializers.CharField(required=False, allow_blank=True, max_length=2000)
 
     def validate_foto_perfil(self, value):
-        from apps.comunidad.imagenes import imagen_segura
         return imagen_segura(value) if value else value
 
 

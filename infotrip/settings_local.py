@@ -1,6 +1,2 @@
-"""Desarrollo local sin PostgreSQL. No usar para producción."""
-from .settings import *  # noqa: F403
-
-DATABASES = {'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': BASE_DIR / 'db.sqlite3'}}
-DEBUG = True
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]']
+"""Compatibilidad: usa infotrip.settings.local."""
+from .settings.local import *  # noqa: F403

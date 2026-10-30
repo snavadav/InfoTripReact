@@ -1,6 +1,10 @@
+from datetime import timedelta
 from django.test import TestCase
 from django.urls import reverse
-from .models import Destino, Region, Municipio, Servicio
+from django.utils import timezone
+from apps.comunidad.models import Aporte
+from apps.usuarios.models import Usuario
+from .models import Categoria, Destino, Region, Municipio, Servicio
 
 
 class PaginasDestinoTests(TestCase):
@@ -79,7 +83,6 @@ class ExploracionMapaTests(TestCase):
     crear_destino = PaginasDestinoTests.crear_destino
 
     def test_filtros_combinados_y_paginacion(self):
-        from .models import Categoria
         categoria = Categoria.objects.create(nombre='Naturaleza', slug='naturaleza')
         servicio = Servicio.objects.create(nombre='Baños', slug='banos')
         for numero in range(10):
@@ -114,3 +117,55 @@ class ExploracionMapaTests(TestCase):
         self.assertEqual(respuesta.context['pagina'].paginator.count, 1)
         self.assertEqual(respuesta.context['puntos_mapa'], [])
         self.assertContains(respuesta, 'no tienen coordenadas registradas')
+
+
+class FiltrosCompartidosTests(TestCase):
+    """La API y la exploración HTML filtran con FiltroDestinos y deben coincidir."""
+
+    def setUp(self):
+        hoy = timezone.localdate()
+        autor = Usuario.objects.create_user('filtros@example.com', 'Ana', 'Prueba', 'Clave-segura-483!')
+        norte = Region.objects.create(nombre='Norte', slug='norte')
+        sur = Region.objects.create(nombre='Sur', slug='sur')
+        municipios = [Municipio.objects.create(nombre=f'Municipio {r.slug}', slug=f'municipio-{r.slug}', region=r)
+                      for r in (norte, sur)]
+        naturaleza = Categoria.objects.create(nombre='Naturaleza', slug='naturaleza')
+        pueblos = Categoria.objects.create(nombre='Pueblos', slug='pueblos')
+        banos = Servicio.objects.create(nombre='Baños', slug='banos')
+        for numero in range(6):
+            destino = Destino.objects.create(
+                nombre=f'Lugar {numero}', slug=f'lugar-{numero}', municipio=municipios[numero % 2],
+                descripcion='Cascada escondida' if numero < 3 else 'Plaza principal', latitud=20, longitud=-103)
+            destino.categorias.add(naturaleza if numero % 3 else pueblos)
+            if numero % 2:
+                destino.servicios.add(banos)
+            Aporte.objects.create(autor=autor, destino=destino, tipo='resena', texto='Reseña', fecha_visita=hoy,
+                                  calificacion=numero % 5 + 1, estado='publicado')
+            Aporte.objects.create(autor=autor, destino=destino, tipo='gasto', texto='Gasto', fecha_visita=hoy - timedelta(days=5),
+                                  monto=100 * (numero + 1), concepto='comida', estado='publicado')
+        Destino.objects.create(nombre='Lugar oculto', slug='oculto', municipio=municipios[0], descripcion='Cascada',
+                               latitud=20, longitud=-103, es_activo=False)
+
+    def slugs_api(self, filtros):
+        respuesta = self.client.get('/api/v1/destinos/', filtros)
+        self.assertEqual(respuesta.status_code, 200)
+        return {destino['slug'] for destino in respuesta.data['results']}
+
+    def slugs_web(self, filtros):
+        respuesta = self.client.get('/destinos/', filtros)
+        self.assertFalse(respuesta.context['formulario'].errors)
+        return {lugar['slug'] for lugar in respuesta.context['lugares']}
+
+    def test_api_y_web_devuelven_los_mismos_destinos(self):
+        casos = [
+            {}, {'q': 'cascada'}, {'q': 'municipio norte'}, {'categoria': 'naturaleza'}, {'region': 'sur'},
+            {'municipio': 'municipio-norte', 'servicio': 'banos'}, {'calificacion_min': '3'},
+            {'concepto': 'comida'}, {'concepto': 'comida', 'precio_max': '350'},
+            {'q': 'plaza', 'categoria': 'naturaleza', 'calificacion_min': '4'},
+        ]
+        for filtros in casos:
+            with self.subTest(filtros=filtros):
+                api, web = self.slugs_api(filtros), self.slugs_web(filtros)
+                self.assertEqual(api, web)
+                self.assertNotIn('oculto', api)
+        self.assertEqual(self.slugs_api({'concepto': 'comida', 'precio_max': '350'}), {'lugar-0', 'lugar-1', 'lugar-2'})

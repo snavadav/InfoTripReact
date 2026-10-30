@@ -1,4 +1,6 @@
 """Inicio de sesión en dos pasos: contraseña y código enviado al buzón."""
+import hashlib
+import logging
 import secrets
 import uuid
 from datetime import timedelta
@@ -6,10 +8,12 @@ from smtplib import SMTPException
 
 from django.conf import settings
 from django.contrib.auth import authenticate
+from django.core.cache import cache
 from django.core.mail import send_mail
 from django.db import transaction
 from django.utils import timezone
 from django.utils.crypto import constant_time_compare, salted_hmac
+from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework import serializers
 from rest_framework.exceptions import APIException, AuthenticationFailed, Throttled
 from rest_framework.permissions import AllowAny
@@ -17,8 +21,11 @@ from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
 from .authentication import CorreoJWTAuthentication
+from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.utils import aware_utcnow, datetime_from_epoch
+from .sesion import COOKIE_REFRESH, borrar_cookie_refresh, exigir_csrf, guardar_cookie_refresh
 from rest_framework_simplejwt.views import TokenRefreshView
 
 from .models import CodigoAcceso, Usuario
@@ -58,17 +65,54 @@ def hash_credencial(usuario):
     return salted_hmac('infotrip.login.credencial', usuario.password, algorithm='sha256').hexdigest()
 
 
+registro_seguridad = logging.getLogger('infotrip.seguridad')
+registro_correo = logging.getLogger('infotrip.correo')
+
+# Límite por cuenta, independiente de la IP: frena la prueba de contraseñas distribuida.
+LOGIN_MAX_FALLOS = 5
+LOGIN_BLOQUEO_SEGUNDOS = 15 * 60
+
+
+def clave_fallos(email):
+    return 'login_fallos:' + hashlib.sha256(email.strip().lower().encode()).hexdigest()
+
+
+def registrar_fallo(clave):
+    # La ventana empieza en el primer fallo; incr conserva la caducidad original.
+    cache.add(clave, 0, LOGIN_BLOQUEO_SEGUNDOS)
+    try:
+        fallos = cache.incr(clave)
+    except ValueError:
+        cache.set(clave, 1, LOGIN_BLOQUEO_SEGUNDOS)
+        fallos = 1
+    if fallos == LOGIN_MAX_FALLOS:
+        # La huella identifica la cuenta en los registros sin escribir el correo.
+        registro_seguridad.warning('Cuenta bloqueada %s min tras %s contraseñas incorrectas (huella %s)',
+                                   LOGIN_BLOQUEO_SEGUNDOS // 60, LOGIN_MAX_FALLOS, clave[-12:])
+
+
 class LoginView(APIView):
     permission_classes = [AllowAny]
     authentication_classes = []
     throttle_classes = [LoginThrottle]
 
+    @extend_schema(request=CredencialesSerializer, responses={200: inline_serializer('DesafioLogin', fields={
+        'requiere_codigo': serializers.BooleanField(), 'desafio': serializers.UUIDField(),
+        'expira_en': serializers.IntegerField(), 'reenviar_en': serializers.IntegerField(),
+        'modo_prueba': serializers.BooleanField(), 'mensaje': serializers.CharField(),
+    })})
     def post(self, request):
         datos = CredencialesSerializer(data=request.data)
         datos.is_valid(raise_exception=True)
+        fallos = clave_fallos(datos.validated_data['email'])
+        if cache.get(fallos, 0) >= LOGIN_MAX_FALLOS:
+            raise Throttled(wait=LOGIN_BLOQUEO_SEGUNDOS,
+                            detail='Demasiados intentos fallidos para esta cuenta. Espera unos minutos.')
         usuario = authenticate(request=request, **datos.validated_data)
         if usuario is None:
+            registrar_fallo(fallos)
             raise AuthenticationFailed('Correo o contraseña incorrectos.')
+        cache.delete(fallos)
         # Bloquear siempre primero al usuario: serializa envío y verificación en PostgreSQL.
         with transaction.atomic():
             usuario = Usuario.objects.select_for_update().get(pk=usuario.pk)
@@ -90,18 +134,25 @@ class LoginView(APIView):
                 'enviado': ahora, 'expira': ahora + timedelta(minutes=10),
                 'intentos': 0, 'consumido': False,
             })
-            try:
-                enviados = send_mail(
-                    'Tu código de acceso a InfoTrip',
-                    f'Tu código para iniciar sesión en InfoTrip es: {codigo}\n\n'
-                    'Caduca en 10 minutos y solo puede utilizarse una vez.\n'
-                    'No lo compartas. Si no solicitaste este acceso, ignora este mensaje.',
-                    settings.DEFAULT_FROM_EMAIL, [usuario.email], fail_silently=False,
-                )
-                if enviados != 1:
-                    raise CorreoNoDisponible()
-            except (SMTPException, OSError) as error:
-                raise CorreoNoDisponible() from error
+        # El envío ocurre ya confirmada la transacción: el SMTP puede tardar hasta EMAIL_TIMEOUT
+        # y no debe retener el bloqueo de la fila. La marca 'enviado' ya impide reenvíos simultáneos.
+        try:
+            enviados = send_mail(
+                'Tu código de acceso a InfoTrip',
+                f'Tu código para iniciar sesión en InfoTrip es: {codigo}\n\n'
+                'Caduca en 10 minutos y solo puede utilizarse una vez.\n'
+                'No lo compartas. Si no solicitaste este acceso, ignora este mensaje.',
+                settings.DEFAULT_FROM_EMAIL, [usuario.email], fail_silently=False,
+            )
+            if enviados != 1:
+                raise CorreoNoDisponible()
+        except (SMTPException, OSError, CorreoNoDisponible) as error:
+            registro_correo.error('No se pudo enviar el código de acceso al usuario %s: %r', usuario.pk, error)
+            # Sin correo entregado el desafío no sirve; se retira para permitir reintentar.
+            CodigoAcceso.objects.filter(usuario=usuario, desafio=desafio).delete()
+            if isinstance(error, CorreoNoDisponible):
+                raise
+            raise CorreoNoDisponible() from error
         return Response({'requiere_codigo': True, 'desafio': str(desafio), 'expira_en': 600,
                          'reenviar_en': 60,
                          'modo_prueba': settings.EMAIL_BACKEND.endswith('console.EmailBackend'),
@@ -113,6 +164,9 @@ class VerificarCodigoView(APIView):
     authentication_classes = []
     throttle_classes = [VerificacionThrottle]
 
+    @extend_schema(request=CodigoSerializer, responses={200: inline_serializer('SesionIniciada', fields={
+        'access': serializers.CharField(), 'usuario': UsuarioPerfilSerializer(),
+    })})
     def post(self, request):
         datos = CodigoSerializer(data=request.data)
         datos.is_valid(raise_exception=True)
@@ -140,17 +194,53 @@ class VerificarCodigoView(APIView):
             usuario.save(update_fields=['es_verificado', 'ultimo_acceso'])
             refresh = RefreshToken.for_user(usuario)
             refresh['correo_confirmado'] = True
-            return Response({'access': str(refresh.access_token), 'refresh': str(refresh),
-                             'usuario': UsuarioPerfilSerializer(usuario, context={'request': request}).data})
+            respuesta = Response({'access': str(refresh.access_token),
+                                  'usuario': UsuarioPerfilSerializer(usuario, context={'request': request}).data})
+            guardar_cookie_refresh(request, respuesta, refresh)
+            return respuesta
+
+
+# La sesión se extiende con el uso, pero el refresh token cambia como mucho una vez al día.
+ROTAR_REFRESH_CADA = timedelta(days=1)
 
 
 class CorreoRefreshSerializer(TokenRefreshSerializer):
     def validate(self, attrs):
         token = self.token_class(attrs['refresh'])
         CorreoJWTAuthentication().get_user(token)
-        return super().validate(attrs)
+        datos = super().validate(attrs)
+        if aware_utcnow() - datetime_from_epoch(token['iat']) >= ROTAR_REFRESH_CADA:
+            token.blacklist()
+            token.set_jti()
+            token.set_exp()
+            token.set_iat()
+            token.outstand()
+            datos['refresh'] = str(token)
+        return datos
 
 
 class CorreoRefreshView(TokenRefreshView):
+    """Entrega un access token nuevo a partir de la cookie de sesión; no recibe el token en el cuerpo."""
     serializer_class = CorreoRefreshSerializer
     authentication_classes = []
+
+    @extend_schema(request=None, responses={200: inline_serializer('AccessRenovado', fields={
+        'access': serializers.CharField(),
+    })})
+    def post(self, request, *args, **kwargs):
+        exigir_csrf(request)
+        refresh = request.COOKIES.get(COOKIE_REFRESH)
+        if not refresh:
+            return Response({'detail': 'No hay una sesión activa.'}, status=401)
+        serializador = self.get_serializer(data={'refresh': refresh})
+        try:
+            serializador.is_valid(raise_exception=True)
+        except (TokenError, AuthenticationFailed):
+            respuesta = Response({'detail': 'Tu sesión terminó. Inicia sesión nuevamente.'}, status=401)
+            borrar_cookie_refresh(respuesta)
+            return respuesta
+        datos = serializador.validated_data
+        respuesta = Response({'access': datos['access']})
+        if 'refresh' in datos:
+            guardar_cookie_refresh(request, respuesta, datos['refresh'])
+        return respuesta

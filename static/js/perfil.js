@@ -58,6 +58,22 @@
       if(!list.children.length)list.append(node('p','Todavía no has compartido aportes. Abre un destino para comenzar.'));
     } catch(error){status.textContent=error.message;}finally{more.disabled=false;}
   }
+  // Avisos: los no leídos se marcan como leídos una vez mostrados.
+  async function loadNotices() {
+    const notices=document.getElementById('my-notices');
+    try {
+      const data=await InfoTrip.api('/api/v1/notificaciones/');
+      data.results.forEach(aviso=>{
+        const item=node('article',null,'community-box');
+        if(!aviso.leida) item.append(node('p','Nuevo','data-freshness data-freshness--recent'));
+        item.append(node('p',aviso.texto),node('p',new Date(aviso.creado).toLocaleDateString('es-MX'),'community-note'));
+        if(aviso.enlace){const link=node('a','Ver destino →');link.href=aviso.enlace;item.append(link);}
+        notices.append(item);
+      });
+      if(!data.results.length) notices.append(node('p','No tienes avisos por ahora.'));
+      if(data.no_leidas) await InfoTrip.api('/api/v1/notificaciones/leidas/',{method:'POST'});
+    } catch(error){notices.append(node('p',error.message));}
+  }
   more.addEventListener('click',load);
   form.addEventListener('submit',event=>{event.preventDefault();InfoTrip.submit(form,async feedback=>{
     const body=new FormData(form);if(!form.elements.foto_perfil.files.length)body.delete('foto_perfil');
@@ -76,7 +92,7 @@
       for(const name of ['nombre','apellido','ciudad_origen','bio'])form.elements[name].value=user[name]||'';
       document.getElementById('profile-email').textContent=`${user.email} · ${user.es_verificado?'Correo confirmado':'Correo pendiente'}`;
       if(user.foto_perfil){const image=document.getElementById('profile-photo');image.src=user.foto_perfil;image.hidden=false;}
-      document.getElementById('profile-content').hidden=false;status.textContent='';await load();
+      document.getElementById('profile-content').hidden=false;status.textContent='';await Promise.all([loadNotices(),load()]);
     }catch(error){status.textContent=error.message;document.getElementById('profile-login').hidden=false;}
   })();
 })();

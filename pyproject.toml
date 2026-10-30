@@ -1,0 +1,57 @@
+[project]
+name = "infotrip"
+version = "0.1.0"
+description = "Plataforma colaborativa de información turística verificada en Jalisco"
+requires-python = ">=3.12"
+
+# ─── Ruff: lint ───────────────────────────────────────────────
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+extend-exclude = ["*/migrations/*", ".venv*", "staticfiles", "media"]
+
+[tool.ruff.lint]
+# Errores reales (pyflakes y pycodestyle básicos) más avisos de espacios (W).
+select = ["E4", "E501", "E7", "E9", "F", "W"]
+ignore = [
+    "E701",  # Varias sentencias en una línea con ':'; estilo existente del proyecto.
+    "E702",  # Varias sentencias con ';' en una línea; estilo existente del proyecto.
+]
+
+[tool.ruff.lint.per-file-ignores]
+"infotrip/settings/*.py" = ["F403", "F405"]
+"infotrip/settings_*.py" = ["F403"]
+# Las pruebas conservan su estilo compacto de datos en línea.
+"**/test*.py" = ["E501"]
+
+# Formato solo para ajustar líneas largas a mano (ruff format --range); conserva las comillas simples.
+[tool.ruff.format]
+quote-style = "preserve"
+
+# ─── Coverage ─────────────────────────────────────────────────
+[tool.coverage.run]
+branch = true
+source = ["apps", "infotrip"]
+omit = [
+    "*/migrations/*",
+    "*/tests.py",
+    "*/test_*.py",
+    "infotrip/asgi.py",
+    "infotrip/wsgi.py",
+    # Configuración por entorno: no se ejecuta durante las pruebas.
+    "infotrip/settings/dev.py",
+    "infotrip/settings/local.py",
+    "infotrip/settings/prod.py",
+    "infotrip/settings_local.py",
+    "infotrip/settings_test.py",
+]
+
+[tool.coverage.report]
+fail_under = 90
+show_missing = true
+skip_covered = true
+precision = 1
+exclude_also = [
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+]

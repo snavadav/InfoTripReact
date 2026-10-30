@@ -62,8 +62,12 @@ class Destino(models.Model):
         ordering = ['nombre', 'pk']
         indexes = [models.Index(fields=['es_activo', 'nombre'], name='destino_activo_nombre_idx')]
         constraints = [
-            models.CheckConstraint(condition=models.Q(latitud__gte=-90, latitud__lte=90), name='destino_latitud_valida'),
-            models.CheckConstraint(condition=models.Q(longitud__gte=-180, longitud__lte=180), name='destino_longitud_valida'),
+            models.CheckConstraint(
+                condition=models.Q(latitud__gte=-90, latitud__lte=90), name='destino_latitud_valida'
+            ),
+            models.CheckConstraint(
+                condition=models.Q(longitud__gte=-180, longitud__lte=180), name='destino_longitud_valida'
+            ),
         ]
 
     def __str__(self):

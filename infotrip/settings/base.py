@@ -1,19 +1,40 @@
 """
-InfoTrip — settings.py
-Configuración principal del proyecto Django
+InfoTrip — settings/base.py
+Configuración común. No se usa directamente: elige dev, local, test o prod.
 """
 
 from pathlib import Path
-from decouple import config
+from decouple import Csv, config
 from datetime import timedelta
+from django.utils.csp import CSP
 
 # ─── RUTAS BASE ───────────────────────────────────────────────
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 # ─── SEGURIDAD ────────────────────────────────────────────────
-SECRET_KEY = config('SECRET_KEY', default='django-insecure-cambia-esto-en-produccion')
-DEBUG      = config('DEBUG', default=True, cast=bool)
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
+# Sin valores inseguros por defecto: cada entorno decide qué hacer si faltan.
+SECRET_KEY = config('SECRET_KEY', default='')
+DEBUG      = False
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='', cast=Csv())
+
+# Content Security Policy (S6): solo se ejecutan scripts de archivos propios y de Leaflet en
+# unpkg, así que un XSS no puede inyectar <script> en línea ni cargar código de otros dominios.
+# Los estilos admiten 'unsafe-inline' porque las plantillas usan bloques <style> y style="".
+SECURE_CSP = {
+    'default-src': [CSP.SELF],
+    'script-src': [CSP.SELF, 'https://unpkg.com'],
+    'style-src': [CSP.SELF, CSP.UNSAFE_INLINE, 'https://fonts.googleapis.com', 'https://unpkg.com'],
+    'font-src': [CSP.SELF, 'https://fonts.gstatic.com'],
+    'img-src': [CSP.SELF, 'data:', 'https://tile.openstreetmap.org', 'https://unpkg.com'],
+    # unpkg: las herramientas de desarrollo del navegador descargan el source map de Leaflet.
+    'connect-src': [CSP.SELF, 'https://unpkg.com'],
+    # Vista "Mapa" de la portada (mapa_embed en apps/destinos/frontend.py).
+    'frame-src': ['https://maps.google.com', 'https://www.google.com'],
+    'object-src': [CSP.NONE],
+    'base-uri': [CSP.SELF],
+    'form-action': [CSP.SELF],
+    'frame-ancestors': [CSP.NONE],
+}
 
 # ─── APLICACIONES ─────────────────────────────────────────────
 INSTALLED_APPS = [
@@ -29,6 +50,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
+    'drf_spectacular',
+    'drf_spectacular_sidecar',
 
     # InfoTrip apps
     'apps.usuarios',
@@ -39,6 +62,9 @@ INSTALLED_APPS = [
 # ─── MIDDLEWARE ───────────────────────────────────────────────
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # Sirve /static/ desde gunicorn en producción (los archivos de usuarios, /media/, los sirve nginx).
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'django.middleware.csp.ContentSecurityPolicyMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -92,7 +118,18 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # ─── DJANGO REST FRAMEWORK ───────────────────────────────────
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'API de InfoTrip',
+    'DESCRIPTION': 'Información turística de Jalisco verificada por la comunidad.',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    # Swagger UI desde archivos propios: la CSP no permite cargarlo de un CDN.
+    'SWAGGER_UI_DIST': 'SIDECAR',
+    'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
+}
+
 REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'apps.usuarios.authentication.CorreoJWTAuthentication',
     ),
@@ -101,17 +138,37 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
+    # Proxies inversos de confianza delante de Django. Con 0 se ignora X-Forwarded-For
+    # y los límites usan REMOTE_ADDR; detrás de nginx/balanceador usar 1.
+    'NUM_PROXIES': config('NUM_PROXIES', default=0, cast=int),
 }
+
+# ─── CACHÉ ────────────────────────────────────────────────────
+# Los límites de intentos (throttles y bloqueo por cuenta) viven en la caché: con varios
+# procesos debe ser compartida (Redis). LocMem solo sirve con un único proceso.
+def configurar_cache(redis_url):
+    if redis_url:
+        return {'default': {'BACKEND': 'django.core.cache.backends.redis.RedisCache', 'LOCATION': redis_url}}
+    return {'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache', 'LOCATION': 'infotrip'}}
+
+
+REDIS_URL = config('REDIS_URL', default='')
+CACHES = configurar_cache(REDIS_URL)
 
 # ─── JWT ──────────────────────────────────────────────────────
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME':  timedelta(hours=2),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'CHECK_REVOKE_TOKEN': True,
-    'ROTATE_REFRESH_TOKENS':  True,
+    # La rotación la decide CorreoRefreshSerializer: como mucho una vez al día. Hacerlo en cada
+    # refresco crearía una fila por página visitada y dos pestañas se invalidarían entre sí.
+    'ROTATE_REFRESH_TOKENS':  False,
     'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
+# Cookie del refresh token (apps/usuarios/sesion.py); solo por HTTPS en producción.
+REFRESH_COOKIE_SECURE = False
 
 # ─── INTERNACIONALIZACIÓN ─────────────────────────────────────
 LANGUAGE_CODE = 'es-mx'
@@ -144,3 +201,18 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='InfoTrip <no-reply@lo
 
 PUBLIC_BASE_URL = config('PUBLIC_BASE_URL', default='http://127.0.0.1:8000').rstrip('/')
 PASSWORD_RESET_TIMEOUT = 3600
+
+# ─── REGISTRO (LOGGING) ───────────────────────────────────────
+# Todo va a la salida estándar (12-factor): Docker, systemd o la plataforma lo recogen.
+# Los registros de InfoTrip nunca incluyen correos ni contraseñas: solo ids o huellas.
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {'simple': {'format': '{asctime} {levelname} {name}: {message}', 'style': '{'}},
+    'handlers': {'consola': {'class': 'logging.StreamHandler', 'formatter': 'simple'}},
+    'root': {'handlers': ['consola'], 'level': 'WARNING'},
+    'loggers': {
+        # infotrip.correo, infotrip.moderacion, infotrip.seguridad…
+        'infotrip': {'handlers': ['consola'], 'level': config('LOG_LEVEL', default='INFO'), 'propagate': False},
+    },
+}

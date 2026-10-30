@@ -11,6 +11,7 @@ from rest_framework.test import APITestCase
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import CodigoAcceso, Usuario
+from .sesion import COOKIE_REFRESH
 
 
 @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
@@ -45,7 +46,7 @@ class VerificacionCorreoTests(APITestCase):
         self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + response.data['access'])
         self.assertEqual(self.client.get('/api/v1/auth/perfil/').status_code, 200)
         self.client.credentials()
-        renovacion = self.client.post('/api/v1/auth/token/refresh/', {'refresh': response.data['refresh']})
+        renovacion = self.client.post('/api/v1/auth/token/refresh/')
         self.assertEqual(renovacion.status_code, 200, renovacion.data)
         self.assertIn('access', renovacion.data)
 
@@ -121,8 +122,10 @@ class VerificacionCorreoTests(APITestCase):
         self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + str(anterior.access_token))
         self.assertEqual(self.client.get('/api/v1/auth/perfil/').status_code, 401)
         self.client.credentials()
-        response = self.client.post('/api/v1/auth/token/refresh/', {'refresh': str(anterior)})
+        self.client.cookies[COOKIE_REFRESH] = str(anterior)
+        response = self.client.post('/api/v1/auth/token/refresh/')
         self.assertEqual(response.status_code, 401)
+        self.assertIn('terminó', response.data['detail'])
 
     def test_tambien_se_pide_codigo_a_usuario_ya_verificado(self):
         self.usuario.es_verificado = True

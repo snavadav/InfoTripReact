@@ -1,6 +1,7 @@
 # Variables de entorno
 .env
 .env.local
+.env.docker
 
 # Python
 .venv/
@@ -32,3 +33,7 @@ Thumbs.db
 dist/
 build/
 .venv314/
+
+# Cobertura
+.coverage
+htmlcov/

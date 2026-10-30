@@ -22,24 +22,107 @@ class Viaje(models.Model):
     class Meta:
         ordering = ['-actualizado', '-pk']
         constraints = [
-            models.CheckConstraint(condition=models.Q(personas__gte=1, personas__lte=100), name='viaje_personas_validas'),
+            models.CheckConstraint(
+                condition=models.Q(personas__gte=1, personas__lte=100), name='viaje_personas_validas'
+            ),
             models.CheckConstraint(condition=models.Q(presupuesto__gte=0), name='viaje_presupuesto_valido'),
-            models.CheckConstraint(condition=models.Q(fecha_fin__gte=models.F('fecha_inicio')), name='viaje_fechas_validas'),
+            models.CheckConstraint(
+                condition=models.Q(fecha_fin__gte=models.F('fecha_inicio')), name='viaje_fechas_validas'
+            ),
         ]
 
 
-class Aporte(models.Model):
+class Moderable(models.Model):
+    """Contenido de la comunidad que un moderador publica u oculta, con historial de cada cambio.
+
+    Las subclases definen `estado` y cómo guardan su historial; la moderación la hace moderacion.moderar().
+    """
+    # Estados que la moderación no puede cambiar (por ejemplo, un aporte que retiró su autor).
+    ESTADOS_SIN_MODERACION = ()
+    CAMPOS_AL_MODERAR = ['estado']
+    # Cómo se nombra cada tipo en el aviso al autor ("Publicamos tu reseña sobre…").
+    NOMBRES_EN_AVISO = {}
+
+    class Meta:
+        abstract = True
+
+    def registrar_moderacion(self, **campos):
+        raise NotImplementedError
+
+    def aviso_para_autor(self, anterior, estado):
+        """Texto del aviso al autor por un cambio de estado, o None si ese cambio no se avisa."""
+        tipo = self.NOMBRES_EN_AVISO.get(self.tipo, 'aporte')
+        if estado == 'publicado':
+            return f'Publicamos tu {tipo} sobre {self.destino.nombre}.'
+        if estado == 'oculto':
+            momento = 'tras una nueva revisión' if anterior == 'publicado' else 'tras la revisión'
+            return f'Ocultamos tu {tipo} sobre {self.destino.nombre} {momento}.'
+        return None
+
+
+class Notificacion(models.Model):
+    """Aviso interno para un usuario; se muestra en Mi perfil y, si corresponde, se envía por correo.
+
+    El correo no se envía al moderar: lo envía después el comando `enviar_avisos`.
+    """
+    MAX_INTENTOS_CORREO = 3
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notificaciones')
+    texto = models.CharField(max_length=300)
+    enlace = models.CharField(max_length=300, blank=True)
+    leida = models.BooleanField(default=False)
+    creado = models.DateTimeField(auto_now_add=True)
+    correo_pendiente = models.BooleanField(default=False)
+    correo_intentos = models.PositiveSmallIntegerField(default=0)
+    correo_enviado = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-creado', '-pk']
+        indexes = [
+            models.Index(fields=['usuario', 'leida'], name='notificacion_usuario_idx'),
+            models.Index(fields=['correo_pendiente'], name='notificacion_correo_idx',
+                         condition=models.Q(correo_pendiente=True)),
+        ]
+
+
+class RegistroModeracion(models.Model):
+    """Historial de solo lectura: quién cambió el estado, de cuál a cuál y por qué."""
+    moderador = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    estado_anterior = models.CharField(max_length=12)
+    estado_nuevo = models.CharField(max_length=12)
+    motivo = models.TextField(max_length=1000)
+    creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        abstract = True
+        ordering = ['-creado', '-pk']
+
+
+class Aporte(Moderable):
     TIPOS = [('resena', 'Reseña'), ('foto', 'Fotografía'), ('gasto', 'Gasto')]
-    ESTADOS = [('pendiente', 'Pendiente'), ('publicado', 'Publicado'), ('oculto', 'Oculto'), ('retirado', 'Retirado por autor')]
-    CONCEPTOS = [('entrada', 'Entrada por persona'), ('comida', 'Comida por persona'), ('alojamiento', 'Alojamiento por noche'), ('transporte', 'Transporte por persona')]
+    ESTADOS = [
+        ('pendiente', 'Pendiente'),
+        ('publicado', 'Publicado'),
+        ('oculto', 'Oculto'),
+        ('retirado', 'Retirado por autor'),
+    ]
+    CONCEPTOS = [
+        ('entrada', 'Entrada por persona'),
+        ('comida', 'Comida por persona'),
+        ('alojamiento', 'Alojamiento por noche'),
+        ('transporte', 'Transporte por persona'),
+    ]
     destino = models.ForeignKey('destinos.Destino', on_delete=models.PROTECT, related_name='aportes')
     autor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='aportes')
     tipo = models.CharField(max_length=10, choices=TIPOS)
     texto = models.TextField(max_length=2000)
     fecha_visita = models.DateField()
-    calificacion = models.PositiveSmallIntegerField(null=True, blank=True, validators=[MinValueValidator(1), MaxValueValidator(5)])
+    calificacion = models.PositiveSmallIntegerField(
+        null=True, blank=True, validators=[MinValueValidator(1), MaxValueValidator(5)]
+    )
     imagen = models.ImageField(upload_to='comunidad/%Y/%m/', blank=True)
-    monto = models.DecimalField(max_digits=9, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(Decimal(0))])
+    monto = models.DecimalField(
+        max_digits=9, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(Decimal(0))]
+    )
     concepto = models.CharField(max_length=15, choices=CONCEPTOS, blank=True)
     estado = models.CharField(max_length=12, choices=ESTADOS, default='pendiente')
     creado = models.DateTimeField(auto_now_add=True)
@@ -48,14 +131,30 @@ class Aporte(models.Model):
     class Meta:
         ordering = ['-creado', '-pk']
         constraints = [
-            models.UniqueConstraint(fields=['autor', 'destino'], condition=models.Q(tipo='resena') & ~models.Q(estado='retirado'), name='una_resena_vigente'),
-            models.CheckConstraint(condition=models.Q(calificacion__isnull=True) | models.Q(calificacion__gte=1, calificacion__lte=5), name='aporte_calificacion_rango'),
-            models.CheckConstraint(condition=models.Q(monto__isnull=True) | models.Q(monto__gte=0), name='aporte_monto_positivo'),
+            models.UniqueConstraint(
+                fields=['autor', 'destino'],
+                condition=models.Q(tipo='resena') & ~models.Q(estado='retirado'),
+                name='una_resena_vigente',
+            ),
+            models.CheckConstraint(
+                condition=models.Q(calificacion__isnull=True) | models.Q(calificacion__gte=1, calificacion__lte=5),
+                name='aporte_calificacion_rango',
+            ),
+            models.CheckConstraint(
+                condition=models.Q(monto__isnull=True) | models.Q(monto__gte=0), name='aporte_monto_positivo'
+            ),
         ]
         indexes = [models.Index(fields=['destino', 'estado', 'tipo'], name='aporte_publico_idx')]
 
+    ESTADOS_SIN_MODERACION = ('retirado',)
+    CAMPOS_AL_MODERAR = ['estado', 'actualizado']
+    NOMBRES_EN_AVISO = {'resena': 'reseña', 'foto': 'fotografía', 'gasto': 'registro de gasto'}
+
     def __str__(self):
         return f'{self.get_tipo_display()} · {self.destino} · {self.autor.nombre}'
+
+    def registrar_moderacion(self, **campos):
+        return self.decisiones.create(**campos)
 
 
 class Reporte(models.Model):
@@ -69,15 +168,8 @@ class Reporte(models.Model):
         constraints = [models.UniqueConstraint(fields=['aporte', 'autor'], name='un_reporte_por_autor')]
 
 
-class Decision(models.Model):
+class Decision(RegistroModeracion):
     aporte = models.ForeignKey(Aporte, on_delete=models.PROTECT, related_name='decisiones')
-    moderador = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
-    estado_anterior = models.CharField(max_length=12)
-    estado_nuevo = models.CharField(max_length=12)
-    motivo = models.TextField(max_length=1000)
-    creado = models.DateTimeField(auto_now_add=True)
-    class Meta:
-        ordering = ['-creado']
 
 
 class Favorito(models.Model):
@@ -90,8 +182,17 @@ class Favorito(models.Model):
         constraints = [models.UniqueConstraint(fields=['autor', 'destino'], name='favorito_unico')]
 
 
-class Colaboracion(models.Model):
-    CAMPOS = [('horarios', 'Horarios'), ('acceso', 'Cómo acceder'), ('estacionamiento', 'Estacionamiento'), ('pago', 'Formas de pago'), ('restricciones', 'Restricciones'), ('accesibilidad', 'Accesibilidad'), ('contacto', 'Contacto'), ('precios', 'Precios y cargos adicionales')]
+class Colaboracion(Moderable):
+    CAMPOS = [
+        ('horarios', 'Horarios'),
+        ('acceso', 'Cómo acceder'),
+        ('estacionamiento', 'Estacionamiento'),
+        ('pago', 'Formas de pago'),
+        ('restricciones', 'Restricciones'),
+        ('accesibilidad', 'Accesibilidad'),
+        ('contacto', 'Contacto'),
+        ('precios', 'Precios y cargos adicionales'),
+    ]
     TIPOS = [('correccion', 'Información práctica / corrección'), ('pregunta', 'Pregunta'), ('respuesta', 'Respuesta')]
     ESTADOS = [('pendiente', 'Pendiente'), ('publicado', 'Publicado'), ('oculto', 'Oculto')]
     destino = models.ForeignKey('destinos.Destino', on_delete=models.PROTECT, related_name='colaboraciones')
@@ -112,14 +213,27 @@ class Colaboracion(models.Model):
     def __str__(self):
         return f'{self.get_tipo_display()} · {self.destino} · {self.pk}'
 
+    NOMBRES_EN_AVISO = {'correccion': 'dato práctico', 'pregunta': 'pregunta', 'respuesta': 'respuesta'}
 
-class RevisionColaboracion(models.Model):
+    def registrar_moderacion(self, **campos):
+        return self.revisiones.create(**campos)
+
+
+class RevisionColaboracion(RegistroModeracion):
     colaboracion = models.ForeignKey(Colaboracion, on_delete=models.PROTECT, related_name='revisiones')
-    moderador = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
-    anterior = models.CharField(max_length=12)
-    nuevo = models.CharField(max_length=12)
-    motivo = models.CharField(max_length=500)
+
+
+class Confirmacion(models.Model):
+    """Una persona confirma que un dato práctico publicado sigue vigente ("¿Sigue vigente?").
+
+    No pasa por moderación porque no añade texto: solo renueva la fecha de vigencia del dato.
+    Cada persona confirma una vez por dato; volver a confirmar actualiza la fecha.
+    """
+    dato = models.ForeignKey(Colaboracion, on_delete=models.CASCADE, related_name='confirmaciones')
+    autor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='confirmaciones')
+    fecha = models.DateField()
     creado = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['-creado', '-pk']
+        ordering = ['-fecha', '-pk']
+        constraints = [models.UniqueConstraint(fields=['dato', 'autor'], name='una_confirmacion_por_persona')]

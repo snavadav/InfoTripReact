@@ -1,0 +1,14 @@
+.git
+.github
+.env
+.env.*
+!.env.example
+.venv*
+.ruff_cache
+.coverage
+**/__pycache__
+**/*.pyc
+db.sqlite3
+media
+staticfiles
+docs

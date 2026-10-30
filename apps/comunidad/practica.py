@@ -1,26 +1,15 @@
 """Información aportada por personas: nunca se rellena un dato desconocido."""
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework import generics, serializers
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Favorito, Colaboracion
+from .models import Colaboracion, Confirmacion, Favorito
+from .selectors import confirmaciones_validas, dato_vigente, publicas
 from .views import AporteThrottle
 from apps.destinos.models import Destino
-
-
-def publicas():
-    return Colaboracion.objects.filter(estado='publicado', autor__es_activo=True, destino__es_activo=True)
-
-
-def ficha_practica(destino):
-    correcciones = list(publicas().filter(destino=destino, tipo='correccion').select_related('autor').order_by('-fecha_dato', '-creado', '-pk'))
-    campos = []
-    for key, label in Colaboracion.CAMPOS:
-        historial = [item for item in correcciones if item.campo == key]
-        campos.append({'nombre': label, 'dato': historial[0] if historial else None, 'historial': historial[1:]})
-    return campos
 
 
 class ColaboracionSerializer(serializers.ModelSerializer):
@@ -28,7 +17,18 @@ class ColaboracionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Colaboracion
-        fields = ['id', 'tipo', 'campo', 'texto', 'fuente', 'fecha_dato', 'pregunta', 'estado', 'creado', 'autor_nombre']
+        fields = [
+            'id',
+            'tipo',
+            'campo',
+            'texto',
+            'fuente',
+            'fecha_dato',
+            'pregunta',
+            'estado',
+            'creado',
+            'autor_nombre',
+        ]
         read_only_fields = ['id', 'estado', 'creado', 'autor_nombre']
 
     def validate(self, attrs):
@@ -38,12 +38,19 @@ class ColaboracionSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({'fecha_dato': 'La fecha no puede ser futura.'})
         if tipo == 'correccion':
             if not attrs.get('campo') or not attrs.get('fuente') or not attrs.get('fecha_dato'):
-                raise serializers.ValidationError('Incluye el dato que actualizas, su fuente y la fecha en que lo consultaste.')
+                raise serializers.ValidationError(
+                    'Incluye el dato que actualizas, su fuente y la fecha en que lo consultaste.'
+                )
         elif attrs.get('campo'):
             raise serializers.ValidationError({'campo': 'Solo las correcciones llevan un campo.'})
         if tipo == 'respuesta':
             destino = self.context['view'].destino()
-            if not parent or parent.tipo != 'pregunta' or parent.destino_id != destino.pk or not publicas().filter(pk=parent.pk).exists():
+            if (
+                not parent
+                or parent.tipo != 'pregunta'
+                or parent.destino_id != destino.pk
+                or not publicas().filter(pk=parent.pk).exists()
+            ):
                 raise serializers.ValidationError({'pregunta': 'Selecciona una pregunta publicada de este destino.'})
         elif parent:
             raise serializers.ValidationError({'pregunta': 'Solo las respuestas llevan una pregunta.'})
@@ -86,18 +93,45 @@ class FavoritosView(generics.ListAPIView):
         return Favorito.objects.filter(autor=self.request.user).select_related('destino')
 
 
+class EstadoFavoritoSerializer(serializers.Serializer):
+    favorito = serializers.BooleanField()
+
+
 class FavoritoView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(responses={200: EstadoFavoritoSerializer})
     def get(self, request, slug):
         destino = get_object_or_404(Destino, slug=slug, es_activo=True)
         return Response({'favorito': Favorito.objects.filter(autor=request.user, destino=destino).exists()})
 
+    @extend_schema(request=None, responses={200: EstadoFavoritoSerializer})
     def put(self, request, slug):
         destino = get_object_or_404(Destino, slug=slug, es_activo=True)
         Favorito.objects.get_or_create(autor=request.user, destino=destino)
         return Response({'favorito': True})
 
+    @extend_schema(responses={204: None})
     def delete(self, request, slug):
         Favorito.objects.filter(autor=request.user, destino__slug=slug).delete()
         return Response(status=204)
+
+
+class ConfirmarDatoView(APIView):
+    """POST: confirma que un dato práctico vigente sigue siendo correcto hoy."""
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [AporteThrottle]
+
+    @extend_schema(request=None, responses={200: inline_serializer('DatoConfirmado', fields={
+        'confirmaciones': serializers.IntegerField(), 'fecha': serializers.DateField(),
+    })})
+    def post(self, request, pk):
+        dato = get_object_or_404(publicas().filter(tipo='correccion'), pk=pk)
+        if dato.autor_id == request.user.pk:
+            raise serializers.ValidationError('Tu propio dato ya cuenta con la fecha en que lo consultaste.')
+        if dato_vigente(dato).pk != dato.pk:
+            raise serializers.ValidationError('Hay una versión más reciente de este dato. Confirma esa versión.')
+        hoy = timezone.localdate()
+        Confirmacion.objects.update_or_create(dato=dato, autor=request.user, defaults={'fecha': hoy})
+        total = confirmaciones_validas().filter(dato=dato).count()
+        return Response({'confirmaciones': total, 'fecha': hoy})

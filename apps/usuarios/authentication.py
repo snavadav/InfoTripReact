@@ -1,3 +1,4 @@
+from drf_spectacular.extensions import OpenApiAuthenticationExtension
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
@@ -10,3 +11,12 @@ class CorreoJWTAuthentication(JWTAuthentication):
         return usuario
 
 
+
+
+class CorreoJWTEsquema(OpenApiAuthenticationExtension):
+    """Documenta la autenticación en OpenAPI: token Bearer de la verificación por correo."""
+    target_class = CorreoJWTAuthentication
+    name = 'jwt'
+
+    def get_security_definition(self, auto_schema):
+        return {'type': 'http', 'scheme': 'bearer', 'bearerFormat': 'JWT'}

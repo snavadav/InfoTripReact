@@ -6,6 +6,7 @@ from django.core.mail import send_mail
 from django.db import transaction
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework import serializers
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -13,7 +14,7 @@ from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
 from smtplib import SMTPException
 from .models import Usuario
-from .verificacion import CorreoNoDisponible
+from .verificacion import CorreoNoDisponible, registro_correo
 
 
 class RecuperacionThrottle(AnonRateThrottle):
@@ -33,6 +34,9 @@ class RecuperarView(APIView):
     authentication_classes = []
     permission_classes = [AllowAny]
     throttle_classes = [RecuperacionThrottle]
+    @extend_schema(request=SolicitudSerializer, responses={200: inline_serializer('RecuperacionSolicitada', fields={
+        'mensaje': serializers.CharField(), 'modo_prueba': serializers.BooleanField(),
+    })})
     def post(self, request):
         datos = SolicitudSerializer(data=request.data)
         datos.is_valid(raise_exception=True)
@@ -44,11 +48,17 @@ class RecuperarView(APIView):
             token = default_token_generator.make_token(usuario)
             url = f'{settings.PUBLIC_BASE_URL}/recuperar/?uid={uid}&token={token}'
             try:
-                enviados = send_mail('Recupera tu acceso a InfoTrip',
-                    f'Abre este enlace para elegir una contraseña nueva. Caduca en una hora:\n{url}\nSi no lo solicitaste, ignora este mensaje.',
-                    settings.DEFAULT_FROM_EMAIL, [usuario.email], fail_silently=False)
+                enviados = send_mail(
+                    'Recupera tu acceso a InfoTrip',
+                    f'Abre este enlace para elegir una contraseña nueva. Caduca en una hora:\n{url}\n'
+                    'Si no lo solicitaste, ignora este mensaje.',
+                    settings.DEFAULT_FROM_EMAIL,
+                    [usuario.email],
+                    fail_silently=False,
+                )
                 if enviados != 1: raise CorreoNoDisponible()
-            except (SMTPException, OSError) as error:
+            except (SMTPException, OSError, CorreoNoDisponible) as error:
+                registro_correo.error('No se pudo enviar la recuperación al usuario %s: %r', usuario.pk, error)
                 raise CorreoNoDisponible() from error
         return Response({'mensaje': 'Si existe una cuenta activa con ese correo, recibirás un enlace de recuperación.',
                          'modo_prueba': settings.EMAIL_BACKEND.endswith('console.EmailBackend')})
@@ -57,6 +67,9 @@ class RestablecerView(APIView):
     authentication_classes = []
     permission_classes = [AllowAny]
     throttle_classes = [RecuperacionThrottle]
+    @extend_schema(request=ConfirmacionSerializer, responses={200: inline_serializer('ContrasenaRestablecida', fields={
+        'mensaje': serializers.CharField(),
+    })})
     def post(self, request):
         datos = ConfirmacionSerializer(data=request.data)
         datos.is_valid(raise_exception=True)
@@ -66,7 +79,9 @@ class RestablecerView(APIView):
         except (ValueError, TypeError, UnicodeDecodeError, OverflowError):
             raise serializers.ValidationError('El enlace no es válido o ha caducado.')
         with transaction.atomic():
-            usuario = Usuario.objects.select_for_update().filter(pk=pk, es_activo=True).first() if 0 < pk < 2**63 else None
+            usuario = (
+                Usuario.objects.select_for_update().filter(pk=pk, es_activo=True).first() if 0 < pk < 2**63 else None
+            )
             if not usuario or not default_token_generator.check_token(usuario, campos['token']):
                 raise serializers.ValidationError('El enlace no es válido o ha caducado.')
             if campos['password'] != campos['password2']:

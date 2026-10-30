@@ -1,7 +1,5 @@
-import re
 from datetime import timedelta
 from unittest.mock import patch
-from urllib.parse import urlparse, parse_qs
 from django.contrib.auth.tokens import default_token_generator
 from django.core import mail
 from django.core.cache import cache
@@ -11,6 +9,7 @@ from django.utils.http import urlsafe_base64_encode
 from rest_framework.test import APITestCase
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import Usuario
+from .sesion import COOKIE_REFRESH
 
 
 @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
@@ -41,7 +40,10 @@ class RecuperacionTests(APITestCase):
         self.client.credentials(HTTP_AUTHORIZATION='Bearer '+access)
         self.assertEqual(self.client.get('/api/v1/auth/perfil/').status_code,401)
         self.client.credentials()
-        self.assertEqual(self.client.post('/api/v1/auth/token/refresh/',{'refresh':str(refresh)}).status_code,401)
+        self.client.cookies[COOKIE_REFRESH]=str(refresh)
+        renovacion=self.client.post('/api/v1/auth/token/refresh/')
+        self.assertEqual(renovacion.status_code,401)
+        self.assertIn('terminó',renovacion.data['detail'])
         self.user.refresh_from_db();self.assertTrue(self.user.check_password(datos['password']))
 
     def test_enlace_vencido_y_malformado(self):

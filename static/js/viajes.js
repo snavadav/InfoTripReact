@@ -96,7 +96,7 @@
   async function load(append=false) {
     more.disabled=true;
     try{const data=await InfoTrip.api(append?next:'/api/v1/mis-viajes/');if(!append)list.replaceChildren();data.results.forEach(render);next=data.next;more.hidden=!next;if(!list.children.length)list.append(node('p','Todavía no tienes escapadas guardadas. Crea tu primer plan.'));status.textContent='';}
-    catch(error){status.textContent=error.message;document.getElementById('trip-login').hidden=!!localStorage.getItem('access_token');}
+    catch(error){status.textContent=error.message;document.getElementById('trip-login').hidden=InfoTrip.hasSession();}
     finally{more.disabled=false;}
   }
   document.getElementById('add-activity').addEventListener('click',()=>{addActivity();dirty=true;activities.lastElementChild?.querySelector('[name="titulo"]').focus();});
@@ -124,6 +124,6 @@
   const suggested=new URLSearchParams(location.search).get('destino');
   if(suggested){form.elements.destino.value=suggested.slice(0,200);form.elements.nombre.value=('Escapada a '+suggested).slice(0,120);dirty=true;}
   calculate();
-  if(localStorage.getItem('access_token'))load();
+  if(InfoTrip.hasSession())load();
   else {document.getElementById('trip-login').hidden=false;list.append(node('p','Inicia sesión para ver tus escapadas. Puedes probar el presupuesto antes de entrar.'));}
 })();

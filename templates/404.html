@@ -1,0 +1,13 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}Página no encontrada — InfoTrip{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}">{% endblock %}
+{% block content %}{% include 'partials/navBar.html' %}
+<main class="explore-shell">
+  <div class="empty-catalog">
+    <h1>No encontramos esta página</h1>
+    <p>Puede que el enlace esté mal escrito o que el destino ya no esté disponible.</p>
+    <p><a href="{% url 'destinos-listado' %}">Explorar destinos →</a> · <a href="{% url 'index' %}">Volver al inicio</a></p>
+  </div>
+  {% include 'destinos/footer.html' %}
+</main>
+{% endblock %}
