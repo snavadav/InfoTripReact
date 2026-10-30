@@ -1,9 +1,13 @@
 from datetime import timedelta
+from io import StringIO
+from django.contrib.staticfiles import finders
+from django.core.management import call_command
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 from apps.comunidad.models import Aporte
 from apps.usuarios.models import Usuario
+from .fotos import FOTOS_CATALOGO
 from .models import Categoria, Destino, Region, Municipio, Servicio
 
 
@@ -169,3 +173,36 @@ class FiltrosCompartidosTests(TestCase):
                 self.assertEqual(api, web)
                 self.assertNotIn('oculto', api)
         self.assertEqual(self.slugs_api({'concepto': 'comida', 'precio_max': '350'}), {'lugar-0', 'lugar-1', 'lugar-2'})
+
+
+class CatalogoInicialTests(TestCase):
+    def test_carga_15_destinos_con_municipio_correcto_y_es_idempotente(self):
+        call_command('cargar_destinos_iniciales', stdout=StringIO())
+        call_command('cargar_destinos_iniciales', stdout=StringIO())
+        self.assertEqual(Destino.objects.count(), 15)
+        self.assertEqual(Destino.objects.get(slug='ajijic').municipio.nombre, 'Chapala')
+        self.assertEqual(Destino.objects.get(slug='guachimontones').municipio.nombre, 'Teuchitlán')
+        self.assertEqual(Destino.objects.get(slug='tonala').municipio.nombre, 'Tonalá')
+
+    def test_las_fotos_del_catalogo_existen_y_llevan_credito(self):
+        for slug, foto in FOTOS_CATALOGO.items():
+            with self.subTest(slug=slug):
+                self.assertIsNotNone(finders.find(foto['imagen']))
+                self.assertTrue(foto['autor'] and foto['licencia_url'] and foto['alt'])
+        call_command('cargar_destinos_iniciales', stdout=StringIO())
+        ficha = self.client.get('/destinos/guachimontones/')
+        self.assertContains(ficha, 'Esteban Tucci')
+        self.assertContains(ficha, 'images/destinos/guachimontones.jpg')
+        creditos = self.client.get('/creditos/')
+        self.assertContains(creditos, 'Esteban Tucci')
+        self.assertContains(creditos, 'CC BY-SA 4.0')
+
+    def test_la_foto_de_la_comunidad_reemplaza_a_la_del_catalogo_sin_su_credito(self):
+        call_command('cargar_destinos_iniciales', stdout=StringIO())
+        destino = Destino.objects.get(slug='guachimontones')
+        autor = Usuario.objects.create_user('f@example.com', 'Ana', 'P', 'Prueba-segura-493!')
+        Aporte.objects.create(autor=autor, destino=destino, tipo='foto', texto='Mi foto', imagen='comunidad/x.jpg',
+                              fecha_visita=timezone.localdate(), estado='publicado')
+        ficha = self.client.get('/destinos/guachimontones/')
+        self.assertEqual(ficha.context['lugar']['alt'], 'Mi foto')
+        self.assertNotContains(ficha, 'Esteban Tucci')

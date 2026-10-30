@@ -15,7 +15,7 @@ from apps.comunidad.cola import cola_moderacion
 from apps.core.views import robots, salud
 from apps.destinos.sitemaps import DestinosSitemap, PaginasSitemap
 from apps.usuarios.views_frontend import login_view, registro_view
-from apps.destinos.frontend import inicio, listado, detalle
+from apps.destinos.frontend import creditos, inicio, listado, detalle
 from apps.metricas.views import EventosView, panel as panel_metricas
 
 
@@ -49,6 +49,7 @@ urlpatterns = [
     path('recuperar/', TemplateView.as_view(template_name='comunidad/recuperar.html'), name='recuperar'),
     path('privacidad/', vista_legal('legal/privacidad.html'), name='privacidad'),
     path('terminos/', vista_legal('legal/terminos.html'), name='terminos'),
+    path('creditos/', creditos, name='creditos'),
     path('api/v1/auth/', include('apps.usuarios.urls')),
     path('api/v1/', include('apps.destinos.urls')),
 

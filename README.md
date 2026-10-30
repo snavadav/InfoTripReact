@@ -10,7 +10,7 @@ Plataforma web colaborativa para la gestión de información turística y valida
 
 ## ¿Qué es InfoTrip?
 
-InfoTrip centraliza información turística verificada por la comunidad. Los viajeros pueden consultar destinos, precios reales, reseñas verificadas y rutas de acceso — todo sin publicidad ni contenido patrocinado.
+InfoTrip reúne información turística aportada por viajeros y revisada antes de publicarse. Se pueden consultar destinos, gastos reportados, reseñas y cómo llegar, sin publicidad ni contenido patrocinado. La revisión no acredita una visita: conviene confirmar con el lugar antes de viajar.
 
 ---
 
@@ -314,7 +314,7 @@ Para desarrollo con SQLite (sin PostgreSQL), selecciona explícitamente `setting
 .\.venv314\Scripts\python.exe -B manage.py runserver --settings=infotrip.settings_local
 ```
 
-El comando de carga agrega cinco localidades sin sobrescribir registros existentes. Fuentes y alcance de sus coordenadas en [catálogo inicial](docs/catalogo-inicial.md). Las credenciales del administrador las eliges al ejecutar `createsuperuser`.
+El comando de carga agrega 15 localidades sin sobrescribir registros existentes. Fuentes y alcance de sus coordenadas en [catálogo inicial](docs/catalogo-inicial.md). Las credenciales del administrador las eliges al ejecutar `createsuperuser`.
 
 Pruebas:
 

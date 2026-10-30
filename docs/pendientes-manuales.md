@@ -46,6 +46,9 @@ Tareas que no se pueden automatizar desde el código. Marca cada una al completa
 - [ ] **Sacar las copias de seguridad del servidor.** El servicio `respaldos` las guarda en un volumen local; hay que copiarlas a otro lugar ([guía](operacion.md)).
 - [ ] **Definir `SENTRY_DSN`** si quieres alertas de errores (opcional).
 
+- [ ] **Sembrar datos prácticos** en los destinos: [guía](sembrar-contenido.md). Sin ellos, las fichas dicen "Sin confirmar" y el sitio aporta poco valor.
+- [ ] **Confirmar el origen de `tequila.jpg` y `ptVallarta.jpg`**: ya estaban en el proyecto sin autor ni licencia documentados. Si no son propias, hay que sustituirlas.
+
 ## Generales
 
 - [ ] **Mover el proyecto fuera de OneDrive** (por ejemplo a `C:\dev\InfoTrip`). La sincronización de `.venv314`, `.venv`, `db.sqlite3` y las cachés de `uv` puede corromper archivos y ralentizar el equipo. Hacerlo con el editor y los servidores cerrados.

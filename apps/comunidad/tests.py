@@ -182,8 +182,8 @@ class ComunidadTests(APITestCase):
         from django.core.management import call_command
         from io import StringIO
         call_command('cargar_destinos_iniciales',stdout=StringIO())
-        self.assertEqual(Destino.objects.count(),6)
+        self.assertEqual(Destino.objects.count(),16)
         tequila=Destino.objects.get(slug='tequila');tequila.es_activo=False;tequila.descripcion='Edición propia';tequila.save()
         call_command('cargar_destinos_iniciales',stdout=StringIO())
         tequila.refresh_from_db();self.assertFalse(tequila.es_activo);self.assertEqual(tequila.descripcion,'Edición propia')
-        self.assertEqual(Destino.objects.count(),6)
+        self.assertEqual(Destino.objects.count(),16)

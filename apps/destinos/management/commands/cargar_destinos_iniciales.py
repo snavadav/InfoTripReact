@@ -4,7 +4,90 @@ from django.db import transaction
 from django.utils.text import slugify
 from apps.destinos.models import Destino, Municipio, Region, Categoria
 
+# Nombre del municipio cuando la localidad pertenece a otro; por defecto, el mismo nombre.
+MUNICIPIOS = {'Ajijic': 'Chapala', 'Guachimontones': 'Teuchitlán', 'Barra de Navidad': 'Cihuatlán'}
+
 LUGARES = [
+    (
+        'Guadalajara',
+        'Centro de Jalisco',
+        'Ciudad y cultura',
+        '20.676389',
+        '-103.342222',
+        'Capital de Jalisco, en el Valle de Atemajac. Recorre su centro histórico y visita el Hospicio Cabañas.',
+    ),
+    (
+        'Tlaquepaque',
+        'Centro de Jalisco',
+        'Ciudad y cultura',
+        '20.583333',
+        '-103.350000',
+        'Parte del área metropolitana de Guadalajara. Pasea por su centro y conoce el Santuario de la Soledad.',
+    ),
+    (
+        'Tonalá',
+        'Centro de Jalisco',
+        'Ciudad y cultura',
+        '20.623333',
+        '-103.245556',
+        'Municipio del área metropolitana de Guadalajara, con plazas y templos históricos por recorrer.',
+    ),
+    (
+        'Ajijic',
+        'Ribera de Chapala',
+        'Lago',
+        '20.300278',
+        '-103.272222',
+        'Localidad del municipio de Chapala, a orillas del lago, con malecón y vistas a las montañas.',
+    ),
+    (
+        'Guachimontones',
+        'Valles de Jalisco',
+        'Arqueología',
+        '20.695149',
+        '-103.835719',
+        'Antiguo asentamiento prehispánico en Teuchitlán, cerca de una hora de Guadalajara, con pirámides circulares.',
+    ),
+    (
+        'San Sebastián del Oeste',
+        'Sierra de Jalisco',
+        'Pueblos',
+        '20.760833',
+        '-104.851667',
+        'Antiguo pueblo minero en la sierra del occidente de Jalisco.',
+    ),
+    (
+        'Mascota',
+        'Sierra de Jalisco',
+        'Pueblos',
+        '20.525556',
+        '-104.782222',
+        'Población de la sierra occidental, con plaza, quiosco y calles para recorrer a pie.',
+    ),
+    (
+        'Talpa de Allende',
+        'Sierra de Jalisco',
+        'Pueblos',
+        '20.381389',
+        '-104.818056',
+        'Localidad de la sierra occidental, conocida por su basílica de Nuestra Señora del Rosario.',
+    ),
+    (
+        'Lagos de Moreno',
+        'Altos de Jalisco',
+        'Ciudad y cultura',
+        '21.361389',
+        '-101.935000',
+        'Ciudad de la región Altos Norte, con templos históricos y el Teatro José Rosas Moreno.',
+    ),
+    (
+        'Barra de Navidad',
+        'Costa de Jalisco',
+        'Costa',
+        '19.208056',
+        '-104.680556',
+        'Pueblo pesquero de la costa sur, en el municipio de Cihuatlán, con playa frente al Pacífico.',
+    ),
     (
         'Tequila',
         'Valles de Jalisco',
@@ -48,7 +131,7 @@ LUGARES = [
 ]
 
 class Command(BaseCommand):
-    help = 'Carga cinco destinos iniciales sin modificar ni reactivar registros existentes.'
+    help = 'Carga 15 destinos iniciales sin modificar ni reactivar registros existentes.'
     @transaction.atomic
     def handle(self, *args, **options):
         creados = 0
@@ -57,7 +140,10 @@ class Command(BaseCommand):
             if Destino.objects.filter(slug=slug).exists():
                 continue
             region, _ = Region.objects.get_or_create(nombre=region_nombre, defaults={'slug':slugify(region_nombre)})
-            municipio, _ = Municipio.objects.get_or_create(nombre=nombre, defaults={'slug':slug,'region':region})
+            nombre_municipio = MUNICIPIOS.get(nombre, nombre)
+            municipio, _ = Municipio.objects.get_or_create(
+                nombre=nombre_municipio, defaults={'slug': slugify(nombre_municipio), 'region': region}
+            )
             categoria, _ = Categoria.objects.get_or_create(
                 nombre=categoria_nombre, defaults={'slug': slugify(categoria_nombre)}
             )

@@ -17,6 +17,7 @@ from apps.comunidad.selectors import (
     aportes_publicos, con_info_reciente, ficha_practica, preguntas_publicas, resumen,
 )
 from .filtros import filtrar_destinos
+from .fotos import FOTOS_CATALOGO
 from .models import Destino, Categoria, Municipio, Region, Servicio
 from .seo import seo_de_destino
 from .views import destinos_publicos
@@ -59,7 +60,8 @@ FOTOS = {lugar['slug']: (lugar['imagen'], lugar['alt']) for lugar in INSPIRACION
 
 def presentar(destino):
     categorias = [categoria.nombre for categoria in destino.categorias.all()]
-    foto, alt = FOTOS.get(destino.slug, ('', ''))
+    catalogo = FOTOS_CATALOGO.get(destino.slug)
+    foto, alt = (catalogo['imagen'], catalogo['alt']) if catalogo else FOTOS.get(destino.slug, ('', ''))
     fotos = getattr(destino, 'fotos_publicas', [])
     return {
         'nombre': destino.nombre, 'slug': destino.slug, 'descripcion': destino.descripcion,
@@ -69,6 +71,7 @@ def presentar(destino):
         'direccion': destino.direccion, 'latitud': str(destino.latitud), 'longitud': str(destino.longitud),
         'imagen': foto, 'foto_url': fotos[0].imagen.url if fotos else '',
         'alt': fotos[0].texto if fotos else alt, 'editorial': False,
+        'credito': None if fotos else catalogo,
     }
 
 
@@ -226,3 +229,7 @@ def detalle(request, slug):
         contexto['aportes'] = Paginator(aportes_publicos(destino), 9).get_page(request.GET.get('aportes'))
     contexto['seo'] = seo_de_destino(lugar, contexto.get('resumen'))
     return render(request, 'destinos/detalle.html', contexto)
+
+
+def creditos(request):
+    return render(request, 'legal/creditos.html', {'fotos': FOTOS_CATALOGO.values()})
