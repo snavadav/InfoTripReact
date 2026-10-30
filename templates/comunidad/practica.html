@@ -2,7 +2,7 @@
 <section id="practical-info" class="community-section" data-slug="{{ lugar.slug }}" aria-labelledby="practical-title">
   <div class="contribution-actions"><button id="favorite-toggle" type="button" aria-pressed="false" disabled>Guardar lugar</button><a href="{% url 'mis-viajes' %}?destino={{ lugar.nombre|urlencode }}">Agregar a una nueva escapada →</a><a href="{% url 'favoritos' %}" data-session-only hidden>Mis favoritos</a><button id="share-place" type="button">Compartir</button></div>
   <p id="favorite-status" role="status"></p>
-  <div class="community-box"><h2>¿Estás aquí?</h2><p>Comprueba tu visita y tus aportes sobre este lugar mostrarán la etiqueta "Comprobó su ubicación". Usamos tu ubicación una sola vez para compararla con la del lugar. No la guardamos: solo el resultado y la fecha.</p><button id="visit-check" type="button">Comprobar mi visita</button><p id="visit-status" role="status"></p></div>
+  <div class="community-box"><h2>¿Estás aquí?</h2><p>Comprueba tu visita y tus aportes sobre este lugar mostrarán la etiqueta "Comprobó su ubicación". Usamos tu ubicación una sola vez para compararla con la del lugar. No la guardamos: solo el resultado y la fecha.</p>{% if da_sello %}<p>Este Pueblo Mágico suma un sello a tu <a href="{% url 'pasaporte' %}">pasaporte</a>.</p>{% endif %}<button id="visit-check" type="button">Comprobar mi visita</button><p id="visit-status" role="status"></p></div>
   <h2 id="practical-title">Antes de visitar este lugar</h2>
   <p class="community-note">Datos aportados por la comunidad y revisados editorialmente. No garantizan condiciones actuales: confirma con el lugar antes de salir.</p>
   <div class="practical-grid">

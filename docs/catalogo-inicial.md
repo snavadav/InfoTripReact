@@ -31,3 +31,9 @@ Las coordenadas de esta segunda tanda se consultaron el 30 de octubre de 2026. F
 ```
 
 Los dos archivos de fotografía existentes de Tequila y Puerto Vallarta se conservan. Los demás destinos muestran un estado sin foto hasta que se aprueben aportes fotográficos.
+
+## Pueblos Mágicos para el pasaporte
+
+La lista de 12 está en `PUEBLOS_MAGICOS` (`apps/comunidad/selectors.py`), tomada de [Excélsior](https://www.excelsior.com.mx/estilo-de-vida/pueblos-magicos-jalisco-12-que-han-ganado-titulo) y [Tus Buenas Noticias](https://www.tusbuenasnoticias.com/noticias/2023/06/27/21134-cocula-sayula-y-temacapulin-los-tres-nuevos-pueblos-magicos-de-jalisco/). Conviene contrastarla con la lista oficial de la Secretaría de Turismo.
+
+Cocula, Sayula y Temacapulín todavía no tienen ficha, así que su sello no se puede ganar. Para activarlo, publica un destino con el slug `cocula`, `sayula` o `temacapulin` y sus coordenadas verificadas. El pasaporte lo detecta solo.

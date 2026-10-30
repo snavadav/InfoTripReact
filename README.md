@@ -184,6 +184,7 @@ docker compose --env-file .env.docker down
 | `/admin/moderacion/` | Cola de moderación con contadores (personal) |
 | `/admin/metricas/` | Embudos, retención y fichas útiles (personal) |
 | `/escapadas/<id>/` | Escapada compartida, de solo lectura y sin cuenta |
+| `/pasaporte/`, `/pasaporte/<enlace>/` | Pasaporte de Pueblos Mágicos: un sello por visita comprobada y tarjeta para compartir |
 | `/misiones/` | Misiones de la comunidad: qué dato falta o conviene confirmar, y cronistas por municipio |
 | `/costos/`, `/destinos/<slug>/costos/` | ¿Cuánto cuesta ir?: gastos reales, con un mínimo de 3 reportes por concepto |
 | `/privacidad/`, `/terminos/`, `/creditos/` | Avisos legales y créditos de fotografías |
@@ -223,6 +224,8 @@ La referencia completa e interactiva está en `/api/v1/docs/` (Swagger) y el esq
 | Bote | `/api/v1/mis-viajes/<id>/bote/publicar/` | POST |
 | Bote | `/api/v1/botes/<invitación>/unirse/`, `/api/v1/mis-botes/` | POST, GET |
 | Visitas | `/api/v1/destinos/<slug>/visita/` | GET, POST |
+| Pasaporte | `/api/v1/mi-pasaporte/` | GET |
+| Pasaporte | `/api/v1/mi-pasaporte/compartir/` | POST, DELETE |
 | Cuenta | `/api/v1/mi-cuenta/eliminar/` | POST |
 | Métricas | `/api/v1/eventos/` | POST |
 | Avisos | `/api/v1/notificaciones/` | GET |

@@ -10,6 +10,24 @@ from django.db.models.functions import Coalesce, Greatest
 from django.utils import timezone
 from .models import Aporte, Colaboracion, Confirmacion, VisitaComprobada
 
+# Lista del programa federal consultada en prensa (docs/catalogo-inicial.md): confírmala si cambia.
+# El sello se activa solo en cuanto exista un destino publicado con ese slug.
+PUEBLOS_MAGICOS = [
+    ('ajijic', 'Ajijic'),
+    ('cocula', 'Cocula'),
+    ('lagos-de-moreno', 'Lagos de Moreno'),
+    ('mascota', 'Mascota'),
+    ('mazamitla', 'Mazamitla'),
+    ('san-sebastian-del-oeste', 'San Sebastián del Oeste'),
+    ('sayula', 'Sayula'),
+    ('talpa-de-allende', 'Talpa de Allende'),
+    ('tapalpa', 'Tapalpa'),
+    ('temacapulin', 'Temacapulín'),
+    ('tequila', 'Tequila'),
+    ('tlaquepaque', 'Tlaquepaque'),
+]
+SLUGS_PUEBLOS = [slug for slug, _ in PUEBLOS_MAGICOS]
+
 
 def publicados():
     return Aporte.objects.filter(estado='publicado', destino__es_activo=True, autor__es_activo=True)

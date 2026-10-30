@@ -1,3 +1,4 @@
+import uuid
 from decimal import Decimal
 from django.conf import settings
 from django.db import models
@@ -320,3 +321,10 @@ class VisitaComprobada(models.Model):
     class Meta:
         ordering = ['-fecha', '-pk']
         constraints = [models.UniqueConstraint(fields=['autor', 'destino'], name='una_visita_por_destino')]
+
+
+class PasaporteCompartido(models.Model):
+    """Existe solo mientras la persona comparte su pasaporte; borrarlo invalida el enlace."""
+    usuario = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='pasaporte')
+    enlace = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    creado = models.DateTimeField(auto_now_add=True)

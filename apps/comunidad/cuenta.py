@@ -17,7 +17,8 @@ from apps.metricas.models import Evento
 from apps.usuarios.models import CodigoAcceso
 from apps.usuarios.sesion import borrar_cookie_refresh
 from .models import (
-    Aporte, Colaboracion, Confirmacion, Favorito, GastoReal, Notificacion, Participante, Viaje, VisitaComprobada,
+    Aporte, Colaboracion, Confirmacion, Favorito, GastoReal, Notificacion, Participante, PasaporteCompartido, Viaje,
+    VisitaComprobada,
 )
 
 TEXTO_ELIMINADO = '[Eliminado por su autor]'
@@ -45,6 +46,7 @@ def anonimizar_cuenta(usuario):
         registrado_por=None, descripcion='Gasto de una cuenta eliminada'
     )
     Notificacion.objects.filter(usuario=usuario).delete()
+    PasaporteCompartido.objects.filter(usuario=usuario).delete()
     CodigoAcceso.objects.filter(usuario=usuario).delete()
     Evento.objects.filter(usuario=usuario).update(usuario=None)
     for token in OutstandingToken.objects.filter(user=usuario):

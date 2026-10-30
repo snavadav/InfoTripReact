@@ -400,3 +400,11 @@ details[open] summary::before {
 .misiones-filtro { max-width: 22rem; margin: 1rem 0; }
 .mision h2 { font-size: 1.15rem; }
 .mision h3 { font-size: .95rem; margin-top: .75rem; }
+
+.passport-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: .75rem; margin: 1rem 0; }
+.passport-stamp { border: 2px dashed #CFC4E8; border-radius: 1rem; padding: .85rem; text-align: center; background: #fff; }
+.passport-stamp h2 { font-size: 1rem; margin: 0 0 .25rem; }
+.passport-state { font-size: .8rem; color: #6F6385; margin: 0; }
+.passport-stamp--done { border: 2px solid #17643A; background: #E7F6EC; }
+.passport-stamp--done .passport-state { color: #17643A; font-weight: 700; }
+.passport-card { padding: 1.25rem; border-radius: 1.25rem; background: #F3EFFF; margin-bottom: 1rem; }

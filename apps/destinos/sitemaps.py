@@ -7,7 +7,7 @@ from .models import Destino
 
 class PaginasSitemap(Sitemap):
     def items(self):
-        return ['index', 'destinos-listado', 'costos-indice', 'misiones']
+        return ['index', 'destinos-listado', 'costos-indice', 'misiones', 'pasaporte']
 
     def location(self, item):
         return reverse(item)

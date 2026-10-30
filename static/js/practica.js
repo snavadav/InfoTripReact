@@ -67,6 +67,7 @@
       try{
         const data=await InfoTrip.api(`/api/v1/destinos/${slug}/visita/`,{method:'POST',body:{latitud:position.coords.latitude,longitud:position.coords.longitude}});
         visitDone(data.fecha);
+        if(data.sello){visitStatus.append(document.createTextNode(' Ganaste un sello. '));const link=document.createElement('a');link.href='/pasaporte/';link.textContent='Ver mi pasaporte';visitStatus.append(link);}
       }catch(error){visitStatus.textContent=error.message;visit.disabled=false;}
     },error=>{visitStatus.textContent=geoErrors[error.code]||geoErrors[2];visit.disabled=false;},{timeout:15000,maximumAge:60000});
   });

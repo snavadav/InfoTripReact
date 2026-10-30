@@ -82,7 +82,7 @@ class FlujosTests(StaticLiveServerTestCase):
         self.pagina.wait_for_url(lambda url: '/login/' not in url)
 
     def test_paginas_publicas_sin_violaciones_de_csp(self):
-        for ruta in ['/', '/destinos/', '/destinos/mirador/', '/destinos/mirador/costos/', '/costos/', '/misiones/', '/login/', '/registro/', '/api/v1/docs/', '/no-existe/']:
+        for ruta in ['/', '/destinos/', '/destinos/mirador/', '/destinos/mirador/costos/', '/costos/', '/misiones/', '/pasaporte/', '/login/', '/registro/', '/api/v1/docs/', '/no-existe/']:
             with self.subTest(ruta=ruta):
                 self.abrir(ruta)
                 self.pagina.wait_for_load_state('load')
@@ -303,6 +303,23 @@ class FlujosTests(StaticLiveServerTestCase):
         self.pagina.click('a[href*="dato=acceso"]')
         self.pagina.wait_for_selector('#sugerir-dato[open]')
         self.assertEqual(self.pagina.input_value('#sugerir-dato [name="campo"]'), 'acceso')
+
+    def test_ganar_un_sello_y_compartir_el_pasaporte(self):
+        Destino.objects.filter(pk=self.destino.pk).update(slug='tapalpa')
+        self.contexto.grant_permissions(['geolocation', 'clipboard-read', 'clipboard-write'], origin=self.live_server_url)
+        self.contexto.set_geolocation({'latitude': 19.901, 'longitude': -103.701})
+        self.iniciar_sesion()
+        self.abrir('/destinos/tapalpa/')
+        self.pagina.click('#visit-check')
+        self.pagina.wait_for_selector('#visit-status:has-text("Ganaste un sello")')
+        self.abrir('/pasaporte/')
+        self.pagina.wait_for_selector('[data-sello="tapalpa"].passport-stamp--done')
+        self.assertIn('1 de 12', self.pagina.inner_text('#pasaporte-progreso'))
+        self.pagina.evaluate('delete Navigator.prototype.share')
+        self.pagina.click('#pasaporte-enlace')
+        self.pagina.wait_for_selector('#pasaporte-retirar:not([hidden])')
+        self.abrir(f'/pasaporte/{self.usuario.pasaporte.enlace}/')
+        self.pagina.wait_for_selector('.passport-stamp--done')
 
     def test_guardar_favorito_y_cerrar_sesion(self):
         self.iniciar_sesion()

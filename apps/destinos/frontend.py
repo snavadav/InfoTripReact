@@ -14,8 +14,8 @@ from django.utils.text import slugify
 
 from apps.comunidad.models import Aporte, Colaboracion
 from apps.comunidad.selectors import (
-    MINIMO_CRONISTA, MINIMO_REPORTES, aportes_publicos, con_info_reciente, costos_de_destino, costos_por_destino,
-    cronistas, ficha_practica, misiones_por_destino, preguntas_publicas, resumen,
+    MINIMO_CRONISTA, MINIMO_REPORTES, SLUGS_PUEBLOS, aportes_publicos, con_info_reciente, costos_de_destino,
+    costos_por_destino, cronistas, ficha_practica, misiones_por_destino, preguntas_publicas, resumen,
 )
 from .filtros import filtrar_destinos
 from .fotos import FOTOS_CATALOGO
@@ -226,7 +226,7 @@ def detalle(request, slug):
         destino = get_object_or_404(destinos_publicos(con_fotos=True), slug=slug)
         lugar = presentar(destino)
     lugar = completar(lugar)
-    contexto = {'lugar': lugar, 'hoy': timezone.localdate().isoformat()}
+    contexto = {'lugar': lugar, 'hoy': timezone.localdate().isoformat(), 'da_sello': slug in SLUGS_PUEBLOS}
     if destino is not None:
         contexto['practica'] = ficha_practica(destino)
         contexto['campos_practicos'] = Colaboracion.CAMPOS

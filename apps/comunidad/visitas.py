@@ -14,7 +14,8 @@ from rest_framework.views import APIView
 from apps.core.geo import distancia_km
 from apps.destinos.models import Destino
 from apps.metricas.models import registrar
-from .models import VisitaComprobada
+from .models import Notificacion, VisitaComprobada
+from .selectors import SLUGS_PUEBLOS
 from .views import AporteThrottle
 
 # Las coordenadas del catálogo son orientativas, de la localidad: un radio menor rechazaría visitas reales.
@@ -44,7 +45,10 @@ class VisitaView(APIView):
         visita = VisitaComprobada.objects.filter(autor=request.user, destino=destino).first()
         return Response({'comprobada': bool(visita), 'fecha': visita.fecha if visita else None})
 
-    @extend_schema(request=UbicacionSerializer, responses={200: ESTADO_VISITA})
+    @extend_schema(request=UbicacionSerializer, responses={200: inline_serializer('VisitaResultado', fields={
+        'comprobada': serializers.BooleanField(), 'fecha': serializers.DateField(),
+        'sello': serializers.BooleanField(),
+    })})
     def post(self, request, slug):
         destino = get_object_or_404(Destino, slug=slug, es_activo=True)
         ubicacion = UbicacionSerializer(data=request.data)
@@ -57,6 +61,16 @@ class VisitaView(APIView):
         _, creada = VisitaComprobada.objects.update_or_create(
             autor=request.user, destino=destino, defaults={'fecha': hoy}
         )
+        sello = destino.slug in SLUGS_PUEBLOS
         if creada:
             registrar('visita_comprobada', usuario=request.user, destino=destino.slug)
-        return Response({'comprobada': True, 'fecha': hoy})
+            if sello:
+                self.avisar_sello(request.user, destino)
+        return Response({'comprobada': True, 'fecha': hoy, 'sello': sello})
+
+    def avisar_sello(self, usuario, destino):
+        total = VisitaComprobada.objects.filter(autor=usuario, destino__slug__in=SLUGS_PUEBLOS,
+                                                destino__es_activo=True).count()
+        Notificacion.objects.create(usuario=usuario, enlace='/pasaporte/', texto=(
+            f'Ganaste el sello de {destino.nombre}: llevas {total} de {len(SLUGS_PUEBLOS)} en tu pasaporte.'))
+        registrar('sello_obtenido', usuario=usuario, destino=destino.slug)

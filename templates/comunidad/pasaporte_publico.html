@@ -1,0 +1,27 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}El pasaporte de {{ nombre }} — InfoTrip{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/comunidad.css' %}">{% endblock %}
+{% block content %}{% include 'partials/navBar.html' %}
+<main class="explore-shell legal-page">
+  <section class="passport-card">
+    <span class="eyebrow">PASAPORTE DE JALISCO</span>
+    <h1>{{ nombre }} lleva {{ total }} de {{ de }} Pueblos Mágicos</h1>
+    <div class="passport-grid">
+      {% for sello in sellos %}
+      <article class="passport-stamp{% if sello.sello %} passport-stamp--done{% endif %}">
+        <h2>{{ sello.nombre }}</h2>
+        <p class="passport-state">{% if sello.sello %}Con sello{% else %}Pendiente{% endif %}</p>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+  <section class="community-box">
+    <h2>¿Cuántos llevas tú?</h2>
+    <p>Junta tus sellos visitando los pueblos de Jalisco.</p>
+    <a href="{% url 'pasaporte' %}">Ver mi pasaporte →</a>
+  </section>
+  <p class="community-note">Los sellos se ganan confirmando la ubicación en cada lugar, y una ubicación se puede falsear. No es una constancia oficial.</p>
+  {% include 'destinos/footer.html' %}
+</main>
+{% endblock %}
