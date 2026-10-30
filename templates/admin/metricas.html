@@ -7,6 +7,7 @@
     <table>
       <tbody>
         <tr><th scope="row">Fichas con al menos 3 datos prácticos</th><td>{{ fichas.utiles }} de {{ fichas.total }}{% if fichas.porcentaje is not None %} ({{ fichas.porcentaje }} %){% endif %}</td></tr>
+        <tr><th scope="row">Tiempo medio para resolver reportes (30 días)</th><td>{% if horas_para_resolver is not None %}{{ horas_para_resolver }} horas{% else %}Aún sin datos{% endif %}</td></tr>
         <tr><th scope="row">Retención a 30 días (registrados hace 30 a 60 días)</th><td>{% if retencion.porcentaje is not None %}{{ retencion.activos }} de {{ retencion.cohorte }} ({{ retencion.porcentaje }} %){% else %}Aún sin datos{% endif %}</td></tr>
       </tbody>
     </table>

@@ -2,7 +2,7 @@
 from datetime import timedelta
 
 from django.contrib import admin
-from django.db.models import Count, Q
+from django.db.models import Count, DurationField, ExpressionWrapper, F, Q
 from django.shortcuts import render
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema
@@ -12,6 +12,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
 
+from apps.comunidad.models import Reporte, ReporteColaboracion
 from apps.destinos.models import Destino
 from apps.usuarios.models import Usuario
 from .models import Evento
@@ -89,6 +90,18 @@ def fichas_utiles():
     return {'total': total, 'utiles': utiles, 'porcentaje': round(100 * utiles / total) if total else None}
 
 
+def horas_para_resolver_reportes(desde):
+    """Tiempo medio entre un reporte y su resolución; None si aún no se ha resuelto ninguno."""
+    duraciones = []
+    for modelo in (Reporte, ReporteColaboracion):
+        duraciones += [fila['duracion'] for fila in modelo.objects.filter(resuelto_en__gte=desde).annotate(
+            duracion=ExpressionWrapper(F('resuelto_en') - F('creado'), output_field=DurationField())
+        ).values('duracion')]
+    if not duraciones:
+        return None
+    return round(sum(duracion.total_seconds() for duracion in duraciones) / len(duraciones) / 3600, 1)
+
+
 def panel(request):
     ahora = timezone.now()
     ultimos_30 = conteos(ahora - timedelta(days=30))
@@ -99,5 +112,6 @@ def panel(request):
         'eventos': [{'nombre': nombre, 'dias_7': ultimos_7.get(nombre, 0), 'dias_30': ultimos_30.get(nombre, 0)}
                     for nombre in nombres],
         'embudos': embudos(ultimos_30), 'retencion': retencion_30_dias(ahora), 'fichas': fichas_utiles(),
+        'horas_para_resolver': horas_para_resolver_reportes(ahora - timedelta(days=30)),
     }
     return render(request, 'admin/metricas.html', contexto)

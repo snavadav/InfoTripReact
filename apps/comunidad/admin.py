@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.db import transaction
-from .models import Aporte, Colaboracion, Confirmacion, Decision, Reporte, RevisionColaboracion
+from django.utils import timezone
+from .models import Aporte, Colaboracion, Confirmacion, Decision, Reporte, ReporteColaboracion, RevisionColaboracion
 from .moderacion import moderar
 
 
@@ -38,37 +39,64 @@ class AporteAdmin(admin.ModelAdmin):
                 moderar(aporte, request.user, 'oculto', 'Revisión editorial: ocultación desde administración.')
 
 
-@admin.register(Reporte)
-class ReporteAdmin(admin.ModelAdmin):
-    list_display = ['id', 'aporte', 'autor', 'resuelto', 'creado']
+class ReporteAdminBase(admin.ModelAdmin):
+    """Resolver un reporte oculta el contenido; desestimarlo lo conserva. Ambos dejan constancia."""
+    modelo_contenido = None
+    campo_contenido = None
+    permiso_contenido = None
     list_filter = ['resuelto']
-    readonly_fields = ['aporte', 'autor', 'motivo', 'resuelto', 'creado']
     actions = ['resolver_ocultando', 'desestimar']
     def has_add_permission(self, request): return False
     def has_delete_permission(self, request, obj=None): return False
     def get_actions(self, request):
         actions = super().get_actions(request)
-        if not request.user.has_perm('comunidad.change_aporte'):
+        if not request.user.has_perm(self.permiso_contenido):
             actions.pop('resolver_ocultando', None)
         return actions
+
+    def contenido(self, reporte):
+        pk = getattr(reporte, f'{self.campo_contenido}_id')
+        return self.modelo_contenido.objects.select_for_update().get(pk=pk)
+
+    def cerrar(self, reporte):
+        reporte.resuelto = True
+        reporte.resuelto_en = timezone.now()
+        reporte.save(update_fields=['resuelto', 'resuelto_en'])
+
     @admin.action(description='Resolver y ocultar contenido reportado', permissions=['change'])
     def resolver_ocultando(self, request, queryset):
-        if not request.user.has_perm('comunidad.change_aporte'): return
+        if not request.user.has_perm(self.permiso_contenido): return
         with transaction.atomic():
             for reporte in queryset.filter(resuelto=False).select_for_update():
-                aporte = Aporte.objects.select_for_update().get(pk=reporte.aporte_id)
-                moderar(aporte, request.user, 'oculto', f'Reporte {reporte.pk}: {reporte.motivo}')
-                reporte.resuelto = True
-                reporte.save(update_fields=['resuelto'])
+                moderar(self.contenido(reporte), request.user, 'oculto', f'Reporte {reporte.pk}: {reporte.motivo}')
+                self.cerrar(reporte)
+
     @admin.action(description='Desestimar reportes (conservar contenido)', permissions=['change'])
     def desestimar(self, request, queryset):
         with transaction.atomic():
             for reporte in queryset.filter(resuelto=False).select_for_update():
-                aporte = Aporte.objects.select_for_update().get(pk=reporte.aporte_id)
+                objeto = self.contenido(reporte)
                 motivo = f'Reporte {reporte.pk} desestimado: {reporte.motivo}'
-                moderar(aporte, request.user, aporte.estado, motivo, registrar_sin_cambio=True)
-                reporte.resuelto = True
-                reporte.save(update_fields=['resuelto'])
+                moderar(objeto, request.user, objeto.estado, motivo, registrar_sin_cambio=True)
+                self.cerrar(reporte)
+
+
+@admin.register(Reporte)
+class ReporteAdmin(ReporteAdminBase):
+    modelo_contenido = Aporte
+    campo_contenido = 'aporte'
+    permiso_contenido = 'comunidad.change_aporte'
+    list_display = ['id', 'aporte', 'autor', 'resuelto', 'creado']
+    readonly_fields = ['aporte', 'autor', 'motivo', 'resuelto', 'resuelto_en', 'creado']
+
+
+@admin.register(ReporteColaboracion)
+class ReporteColaboracionAdmin(ReporteAdminBase):
+    modelo_contenido = Colaboracion
+    campo_contenido = 'colaboracion'
+    permiso_contenido = 'comunidad.change_colaboracion'
+    list_display = ['id', 'colaboracion', 'autor', 'resuelto', 'creado']
+    readonly_fields = ['colaboracion', 'autor', 'motivo', 'resuelto', 'resuelto_en', 'creado']
 
 
 @admin.register(Decision)

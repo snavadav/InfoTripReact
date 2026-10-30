@@ -21,7 +21,7 @@
   document.querySelectorAll('.report-form').forEach(form => form.addEventListener('submit', event => {
     event.preventDefault();
     InfoTrip.submit(form, async status => {
-      await InfoTrip.api(`/api/v1/aportes/${form.dataset.id}/reportar/`, {method:'POST', body:{motivo:form.elements.motivo.value}});
+      await InfoTrip.api(form.dataset.url || `/api/v1/aportes/${form.dataset.id}/reportar/`, {method:'POST', body:{motivo:form.elements.motivo.value}});
       form.reset(); status.textContent='Reporte recibido. El equipo lo revisará.';
     });
   }));

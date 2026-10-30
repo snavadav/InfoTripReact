@@ -162,12 +162,21 @@ class Aporte(Moderable):
         return self.decisiones.create(**campos)
 
 
-class Reporte(models.Model):
-    aporte = models.ForeignKey(Aporte, on_delete=models.PROTECT, related_name='reportes')
+class ReporteBase(models.Model):
+    """Alguien avisa de un problema con contenido publicado. Lo resuelve el personal desde el admin."""
     autor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     motivo = models.TextField(max_length=1000)
     resuelto = models.BooleanField(default=False)
+    resuelto_en = models.DateTimeField(null=True, blank=True)
     creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        abstract = True
+
+
+class Reporte(ReporteBase):
+    aporte = models.ForeignKey(Aporte, on_delete=models.PROTECT, related_name='reportes')
+
     class Meta:
         ordering = ['-creado']
         constraints = [models.UniqueConstraint(fields=['aporte', 'autor'], name='un_reporte_por_autor')]
@@ -222,6 +231,16 @@ class Colaboracion(Moderable):
 
     def registrar_moderacion(self, **campos):
         return self.revisiones.create(**campos)
+
+
+class ReporteColaboracion(ReporteBase):
+    colaboracion = models.ForeignKey(Colaboracion, on_delete=models.PROTECT, related_name='reportes')
+
+    class Meta:
+        ordering = ['-creado']
+        constraints = [
+            models.UniqueConstraint(fields=['colaboracion', 'autor'], name='un_reporte_de_colaboracion_por_autor'),
+        ]
 
 
 class RevisionColaboracion(RegistroModeracion):

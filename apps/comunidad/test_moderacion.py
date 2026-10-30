@@ -167,7 +167,8 @@ class ColaModeracionTests(DatosModeracion):
         respuesta = self.client.get('/admin/moderacion/')
         self.assertEqual(respuesta.status_code, 200)
         totales = {s['titulo']: s['total'] for s in respuesta.context['secciones']}
-        self.assertEqual(totales, {'Aportes pendientes': 2, 'Colaboraciones pendientes': 1, 'Reportes abiertos': 1})
+        self.assertEqual(totales, {'Aportes pendientes': 2, 'Colaboraciones pendientes': 1, 'Reportes abiertos': 1,
+                                   'Reportes de información abiertos': 0})
         primero = respuesta.context['secciones'][0]['elementos'][0]
         self.assertEqual(primero['enlace'], f'/admin/comunidad/aporte/{antiguo.pk}/change/')
         self.assertContains(self.client.get('/admin/'), 'href="/admin/moderacion/"')
