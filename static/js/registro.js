@@ -84,7 +84,8 @@ form.addEventListener('submit', async (e) => {
     const data = await res.json();
 
     if (res.ok) {
-      window.location.href = '/login/?registro=1';
+      const next = new URLSearchParams(location.search).get('next');
+      window.location.href = `/login/?registro=1${next ? `&next=${encodeURIComponent(next)}` : ''}`;
     } else {
       // Errores por campo
       Object.entries(data).forEach(([key, val]) => {

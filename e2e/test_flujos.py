@@ -61,6 +61,9 @@ class FlujosTests(StaticLiveServerTestCase):
 
     def iniciar_sesion(self):
         self.abrir('/login/')
+        self.completar_login()
+
+    def completar_login(self):
         self.pagina.fill('#email', self.usuario.email)
         self.pagina.fill('#password', CLAVE)
         self.pagina.click('#submitBtn')
@@ -91,6 +94,39 @@ class FlujosTests(StaticLiveServerTestCase):
         self.abrir('/perfil/')
         self.pagina.wait_for_selector('#profile-content:not([hidden])')
         self.assertIn(self.usuario.email, self.pagina.inner_text('#profile-email'))
+
+    def test_tras_iniciar_sesion_vuelve_a_la_ficha(self):
+        self.abrir('/destinos/mirador/')
+        self.pagina.click('#favorite-toggle')
+        self.pagina.click('#favorite-status a')
+        self.completar_login()
+        self.pagina.wait_for_url(self.live_server_url + '/destinos/mirador/')
+
+    def test_next_externo_no_redirige_fuera_del_sitio(self):
+        self.abrir('/login/?next=https://ajeno.example/')
+        self.completar_login()
+        self.pagina.wait_for_url(self.live_server_url + '/')
+
+    def test_el_borrador_del_viaje_sobrevive_a_iniciar_sesion(self):
+        self.abrir('/mis-viajes/')
+        self.pagina.fill('[name="nombre"]', 'Fin de semana')
+        self.pagina.fill('[name="destino"]', 'Tapalpa')
+        self.pagina.fill('[name="fecha_inicio"]', '2026-12-01')
+        self.pagina.fill('[name="fecha_fin"]', '2026-12-02')
+        self.pagina.fill('[name="personas"]', '2')
+        self.pagina.fill('[name="presupuesto"]', '1500')
+        self.pagina.click('#add-expense')
+        self.pagina.fill('.trip-expense [name="descripcion"]', 'Gasolina')
+        self.pagina.fill('.trip-expense [name="monto"]', '500')
+        self.pagina.click('#trip-login a')
+        self.completar_login()
+        self.pagina.wait_for_url(self.live_server_url + '/mis-viajes/')
+        self.assertEqual(self.pagina.input_value('[name="nombre"]'), 'Fin de semana')
+        self.assertEqual(self.pagina.input_value('.trip-expense [name="descripcion"]'), 'Gasolina')
+        self.pagina.click('#trip-form button[type="submit"]')
+        self.pagina.wait_for_selector('#trip-form .form-status:has-text("guardada")')
+        self.assertEqual(self.usuario.viajes.get().nombre, 'Fin de semana')
+        self.assertIsNone(self.pagina.evaluate("localStorage.getItem('infotrip_borrador_viaje')"))
 
     def test_guardar_favorito_y_cerrar_sesion(self):
         self.iniciar_sesion()

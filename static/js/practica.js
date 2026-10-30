@@ -12,7 +12,7 @@
   toggle.addEventListener('click',async()=>{
     if(!window.InfoTripSession?.authenticated){
       status.replaceChildren(document.createTextNode('Entra para guardar este lugar. '));
-      const link=document.createElement('a');link.href='/login/';link.textContent='Iniciar sesión';status.append(link);link.focus();return;
+      const link=document.createElement('a');link.href=InfoTrip.loginUrl();link.textContent='Iniciar sesión';status.append(link);link.focus();return;
     }
     toggle.disabled=true;
     try{await InfoTrip.api(`/api/v1/favoritos/${slug}/`,{method:favorite?'DELETE':'PUT'});favorite=!favorite;display();status.textContent=favorite?'Guardado en tus favoritos.':'Quitado de tus favoritos.';}
@@ -32,7 +32,7 @@
     const feedback=button.parentElement.nextElementSibling;
     if(!window.InfoTripSession?.authenticated){
       feedback.replaceChildren(document.createTextNode('Entra para confirmar este dato. '));
-      const link=document.createElement('a');link.href='/login/';link.textContent='Iniciar sesión';feedback.append(link);return;
+      const link=document.createElement('a');link.href=InfoTrip.loginUrl();link.textContent='Iniciar sesión';feedback.append(link);return;
     }
     button.disabled=true;
     try{

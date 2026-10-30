@@ -57,6 +57,7 @@ function doLogout() {
     headers: { 'X-CSRFToken': getCookie('csrftoken') },
   }).finally(() => {
     localStorage.removeItem('usuario');
+    localStorage.removeItem('infotrip_borrador_viaje');
     window.location.href = '/';
   });
 }

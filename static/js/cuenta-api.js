@@ -65,5 +65,6 @@
     const status = form.querySelector('.form-status'); status.textContent='Procesando…';
     try {await operation(status);} catch(error) {status.textContent=error.message;} finally {if(button) button.disabled=false;}
   }
-  window.InfoTrip = {api, clear, hasSession, submit};
+  function loginUrl() { return `/login/?next=${encodeURIComponent(location.pathname + location.search + location.hash)}`; }
+  window.InfoTrip = {api, clear, hasSession, loginUrl, submit};
 })();

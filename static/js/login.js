@@ -12,7 +12,18 @@
   let timer;
   let busy = false;
   let resendAt = 0;
-  if (new URLSearchParams(location.search).has('registro')) {
+  const params = new URLSearchParams(location.search);
+  // A dónde volver tras entrar: solo rutas de este sitio.
+  const nextPath = (() => {
+    const candidate = params.get('next');
+    if (!candidate) return '/';
+    const url = new URL(candidate, location.origin);
+    return url.origin === location.origin && !/^\/(login|registro)\//.test(url.pathname)
+      ? url.pathname + url.search + url.hash : '/';
+  })();
+  const signup = document.querySelector('a[href="/registro/"]');
+  if (signup && nextPath !== '/') signup.href = `/registro/?next=${encodeURIComponent(nextPath)}`;
+  if (params.has('registro')) {
     notice.textContent = 'Registro recibido. Inicia sesión para verificar tu correo.';
   }
   function showError(message) {
@@ -94,7 +105,7 @@
       localStorage.setItem('usuario', JSON.stringify(data.usuario));
       credentials = null;
       document.getElementById('password').value = '';
-      window.location.assign('/');
+      window.location.assign(nextPath);
     } catch (err) { showError(err.message || 'No pudimos conectar. Intenta de nuevo.'); }
     finally { setBusy(false); }
   });
