@@ -2,7 +2,8 @@
 
 
 def _foto(archivo, alt, autor, licencia, licencia_url, fuente):
-    return {'imagen': f'images/destinos/{archivo}.jpg', 'alt': alt, 'autor': autor, 'licencia': licencia,
+    return {'imagen': f'images/destinos/{archivo}.jpg', 'miniatura': f'images/destinos/{archivo}-m.jpg',
+            'alt': alt, 'autor': autor, 'licencia': licencia,
             'licencia_url': licencia_url, 'fuente': 'https://commons.wikimedia.org/wiki/File:' + fuente}
 
 

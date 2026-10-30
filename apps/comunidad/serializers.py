@@ -1,7 +1,7 @@
 from django.utils import timezone
 from rest_framework import serializers
 from .models import Aporte, Reporte
-from apps.core.imagenes import imagen_segura
+from apps.core.imagenes import imagen_segura, miniatura_de
 
 
 class AporteSerializer(serializers.ModelSerializer):
@@ -44,6 +44,8 @@ class AporteSerializer(serializers.ModelSerializer):
         ]:
             if tipo != requerido_por and datos.get(campo) not in (None, ''):
                 raise serializers.ValidationError({campo: 'Este campo no corresponde al tipo de aporte.'})
+        if datos.get('imagen'):
+            datos['miniatura'] = miniatura_de(datos['imagen'])
         return datos
 
 

@@ -23,7 +23,7 @@
     {% for aporte in aportes %}<article class="community-box">
       <div class="contribution-heading"><h3>{{ aporte.get_tipo_display }} · {{ aporte.autor.nombre }}</h3><span>{{ aporte.fecha_visita|date:'d/m/Y' }}</span></div>
       {% if aporte.tipo == 'resena' %}<p class="rating">{{ aporte.calificacion }} / 5</p>{% endif %}
-      {% if aporte.tipo == 'foto' %}<a href="{{ aporte.imagen.url }}" target="_blank" rel="noopener"><img class="community-photo" src="{{ aporte.imagen.url }}" alt="{{ aporte.texto }}" loading="lazy"></a>{% endif %}
+      {% if aporte.tipo == 'foto' %}<a href="{{ aporte.imagen.url }}" target="_blank" rel="noopener"><img class="community-photo" src="{% if aporte.miniatura %}{{ aporte.miniatura.url }}{% else %}{{ aporte.imagen.url }}{% endif %}" alt="{{ aporte.texto }}" loading="lazy"></a>{% endif %}
       {% if aporte.tipo == 'gasto' %}<p class="rating">${{ aporte.monto|floatformat:2 }} MXN · {{ aporte.get_concepto_display }}</p>{% endif %}
       <p class="contribution-text">{{ aporte.texto|linebreaksbr }}</p>
       <details><summary>Reportar información</summary><form class="report-form community-form" data-id="{{ aporte.pk }}"><label>Motivo<textarea name="motivo" required maxlength="1000" rows="2"></textarea></label><button type="submit">Enviar reporte</button><p class="form-status" role="status"></p></form></details>

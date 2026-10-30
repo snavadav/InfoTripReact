@@ -1,7 +1,7 @@
 <div class="trip-grid">
   {% for lugar in lugares %}
   <a class="trip-card" href="{{ lugar.url }}">
-    {% if lugar.foto_url %}<img src="{{ lugar.foto_url }}" alt="{{ lugar.alt }}" width="800" height="480" decoding="async">{% else %}<div class="photo-placeholder" aria-hidden="true">↗</div>{% endif %}
+    {% if lugar.foto_url %}<img src="{{ lugar.miniatura_url }}" alt="{{ lugar.alt }}" width="800" height="480" loading="lazy" decoding="async">{% else %}<div class="photo-placeholder" aria-hidden="true">↗</div>{% endif %}
     <span class="trip-tag">{{ lugar.categoria }}</span>
     {% if lugar.tiene_info_reciente %}<span class="trip-freshness">Información práctica consultada recientemente</span>{% endif %}
     <div class="trip-card-caption"><div><span>{% if lugar.editorial %}INSPIRACIÓN · {% endif %}JALISCO</span><h3>{{ lugar.nombre }}</h3></div><span class="trip-arrow" aria-hidden="true">↗</span></div>

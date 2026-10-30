@@ -27,10 +27,13 @@ class ConfirmarBajaSerializer(serializers.Serializer):
 
 def anonimizar_cuenta(usuario):
     """Debe ejecutarse en una transacción. Los archivos se borran solo si esta se confirma."""
-    archivos = [aporte.imagen for aporte in Aporte.objects.filter(autor=usuario).exclude(imagen='')]
+    archivos = [archivo for aporte in Aporte.objects.filter(autor=usuario).exclude(imagen='')
+                for archivo in (aporte.imagen, aporte.miniatura) if archivo]
     if usuario.foto_perfil:
         archivos.append(usuario.foto_perfil)
-    Aporte.objects.filter(autor=usuario).update(estado='retirado', texto=TEXTO_ELIMINADO, imagen='')
+    Aporte.objects.filter(autor=usuario).update(
+        estado='retirado', texto=TEXTO_ELIMINADO, imagen='', miniatura=''
+    )
     Colaboracion.objects.filter(autor=usuario).update(estado='oculto', texto=TEXTO_ELIMINADO, fuente='')
     for modelo in (Viaje, Favorito, Confirmacion):
         modelo.objects.filter(autor=usuario).delete()

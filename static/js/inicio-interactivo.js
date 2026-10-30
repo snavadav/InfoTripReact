@@ -60,7 +60,7 @@
       card.setAttribute('aria-label', `Explorar ${place.nombre}`);
       if (place.foto_url) {
         const photo = document.createElement('img');
-        photo.src = place.foto_url;
+        photo.src = place.miniatura_url;
         photo.alt = '';
         photo.loading = 'lazy';
         card.append(photo);

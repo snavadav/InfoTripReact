@@ -72,6 +72,8 @@ def presentar(destino):
         'imagen': foto, 'foto_url': fotos[0].imagen.url if fotos else '',
         'alt': fotos[0].texto if fotos else alt, 'editorial': False,
         'credito': None if fotos else catalogo,
+        'miniatura_url': (fotos[0].miniatura.url if fotos and fotos[0].miniatura else
+                          static(catalogo['miniatura']) if catalogo and not fotos else ''),
     }
 
 
@@ -79,6 +81,7 @@ def completar(lugar):
     lugar = dict(lugar)
     lugar['url'] = reverse('destino-detalle', kwargs={'slug': lugar['slug']})
     lugar['foto_url'] = lugar.get('foto_url') or (static(lugar['imagen']) if lugar['imagen'] else '')
+    lugar['miniatura_url'] = lugar.get('miniatura_url') or lugar['foto_url']
     if lugar['editorial']:
         # En inspiración se busca el nombre del lugar; no se inventa un punto GPS.
         destino_maps = f"{lugar['nombre']}, Jalisco, México"

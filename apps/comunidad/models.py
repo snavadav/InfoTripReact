@@ -124,6 +124,7 @@ class Aporte(Moderable):
         null=True, blank=True, validators=[MinValueValidator(1), MaxValueValidator(5)]
     )
     imagen = models.ImageField(upload_to='comunidad/%Y/%m/', blank=True)
+    miniatura = models.ImageField(upload_to='comunidad/miniaturas/%Y/%m/', blank=True, editable=False)
     monto = models.DecimalField(
         max_digits=9, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(Decimal(0))]
     )

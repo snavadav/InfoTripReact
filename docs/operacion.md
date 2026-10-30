@@ -61,6 +61,10 @@ docker compose --env-file .env.docker logs -f web avisos respaldos
 
 Conviene vigilar `infotrip.correo` (correos fallidos), `infotrip.seguridad` (cuentas bloqueadas) e `infotrip.salud` (base de datos, caché y Redis).
 
+## Miniaturas
+
+Las fotos nuevas crean su miniatura al subirse. Para las anteriores, ejecuta una vez `python manage.py generar_miniaturas`.
+
 ## Métricas
 
 `/admin/metricas/` (personal) muestra los eventos de los últimos 7 y 30 días, los embudos de activación, contribución y referencia, la retención a 30 días y el porcentaje de fichas con al menos 3 datos prácticos. Para el tráfico desde buscadores usa [Google Search Console](https://search.google.com/search-console), que es gratis: registra el dominio y envía `/sitemap.xml`.
