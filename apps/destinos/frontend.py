@@ -203,7 +203,7 @@ def listado(request):
             'q': texto,
             'formulario': formulario,
             'categoria': datos.get('categoria', ''),
-            'filtros': urlencode({k: v for k, v in datos.items() if v is not None and v != ''}),
+            'filtros': urlencode({k: v for k, v in datos.items() if v not in (None, '', False)}),
             'puntos_mapa': puntos,
             'editorial': editorial,
         },

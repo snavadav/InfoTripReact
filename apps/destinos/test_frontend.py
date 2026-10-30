@@ -206,3 +206,10 @@ class CatalogoInicialTests(TestCase):
         ficha = self.client.get('/destinos/guachimontones/')
         self.assertEqual(ficha.context['lugar']['alt'], 'Mi foto')
         self.assertNotContains(ficha, 'Esteban Tucci')
+
+
+class FiltrosSinValorTests(TestCase):
+    def test_una_casilla_sin_marcar_no_cuenta_como_filtro(self):
+        self.assertEqual(self.client.get('/destinos/').context['filtros'], '')
+        self.assertContains(self.client.get('/destinos/'), 'data-activos="false"')
+        self.assertContains(self.client.get('/destinos/', {'q': 'lago'}), 'data-activos="true"')

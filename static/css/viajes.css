@@ -10,7 +10,7 @@
 .trips-shell > p {
   margin: 14px 0 28px;
   font-size: 14px;
-  color: #8a7d96;
+  color: #6F6385;
   line-height: 1.7;
 }
 
@@ -192,7 +192,7 @@
 
 /* ── Focus global ── */
 .trips-shell :focus-visible {
-  outline: 3px solid #f76707;
+  outline: 3px solid #C2500A;
   outline-offset: 2px;
   border-radius: 8px;
 }

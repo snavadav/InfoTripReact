@@ -101,7 +101,7 @@ main > .explore-shell > div {
   letter-spacing: 0.3px;
 }
 .badge-primary { background: #F3EFFF; color: #6741D9; }
-.badge-accent  { background: #FFF0E6; color: #F76707; }
+.badge-accent  { background: #FFF0E6; color: #C2500A; }
 .badge-success { background: #E8F5ED; color: #2D9B47; }
 .badge-muted   { background: #F3F0F6; color: #7B6D8A; }
 
@@ -285,4 +285,21 @@ textarea::placeholder {
 @media (max-width: 600px) {
   h1 { letter-spacing: -1.5px; }
   h2 { letter-spacing: -0.8px; }
+}
+
+/* Foco visible al navegar con teclado (accesibilidad). */
+:focus-visible { outline: 2px solid #5835C4 !important; outline-offset: 2px; }
+
+/* Controles fáciles de tocar y sin que el chat tape el final de la página. */
+@media (max-width: 767px) {
+  main button, main select, main summary, main a.back-link, main .filter-actions a, main input:not([type="checkbox"]):not([type="radio"]) {
+    min-height: 44px;
+  }
+  main .discovery-filters button, main .list-controls button, main .surprise, main .preview-modes button, main .app-discover button, main .app-discover a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  main.explore-shell { padding-bottom: 88px; }
+  .compact-footer { flex-wrap: wrap; font-size: 12px !important; }
+  .compact-footer a { display: inline-block; padding: 12px 4px; }
 }

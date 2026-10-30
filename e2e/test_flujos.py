@@ -47,14 +47,21 @@ class FlujosTests(StaticLiveServerTestCase):
         self.pagina = self.contexto.new_page()
         self.pagina.on('pageerror', lambda error: self.problemas.append(f'Error de página: {error}'))
         self.pagina.on('console', self.revisar_consola)
+        self.pagina.on('response', self.revisar_respuesta)
 
     def tearDown(self):
+        # Espera a las peticiones en curso: si la prueba termina antes, la base se vacía bajo ellas.
+        self.pagina.wait_for_load_state('networkidle')
         self.contexto.close()
         self.assertEqual(self.problemas, [])
 
     def revisar_consola(self, mensaje):
         if 'Content Security Policy' in mensaje.text:
             self.problemas.append(mensaje.text)
+
+    def revisar_respuesta(self, respuesta):
+        if respuesta.status >= 500:
+            self.problemas.append(f'{respuesta.status} en {respuesta.url}')
 
     def abrir(self, ruta):
         self.pagina.goto(self.live_server_url + ruta)
@@ -127,6 +134,29 @@ class FlujosTests(StaticLiveServerTestCase):
         self.pagina.wait_for_selector('#trip-form .form-status:has-text("guardada")')
         self.assertEqual(self.usuario.viajes.get().nombre, 'Fin de semana')
         self.assertIsNone(self.pagina.evaluate("localStorage.getItem('infotrip_borrador_viaje')"))
+
+    def test_en_movil_los_resultados_se_ven_sin_desplazarse_y_se_puede_tocar(self):
+        self.pagina.set_viewport_size({'width': 375, 'height': 812})
+        self.abrir('/destinos/')
+        self.pagina.wait_for_selector('.trip-card', state='attached')
+        self.assertLess(self.pagina.locator('.trip-card').first.bounding_box()['y'], 812)
+        self.assertFalse(self.pagina.locator('#filters-panel').evaluate('panel => panel.open'))
+        self.assertEqual(self.pagina.evaluate('document.documentElement.scrollWidth'), 375)
+        self.abrir('/destinos/?q=mirador')
+        self.assertTrue(self.pagina.locator('#filters-panel').evaluate('panel => panel.open'))
+        self.abrir('/')
+        pequenos = self.pagina.evaluate('''[...document.querySelectorAll('main button, main input, main select')]
+            .filter(e => { const r = e.getBoundingClientRect(); return r.height > 0 && r.height < 44; }).length''')
+        self.assertEqual(pequenos, 0)
+        chat = self.pagina.locator('#trip-chat-toggle').bounding_box()
+        self.assertLessEqual(chat['width'], 56)
+        self.assertEqual(self.pagina.get_by_role('button', name='¿Planeamos tu viaje?').count(), 1)
+
+    def test_el_teclado_muestra_el_foco(self):
+        self.abrir('/login/')
+        self.pagina.keyboard.press('Tab')
+        estilo = self.pagina.evaluate('getComputedStyle(document.activeElement).outlineStyle')
+        self.assertEqual(estilo, 'solid')
 
     def test_guardar_favorito_y_cerrar_sesion(self):
         self.iniciar_sesion()

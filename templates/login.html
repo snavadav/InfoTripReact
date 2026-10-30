@@ -9,6 +9,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
   <style>
+    /* Foco visible al navegar con teclado (accesibilidad). */
+    :focus-visible { outline: 2px solid #5835C4 !important; outline-offset: 2px; }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
@@ -16,9 +18,9 @@
       --bg-soft:   #F7F3EE;
       --primary:   #6741D9;
       --primary-h: #5835C4;
-      --accent:    #F76707;
+      --accent:    #C2500A;
       --ink:       #1F1635;
-      --muted:     #9B8FAF;
+      --muted:     #6F6385;
       --border:    #E8E0F5;
       --tag-bg:    #F3EFFF;
       --error:     #D94141;
