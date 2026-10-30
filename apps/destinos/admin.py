@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Destino, Region, Municipio, Categoria, Servicio
+from .models import Destino, Lugar, Region, Municipio, Categoria, Servicio
 
 
 class OrigenFilter(admin.SimpleListFilter):
@@ -55,3 +55,27 @@ class CatalogoAdmin(admin.ModelAdmin):
 
 for modelo in [Region, Municipio, Categoria, Servicio]:
     admin.site.register(modelo, CatalogoAdmin)
+
+
+@admin.register(Lugar)
+class LugarAdmin(admin.ModelAdmin):
+    """Editar un lugar lo protege de la siguiente importación. Para retirarlo, se oculta."""
+    list_display = ['nombre', 'subtipo', 'municipio', 'es_activo', 'protegido']
+    list_filter = ['tipo', 'es_activo', 'protegido', 'municipio__region']
+    search_fields = ['nombre', 'municipio__nombre', 'osm_id']
+    readonly_fields = ['fecha_creacion', 'fecha_actualizacion', 'osm_id', 'protegido']
+    list_select_related = ['municipio']
+    actions = ['ocultar', 'publicar']
+    def has_delete_permission(self, request, obj=None): return False
+
+    def save_model(self, request, obj, form, change):
+        obj.protegido = True
+        super().save_model(request, obj, form, change)
+
+    @admin.action(description='Ocultar lugares seleccionados', permissions=['change'])
+    def ocultar(self, request, queryset):
+        queryset.update(es_activo=False, protegido=True)
+
+    @admin.action(description='Publicar lugares seleccionados', permissions=['change'])
+    def publicar(self, request, queryset):
+        queryset.update(es_activo=True, protegido=True)

@@ -19,6 +19,7 @@ from apps.comunidad.selectors import (
     costos_por_destino, cronistas, ficha_practica, misiones_por_destino, preguntas_publicas, resumen,
 )
 from .filtros import filtrar_destinos
+from .lugares import cercanos_de_destino
 from .fotos import FOTOS_CATALOGO
 from .models import Destino, Categoria, Municipio, Region, Servicio
 from .seo import seo_de_destino
@@ -256,6 +257,7 @@ def detalle(request, slug):
         contexto['preguntas'] = Paginator(preguntas_publicas(destino), 8).get_page(request.GET.get('preguntas'))
         contexto['resumen'] = resumen(destino)
         contexto['aportes'] = Paginator(aportes_publicos(destino), 9).get_page(request.GET.get('aportes'))
+        contexto['cerca'] = cercanos_de_destino(destino)
     contexto['seo'] = seo_de_destino(lugar, contexto.get('resumen'))
     return render(request, 'destinos/detalle.html', contexto)
 

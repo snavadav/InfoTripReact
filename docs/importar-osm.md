@@ -53,3 +53,20 @@ Los datos de OpenStreetMap tienen licencia [ODbL](https://www.openstreetmap.org/
 - Si se distribuye una base de datos derivada, debe ir bajo la misma licencia. Por eso `Destino.osm_id` identifica lo que viene de OpenStreetMap, y conviene no mezclarlo con lo que aporta la comunidad.
 
 Reglas del servicio: identifica la aplicación (el comando lo hace) y úsalo con moderación. Una importación de vez en cuando está dentro de lo normal. No lo programes en cada visita ni lo ejecutes en paralelo.
+
+## Dónde comer, dormir y servicios
+
+Restaurantes, cafés, bares, hoteles, moteles, hostales, gasolineras, farmacias, cajeros y bancos van en otra tabla, `Lugar`, y **se publican de inmediato**, porque son miles:
+
+```bash
+python manage.py importar_lugares --simular
+```
+
+```bash
+python manage.py importar_lugares
+```
+
+- Aparecen en `/destinos/`, con los botones sobre el mapa y **Cerca de mí**, y en la ficha de cada destino, en "Cerca de aquí". No aparecen en la lista de destinos, las misiones ni el pasaporte.
+- Repetirlo trae los cambios de OpenStreetMap. Lo que edites en `/admin/destinos/lugar/` queda protegido y no se pisa. Para retirar un lugar, ocúltalo.
+- `--retirar-ausentes` oculta lo que ya no aparece en OpenStreetMap. No lo uses si la descarga parece incompleta.
+- Pocos lugares traen horario o teléfono: la página los muestra como registrados y pide confirmar antes de ir.

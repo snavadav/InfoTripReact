@@ -1,4 +1,4 @@
-"""Lugares de OpenStreetMap: descarga con Overpass e interpretación de la respuesta.
+"""Destinos y lugares útiles de OpenStreetMap: descarga con Overpass e interpretación de la respuesta.
 
 Los datos de OpenStreetMap tienen licencia ODbL: hay que dar crédito (la ficha lo hace) y mantener
 identificado qué viene de ahí (Destino.osm_id). Se importa de vez en cuando con el comando
@@ -29,6 +29,26 @@ rel(area.jalisco)["boundary"="administrative"]["admin_level"="6"];
 out geom;
 """
 
+# Dónde comer, dormir y servicios. Mismo enfoque: una sola consulta y el municipio se calcula en local.
+CONSULTA_LUGARES = """
+[out:json][timeout:300];
+area["ISO3166-2"="MX-JAL"][admin_level=4]->.jalisco;
+(
+  nwr["amenity"~"^(restaurant|fast_food|cafe|bar|pub|fuel|pharmacy|atm|bank)$"]["name"](area.jalisco);
+  nwr["tourism"~"^(hotel|motel|hostel|guest_house|apartment)$"]["name"](area.jalisco);
+);
+out center tags;
+rel(area.jalisco)["boundary"="administrative"]["admin_level"="6"];
+out geom;
+"""
+
+# Etiqueta de OSM → tipo de Lugar.
+TIPOS_DE_LUGAR = {
+    'restaurant': 'comer', 'fast_food': 'comer', 'cafe': 'comer', 'bar': 'comer', 'pub': 'comer',
+    'hotel': 'dormir', 'motel': 'dormir', 'hostel': 'dormir', 'guest_house': 'dormir', 'apartment': 'dormir',
+    'fuel': 'gasolina', 'pharmacy': 'farmacia', 'atm': 'cajero', 'bank': 'cajero',
+}
+
 # Etiqueta de OSM → (nombre en una frase, categoría del catálogo o None si no hay una clara).
 TIPOS = {
     'museum': ('Museo', 'Ciudad y cultura'),
@@ -45,8 +65,8 @@ class ErrorOverpass(Exception):
     """El servidor no respondió o la respuesta está incompleta: mejor no importar nada."""
 
 
-def descargar():
-    pedido = urllib.request.Request(SERVIDOR, data=urllib.parse.urlencode({'data': CONSULTA}).encode(),
+def descargar(consulta=CONSULTA):
+    pedido = urllib.request.Request(SERVIDOR, data=urllib.parse.urlencode({'data': consulta}).encode(),
                                     headers={'User-Agent': AGENTE})
     try:
         with urllib.request.urlopen(pedido, timeout=SEGUNDOS_MAXIMOS) as respuesta:
@@ -118,5 +138,71 @@ def interpretar(datos):
             'osm_id': clave, 'nombre': etiquetas['name'].strip(), 'tipo': tipo, 'municipio': municipio,
             'latitud': round(centro['lat'], 6), 'longitud': round(centro['lon'], 6),
             'descripcion': (etiquetas.get('description:es') or etiquetas.get('description') or '').strip(),
+        })
+    return lugares, omitidos
+
+
+def _recuadro(tramos):
+    """(sur, norte, oeste, este) del contorno: descarta casi todos los municipios sin recorrer sus tramos."""
+    latitudes = [punto[0] for tramo in tramos for punto in tramo]
+    longitudes = [punto[1] for tramo in tramos for punto in tramo]
+    return (min(latitudes), max(latitudes), min(longitudes), max(longitudes)) if latitudes else None
+
+
+def _municipio_en(latitud, longitud, municipios):
+    for nombre, tramos, recuadro in municipios:
+        if recuadro and recuadro[0] <= latitud <= recuadro[1] and recuadro[2] <= longitud <= recuadro[3] \
+                and _dentro(latitud, longitud, tramos):
+            return nombre
+    return None
+
+
+def _direccion(etiquetas):
+    calle = etiquetas.get('addr:street', '').strip()
+    numero = etiquetas.get('addr:housenumber', '').strip()
+    return f'{calle} {numero}'.strip()[:300] if calle else ''
+
+
+def _sitio_web(etiquetas):
+    """Solo http y https: este valor termina en un enlace, y `javascript:` ejecutaría código."""
+    sitio = (etiquetas.get('website') or etiquetas.get('contact:website') or '').strip()
+    return sitio if sitio.startswith(('http://', 'https://')) and len(sitio) <= 300 else ''
+
+
+def interpretar_lugares(datos):
+    """Convierte la respuesta en lugares con su municipio. Omite lo que no tiene nombre, tipo o municipio."""
+    if datos.get('remark'):
+        raise ErrorOverpass(f"La respuesta está incompleta: {datos['remark']}")
+    elementos = datos.get('elements', [])
+    municipios = []
+    for elemento in elementos:
+        if _es_municipio(elemento):
+            tramos = _segmentos(elemento)
+            municipios.append((elemento['tags'].get('name', ''), tramos, _recuadro(tramos)))
+    if not municipios:
+        raise ErrorOverpass('La respuesta no trae los límites de los municipios.')
+    lugares, omitidos, vistos = [], 0, set()
+    for elemento in elementos:
+        if _es_municipio(elemento):
+            continue
+        clave = f"{elemento['type']}/{elemento['id']}"
+        etiquetas = elemento.get('tags', {})
+        centro = elemento.get('center', elemento)
+        subtipo = etiquetas.get('amenity') if etiquetas.get('amenity') in TIPOS_DE_LUGAR else etiquetas.get('tourism')
+        nombre = etiquetas.get('name', '').strip()
+        if clave in vistos or not nombre or subtipo not in TIPOS_DE_LUGAR or 'lat' not in centro:
+            omitidos += 1
+            continue
+        vistos.add(clave)
+        municipio = _municipio_en(centro['lat'], centro['lon'], municipios)
+        if not municipio:
+            omitidos += 1
+            continue
+        lugares.append({
+            'osm_id': clave, 'nombre': nombre[:200], 'tipo': TIPOS_DE_LUGAR[subtipo], 'subtipo': subtipo,
+            'municipio': municipio, 'latitud': round(centro['lat'], 6), 'longitud': round(centro['lon'], 6),
+            'direccion': _direccion(etiquetas), 'sitio_web': _sitio_web(etiquetas),
+            'telefono': (etiquetas.get('phone') or etiquetas.get('contact:phone') or '').strip()[:60],
+            'horario': etiquetas.get('opening_hours', '').strip()[:200],
         })
     return lugares, omitidos

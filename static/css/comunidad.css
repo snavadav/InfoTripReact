@@ -86,3 +86,14 @@ details > form, details > p { margin-top: .6rem; }
 .mision h2 { font-size: 1.05rem; }
 .mision h3 { margin-top: .6rem; color: var(--texto-2); font-size: .8125rem; font-weight: 500; }
 .mision ul { display: flex; flex-wrap: wrap; gap: .25rem .9rem; margin-top: .2rem; padding: 0; list-style: none; font-size: .9rem; }
+
+/* Cerca de aquí */
+.cerca-grupos { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: .6rem; align-items: start; }
+.cerca-grupo { margin-top: 0; }
+.cerca-grupo ul { margin-top: .4rem; padding: 0; list-style: none; }
+.cerca-grupo li { padding: .5rem 0; border-top: 1px solid var(--linea); }
+.cerca-fila { display: flex; justify-content: space-between; gap: .75rem; font-size: .9375rem; }
+.cerca-fila strong { font-weight: 500; }
+.cerca-distancia { flex: none; color: var(--texto-3); font-family: var(--fuente-mono); font-size: .75rem; }
+.cerca-grupo small { display: block; color: var(--texto-3); }
+.cerca-enlaces { display: flex; flex-wrap: wrap; gap: .1rem .7rem; font-size: .8125rem; }

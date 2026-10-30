@@ -51,3 +51,20 @@
 .linea-recorrido { fill: none; stroke: var(--marca); stroke-width: 3; stroke-dasharray: 2 7; stroke-linecap: round; }
 .mi-ubicacion { fill: var(--acento); fill-opacity: 1; stroke: var(--panel); stroke-width: 3; }
 .mi-ubicacion-radio { fill: var(--acento); fill-opacity: .12; stroke: var(--acento); stroke-opacity: .5; stroke-width: 1; }
+
+.pin-lugar {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  margin: 1px;
+  border: 2px solid var(--panel);
+  border-radius: 50%;
+  background: var(--texto);
+  color: var(--panel);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .35);
+}
+.pin-lugar svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.lugar-popup p { margin: .15rem 0; font-size: .8125rem; }
+.lugar-popup-acciones { display: flex; flex-wrap: wrap; gap: .25rem .7rem; margin-top: .35rem; font-size: .8125rem; }
+.leaflet-popup-content .lugar-popup-credito { margin-top: .35rem; color: var(--texto-3); font-size: .6875rem; }

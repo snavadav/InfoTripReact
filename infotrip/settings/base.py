@@ -129,6 +129,8 @@ SPECTACULAR_SETTINGS = {
     # Swagger UI desde archivos propios: la CSP no permite cargarlo de un CDN.
     'SWAGGER_UI_DIST': 'SIDECAR',
     'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
+    # Varios modelos tienen un campo "tipo": sin esto, el nombre de este en el esquema sería aleatorio.
+    'ENUM_NAME_OVERRIDES': {'TipoDeLugarEnum': 'apps.destinos.models.TIPOS_DE_LUGAR'},
 }
 
 REST_FRAMEWORK = {

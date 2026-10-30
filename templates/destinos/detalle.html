@@ -19,6 +19,7 @@
       <section><h2>Servicios</h2>{% if lugar.servicios %}<ul class="services">{% for servicio in lugar.servicios %}<li>{{ servicio }}</li>{% endfor %}</ul>{% else %}<p>Aún no hay servicios confirmados para este lugar.</p>{% endif %}</section>
     </div>
   </div>
+  {% include 'destinos/cerca.html' %}
   {% include 'comunidad/practica.html' %}
   {% include 'comunidad/destino.html' %}
   {% include 'destinos/footer.html' %}

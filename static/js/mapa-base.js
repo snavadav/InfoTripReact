@@ -29,6 +29,25 @@ window.InfoTripMapa = (() => {
     });
   }
 
+  // Lugares útiles: redondos y neutros, para distinguirlos de los destinos a primera vista.
+  const TRAZOS_LUGAR = {
+    comer: 'M7 3v8M4 3v5a3 3 0 0 0 6 0V3M7 11v10M17 3c-2 1-3 4-3 7 0 2 1 3 3 3zM17 13v8',
+    dormir: 'M3 18v-6M3 14h18v4M21 18v-3a3 3 0 0 0-3-3H10v2M6.5 11a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z',
+    gasolina: 'M4 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16M3 21h12M7 8h4M14 12h2a2 2 0 0 1 2 2v3a1.5 1.5 0 0 0 3 0V9l-3-3',
+    farmacia: 'M12 5v14M5 12h14',
+    cajero: 'M3 7h18v11H3zM3 11h18M7 15h3',
+  };
+
+  function iconoLugar(tipo) {
+    return L.divIcon({
+      className: 'pin-envoltura',
+      html: `<span class="pin-lugar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${TRAZOS_LUGAR[tipo] || TRAZO_GENERAL}"/></svg></span>`,
+      iconSize: [28, 28],
+      iconAnchor: [14, 14],
+      popupAnchor: [0, -12],
+    });
+  }
+
   function crear(contenedor, {rueda = true, alFallarFondo = null} = {}) {
     const mapa = L.map(contenedor, {scrollWheelZoom: rueda, zoomControl: false});
     L.control.zoom({position: 'topright', zoomInTitle: 'Acercar', zoomOutTitle: 'Alejar'}).addTo(mapa);
@@ -86,5 +105,5 @@ window.InfoTripMapa = (() => {
     return `${Math.abs(a).toFixed(4)}° ${a >= 0 ? 'N' : 'S'}, ${Math.abs(o).toFixed(4)}° ${o >= 0 ? 'E' : 'O'}`;
   }
 
-  return {CENTRO_JALISCO, ZOOM_JALISCO, icono, crear, agrupador, coordenadas, agregarPuntos, formatoCoordenadas};
+  return {CENTRO_JALISCO, ZOOM_JALISCO, icono, iconoLugar, crear, agrupador, coordenadas, agregarPuntos, formatoCoordenadas};
 })();

@@ -45,6 +45,12 @@
     <div class="explorer-list">
       <noscript><p class="editorial-note">Activa JavaScript para ver el mapa. Puedes buscar y abrir los destinos con los enlaces siguientes.</p></noscript>
       {% if editorial %}<p class="editorial-note">Las fichas de inspiración aún no tienen coordenadas registradas. Puedes consultar su ubicación desde el detalle.</p>{% endif %}
+      <section id="nearby-panel" class="nearby-panel" aria-labelledby="nearby-title" hidden>
+        <div class="route-heading"><h2 id="nearby-title">Cerca de ti</h2><button type="button" id="nearby-close">Cerrar</button></div>
+        <p id="nearby-status" class="editorial-note" role="status"></p>
+        <div id="nearby-list"></div>
+        <p class="editorial-note">Usamos tu ubicación solo para esta búsqueda y no la guardamos. Distancia en línea recta. Datos de © colaboradores de OpenStreetMap: confirma antes de ir.</p>
+      </section>
       <section id="route-panel" class="route-panel" aria-labelledby="route-title" hidden>
         <div class="route-heading"><h2 id="route-title">Tu recorrido</h2><button type="button" id="route-clear">Vaciar</button></div>
         <ol id="route-stops"></ol>
@@ -59,6 +65,15 @@
   </aside>
   <section id="map-panel" aria-label="Mapa de destinos">
     <div id="destinations-map" aria-label="Mapa interactivo de Jalisco"></div>
+    <div class="poi-bar" role="group" aria-label="Mostrar lugares en el mapa">
+      <button type="button" id="nearby" class="poi-cerca" aria-pressed="false">Cerca de mí</button>
+      <button type="button" data-lugar-tipo="comer" aria-pressed="false">Comer</button>
+      <button type="button" data-lugar-tipo="dormir" aria-pressed="false">Dormir</button>
+      <button type="button" data-lugar-tipo="gasolina" aria-pressed="false">Gasolina</button>
+      <button type="button" data-lugar-tipo="farmacia" aria-pressed="false">Farmacia</button>
+      <button type="button" data-lugar-tipo="cajero" aria-pressed="false">Cajero</button>
+    </div>
+    <p id="poi-hint" class="poi-hint" role="status" hidden></p>
     <p id="map-status" class="sr-only" role="status" aria-live="polite"></p>
     <article id="place-panel" class="place-panel" aria-labelledby="place-name" hidden>
       <button type="button" id="place-close" aria-label="Cerrar">×</button>
@@ -89,4 +104,5 @@
 <script src="{% static 'js/mapa-base.js' %}" defer></script>
 <script src="{% static 'js/filtros.js' %}" defer></script>
 <script src="{% static 'js/mapa.js' %}" defer></script>
+<script src="{% static 'js/lugares-mapa.js' %}" defer></script>
 {% endblock %}

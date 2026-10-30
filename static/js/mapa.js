@@ -186,6 +186,8 @@
   showRoute();
   if (!markers.size) status.textContent = 'No hay destinos con coordenadas en estos resultados. Prueba otros filtros.';
 
+  window.InfoTripExplorador = {map};
+
   // Una tarjeta ubica el lugar en el mapa; con Ctrl, Cmd o sin mapa sigue siendo un enlace a la ficha.
   const bySlug = new Map(places.map(place => [place.slug, place]));
   document.querySelectorAll('.trip-card[data-slug]').forEach(card => card.addEventListener('click', event => {

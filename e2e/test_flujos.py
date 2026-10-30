@@ -12,7 +12,7 @@ from django.core import mail
 from django.core.cache import cache
 
 from apps.comunidad.models import Aporte, InteresNegocio, Viaje
-from apps.destinos.models import Destino, Municipio, Region
+from apps.destinos.models import Destino, Lugar, Municipio, Region
 from apps.metricas.models import Evento
 from apps.usuarios.models import Usuario
 
@@ -399,6 +399,32 @@ class FlujosTests(StaticLiveServerTestCase):
         self.assertTrue(peticiones)
         for peticion in peticiones:
             self.assertEqual(peticion.all_headers().get('referer'), self.live_server_url + '/')
+
+    def test_cerca_de_mi_y_lugares_por_zona(self):
+        Lugar.objects.create(nombre='Fonda Doña Ana', tipo='comer', subtipo='restaurant', latitud=19.901, longitud=-103.701,
+                             telefono='33 1234', osm_id='node/1')
+        Lugar.objects.create(nombre='Hotel Sierra', tipo='dormir', subtipo='hotel', latitud=19.905, longitud=-103.705)
+        self.contexto.grant_permissions(['geolocation'], origin=self.live_server_url)
+        self.contexto.set_geolocation({'latitude': 19.9, 'longitude': -103.7})
+        # El enlace de la portada abre directamente la búsqueda.
+        self.abrir('/')
+        self.pagina.click('.home-cerca a')
+        self.pagina.wait_for_selector('#nearby-list .nearby-fila')
+        filas = self.pagina.locator('#nearby-list .nearby-fila')
+        self.assertEqual(filas.count(), 2)
+        self.assertIn('Fonda Doña Ana', filas.first.inner_text())
+        self.pagina.click('[data-lugar-tipo="dormir"]')
+        self.pagina.wait_for_selector('#nearby-list .nearby-fila:has-text("Fonda")', state='detached')
+        self.assertIn('Hotel Sierra', self.pagina.inner_text('#nearby-list'))
+        self.pagina.click('#nearby-list .nearby-fila')
+        self.pagina.wait_for_selector('.lugar-popup:has-text("Hotel Sierra")')
+        # Al cerrar sigue el filtro, ahora por la zona visible del mapa.
+        self.pagina.click('#nearby-close')
+        self.pagina.click('[data-lugar-tipo="comer"]')
+        self.pagina.wait_for_selector('.pin-lugar', state='attached')
+        self.pagina.click('.pin-lugar')
+        self.pagina.wait_for_selector('.lugar-popup:has-text("Fonda Doña Ana")')
+        self.assertEqual(self.pagina.get_attribute('.lugar-popup a[href^="tel:"]', 'href'), 'tel:331234')
 
     def test_guardar_favorito_y_cerrar_sesion(self):
         self.iniciar_sesion()
