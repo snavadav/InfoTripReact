@@ -100,7 +100,9 @@ class RegistroGenericoTests(APITestCase):
         existente = self.registrar('existe@example.com')
         nuevo = self.registrar('nuevo@example.com')
         self.assertEqual(existente.status_code, nuevo.status_code)
-        self.assertEqual(existente.data, nuevo.data)
+        # El desafío es aleatorio en ambos casos; el resto de la respuesta es idéntico.
+        self.assertEqual({k: v for k, v in existente.data.items() if k != 'desafio'},
+                         {k: v for k, v in nuevo.data.items() if k != 'desafio'})
         self.assertEqual(Usuario.objects.count(), 2)
         self.assertEqual(Usuario.objects.get(email='existe@example.com').nombre, 'Ana')
 

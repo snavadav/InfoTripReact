@@ -49,7 +49,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
 
     uuid          = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     nombre        = models.CharField(max_length=100)
-    apellido      = models.CharField(max_length=100)
+    apellido      = models.CharField(max_length=100, blank=True)
     email         = models.EmailField(unique=True)
     foto_perfil   = models.ImageField(upload_to='perfiles/', blank=True, null=True)
     ciudad_origen = models.CharField(max_length=150, blank=True)
@@ -82,7 +82,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
 
     @property
     def nombre_completo(self) -> str:
-        return f'{self.nombre} {self.apellido}'
+        return f'{self.nombre} {self.apellido}'.strip()
 
     # Requerido por Django admin
     @property

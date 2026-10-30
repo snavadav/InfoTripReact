@@ -395,6 +395,7 @@
           <input class="form-input" id="loginCode" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" minlength="6" autocomplete="one-time-code" placeholder="000000" required aria-describedby="codeHelp">
           <p id="codeHelp" style="font-size:.8rem;line-height:1.6;color:#675975">Escribe los 6 dígitos de tu código de acceso. El código caduca en 10 minutos; tienes hasta 5 intentos.</p>
         </div>
+        <label class="remember-device" style="display:flex;gap:8px;align-items:center;font-size:.85rem;margin-bottom:14px"><input type="checkbox" id="rememberDevice"> Recordar este dispositivo 30 días y no pedir código. No lo marques en un equipo compartido.</label>
         <button type="submit" class="btn-submit" id="verifyBtn">Verificar e iniciar sesión</button>
         <div style="display:flex;gap:16px;justify-content:space-between;margin-top:18px">
           <button type="button" id="resendBtn" disabled>Reenviar código</button>
