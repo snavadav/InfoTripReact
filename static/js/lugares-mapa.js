@@ -34,11 +34,12 @@
   function details(place) {
     const box = node('div', null, 'lugar-popup');
     box.append(node('strong', place.nombre));
+    if (place.num_resenas) box.append(node('p', `${place.calificacion_promedio.toFixed(1)} / 5 · ${place.num_resenas} ${place.num_resenas === 1 ? 'reseña' : 'reseñas'}`, 'lugar-popup-nota'));
     const where = [place.subtipo_nombre, place.municipio].filter(Boolean).join(' · ');
     box.append(node('p', place.distancia_km === null ? where : `${where} · ${distanceText(place.distancia_km)}`));
     if (place.horario) box.append(node('p', `Horario registrado: ${place.horario}`));
     const actions = node('div', null, 'lugar-popup-acciones');
-    actions.append(link('Cómo llegar ↗', `https://www.google.com/maps/dir/?api=1&destination=${place.latitud},${place.longitud}`, true));
+    actions.append(link('Ver ficha', place.url), link('Cómo llegar ↗', `https://www.google.com/maps/dir/?api=1&destination=${place.latitud},${place.longitud}`, true));
     const phone = place.telefono.replace(/[^+\d]/g, '');
     if (phone) actions.append(link(place.telefono, `tel:${phone}`));
     if (place.sitio_web) actions.append(link('Sitio web ↗', place.sitio_web, true));

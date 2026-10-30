@@ -12,6 +12,7 @@ from django.core import mail
 from django.core.cache import cache
 
 from apps.comunidad.models import Aporte, InteresNegocio, Viaje
+from apps.comunidad.moderacion import moderar
 from apps.destinos.models import Destino, Lugar, Municipio, Region
 from apps.metricas.models import Evento
 from apps.usuarios.models import Usuario
@@ -425,6 +426,32 @@ class FlujosTests(StaticLiveServerTestCase):
         self.pagina.click('.pin-lugar')
         self.pagina.wait_for_selector('.lugar-popup:has-text("Fonda Doña Ana")')
         self.assertEqual(self.pagina.get_attribute('.lugar-popup a[href^="tel:"]', 'href'), 'tel:331234')
+
+    def test_resenar_un_lugar_y_responder_si_sigue_abierto(self):
+        sitio = Lugar.objects.create(nombre='Fonda Doña Ana', tipo='comer', subtipo='restaurant', latitud=19.901, longitud=-103.701,
+                                     osm_id='node/1')
+        self.contexto.grant_permissions(['geolocation'], origin=self.live_server_url)
+        self.contexto.set_geolocation({'latitude': 19.9011, 'longitude': -103.7011})
+        self.iniciar_sesion()
+        self.abrir(f'/lugares/{sitio.pk}/')
+        self.pagina.wait_for_selector('#ficha-mapa .pin-lugar', state='attached')
+        self.pagina.click('.estado-lugar[data-abierto="true"]')
+        self.pagina.wait_for_selector('#estado-resumen:has-text("1 dice que sí")')
+        self.pagina.click('#escribir-resena summary')
+        self.pagina.fill('#resena-form [name="texto"]', 'Muy rico')
+        self.pagina.fill('#resena-form [name="fecha_visita"]', '2026-01-15')
+        self.pagina.check('#resena-form [name="comprobar"]')
+        self.pagina.click('#resena-form button[type="submit"]')
+        self.pagina.wait_for_selector('#resena-form .form-status:has-text("pendiente de revisión")')
+        resena = sitio.resenas.get()
+        self.assertTrue(resena.ubicacion_comprobada)
+        moderar(resena, Usuario.objects.create_superuser('m@example.com', 'Mod', 'P', CLAVE), 'publicado', 'Revisada')
+        # Al volver, la página recuerda lo que respondió y muestra la reseña publicada.
+        self.abrir(f'/lugares/{sitio.pk}/')
+        self.pagina.wait_for_selector('.visit-badge')
+        self.pagina.wait_for_selector('#resena-titulo:has-text("Editar mi reseña")')
+        self.pagina.wait_for_selector('.estado-lugar[data-abierto="true"][aria-pressed="true"]')
+        self.assertIn('Muy rico', self.pagina.inner_text('.contribution-list'))
 
     def test_guardar_favorito_y_cerrar_sesion(self):
         self.iniciar_sesion()

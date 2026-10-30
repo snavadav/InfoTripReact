@@ -3,6 +3,16 @@ from decimal import Decimal
 from django.conf import settings
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.urls import reverse
+
+
+# Lo comparten aportes y reseñas de lugares; una constante para que el esquema de la API les dé un solo nombre.
+ESTADOS_CON_RETIRO = [
+    ('pendiente', 'Pendiente'),
+    ('publicado', 'Publicado'),
+    ('oculto', 'Oculto'),
+    ('retirado', 'Retirado por autor'),
+]
 
 
 class Viaje(models.Model):
@@ -56,6 +66,10 @@ class Moderable(models.Model):
     def registrar_moderacion(self, **campos):
         raise NotImplementedError
 
+    def enlace_publicado(self):
+        """A dónde lleva el aviso de que el contenido se publicó."""
+        return reverse('destino-detalle', kwargs={'slug': self.destino.slug})
+
     def aviso_para_autor(self, anterior, estado):
         """Texto del aviso al autor por un cambio de estado, o None si ese cambio no se avisa."""
         tipo = self.NOMBRES_EN_AVISO.get(self.tipo, 'aporte')
@@ -106,12 +120,7 @@ class RegistroModeracion(models.Model):
 
 class Aporte(Moderable):
     TIPOS = [('resena', 'Reseña'), ('foto', 'Fotografía'), ('gasto', 'Gasto')]
-    ESTADOS = [
-        ('pendiente', 'Pendiente'),
-        ('publicado', 'Publicado'),
-        ('oculto', 'Oculto'),
-        ('retirado', 'Retirado por autor'),
-    ]
+    ESTADOS = ESTADOS_CON_RETIRO
     CONCEPTOS = [
         ('entrada', 'Entrada por persona'),
         ('comida', 'Comida por persona'),
@@ -346,3 +355,75 @@ class InteresNegocio(models.Model):
 
     def __str__(self):
         return f'{self.negocio} · {self.municipio}'
+
+
+class ResenaLugar(Moderable):
+    """Reseña de un lugar útil (restaurante, hotel...). Sigue la misma moderación que los aportes."""
+    ESTADOS = ESTADOS_CON_RETIRO
+    lugar = models.ForeignKey('destinos.Lugar', on_delete=models.PROTECT, related_name='resenas')
+    autor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='resenas_lugar')
+    calificacion = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    texto = models.TextField(max_length=2000)
+    fecha_visita = models.DateField()
+    # Solo el resultado: las coordenadas no se guardan.
+    ubicacion_comprobada = models.BooleanField(default=False)
+    estado = models.CharField(max_length=12, choices=ESTADOS, default='pendiente')
+    creado = models.DateTimeField(auto_now_add=True)
+    actualizado = models.DateTimeField(auto_now=True)
+
+    ESTADOS_SIN_MODERACION = ('retirado',)
+    CAMPOS_AL_MODERAR = ['estado', 'actualizado']
+
+    class Meta:
+        ordering = ['-creado', '-pk']
+        verbose_name = 'reseña de lugar'
+        verbose_name_plural = 'reseñas de lugares'
+        constraints = [
+            models.UniqueConstraint(fields=['autor', 'lugar'], condition=~models.Q(estado='retirado'),
+                                    name='una_resena_de_lugar_vigente'),
+            models.CheckConstraint(condition=models.Q(calificacion__gte=1, calificacion__lte=5),
+                                   name='resena_lugar_calificacion_rango'),
+        ]
+        indexes = [models.Index(fields=['lugar', 'estado'], name='resena_lugar_publica_idx')]
+
+    def __str__(self):
+        return f'{self.lugar.nombre} · {self.autor.nombre}'
+
+    def registrar_moderacion(self, **campos):
+        return self.revisiones.create(**campos)
+
+    def enlace_publicado(self):
+        return reverse('lugar-detalle', kwargs={'pk': self.lugar_id})
+
+    def aviso_para_autor(self, anterior, estado):
+        if estado == 'publicado':
+            return f'Publicamos tu reseña sobre {self.lugar.nombre}.'
+        if estado == 'oculto':
+            momento = 'tras una nueva revisión' if anterior == 'publicado' else 'tras la revisión'
+            return f'Ocultamos tu reseña sobre {self.lugar.nombre} {momento}.'
+        return None
+
+
+class RevisionResenaLugar(RegistroModeracion):
+    resena = models.ForeignKey(ResenaLugar, on_delete=models.PROTECT, related_name='revisiones')
+
+
+class ReporteResenaLugar(ReporteBase):
+    resena = models.ForeignKey(ResenaLugar, on_delete=models.PROTECT, related_name='reportes')
+
+    class Meta:
+        ordering = ['-creado']
+        constraints = [models.UniqueConstraint(fields=['resena', 'autor'], name='un_reporte_de_resena_lugar_por_autor')]
+
+
+class ConfirmacionLugar(models.Model):
+    """Respuesta a "¿Sigue abierto?". Sin moderación porque no añade texto; cada persona tiene una por lugar."""
+    lugar = models.ForeignKey('destinos.Lugar', on_delete=models.CASCADE, related_name='confirmaciones')
+    autor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='confirmaciones_lugar')
+    abierto = models.BooleanField()
+    fecha = models.DateField()
+    creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-fecha', '-pk']
+        constraints = [models.UniqueConstraint(fields=['lugar', 'autor'], name='una_confirmacion_de_lugar_por_persona')]

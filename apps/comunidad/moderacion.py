@@ -4,7 +4,7 @@ from datetime import timedelta
 from django.urls import reverse
 from django.utils import timezone
 from apps.metricas.models import registrar
-from .models import Aporte, Favorito, Notificacion
+from .models import Aporte, Favorito, Notificacion, ResenaLugar
 
 registro = logging.getLogger('infotrip.moderacion')
 TEXTO_NOVEDAD = 'Hay información nueva sobre'
@@ -35,6 +35,8 @@ def moderar(objeto, moderador, estado, motivo, registrar_sin_cambio=False):
             avisar_a_quienes_lo_guardaron(objeto)
         if estado == 'publicado' and isinstance(objeto, Aporte):
             registrar('aporte_publicado', usuario=objeto.autor, destino=objeto.destino.slug)
+        if estado == 'publicado' and isinstance(objeto, ResenaLugar):
+            registrar('resena_lugar_publicada', usuario=objeto.autor, destino=f'lugar-{objeto.lugar_id}')
     return cambia
 
 
@@ -42,7 +44,7 @@ def avisar_al_autor(objeto, anterior, estado):
     # El motivo no se incluye: puede citar el texto de un reporte de otra persona.
     texto = objeto.aviso_para_autor(anterior, estado)
     if texto:
-        enlace = reverse('destino-detalle', kwargs={'slug': objeto.destino.slug}) if estado == 'publicado' else ''
+        enlace = objeto.enlace_publicado() if estado == 'publicado' else ''
         Notificacion.objects.create(usuario=objeto.autor, texto=texto, enlace=enlace, correo_pendiente=True)
 
 

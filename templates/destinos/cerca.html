@@ -9,8 +9,8 @@
       <ul>
         {% for sitio in grupo.lugares %}
         <li>
-          <div class="cerca-fila"><strong>{{ sitio.nombre }}</strong><span class="cerca-distancia">{{ sitio.distancia_legible }}</span></div>
-          <small>{{ sitio.get_subtipo_display }}{% if sitio.horario %} · {{ sitio.horario }}{% endif %}</small>
+          <div class="cerca-fila"><strong><a href="{% url 'lugar-detalle' sitio.pk %}">{{ sitio.nombre }}</a></strong><span class="cerca-distancia">{{ sitio.distancia_legible }}</span></div>
+          <small>{{ sitio.get_subtipo_display }}{% if sitio.num_resenas %} · {{ sitio.calificacion_promedio|floatformat:1 }} / 5{% endif %}{% if sitio.horario %} · {{ sitio.horario }}{% endif %}</small>
           <div class="cerca-enlaces"><a href="https://www.google.com/maps/dir/?api=1&amp;destination={{ sitio.latitud }},{{ sitio.longitud }}" target="_blank" rel="noopener noreferrer">Cómo llegar ↗</a>{% if sitio.telefono %}<a href="tel:{{ sitio.telefono_marcable }}">{{ sitio.telefono }}</a>{% endif %}{% if sitio.sitio_web %}<a href="{{ sitio.sitio_web }}" target="_blank" rel="noopener noreferrer">Sitio web ↗</a>{% endif %}</div>
         </li>
         {% endfor %}

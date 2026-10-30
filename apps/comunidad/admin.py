@@ -2,7 +2,8 @@ from django.contrib import admin
 from django.db import transaction
 from django.utils import timezone
 from .models import (
-    Aporte, Colaboracion, Confirmacion, Decision, InteresNegocio, Reporte, ReporteColaboracion, RevisionColaboracion,
+    Aporte, Colaboracion, Confirmacion, ConfirmacionLugar, Decision, InteresNegocio, Reporte, ReporteColaboracion,
+    ReporteResenaLugar, ResenaLugar, RevisionColaboracion, RevisionResenaLugar,
 )
 from .moderacion import moderar
 
@@ -172,3 +173,57 @@ class InteresNegocioAdmin(admin.ModelAdmin):
     search_fields = ['negocio', 'correo', 'municipio']
     readonly_fields = ['negocio', 'contacto', 'correo', 'telefono', 'municipio', 'mensaje', 'creado']
     def has_add_permission(self, request): return False
+
+
+@admin.register(ResenaLugar)
+class ResenaLugarAdmin(admin.ModelAdmin):
+    list_display = ['id', 'lugar', 'autor', 'calificacion', 'estado', 'ubicacion_comprobada', 'creado']
+    list_filter = ['estado', 'ubicacion_comprobada']
+    search_fields = ['lugar__nombre', 'autor__email', 'texto']
+    list_select_related = ['lugar', 'autor']
+    readonly_fields = ['lugar', 'autor', 'calificacion', 'texto', 'fecha_visita', 'ubicacion_comprobada', 'estado',
+                       'creado', 'actualizado']
+    actions = ['publicar', 'ocultar']
+    def has_add_permission(self, request): return False
+    def has_delete_permission(self, request, obj=None): return False
+
+    @admin.action(description='Publicar reseñas seleccionadas', permissions=['change'])
+    def publicar(self, request, queryset):
+        with transaction.atomic():
+            for resena in queryset.select_for_update():
+                moderar(resena, request.user, 'publicado', 'Revisión editorial: publicación desde administración.')
+
+    @admin.action(description='Ocultar reseñas seleccionadas', permissions=['change'])
+    def ocultar(self, request, queryset):
+        with transaction.atomic():
+            for resena in queryset.select_for_update():
+                moderar(resena, request.user, 'oculto', 'Revisión editorial: ocultación desde administración.')
+
+
+@admin.register(ReporteResenaLugar)
+class ReporteResenaLugarAdmin(ReporteAdminBase):
+    modelo_contenido = ResenaLugar
+    campo_contenido = 'resena'
+    permiso_contenido = 'comunidad.change_resenalugar'
+    list_display = ['id', 'resena', 'autor', 'resuelto', 'creado']
+    readonly_fields = ['resena', 'autor', 'motivo', 'resuelto', 'resuelto_en', 'creado']
+
+
+@admin.register(RevisionResenaLugar)
+class RevisionResenaLugarAdmin(admin.ModelAdmin):
+    list_display = ['resena', 'moderador', 'estado_anterior', 'estado_nuevo', 'creado']
+    readonly_fields = ['resena', 'moderador', 'estado_anterior', 'estado_nuevo', 'motivo', 'creado']
+    def has_add_permission(self, request): return False
+    def has_change_permission(self, request, obj=None): return False
+    def has_delete_permission(self, request, obj=None): return False
+
+
+@admin.register(ConfirmacionLugar)
+class ConfirmacionLugarAdmin(admin.ModelAdmin):
+    """Respuestas a "¿Sigue abierto?": no se editan; el personal puede borrar las abusivas."""
+    list_display = ['lugar', 'autor', 'abierto', 'fecha']
+    list_filter = ['abierto']
+    search_fields = ['lugar__nombre', 'autor__email']
+    readonly_fields = ['lugar', 'autor', 'abierto', 'fecha', 'creado']
+    def has_add_permission(self, request): return False
+    def has_change_permission(self, request, obj=None): return False

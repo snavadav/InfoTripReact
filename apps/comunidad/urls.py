@@ -9,6 +9,9 @@ from .bote import (
 from .cuenta import EliminarCuentaView
 from .negocios import InteresNegocioView
 from .pasaporte import CompartirPasaporteView, MiPasaporteView
+from .resenas_lugar import (
+    EstadoLugarView, MiOpinionLugarView, MisResenasLugarView, ReportarResenaLugarView, ResenasLugarView,
+)
 from .visitas import VisitaView
 urlpatterns = [
     path('mi-cuenta/eliminar/', EliminarCuentaView.as_view(), name='eliminar-cuenta'),
@@ -26,6 +29,11 @@ urlpatterns = [
     path('mis-botes/', MisBotesView.as_view(), name='mis-botes'),
     path('destinos/<slug:slug>/visita/', VisitaView.as_view(), name='visita'),
     path('negocios/interes/', InteresNegocioView.as_view(), name='interes-negocio'),
+    path('lugares/<int:pk>/resenas/', ResenasLugarView.as_view(), name='lugar-resenas'),
+    path('lugares/<int:pk>/mi-opinion/', MiOpinionLugarView.as_view(), name='lugar-mi-opinion'),
+    path('lugares/<int:pk>/estado/', EstadoLugarView.as_view(), name='lugar-estado'),
+    path('resenas-lugar/<int:pk>/reportar/', ReportarResenaLugarView.as_view(), name='resena-lugar-reportar'),
+    path('mis-resenas-lugar/', MisResenasLugarView.as_view(), name='mis-resenas-lugar'),
     path('mi-pasaporte/', MiPasaporteView.as_view(), name='mi-pasaporte'),
     path('mi-pasaporte/compartir/', CompartirPasaporteView.as_view(), name='compartir-pasaporte'),
     path('destinos/<slug:slug>/colaboraciones/', ColaboracionesView.as_view(), name='colaboraciones'),

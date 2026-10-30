@@ -16,10 +16,11 @@ from django.utils.text import slugify
 from apps.comunidad.models import Aporte, Colaboracion
 from apps.comunidad.selectors import (
     MINIMO_CRONISTA, MINIMO_REPORTES, SLUGS_PUEBLOS, aportes_publicos, con_info_reciente, costos_de_destino,
-    costos_por_destino, cronistas, ficha_practica, misiones_por_destino, preguntas_publicas, resumen,
+    costos_por_destino, cronistas, estado_de_lugar, ficha_practica, misiones_por_destino, preguntas_publicas,
+    resenas_publicas_de_lugar, resumen,
 )
 from .filtros import filtrar_destinos
-from .lugares import cercanos_de_destino
+from .lugares import activos as lugares_activos, cercanos_de_destino
 from .fotos import FOTOS_CATALOGO
 from .models import Destino, Categoria, Municipio, Region, Servicio
 from .seo import seo_de_destino
@@ -315,4 +316,17 @@ def misiones(request):
         'pagina': Paginator(filas, 12).get_page(request.GET.get('pagina')), 'municipios': municipios,
         'municipio_actual': municipio, 'seo': seo, 'cronistas': cronistas(), 'minimo_cronista': MINIMO_CRONISTA,
         'total_misiones': sum(len(fila['faltan']) + len(fila['confirmar']) for fila in filas),
+    })
+
+
+def lugar_detalle(request, pk):
+    sitio = get_object_or_404(lugares_activos(), pk=pk)
+    municipio = f', {sitio.municipio.nombre}' if sitio.municipio else ''
+    seo = {'titulo': f'{sitio.nombre}{municipio} — InfoTrip',
+           'descripcion': f'{sitio.get_subtipo_display()} en Jalisco: ubicación, contacto y reseñas de viajeros.'}
+    return render(request, 'destinos/lugar.html', {
+        'sitio': sitio, 'seo': seo, 'estado': estado_de_lugar(sitio), 'hoy': timezone.localdate().isoformat(),
+        'resenas': Paginator(resenas_publicas_de_lugar(sitio), 10).get_page(request.GET.get('resenas')),
+        'como_llegar': 'https://www.google.com/maps/dir/?' + urlencode(
+            {'api': 1, 'destination': f'{sitio.latitud},{sitio.longitud}'}),
     })

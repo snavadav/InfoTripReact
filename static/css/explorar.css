@@ -203,3 +203,11 @@ a.trip-card img, .photo-placeholder { width: 76px; height: 76px; border-radius: 
   .detail-layout { grid-template-columns: minmax(0, 1fr); }
   .directions-button { min-height: 44px; }
 }
+
+/* Ficha de un lugar */
+.lugar-nota { margin-top: .25rem; color: var(--texto-2); font-size: .9375rem; }
+.lugar-nota strong { font-weight: 600; color: var(--texto); }
+.lugar-aviso { margin-bottom: 1rem; padding: .6rem .8rem; border-radius: var(--radio-s); background: var(--aviso-suave); color: var(--aviso); font-size: .9375rem; font-weight: 500; }
+.estado-lugar[aria-pressed="true"] { border-color: var(--acento); color: var(--acento); }
+#estado-mensaje { color: var(--texto-2); font-size: .875rem; }
+#estado-mensaje:empty { display: none; }

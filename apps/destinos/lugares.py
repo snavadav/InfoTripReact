@@ -5,6 +5,7 @@ de la dirección, y se usa solo para calcular distancias: no se guarda en ningú
 """
 from math import cos, radians
 
+from django.urls import reverse
 from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework import serializers
 from rest_framework.permissions import AllowAny
@@ -12,6 +13,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
 
+from apps.comunidad.selectors import con_resumen_de_resenas
 from apps.core.geo import distancia_km
 from .models import Lugar
 
@@ -36,7 +38,7 @@ class CercaThrottle(AnonRateThrottle):
 
 
 def activos():
-    return Lugar.objects.filter(es_activo=True).select_related('municipio')
+    return con_resumen_de_resenas(Lugar.objects.filter(es_activo=True).select_related('municipio'))
 
 
 def cerca_de(latitud, longitud, radio_km=RADIO_CERCA_KM, tipo='', limite=MAXIMO_CERCA):
@@ -73,13 +75,20 @@ class LugarSerializer(serializers.ModelSerializer):
     subtipo_nombre = serializers.CharField(source='get_subtipo_display', read_only=True)
     municipio = serializers.CharField(source='municipio.nombre', read_only=True, default='')
     distancia_km = serializers.FloatField(read_only=True, default=None)
+    url = serializers.SerializerMethodField()
+    calificacion_promedio = serializers.FloatField(read_only=True, default=None)
+    num_resenas = serializers.IntegerField(read_only=True, default=0)
     osm_url = serializers.SerializerMethodField()
     atribucion = serializers.SerializerMethodField()
 
     class Meta:
         model = Lugar
         fields = ['id', 'nombre', 'tipo', 'tipo_nombre', 'subtipo_nombre', 'municipio', 'latitud', 'longitud',
-                  'direccion', 'telefono', 'sitio_web', 'horario', 'distancia_km', 'osm_url', 'atribucion']
+                  'direccion', 'telefono', 'sitio_web', 'horario', 'distancia_km', 'url', 'calificacion_promedio',
+                  'num_resenas', 'osm_url', 'atribucion']
+
+    def get_url(self, lugar) -> str:
+        return reverse('lugar-detalle', kwargs={'pk': lugar.pk})
 
     def get_osm_url(self, lugar) -> str:
         return f'https://www.openstreetmap.org/{lugar.osm_id}' if lugar.osm_id else ''

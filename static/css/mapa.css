@@ -68,3 +68,5 @@
 .lugar-popup p { margin: .15rem 0; font-size: .8125rem; }
 .lugar-popup-acciones { display: flex; flex-wrap: wrap; gap: .25rem .7rem; margin-top: .35rem; font-size: .8125rem; }
 .leaflet-popup-content .lugar-popup-credito { margin-top: .35rem; color: var(--texto-3); font-size: .6875rem; }
+
+.leaflet-popup-content .lugar-popup-nota { color: var(--texto); font-weight: 600; }

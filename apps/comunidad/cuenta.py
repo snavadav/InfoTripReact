@@ -17,8 +17,8 @@ from apps.metricas.models import Evento
 from apps.usuarios.models import CodigoAcceso
 from apps.usuarios.sesion import borrar_cookie_refresh
 from .models import (
-    Aporte, Colaboracion, Confirmacion, Favorito, GastoReal, Notificacion, Participante, PasaporteCompartido, Viaje,
-    VisitaComprobada,
+    Aporte, Colaboracion, Confirmacion, ConfirmacionLugar, Favorito, GastoReal, Notificacion, Participante,
+    PasaporteCompartido, ResenaLugar, Viaje, VisitaComprobada,
 )
 
 TEXTO_ELIMINADO = '[Eliminado por su autor]'
@@ -38,7 +38,8 @@ def anonimizar_cuenta(usuario):
         estado='retirado', texto=TEXTO_ELIMINADO, imagen='', miniatura=''
     )
     Colaboracion.objects.filter(autor=usuario).update(estado='oculto', texto=TEXTO_ELIMINADO, fuente='')
-    for modelo in (Viaje, Favorito, Confirmacion, VisitaComprobada):
+    ResenaLugar.objects.filter(autor=usuario).update(estado='retirado', texto=TEXTO_ELIMINADO)
+    for modelo in (Viaje, Favorito, Confirmacion, ConfirmacionLugar, VisitaComprobada):
         modelo.objects.filter(autor=usuario).delete()
     # En botes de otras personas su parte se queda, para que las cuentas del grupo sigan cuadrando.
     Participante.objects.filter(usuario=usuario).update(usuario=None)
