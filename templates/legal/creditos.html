@@ -1,9 +1,12 @@
 {% extends 'base.html' %}{% load static %}
-{% block title %}Créditos de fotografías — InfoTrip{% endblock %}
+{% block title %}Créditos — InfoTrip{% endblock %}
 {% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/comunidad.css' %}">{% endblock %}
 {% block content %}{% include 'partials/navBar.html' %}
 <main class="explore-shell legal-page">
-  <h1>Créditos de fotografías</h1>
+  <h1>Créditos</h1>
+  <h2>Mapas y lugares</h2>
+  <p>El mapa y parte de los lugares provienen de <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© colaboradores de OpenStreetMap</a>, con licencia ODbL. Cada ficha importada lo indica.</p>
+  <h2>Fotografías</h2>
   <p>Estas fotografías provienen de Wikimedia Commons y se muestran redimensionadas, bajo la licencia que indica cada una.</p>
   <ul>
     {% for foto in fotos %}<li>{{ foto.alt }}: <a href="{{ foto.fuente }}" target="_blank" rel="noopener noreferrer">{{ foto.autor }}</a>, <a href="{{ foto.licencia_url }}" target="_blank" rel="noopener noreferrer">{{ foto.licencia }}</a>.</li>{% endfor %}

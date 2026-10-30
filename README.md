@@ -234,6 +234,7 @@ Registrarse o iniciar sesión envía un código al correo, y `verificar-codigo` 
 | `python manage.py generar_miniaturas` | Crea las miniaturas de fotos anteriores a este campo; basta una vez |
 | `python manage.py purgar_eventos` | Borra los eventos de uso de más de 13 meses |
 | `python manage.py cargar_destinos_iniciales` | Carga opcional del catálogo inicial |
+| `python manage.py importar_osm` | Importa lugares de OpenStreetMap, ocultos hasta publicarlos; gratis y sin cuenta ([guía](docs/importar-osm.md)) |
 
 Los registros van a la salida estándar. `LOG_LEVEL` ajusta el detalle, y nunca incluyen correos ni contraseñas. Copias de seguridad, restauración y monitoreo en [la guía de operación](docs/operacion.md).
 

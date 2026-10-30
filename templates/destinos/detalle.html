@@ -15,7 +15,7 @@
     </div>
     <div class="detail-information">
       <section><h2>Conoce el lugar</h2><div class="description">{{ lugar.descripcion|linebreaksbr }}</div><div class="category-chips">{% for categoria in lugar.categorias %}<span>{{ categoria }}</span>{% endfor %}</div></section>
-      <section><h2>Ubicación</h2><p>{{ lugar.municipio }}, Jalisco</p>{% if lugar.direccion %}<p>{{ lugar.direccion }}</p>{% endif %}{% if not lugar.editorial %}<p class="coordinates">{{ lugar.latitud }}, {{ lugar.longitud }}</p>{% endif %}</section>
+      <section><h2>Ubicación</h2>{% if lugar.osm_url %}<p class="community-note">Nombre y ubicación: © <a href="{{ lugar.osm_url }}" target="_blank" rel="noopener noreferrer">colaboradores de OpenStreetMap</a> (<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">ODbL</a>)</p>{% endif %}<p>{{ lugar.municipio }}, Jalisco</p>{% if lugar.direccion %}<p>{{ lugar.direccion }}</p>{% endif %}{% if not lugar.editorial %}<p class="coordinates">{{ lugar.latitud }}, {{ lugar.longitud }}</p>{% endif %}</section>
       <section><h2>Servicios</h2>{% if lugar.servicios %}<ul class="services">{% for servicio in lugar.servicios %}<li>{{ servicio }}</li>{% endfor %}</ul>{% else %}<p>Aún no hay servicios confirmados para este lugar.</p>{% endif %}</section>
     </div>
   </div>

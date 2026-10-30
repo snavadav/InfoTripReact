@@ -73,6 +73,7 @@ def presentar(destino):
         'imagen': foto, 'foto_url': fotos[0].imagen.url if fotos else '',
         'alt': fotos[0].texto if fotos else alt, 'editorial': False,
         'credito': None if fotos else catalogo,
+        'osm_url': f'https://www.openstreetmap.org/{destino.osm_id}' if destino.osm_id else '',
         'miniatura_url': (fotos[0].miniatura.url if fotos and fotos[0].miniatura else
                           static(catalogo['miniatura']) if catalogo and not fotos else ''),
     }
@@ -150,13 +151,14 @@ class ExploracionForm(forms.Form):
 
     def __init__(self, *args, editorial=False, **kwargs):
         super().__init__(*args, **kwargs)
-        for campo, modelo in [
-            ('categoria', Categoria),
-            ('municipio', Municipio),
-            ('region', Region),
-            ('servicio', Servicio),
+        # Solo lo que tiene destinos publicados: un filtro sin resultados no le sirve a nadie.
+        for campo, modelo, relacion in [
+            ('categoria', Categoria, 'destinos__es_activo'),
+            ('municipio', Municipio, 'destinos__es_activo'),
+            ('region', Region, 'municipios__destinos__es_activo'),
+            ('servicio', Servicio, 'destinos__es_activo'),
         ]:
-            opciones = list(modelo.objects.values_list('slug', 'nombre'))
+            opciones = list(modelo.objects.filter(**{relacion: True}).distinct().values_list('slug', 'nombre'))
             if editorial and campo != 'servicio':
                 opciones = sorted({(slugify(lugar[campo]), lugar[campo]) for lugar in INSPIRACION})
             self.fields[campo].choices = [('', 'Todos')] + opciones
