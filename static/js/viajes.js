@@ -96,6 +96,20 @@
     const card=node('article');card.className='trip-card';card.append(node('h3',item.nombre),node('p',item.destino),node('p',`${item.fecha_inicio} → ${item.fecha_fin} · ${item.personas} viajeros`),node('p',`Estimado: ${money(cents(item.resumen.total))}`));
     const actions=node('div');actions.className='trip-actions';
     actions.append(button('Editar',()=>edit(item)),button('Duplicar',()=>edit(item,true)));
+    const shareTrip=button('Compartir',async()=>{
+      try{
+        const data=await InfoTrip.api(`/api/v1/mis-viajes/${item.id}/compartir/`,{method:'POST'});
+        item.enlace_publico=data.enlace_publico;stopSharing.hidden=false;
+        const feedback=await InfoTrip.share(item.nombre,`${location.origin}/escapadas/${data.enlace_publico}/?ref=compartido`);
+        if(feedback)status.textContent=feedback;
+      }catch(error){status.textContent=error.message;}
+    });
+    const stopSharing=button('Dejar de compartir',async()=>{
+      try{await InfoTrip.api(`/api/v1/mis-viajes/${item.id}/compartir/`,{method:'DELETE'});item.enlace_publico=null;stopSharing.hidden=true;status.textContent='El enlace anterior ya no funciona.';}
+      catch(error){status.textContent=error.message;}
+    });
+    stopSharing.hidden=!item.enlace_publico;
+    actions.append(shareTrip,stopSharing);
     const remove=button('Eliminar',async()=>{
       if(saving)return;
       if(!confirm(`¿Eliminar la escapada «${item.nombre}»?`))return;

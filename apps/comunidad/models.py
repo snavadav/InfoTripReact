@@ -19,6 +19,8 @@ class Viaje(models.Model):
     lugares = models.ManyToManyField('destinos.Destino', blank=True, related_name='viajes_guardados')
     # Cuándo se invitó al viajero a contar cómo le fue; una sola vez por escapada.
     recordatorio_enviado = models.DateTimeField(null=True, blank=True)
+    # Enlace de solo lectura para quien organiza con otras personas; vacío si no se comparte.
+    enlace_publico = models.UUIDField(null=True, blank=True, unique=True, editable=False)
     actualizado = models.DateTimeField(auto_now=True)
 
     class Meta:

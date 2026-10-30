@@ -1,0 +1,39 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}{{ viaje.nombre }} — Escapada en InfoTrip{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/comunidad.css' %}">{% endblock %}
+{% block content %}{% include 'partials/navBar.html' %}
+<main class="explore-shell legal-page">
+  <span class="eyebrow">ESCAPADA COMPARTIDA POR {{ viaje.autor.nombre|upper }}</span>
+  <h1>{{ viaje.nombre }}</h1>
+  <p>{{ viaje.destino }} · {{ viaje.fecha_inicio|date:'d/m/Y' }} a {{ viaje.fecha_fin|date:'d/m/Y' }} · {{ viaje.personas }} viajero{{ viaje.personas|pluralize }}</p>
+
+  <section class="community-box">
+    <h2>Presupuesto estimado</h2>
+    <p><strong>{{ resumen.total }} MXN</strong> en total · <strong>{{ resumen.por_persona }} MXN</strong> por persona</p>
+    <p class="community-note">Son estimaciones de quien organiza, no cotizaciones.</p>
+    {% if viaje.gastos %}<ul>{% for gasto in viaje.gastos %}<li>{{ gasto.descripcion }}: {{ gasto.monto }} MXN × {{ gasto.cantidad }} ({{ gasto.reparto }})</li>{% endfor %}</ul>{% endif %}
+  </section>
+
+  {% if viaje.actividades %}
+  <section class="community-box">
+    <h2>Agenda</h2>
+    <ul>{% for actividad in viaje.actividades %}<li>Día {{ actividad.dia }}{% if actividad.hora %}, {{ actividad.hora }}{% endif %}: {{ actividad.titulo }}{% if actividad.notas %} — {{ actividad.notas }}{% endif %}</li>{% endfor %}</ul>
+  </section>
+  {% endif %}
+
+  {% if lugares %}
+  <section class="community-box">
+    <h2>Lugares</h2>
+    <ul>{% for lugar in lugares %}<li><a href="{% url 'destino-detalle' lugar.slug %}">{{ lugar.nombre }}</a></li>{% endfor %}</ul>
+  </section>
+  {% endif %}
+
+  <section class="community-box">
+    <h2>¿Vas a organizar tu propia salida?</h2>
+    <p>Calcula cuánto le toca a cada quien y guarda tu plan.</p>
+    <a href="{% url 'mis-viajes' %}?destino={{ viaje.destino|urlencode }}">Crear mi escapada →</a>
+  </section>
+  {% include 'destinos/footer.html' %}
+</main>
+{% endblock %}

@@ -19,6 +19,10 @@
     catch(error){status.textContent=error.message;}
     finally{toggle.disabled=false;}
   });
+  document.getElementById('share-place').addEventListener('click',async()=>{
+    const feedback=await InfoTrip.share(document.title,`${location.origin}${location.pathname}?ref=compartido`,root.dataset.slug);
+    if(feedback)status.textContent=feedback;
+  });
   document.querySelectorAll('.collaboration-form').forEach(form=>form.addEventListener('submit',event=>{
     event.preventDefault();InfoTrip.submit(form,async feedback=>{
       const body=Object.fromEntries(new FormData(form));body.tipo=form.dataset.type;

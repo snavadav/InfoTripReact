@@ -1,6 +1,6 @@
 {% if not lugar.editorial %}
 <section id="practical-info" class="community-section" data-slug="{{ lugar.slug }}" aria-labelledby="practical-title">
-  <div class="contribution-actions"><button id="favorite-toggle" type="button" aria-pressed="false" disabled>Guardar lugar</button><a href="{% url 'mis-viajes' %}?destino={{ lugar.nombre|urlencode }}">Agregar a una nueva escapada →</a><a href="{% url 'favoritos' %}" data-session-only hidden>Mis favoritos</a></div>
+  <div class="contribution-actions"><button id="favorite-toggle" type="button" aria-pressed="false" disabled>Guardar lugar</button><a href="{% url 'mis-viajes' %}?destino={{ lugar.nombre|urlencode }}">Agregar a una nueva escapada →</a><a href="{% url 'favoritos' %}" data-session-only hidden>Mis favoritos</a><button id="share-place" type="button">Compartir</button></div>
   <p id="favorite-status" role="status"></p>
   <h2 id="practical-title">Antes de visitar este lugar</h2>
   <p class="community-note">Datos aportados por la comunidad y revisados editorialmente. No garantizan condiciones actuales: confirma con el lugar antes de salir.</p>

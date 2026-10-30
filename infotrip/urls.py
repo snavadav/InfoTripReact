@@ -12,9 +12,10 @@ from django.conf import settings
 from django.conf.urls.static import static
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerSplitView
 from apps.comunidad.cola import cola_moderacion
+from apps.comunidad.viajes import viaje_publico
 from apps.core.views import robots, salud
 from apps.destinos.sitemaps import DestinosSitemap, PaginasSitemap
-from apps.usuarios.views_frontend import login_view, registro_view
+from apps.usuarios.views_frontend import baja_avisos, login_view, registro_view
 from apps.destinos.frontend import creditos, inicio, listado, detalle
 from apps.metricas.views import EventosView, panel as panel_metricas
 
@@ -50,6 +51,8 @@ urlpatterns = [
     path('privacidad/', vista_legal('legal/privacidad.html'), name='privacidad'),
     path('terminos/', vista_legal('legal/terminos.html'), name='terminos'),
     path('creditos/', creditos, name='creditos'),
+    path('escapadas/<uuid:enlace>/', viaje_publico, name='viaje-publico'),
+    path('baja-avisos/', baja_avisos, name='baja-avisos'),
     path('api/v1/auth/', include('apps.usuarios.urls')),
     path('api/v1/', include('apps.destinos.urls')),
 

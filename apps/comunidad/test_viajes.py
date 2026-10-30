@@ -1,7 +1,9 @@
 from copy import deepcopy
 from django.contrib.auth import get_user_model
 from django.test import TestCase
-from rest_framework.test import APIClient
+from rest_framework.test import APIClient, APITestCase
+from rest_framework_simplejwt.tokens import RefreshToken
+from apps.usuarios.models import Usuario
 from .models import Viaje
 
 
@@ -71,3 +73,53 @@ class ViajesTests(TestCase):
         self.assertContains(response,'trip-form')
         self.assertContains(response,'js/viajes.js')
         self.assertContains(response,'data-trips="/mis-viajes/"')
+
+
+class CompartirViajeTests(APITestCase):
+    def setUp(self):
+        self.ana = Usuario.objects.create_user('ana@example.com', 'Ana', 'P', 'Prueba-segura-493!', es_verificado=True)
+        self.leo = Usuario.objects.create_user('leo@example.com', 'Leo', 'P', 'Prueba-segura-493!', es_verificado=True)
+        self.viaje = Viaje.objects.create(
+            autor=self.ana, nombre='Con amigos', destino='Tapalpa', fecha_inicio='2026-12-01', fecha_fin='2026-12-02',
+            personas=2, presupuesto='1234567', notas='Nota privada', pendientes=[{'texto': 'Pendiente privado', 'hecho': False}],
+            gastos=[{'concepto': 'comida', 'descripcion': 'Cena', 'monto': '100.00', 'reparto': 'individual', 'cantidad': 1}])
+
+    def entrar(self, usuario):
+        token = RefreshToken.for_user(usuario)
+        token['correo_confirmado'] = True
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + str(token.access_token))
+
+    def url(self):
+        return f'/api/v1/mis-viajes/{self.viaje.pk}/compartir/'
+
+    def test_crear_ver_sin_datos_privados_y_revocar(self):
+        self.entrar(self.ana)
+        enlace = self.client.post(self.url()).data['enlace_publico']
+        self.assertEqual(self.client.post(self.url()).data['enlace_publico'], enlace)
+        self.client.credentials()
+        pagina = self.client.get(f'/escapadas/{enlace}/')
+        self.assertContains(pagina, 'Con amigos')
+        self.assertContains(pagina, 'Cena')
+        self.assertContains(pagina, '200.00 MXN')
+        for privado in ('Nota privada', 'Pendiente privado', 'ana@example.com', '1234567'):
+            self.assertNotContains(pagina, privado)
+        self.assertContains(pagina, 'noindex')
+        self.entrar(self.ana)
+        self.assertEqual(self.client.delete(self.url()).status_code, 204)
+        self.assertEqual(self.client.get(f'/escapadas/{enlace}/').status_code, 404)
+
+    def test_solo_quien_la_creo_la_comparte(self):
+        self.entrar(self.leo)
+        self.assertEqual(self.client.post(self.url()).status_code, 404)
+        self.client.delete(self.url())
+        self.client.credentials()
+        self.assertEqual(self.client.post(self.url()).status_code, 401)
+        self.viaje.refresh_from_db()
+        self.assertIsNone(self.viaje.enlace_publico)
+
+    def test_enlace_inexistente_o_de_cuenta_inactiva(self):
+        self.assertEqual(self.client.get('/escapadas/00000000-0000-0000-0000-000000000000/').status_code, 404)
+        self.entrar(self.ana)
+        enlace = self.client.post(self.url()).data['enlace_publico']
+        Usuario.objects.filter(pk=self.ana.pk).update(es_activo=False)
+        self.assertEqual(self.client.get(f'/escapadas/{enlace}/').status_code, 404)

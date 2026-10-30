@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import PublicarView, MisAportesView, EditarAporteView, ReportarView
-from .viajes import MisViajesView, ViajeView, VincularLugarView
+from .viajes import CompartirViajeView, MisViajesView, ViajeView, VincularLugarView
 from .practica import ColaboracionesView, ConfirmarDatoView, FavoritosView, FavoritoView
 from .avisos import NotificacionesView, NotificacionesLeidasView
 from .cuenta import EliminarCuentaView
@@ -9,6 +9,7 @@ urlpatterns = [
     path('notificaciones/', NotificacionesView.as_view(), name='notificaciones'),
     path('notificaciones/leidas/', NotificacionesLeidasView.as_view(), name='notificaciones-leidas'),
     path('mis-viajes/<int:pk>/lugares/', VincularLugarView.as_view(), name='vincular-lugar'),
+    path('mis-viajes/<int:pk>/compartir/', CompartirViajeView.as_view(), name='compartir-viaje'),
     path('destinos/<slug:slug>/colaboraciones/', ColaboracionesView.as_view(), name='colaboraciones'),
     path('colaboraciones/<int:pk>/confirmar/', ConfirmarDatoView.as_view(), name='confirmar-dato'),
     path('favoritos/', FavoritosView.as_view(), name='favoritos-api'),

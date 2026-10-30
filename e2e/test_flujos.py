@@ -11,6 +11,7 @@ from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.core import mail
 from django.core.cache import cache
 
+from apps.comunidad.models import Viaje
 from apps.destinos.models import Destino, Municipio, Region
 from apps.usuarios.models import Usuario
 
@@ -137,6 +138,32 @@ class FlujosTests(StaticLiveServerTestCase):
         self.pagina.click('#submitBtn')
         self.pagina.wait_for_url(self.live_server_url + '/')
         self.assertEqual(len(mail.outbox), enviados)
+
+    def test_compartir_una_ficha_y_una_escapada(self):
+        self.contexto.grant_permissions(['clipboard-read', 'clipboard-write'], origin=self.live_server_url)
+        self.pagina.add_init_script("Object.defineProperty(navigator, 'share', {value: undefined})")
+        self.abrir('/destinos/mirador/')
+        self.pagina.click('#share-place')
+        self.pagina.wait_for_selector('#favorite-status:has-text("Enlace copiado")')
+        self.assertIn('/destinos/mirador/?ref=compartido', self.pagina.evaluate('navigator.clipboard.readText()'))
+
+        viaje = Viaje.objects.create(autor=self.usuario, nombre='Con amigos', destino='Tapalpa', personas=4,
+                                     presupuesto=1000, fecha_inicio='2026-12-01', fecha_fin='2026-12-02',
+                                     notas='Nota privada')
+        self.iniciar_sesion()
+        self.abrir('/mis-viajes/')
+        self.pagina.locator('.trip-card button', has_text='Compartir').first.click()
+        self.pagina.wait_for_selector('#trip-status:has-text("Enlace copiado")')
+        enlace = self.pagina.evaluate('navigator.clipboard.readText()')
+        viaje.refresh_from_db()
+        self.assertIn(str(viaje.enlace_publico), enlace)
+        anonimo = self.navegador.new_context()
+        pagina = anonimo.new_page()
+        pagina.goto(enlace)
+        self.assertIn('Con amigos', pagina.inner_text('main'))
+        self.assertNotIn('Nota privada', pagina.content())
+        anonimo.close()
+        self.pagina.wait_for_load_state('networkidle')
 
     def test_tras_iniciar_sesion_vuelve_a_la_ficha(self):
         self.abrir('/destinos/mirador/')
