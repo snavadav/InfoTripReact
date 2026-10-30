@@ -159,5 +159,5 @@ class PoliticaDeContenidoTests(TestCase):
         # Con la CSP, un <script> sin src no se ejecutaría: el código va en static/js/.
         for plantilla in Path(settings.BASE_DIR, 'templates').rglob('*.html'):
             texto = plantilla.read_text(encoding='utf-8')
-            self.assertNotRegex(texto, r'<script(?![^>]*\ssrc=)(?![^>]*application/json)[^>]*>', plantilla.name)
+            self.assertNotRegex(texto, r'<script(?![^>]*\ssrc=)(?![^>]*application/(ld\+)?json)[^>]*>', plantilla.name)
             self.assertNotRegex(texto, r'\son[a-z]+=', plantilla.name)

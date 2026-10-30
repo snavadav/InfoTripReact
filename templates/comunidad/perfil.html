@@ -1,5 +1,6 @@
 {% extends 'base.html' %}{% load static %}
 {% block title %}Mi perfil — InfoTrip{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
 {% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/comunidad.css' %}">{% endblock %}
 {% block content %}{% include 'partials/navBar.html' %}
 <main class="explore-shell"><a class="back-link" href="/destinos/">← Explorar destinos</a><h1>Tu espacio de viajero</h1><p id="profile-status" role="status">Cargando perfil…</p>

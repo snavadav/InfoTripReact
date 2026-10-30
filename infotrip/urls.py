@@ -4,6 +4,7 @@ Enrutador principal del proyecto
 """
 
 from django.contrib import admin
+from django.contrib.sitemaps.views import sitemap
 from django.shortcuts import render
 from django.views.generic import TemplateView
 from django.urls import path, include
@@ -11,7 +12,8 @@ from django.conf import settings
 from django.conf.urls.static import static
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerSplitView
 from apps.comunidad.cola import cola_moderacion
-from apps.core.views import salud
+from apps.core.views import robots, salud
+from apps.destinos.sitemaps import DestinosSitemap, PaginasSitemap
 from apps.usuarios.views_frontend import login_view, registro_view
 from apps.destinos.frontend import inicio, listado, detalle
 
@@ -25,6 +27,9 @@ def vista_legal(plantilla):
 
 urlpatterns = [
     path('health/', salud, name='salud'),
+    path('robots.txt', robots, name='robots'),
+    path('sitemap.xml', sitemap, {'sitemaps': {'paginas': PaginasSitemap, 'destinos': DestinosSitemap}},
+         name='django.contrib.sitemaps.views.sitemap'),
     path('favoritos/', TemplateView.as_view(template_name='comunidad/favoritos.html'), name='favoritos'),
     path('mis-viajes/', TemplateView.as_view(template_name='comunidad/viajes.html'), name='mis-viajes'),
     # Antes de admin.site.urls para que el admin no la tome como una app.

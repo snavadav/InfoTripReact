@@ -1,5 +1,6 @@
 {% extends 'base.html' %}{% load static %}
 {% block title %}Mis favoritos — InfoTrip{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
 {% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/comunidad.css' %}">{% endblock %}
 {% block content %}{% include 'partials/navBar.html' %}<main class="explore-shell" style="padding-bottom:120px"><span class="eyebrow">LUGARES PARA DESPUÉS</span><h1>Mis favoritos</h1><p>Guarda lugares desde sus fichas y agrégalos a tus escapadas.</p><p><a href="/destinos/">Explorar destinos →</a> · <a href="/mis-viajes/">Mis viajes →</a></p><p id="favorites-status" role="status"></p><p id="favorites-login" hidden><a href="/login/">Inicia sesión</a> para consultar tus lugares guardados.</p><div id="favorites-list"></div><button type="button" id="favorites-more" hidden>Cargar más</button>{% include 'destinos/footer.html' %}</main>{% endblock %}
 {% block extra_js %}<script src="{% static 'js/cuenta-api.js' %}"></script><script src="{% static 'js/favoritos.js' %}" defer></script>{% endblock %}

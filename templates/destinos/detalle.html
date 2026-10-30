@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %}{{ lugar.nombre }} — InfoTrip{% endblock %}
+{% block title %}{{ seo.titulo }}{% endblock %}
+{% block datos_estructurados %}<script type="application/ld+json">{{ seo.datos_estructurados|safe }}</script>{% endblock %}
 {% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/comunidad.css' %}">{% endblock %}
 {% block content %}
 {% include 'partials/navBar.html' %}

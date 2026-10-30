@@ -18,6 +18,7 @@ from apps.comunidad.selectors import (
 )
 from .filtros import filtrar_destinos
 from .models import Destino, Categoria, Municipio, Region, Servicio
+from .seo import seo_de_destino
 from .views import destinos_publicos
 
 
@@ -215,11 +216,13 @@ def detalle(request, slug):
     else:
         destino = get_object_or_404(destinos_publicos(con_fotos=True), slug=slug)
         lugar = presentar(destino)
-    contexto = {'lugar': completar(lugar), 'hoy': timezone.localdate().isoformat()}
+    lugar = completar(lugar)
+    contexto = {'lugar': lugar, 'hoy': timezone.localdate().isoformat()}
     if destino is not None:
         contexto['practica'] = ficha_practica(destino)
         contexto['campos_practicos'] = Colaboracion.CAMPOS
         contexto['preguntas'] = Paginator(preguntas_publicas(destino), 8).get_page(request.GET.get('preguntas'))
         contexto['resumen'] = resumen(destino)
         contexto['aportes'] = Paginator(aportes_publicos(destino), 9).get_page(request.GET.get('aportes'))
+    contexto['seo'] = seo_de_destino(lugar, contexto.get('resumen'))
     return render(request, 'destinos/detalle.html', contexto)

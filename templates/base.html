@@ -5,6 +5,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{% block title %}InfoTrip — Descubre Jalisco con información real{% endblock %}</title>
+  <meta name="description" content="{{ seo.descripcion|default:'Planea tu escapada por Jalisco con información de otros viajeros: lugares, datos prácticos, gastos reales y mapa.' }}">
+  <link rel="canonical" href="{{ url_canonica }}">
+  <meta property="og:site_name" content="InfoTrip">
+  <meta property="og:locale" content="es_MX">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="{{ url_canonica }}">
+  <meta property="og:title" content="{{ seo.titulo|default:'InfoTrip — Descubre Jalisco con información real' }}">
+  <meta property="og:description" content="{{ seo.descripcion|default:'Planea tu escapada por Jalisco con información de otros viajeros.' }}">
+  <meta property="og:image" content="{% if seo.imagen %}{{ seo.imagen }}{% else %}{{ url_base }}{% static 'images/tequila.jpg' %}{% endif %}">
+  <meta name="twitter:card" content="summary_large_image">
+  {% block robots %}{% endblock %}
+  {% block datos_estructurados %}{% endblock %}
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
   <style>

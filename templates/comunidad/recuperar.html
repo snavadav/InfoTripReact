@@ -1,5 +1,6 @@
 {% extends 'base.html' %}{% load static %}
 {% block title %}Recuperar acceso — InfoTrip{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
 {% block extra_css %}<meta name="referrer" content="no-referrer"><link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/comunidad.css' %}">{% endblock %}
 {% block content %}{% include 'partials/navBar.html' %}<main class="explore-shell account-shell"><a class="back-link" href="/login/">← Volver al inicio de sesión</a><div class="community-box"><h1>Recupera tu acceso</h1><form id="recovery-form" class="community-form"><label>Correo electrónico<input type="email" name="email" required autocomplete="email"></label><button>Enviar enlace</button><p class="form-status" role="status"></p></form><form id="reset-form" class="community-form" hidden><label>Contraseña nueva<input type="password" name="password" required minlength="8" autocomplete="new-password"></label><label>Confirmar contraseña<input type="password" name="password2" required minlength="8" autocomplete="new-password"></label><button>Guardar contraseña</button><p class="form-status" role="status"></p></form></div></main>{% endblock %}
 {% block extra_js %}<script src="{% static 'js/cuenta-api.js' %}"></script><script src="{% static 'js/recuperar.js' %}"></script>{% endblock %}
