@@ -47,6 +47,7 @@ def anonimizar_cuenta(usuario):
     usuario.bio = ''
     usuario.es_activo = False
     usuario.es_verificado = False
+    usuario.avisos_correo = False
     usuario.set_unusable_password()
     usuario.save()
     transaction.on_commit(lambda: [archivo.storage.delete(archivo.name) for archivo in archivos])

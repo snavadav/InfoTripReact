@@ -73,9 +73,10 @@ class MigracionHistorialTests(TransactionTestCase):
 
     def migrar(self, objetivo):
         executor = MigrationExecutor(connection)
-        executor.loader.build_graph()
+        # Solo comunidad retrocede: las demás apps siguen al día, y su estado debe reflejarlo.
+        otras = [nodo for nodo in executor.loader.graph.leaf_nodes() if nodo[0] != 'comunidad']
         executor.migrate(objetivo)
-        return executor.loader.project_state(objetivo).apps
+        return executor.loader.project_state(otras + objetivo).apps
 
     def tearDown(self):
         # Deja la base en la última migración para las demás pruebas.

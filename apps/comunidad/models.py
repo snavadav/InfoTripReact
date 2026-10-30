@@ -17,6 +17,8 @@ class Viaje(models.Model):
     pendientes = models.JSONField(default=list)
     notas = models.TextField(max_length=3000, blank=True)
     lugares = models.ManyToManyField('destinos.Destino', blank=True, related_name='viajes_guardados')
+    # Cuándo se invitó al viajero a contar cómo le fue; una sola vez por escapada.
+    recordatorio_enviado = models.DateTimeField(null=True, blank=True)
     actualizado = models.DateTimeField(auto_now=True)
 
     class Meta:

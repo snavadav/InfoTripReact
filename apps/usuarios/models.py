@@ -57,6 +57,8 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     es_activo     = models.BooleanField(default=True)
     es_staff      = models.BooleanField(default=False)
     es_verificado = models.BooleanField(default=False)
+    # Correos de novedades. Los códigos de acceso y la recuperación de contraseña se envían siempre.
+    avisos_correo = models.BooleanField(default=True)
     fecha_registro = models.DateTimeField(auto_now_add=True)
     ultimo_acceso  = models.DateTimeField(null=True, blank=True)
 

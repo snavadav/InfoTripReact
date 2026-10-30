@@ -65,3 +65,19 @@ def dispositivo_recordado(request, usuario, huella):
         return False
     return (datos.get('u') == usuario.pk and datos.get('e') == usuario.email
             and constant_time_compare(datos.get('h', ''), huella))
+
+
+# ─── Baja de correos ──────────────────────────────────────────
+SAL_BAJA_AVISOS = 'infotrip.baja-avisos'
+
+
+def token_baja_avisos(usuario):
+    return signing.dumps(usuario.pk, salt=SAL_BAJA_AVISOS)
+
+
+def usuario_de_baja_avisos(token):
+    """El pk del token, o None si no es válido. No caduca: el enlace debe seguir sirviendo en correos viejos."""
+    try:
+        return signing.loads(token, salt=SAL_BAJA_AVISOS)
+    except signing.BadSignature:
+        return None

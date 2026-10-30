@@ -67,7 +67,7 @@
         const item=node('article',null,'community-box');
         if(!aviso.leida) item.append(node('p','Nuevo','data-freshness data-freshness--recent'));
         item.append(node('p',aviso.texto),node('p',new Date(aviso.creado).toLocaleDateString('es-MX'),'community-note'));
-        if(aviso.enlace){const link=node('a','Ver destino →');link.href=aviso.enlace;item.append(link);}
+        if(aviso.enlace){const link=node('a','Abrir →');link.href=aviso.enlace;item.append(link);}
         notices.append(item);
       });
       if(!data.results.length) notices.append(node('p','No tienes avisos por ahora.'));
@@ -77,6 +77,7 @@
   more.addEventListener('click',load);
   form.addEventListener('submit',event=>{event.preventDefault();InfoTrip.submit(form,async feedback=>{
     const body=new FormData(form);if(!form.elements.foto_perfil.files.length)body.delete('foto_perfil');
+    body.set('avisos_correo',form.elements.avisos_correo.checked);
     const user=await InfoTrip.api('/api/v1/auth/perfil/',{method:'PATCH',body});localStorage.setItem('usuario',JSON.stringify(user));
     feedback.textContent='Perfil guardado.';if(user.foto_perfil){const image=document.getElementById('profile-photo');image.src=user.foto_perfil;image.hidden=false;}
   });});
@@ -98,6 +99,7 @@
     try {
       const user=await InfoTrip.api('/api/v1/auth/perfil/');
       for(const name of ['nombre','apellido','ciudad_origen','bio'])form.elements[name].value=user[name]||'';
+      form.elements.avisos_correo.checked=user.avisos_correo;
       document.getElementById('profile-email').textContent=`${user.email} · ${user.es_verificado?'Correo confirmado':'Correo pendiente'}`;
       if(user.foto_perfil){const image=document.getElementById('profile-photo');image.src=user.foto_perfil;image.hidden=false;}
       document.getElementById('profile-content').hidden=false;status.textContent='';await Promise.all([loadNotices(),load()]);

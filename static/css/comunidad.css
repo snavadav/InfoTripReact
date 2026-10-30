@@ -376,3 +376,6 @@ details[open] summary::before {
 .legal-page h2 { margin: 24px 0 8px; }
 .legal-page ul { margin: 8px 0 8px 20px; }
 .legal-page p, .legal-page li { line-height: 1.6; }
+
+.community-form label.check-label { display: flex; flex-direction: row; gap: 8px; align-items: center; }
+.community-form label.check-label input { width: auto; min-height: 0; }
