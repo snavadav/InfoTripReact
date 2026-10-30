@@ -109,7 +109,10 @@
       catch(error){status.textContent=error.message;}
     });
     stopSharing.hidden=!item.enlace_publico;
-    actions.append(shareTrip,stopSharing);
+    actions.append(shareTrip,stopSharing,button('Bote del grupo',async()=>{
+      try{await InfoTrip.api(`/api/v1/mis-viajes/${item.id}/bote/`,{method:'POST'});location.href=`/mis-viajes/${item.id}/bote/`;}
+      catch(error){status.textContent=error.message;}
+    }));
     const remove=button('Eliminar',async()=>{
       if(saving)return;
       if(!confirm(`¿Eliminar la escapada «${item.nombre}»?`))return;
@@ -117,6 +120,14 @@
       remove.disabled=true;
       try{await InfoTrip.api(`/api/v1/mis-viajes/${item.id}/`,{method:'DELETE'});if(current===item.id){dirty=false;edit();}await load();status.textContent='Escapada eliminada.';}catch(error){status.textContent=error.message;}finally{remove.disabled=false;}
     });actions.append(remove);card.append(actions);list.append(card);
+  }
+  async function loadPots() {
+    const target=document.getElementById('joined-pots');
+    try{
+      const pots=(await InfoTrip.api('/api/v1/mis-botes/')).filter(pot=>!pot.es_organizador);
+      target.hidden=!pots.length;target.replaceChildren(node('h3','Botes en los que participas'));
+      pots.forEach(pot=>{const row=node('p'),link=node('a',`${pot.nombre} · ${pot.personas} personas`);link.href=`/mis-viajes/${pot.id}/bote/`;row.append(link);target.append(row);});
+    }catch{target.hidden=true;}
   }
   async function load(append=false) {
     more.disabled=true;
@@ -154,6 +165,6 @@
   const draft=suggested?null:loadDraft();
   if(draft){edit(draft);dirty=true;status.textContent=InfoTrip.hasSession()?'Recuperamos tu borrador. Guárdalo para conservarlo en tu cuenta.':'Recuperamos tu borrador. Inicia sesión para guardarlo.';}
   calculate();
-  if(InfoTrip.hasSession())load();
+  if(InfoTrip.hasSession())load().then(loadPots);
   else {document.getElementById('trip-login').hidden=false;list.append(node('p','Inicia sesión para ver tus escapadas. Puedes probar el presupuesto antes de entrar.'));}
 })();

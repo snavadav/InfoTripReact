@@ -179,6 +179,7 @@ docker compose --env-file .env.docker down
 | `/login/`, `/registro/`, `/recuperar/` | Acceso a la cuenta |
 | `/perfil/` | Datos personales, avisos de moderación y aportes propios |
 | `/favoritos/`, `/mis-viajes/` | Lugares guardados y planes de viaje |
+| `/mis-viajes/<id>/bote/`, `/botes/<invitación>/` | Bote de la escapada: gastos reales del grupo y quién le debe a quién |
 | `/admin/` | Administración del catálogo, usuarios y moderación |
 | `/admin/moderacion/` | Cola de moderación con contadores (personal) |
 | `/admin/metricas/` | Embudos, retención y fichas útiles (personal) |
@@ -214,6 +215,12 @@ La referencia completa e interactiva está en `/api/v1/docs/` (Swagger) y el esq
 | Viajes | `/api/v1/mis-viajes/<id>/` | GET, PATCH, DELETE |
 | Viajes | `/api/v1/mis-viajes/<id>/lugares/` | POST |
 | Viajes | `/api/v1/mis-viajes/<id>/compartir/` | POST, DELETE |
+| Bote | `/api/v1/mis-viajes/<id>/bote/` | GET, POST, DELETE |
+| Bote | `/api/v1/mis-viajes/<id>/bote/gastos/` | POST |
+| Bote | `/api/v1/mis-viajes/<id>/bote/gastos/<id>/` | PATCH, DELETE |
+| Bote | `/api/v1/mis-viajes/<id>/bote/participantes/<id>/` | DELETE |
+| Bote | `/api/v1/mis-viajes/<id>/bote/publicar/` | POST |
+| Bote | `/api/v1/botes/<invitación>/unirse/`, `/api/v1/mis-botes/` | POST, GET |
 | Cuenta | `/api/v1/mi-cuenta/eliminar/` | POST |
 | Métricas | `/api/v1/eventos/` | POST |
 | Avisos | `/api/v1/notificaciones/` | GET |

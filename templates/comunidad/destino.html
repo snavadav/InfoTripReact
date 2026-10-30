@@ -22,7 +22,7 @@
   </details>
   <div class="contribution-list">
     {% for aporte in aportes %}<article class="community-box">
-      <div class="contribution-heading"><h3>{{ aporte.get_tipo_display }} · {{ aporte.autor.nombre }}</h3><span>{{ aporte.fecha_visita|date:'d/m/Y' }}</span></div>
+      <div class="contribution-heading"><h3>{{ aporte.get_tipo_display }} · {{ aporte.nombre_publico }}</h3><span>{{ aporte.fecha_visita|date:'d/m/Y' }}</span></div>
       {% if aporte.tipo == 'resena' %}<p class="rating">{{ aporte.calificacion }} / 5</p>{% endif %}
       {% if aporte.tipo == 'foto' %}<a href="{{ aporte.imagen.url }}" target="_blank" rel="noopener"><img class="community-photo" src="{% if aporte.miniatura %}{{ aporte.miniatura.url }}{% else %}{{ aporte.imagen.url }}{% endif %}" alt="{{ aporte.texto }}" loading="lazy"></a>{% endif %}
       {% if aporte.tipo == 'gasto' %}<p class="rating">${{ aporte.monto|floatformat:2 }} MXN · {{ aporte.get_concepto_display }}</p>{% endif %}

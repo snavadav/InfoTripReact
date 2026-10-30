@@ -11,6 +11,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerSplitView
+from apps.comunidad.bote import unirse_al_bote
 from apps.comunidad.cola import cola_moderacion
 from apps.comunidad.viajes import viaje_publico
 from apps.core.views import robots, salud
@@ -35,6 +36,8 @@ urlpatterns = [
          name='django.contrib.sitemaps.views.sitemap'),
     path('favoritos/', TemplateView.as_view(template_name='comunidad/favoritos.html'), name='favoritos'),
     path('mis-viajes/', TemplateView.as_view(template_name='comunidad/viajes.html'), name='mis-viajes'),
+    path('mis-viajes/<int:pk>/bote/', TemplateView.as_view(template_name='comunidad/bote.html'), name='bote-pagina'),
+    path('botes/<uuid:enlace>/', unirse_al_bote, name='bote-invitacion'),
     # Antes de admin.site.urls para que el admin no la tome como una app.
     path('admin/moderacion/', admin.site.admin_view(cola_moderacion), name='cola-moderacion'),
     path('admin/metricas/', admin.site.admin_view(panel_metricas), name='panel-metricas'),

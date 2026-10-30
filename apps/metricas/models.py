@@ -12,7 +12,8 @@ class Evento(models.Model):
     DEL_NAVEGADOR = ['registro_iniciado', 'ficha_vista', 'dato_practico_visto', 'enlace_compartido',
                      'visita_por_enlace', 'clic_en_aviso', 'costos_vista']
     DEL_SERVIDOR = ['registro_completado', 'login_completado', 'aporte_enviado', 'aporte_publicado',
-                    'dato_enviado', 'dato_confirmado', 'reporte_enviado', 'viaje_guardado', 'favorito_guardado']
+                    'dato_enviado', 'dato_confirmado', 'reporte_enviado', 'viaje_guardado', 'favorito_guardado',
+                    'bote_creado', 'bote_unido', 'gasto_real_publicado']
 
     nombre = models.CharField(max_length=40)
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,

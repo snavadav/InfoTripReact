@@ -5,7 +5,7 @@ from apps.core.imagenes import imagen_segura, miniatura_de
 
 
 class AporteSerializer(serializers.ModelSerializer):
-    autor_nombre = serializers.CharField(source='autor.nombre', read_only=True)
+    autor_nombre = serializers.CharField(source='nombre_publico', read_only=True)
     destino_nombre = serializers.CharField(source='destino.nombre', read_only=True)
     destino_slug = serializers.CharField(source='destino.slug', read_only=True)
     estado_nombre = serializers.CharField(source='get_estado_display', read_only=True)

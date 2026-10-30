@@ -11,7 +11,7 @@ from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.core import mail
 from django.core.cache import cache
 
-from apps.comunidad.models import Viaje
+from apps.comunidad.models import Aporte, Viaje
 from apps.destinos.models import Destino, Municipio, Region
 from apps.metricas.models import Evento
 from apps.usuarios.models import Usuario
@@ -241,6 +241,51 @@ class FlujosTests(StaticLiveServerTestCase):
         self.pagina.keyboard.press('Tab')
         estilo = self.pagina.evaluate('getComputedStyle(document.activeElement).outlineStyle')
         self.assertEqual(estilo, 'solid')
+
+    def test_bote_entre_dos_personas(self):
+        viaje = Viaje.objects.create(autor=self.usuario, nombre='Con amigos', destino='Tapalpa', personas=2,
+                                     fecha_inicio='2026-01-01', fecha_fin='2026-01-02', presupuesto='100')
+        viaje.lugares.add(self.destino)
+        self.iniciar_sesion()
+        self.abrir('/mis-viajes/')
+        self.pagina.click('button:has-text("Bote del grupo")')
+        self.pagina.wait_for_selector('#bote-contenido:not([hidden])')
+        self.pagina.fill('#bote-form [name="descripcion"]', 'Cena')
+        self.pagina.fill('#bote-form [name="monto"]', '300')
+        self.pagina.click('#bote-form button[type="submit"]')
+        self.pagina.wait_for_selector('.bote-gasto:has-text("Cena")')
+        viaje.refresh_from_db()
+
+        ana, contexto_ana = self.pagina, self.contexto
+        self.contexto = self.navegador.new_context()
+        self.pagina = self.contexto.new_page()
+        self.pagina.on('pageerror', lambda error: self.problemas.append(f'Error de página: {error}'))
+        self.usuario = Usuario.objects.create_user('leo@example.com', 'Leo', 'Prueba', CLAVE, es_verificado=True)
+        self.abrir(f'/botes/{viaje.enlace_bote}/')
+        self.pagina.click('#bote-unirse')
+        self.pagina.wait_for_url('**/login/**')
+        self.completar_login()
+        self.pagina.wait_for_url(f'**/botes/{viaje.enlace_bote}/')
+        self.pagina.click('#bote-unirse')
+        self.pagina.wait_for_selector('#bote-contenido:not([hidden])')
+        self.pagina.wait_for_selector('#bote-personas:has-text("Leo (tú)")')
+        self.assertTrue(self.pagina.is_hidden('#bote-publicar'))
+        self.pagina.wait_for_load_state('networkidle')
+        self.contexto.close()
+        self.pagina, self.contexto = ana, contexto_ana
+
+        # Leo no estaba en el reparto de la cena; Ana la incluye y aparece la deuda.
+        self.pagina.reload()
+        self.pagina.wait_for_selector('#bote-personas:has-text("Leo")')
+        self.pagina.click('.bote-gasto button:has-text("Editar")')
+        self.pagina.wait_for_selector('#bote-form-titulo:has-text("Editar")')
+        self.pagina.check('#bote-entre label:has-text("Leo") input')
+        self.pagina.click('#bote-form button[type="submit"]')
+        self.pagina.wait_for_selector('#bote-transferencias:has-text("Leo le paga")')
+        self.assertIn('150', self.pagina.inner_text('#bote-transferencias'))
+        self.pagina.click('#bote-publicar-boton')
+        self.pagina.wait_for_selector('#bote-publicar-estado:has-text("1 gasto enviado")')
+        self.assertTrue(Aporte.objects.get().anonimo)
 
     def test_guardar_favorito_y_cerrar_sesion(self):
         self.iniciar_sesion()

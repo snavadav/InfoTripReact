@@ -21,6 +21,8 @@ class Viaje(models.Model):
     recordatorio_enviado = models.DateTimeField(null=True, blank=True)
     # Enlace de solo lectura para quien organiza con otras personas; vacío si no se comparte.
     enlace_publico = models.UUIDField(null=True, blank=True, unique=True, editable=False)
+    # Invitación al bote; distinta del enlace público porque esta da acceso a los gastos del grupo.
+    enlace_bote = models.UUIDField(null=True, blank=True, unique=True, editable=False)
     actualizado = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -130,6 +132,8 @@ class Aporte(Moderable):
     )
     concepto = models.CharField(max_length=15, choices=CONCEPTOS, blank=True)
     estado = models.CharField(max_length=12, choices=ESTADOS, default='pendiente')
+    # Se publica sin el nombre del autor, por ejemplo los gastos de un bote. La moderación sí lo ve.
+    anonimo = models.BooleanField(default=False)
     creado = models.DateTimeField(auto_now_add=True)
     actualizado = models.DateTimeField(auto_now=True)
 
@@ -160,6 +164,10 @@ class Aporte(Moderable):
 
     def registrar_moderacion(self, **campos):
         return self.decisiones.create(**campos)
+
+    @property
+    def nombre_publico(self):
+        return 'Viajero anónimo' if self.anonimo else self.autor.nombre
 
 
 class ReporteBase(models.Model):
@@ -261,3 +269,42 @@ class Confirmacion(models.Model):
     class Meta:
         ordering = ['-fecha', '-pk']
         constraints = [models.UniqueConstraint(fields=['dato', 'autor'], name='una_confirmacion_por_persona')]
+
+
+class Participante(models.Model):
+    """Persona que se unió al bote de una escapada. Sin usuario: su cuenta se eliminó, pero sus cuentas siguen."""
+    viaje = models.ForeignKey(Viaje, on_delete=models.CASCADE, related_name='participantes')
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name='botes')
+    creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['pk']
+        constraints = [models.UniqueConstraint(fields=['viaje', 'usuario'], name='un_participante_por_bote')]
+
+    @property
+    def nombre(self):
+        return self.usuario.nombre if self.usuario else 'Cuenta eliminada'
+
+
+class GastoReal(models.Model):
+    """Lo que alguien del grupo ya pagó, repartido en partes iguales entre `entre`."""
+    CONCEPTOS = [*Aporte.CONCEPTOS, ('otros', 'Otros')]
+    viaje = models.ForeignKey(Viaje, on_delete=models.CASCADE, related_name='gastos_reales')
+    # RESTRICT y no PROTECT: permite borrar el viaje completo, pero no a una persona con gastos.
+    pagado_por = models.ForeignKey(Participante, on_delete=models.RESTRICT, related_name='pagados')
+    entre = models.ManyToManyField(Participante, related_name='compartidos')
+    registrado_por = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name='+')
+    descripcion = models.CharField(max_length=120)
+    concepto = models.CharField(max_length=15, choices=CONCEPTOS)
+    monto = models.DecimalField(max_digits=9, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))])
+    fecha = models.DateField()
+    noches = models.PositiveSmallIntegerField(default=1, validators=[MinValueValidator(1), MaxValueValidator(365)])
+    destino = models.ForeignKey('destinos.Destino', null=True, blank=True, on_delete=models.SET_NULL, related_name='+')
+    # El aporte que se envió a revisión, para no publicarlo dos veces.
+    aporte = models.OneToOneField(Aporte, null=True, blank=True, on_delete=models.SET_NULL, related_name='gasto_real',
+                                  editable=False)
+    creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-fecha', '-pk']
+        constraints = [models.CheckConstraint(condition=models.Q(monto__gt=0), name='gasto_real_monto_positivo')]

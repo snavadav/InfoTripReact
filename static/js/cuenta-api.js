@@ -19,6 +19,7 @@
     fecha_dato: 'Fecha de consulta', pregunta: 'Pregunta', destino: 'Destino', fecha_inicio: 'Salida',
     fecha_fin: 'Regreso', personas: 'Viajeros', presupuesto: 'Presupuesto', gastos: 'Gastos',
     actividades: 'Actividades', pendientes: 'Pendientes', notas: 'Notas', lugares: 'Lugares',
+    descripcion: 'Descripción', fecha: 'Fecha', noches: 'Noches', pagado_por: 'Quién pagó', entre: 'Entre quiénes',
   };
   function message(data) {
     if (typeof data === 'string') return data;

@@ -16,7 +16,7 @@ from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, Ou
 from apps.metricas.models import Evento
 from apps.usuarios.models import CodigoAcceso
 from apps.usuarios.sesion import borrar_cookie_refresh
-from .models import Aporte, Colaboracion, Confirmacion, Favorito, Notificacion, Viaje
+from .models import Aporte, Colaboracion, Confirmacion, Favorito, GastoReal, Notificacion, Participante, Viaje
 
 TEXTO_ELIMINADO = '[Eliminado por su autor]'
 
@@ -37,6 +37,11 @@ def anonimizar_cuenta(usuario):
     Colaboracion.objects.filter(autor=usuario).update(estado='oculto', texto=TEXTO_ELIMINADO, fuente='')
     for modelo in (Viaje, Favorito, Confirmacion):
         modelo.objects.filter(autor=usuario).delete()
+    # En botes de otras personas su parte se queda, para que las cuentas del grupo sigan cuadrando.
+    Participante.objects.filter(usuario=usuario).update(usuario=None)
+    GastoReal.objects.filter(registrado_por=usuario).update(
+        registrado_por=None, descripcion='Gasto de una cuenta eliminada'
+    )
     Notificacion.objects.filter(usuario=usuario).delete()
     CodigoAcceso.objects.filter(usuario=usuario).delete()
     Evento.objects.filter(usuario=usuario).update(usuario=None)
