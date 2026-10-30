@@ -128,6 +128,10 @@ class ArchivoTests(TestCase):
         for sitio in self.sitios:
             self.assertTrue(set(sitio['datos']) <= validos, sitio['nombre'])
 
+    def test_los_costos_no_quedan_dentro_de_los_horarios(self):
+        for sitio in self.sitios:
+            self.assertNotRegex(sitio['datos'].get('horarios', ''), r'\$|Entrada (libre|general|gratuita)', sitio['nombre'])
+
     def test_todo_lo_nuevo_se_puede_ubicar(self):
         for sitio in self.sitios:
             if not sitio['destino']:

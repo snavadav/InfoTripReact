@@ -62,6 +62,9 @@ class InterpretarTests(TestCase):
         # El tamaño solo filtra comida: un hotel pequeño en la ciudad se queda.
         self.assertEqual(len(interpreta(registro(Ubicacion='ZAPOPAN,Zapopan,JALISCO', Estrato='0 a 5 personas'))[0]), 1)
 
+    def test_telefono_sin_decimales(self):
+        self.assertEqual(interpreta(registro(Telefono='3310018621.0'))[0][0]['telefono'], '3310018621')
+
     def test_sitio_web_solo_si_es_valido(self):
         for valor, esperado in [('www.a.mx', 'https://www.a.mx'), ('http://a.mx', 'http://a.mx'), ('javascript:alert(1)', ''),
                                 ('no tiene', ''), ('', '')]:

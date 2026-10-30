@@ -129,8 +129,8 @@
   "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1256",
   "consultado": "2026-10-30",
   "datos": {
-   "horarios": "De martes a domingo de 10 a 17 hrs. Entrada libre a personas con capacidades diferentes y niños menores de 6 años",
-   "precios": "Entrada general $ 45, niños $ 30",
+   "horarios": "De martes a domingo de 10 a 17 hrs.",
+   "precios": "Entrada libre a personas con capacidades diferentes y niños menores de 6 años Entrada general $ 45, niños $ 30",
    "contacto": "Teléfono: 322 223 53 57"
   }
  },
@@ -163,7 +163,7 @@
   "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=74",
   "consultado": "2026-10-30",
   "datos": {
-   "horarios": "Martes a viernes 10 a 18 h Sábado a lunes de 10 a 16 h",
+   "horarios": "Martes a viernes 10 a 18 h. Sábado a lunes de 10 a 16 h",
    "precios": "Entrada libre",
    "contacto": "Teléfono: 378 788 8700 ext. 8862 · https://www.tepatitlan.gob.mx/museo/"
   }
@@ -197,7 +197,7 @@
   "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1029",
   "consultado": "2026-10-30",
   "datos": {
-   "horarios": "Miércoles a lunes de 9 a 18 h Martes cerrado",
+   "horarios": "Miércoles a lunes de 9 a 18 h. Martes cerrado",
    "precios": "Entrada libre"
   }
  },
@@ -230,7 +230,7 @@
   "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1757",
   "consultado": "2026-10-30",
   "datos": {
-   "horarios": "Martes a viernes de 9 a 19 h Sábado y domingo de 10 a 13 h",
+   "horarios": "Martes a viernes de 9 a 19 h. Sábado y domingo de 10 a 13 h",
    "contacto": "Teléfono: 347 718 25 39, 347 718 00 01 · https://sanjulian.gob.mx/"
   }
  },
@@ -246,8 +246,8 @@
   "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1030",
   "consultado": "2026-10-30",
   "datos": {
-   "horarios": "Martes a domingo de 9:30 a 17:30 h Sábado y domingo de 9 h a 16 h Entrada gratuita (aplica únicamente al presentar credencial oficial vigente): menores de 12 años, estudiantes, docentes, personas adultas mayores y personas con discapacidad",
-   "precios": "Entrada general: $100 Entrada libre: domingos (solo para nacionales) La utilización de dispositivos de fotografía o de videograbación está sujeta al pago de derechos",
+   "horarios": "Martes a domingo de 9:30 a 17:30 h. Sábado y domingo de 9 h a 16 h",
+   "precios": "Entrada gratuita (aplica únicamente al presentar credencial oficial vigente): menores de 12 años, estudiantes, docentes, personas adultas mayores y personas con discapacidad Entrada general: $100 Entrada libre: domingos (solo para nacionales) La utilización de dispositivos de fotografía o de videograbación está sujeta al pago de derechos",
    "contacto": "Teléfono: 33 3614 5257, 33 3614 9957"
   }
  },
@@ -414,7 +414,7 @@
   "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1488",
   "consultado": "2026-10-30",
   "datos": {
-   "horarios": "Entrada únicamente en recorrido guiado de martes a sábado en los horarios: 11, 12, 13 y 15 h Domingos 11 y 12 h",
+   "horarios": "Entrada únicamente en recorrido guiado de martes a sábado en los horarios: 11, 12, 13 y 15 h. Domingos 11 y 12 h",
    "precios": "Entrada gratuita.",
    "contacto": "Teléfono: 333 668 1800 ext. 34771 · https://museosdejalisco.com/espacio-museo-de-palacio-de-gobierno/#"
   }
@@ -465,7 +465,7 @@
   "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1022",
   "consultado": "2026-10-30",
   "datos": {
-   "horarios": "Martes a sábado 11 a 17 h Domingo 11 a 14 h",
+   "horarios": "Martes a sábado 11 a 17 h. Domingo 11 a 14 h",
    "precios": "Entrada libre",
    "contacto": "Teléfono: 333 030 9779, 333 614 3891 · https://sc.jalisco.gob.mx/patrimonio/museos/museo-de-las-artes-populares-de-jalisco"
   }
@@ -682,8 +682,8 @@
   "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=56",
   "consultado": "2026-10-30",
   "datos": {
-   "horarios": "Martes a domingo de 9 h a 17 h Entrada gratuita (aplica únicamente al presentar credencial oficial vigente): menores de 13 años, estudiantes, docentes y personas adultas mayores",
-   "precios": "Entrada general: $75 Entrada libre: domingos La utilización de dispositivos electrónicos para videograbación está sujeta al pago de derechos ($56)",
+   "horarios": "Martes a domingo de 9 h a 17 h",
+   "precios": "Entrada gratuita (aplica únicamente al presentar credencial oficial vigente): menores de 13 años, estudiantes, docentes y personas adultas mayores Entrada general: $75 Entrada libre: domingos La utilización de dispositivos electrónicos para videograbación está sujeta al pago de derechos ($56)",
    "contacto": "Teléfono: 33 3614 5416, 33 3613 8224, 341 124 73 95"
   }
  },
@@ -733,7 +733,7 @@
   "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=2484",
   "consultado": "2026-10-30",
   "datos": {
-   "horarios": "Lunes a viernes de 9 a 17 h Sábados y domingos de 8 a 18h.",
+   "horarios": "Lunes a viernes de 9 a 17 h. Sábados y domingos de 8 a 18h.",
    "precios": "La entrada tiene un costo de $10 pesos para adultos y $5 pesos para niños.",
    "contacto": "Teléfono: 395 785 42 31, 395 785 1275 · https://virgendesanjuan.org/?page_id=553"
   }
@@ -767,7 +767,7 @@
   "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=294",
   "consultado": "2026-10-30",
   "datos": {
-   "horarios": "Martes a Domingo 9 a 16 hrs.",
+   "horarios": "Martes a. Domingo 9 a 16 hrs.",
    "contacto": "Teléfono: 391 921 04 23"
   }
  },
@@ -799,7 +799,7 @@
   "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1139",
   "consultado": "2026-10-30",
   "datos": {
-   "horarios": "Lunes a Sábado de 8 a 20 hrs.",
+   "horarios": "Lunes a. Sábado de 8 a 20 hrs.",
    "precios": "Entrada libre",
    "contacto": "Teléfono: 385 755 11 02, 385 755 14 31, 385 755 08163, ext. 124 · https://www.sanmartindehidalgo.gob.mx/"
   }
@@ -1015,7 +1015,7 @@
   "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=2445",
   "consultado": "2026-10-30",
   "datos": {
-   "horarios": "Lunes a Viernes: 8:30 a 15:00 h.",
+   "horarios": "Lunes a. Viernes: 8:30 a 15:00 h.",
    "contacto": "Teléfono: 387 690 1560"
   }
  },
@@ -1031,8 +1031,8 @@
   "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1996",
   "consultado": "2026-10-30",
   "datos": {
-   "horarios": "Lunes a domingo de 10 a 18 h Entrada libre: Niños menores de 6 años y personas con capacidades diferentes",
-   "precios": "Entrada general: $100 Maestros y estudiantes e INAPAM: $80",
+   "horarios": "Lunes a domingo de 10 a 18 h",
+   "precios": "Entrada libre: Niños menores de 6 años y personas con capacidades diferentes Entrada general: $100 Maestros y estudiantes e INAPAM: $80",
    "contacto": "Teléfono: 33 3613 0004, 33 4076 4201 · https://expovampiros.com/?fbclid=IwAR0fXlbc-Y6F-pA0y_de-nhnzZ3qfk2t9HYcmjaZzVkWNBEVGIrLD6RBWl0"
   }
  },
@@ -1064,7 +1064,7 @@
   "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=306",
   "consultado": "2026-10-30",
   "datos": {
-   "horarios": "Martes a sábado de 10:00 a 17:00 h Domingo de 10:00 a 15:00 h",
+   "horarios": "Martes a sábado de 10:00 a 17:00 h. Domingo de 10:00 a 15:00 h",
    "precios": "Entrada libre",
    "contacto": "Teléfono: 33 1657 9819, 33 3801 2032, 33 1657 9942"
   }
@@ -1131,8 +1131,8 @@
   "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=515",
   "consultado": "2026-10-30",
   "datos": {
-   "horarios": "Lunes a viernes: 9 a 18 h Sábados: 10 a 14 h Domingos: Cerrado Entrada gratuita para menores de 12 años y adultos mayores",
-   "precios": "Entrada general: $50 Estudiantes y maestros con credencial: $30",
+   "horarios": "Lunes a viernes: 9 a 18 h. Sábados: 10 a 14 h. Domingos: Cerrado",
+   "precios": "Entrada gratuita para menores de 12 años y adultos mayores Entrada general: $50 Estudiantes y maestros con credencial: $30",
    "contacto": "Teléfono: 437 964 0121"
   }
  },
@@ -1148,7 +1148,7 @@
   "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1243",
   "consultado": "2026-10-30",
   "datos": {
-   "horarios": "Martes a Domingo de 10:00 a 13:30 hrs. y de 16 a 18 hrs.",
+   "horarios": "Martes a. Domingo de 10:00 a 13:30 hrs. y de 16 a 18 hrs.",
    "contacto": "Teléfono: (343) 431 51 76"
   }
  },
@@ -1248,7 +1248,7 @@
   "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1059",
   "consultado": "2026-10-30",
   "datos": {
-   "horarios": "Lunes a Sábado de 9 a 19 hrs.",
+   "horarios": "Lunes a. Sábado de 9 a 19 hrs.",
    "contacto": "Teléfono: 321 373 08 87, 373 09 15, 321 373 00 90, 321 373 0028"
   }
  },
@@ -1264,7 +1264,7 @@
   "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=1605",
   "consultado": "2026-10-30",
   "datos": {
-   "horarios": "Lunes a Viernes de 9:00 a 17:00 hrs. y Sábado de 9:00 a 14:00 hrs.",
+   "horarios": "Lunes a. Viernes de 9:00 a 17:00 hrs. y. Sábado de 9:00 a 14:00 hrs.",
    "contacto": "Teléfono: (33) 3669 0310 · http://www.upc.com.mx/pages/laboratorio/museo"
   }
  },
@@ -1280,7 +1280,7 @@
   "fuente": "https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=2523",
   "consultado": "2026-10-30",
   "datos": {
-   "horarios": "Lunes a viernes de 10 a 14 h Y de 17 a 19 h Sábado de 10 a 14 h",
+   "horarios": "Lunes a viernes de 10 a 14 h Y de 17 a 19 h. Sábado de 10 a 14 h",
    "contacto": "Teléfono: 321 387 3273"
   }
  },

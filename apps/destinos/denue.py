@@ -173,7 +173,8 @@ def interpretar(registros, tipo_de_subtipo):
         lugares.append({
             'denue_id': identificador, 'nombre': nombre[:200], 'tipo': tipo_de_subtipo[subtipo], 'subtipo': subtipo,
             'municipio': municipio, 'latitud': latitud, 'longitud': longitud, 'direccion': _direccion(registro),
-            'telefono': registro.get('Telefono', '').strip()[:60],
+            # Algunos llegan como número decimal: 3310018621.0
+            'telefono': re.sub(r'\.0$', '', registro.get('Telefono', '').strip())[:60],
             'sitio_web': _sitio_web(registro.get('Sitio_internet', '')),
         })
     return lugares, omitidos
