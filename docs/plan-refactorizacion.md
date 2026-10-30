@@ -49,3 +49,23 @@ Lista de commits por fase, resultado final de pruebas, cobertura y `check --depl
 - Tras cada cambio: `manage.py test`, `makemigrations --check` y `check`. No avanzar con pruebas en rojo.
 - No cambiar comportamiento visible (URLs, respuestas de la API, plantillas) sin avisar antes.
 - Preguntar antes de: reescribir el historial o hacer push, migraciones que modifiquen o borren datos, borrar archivos o entornos virtuales, y cualquier cambio que no se revierta con `git revert`.
+
+## Mejoras de producto (revisión de arquitectura, UX y crecimiento)
+
+Rama `mejoras/crecimiento`, salvo 1, 3 y 13, que van en `refactor/robustez`.
+
+- [x] 1: mapa de la portada bloqueado por la CSP.
+- [x] 2: aviso de privacidad, términos y baja de cuenta. Falta la revisión legal.
+- [x] 3: páginas 404 y 500 en español, y errores legibles.
+- [x] 4: reportar datos prácticos, preguntas y respuestas.
+- [x] 5: volver a la página tras iniciar sesión y conservar el borrador del viaje.
+- [x] 6: SEO base. Falta dar de alta el dominio en Search Console.
+- [x] 7: móvil y accesibilidad.
+- [x] 8: miniaturas e imágenes más ligeras.
+- [ ] 9: contenido. Hecho: 15 destinos con fotos y créditos. Falta: **datos prácticos, que debe aportar el equipo** ([guía](sembrar-contenido.md)).
+- [x] 10: registro en un paso y dispositivo recordado.
+- [x] 11: compartir fichas y escapadas.
+- [x] 12: invitación tras el viaje, novedades en favoritos y baja de correos.
+- [x] 13: pruebas de navegador con Playwright en la CI.
+- [x] 14: copias de seguridad, monitoreo, límite global y limpieza.
+- [x] 15: eventos propios y panel de métricas.
