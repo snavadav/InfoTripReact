@@ -14,7 +14,7 @@ from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.core import mail
 from django.core.cache import cache
 
-from apps.comunidad.models import Aporte, InteresNegocio, PropuestaLugar, Viaje
+from apps.comunidad.models import Aporte, Comentario, InteresNegocio, PropuestaLugar, Viaje
 from apps.comunidad.moderacion import moderar
 from apps.destinos.models import Destino, Lugar, Municipio, Region
 from apps.metricas.models import Evento
@@ -503,6 +503,16 @@ class FlujosTests(StaticLiveServerTestCase):
         moderar(propuesta, Usuario.objects.create_superuser('m@example.com', 'Mod', 'P', CLAVE), 'publicado', 'Revisada')
         self.abrir(f'/lugares/{propuesta.lugar_id}/')
         self.pagina.wait_for_selector('text=Agregado por la comunidad')
+
+    def test_enviar_un_comentario_desde_cualquier_pagina(self):
+        self.abrir('/destinos/mirador/')
+        self.pagina.click('footer a:has-text("Enviar comentarios")')
+        self.pagina.wait_for_selector('#comentario-form')
+        self.pagina.fill('#comentario-form [name="texto"]', 'El mapa tardó en cargar')
+        self.pagina.click('#comentario-form button[type="submit"]')
+        self.pagina.wait_for_selector('#comentario-form .form-status:has-text("Gracias")')
+        comentario = Comentario.objects.get()
+        self.assertEqual((comentario.pagina, comentario.tipo), ('/destinos/mirador/', 'problema'))
 
     def test_guardar_favorito_y_cerrar_sesion(self):
         self.iniciar_sesion()

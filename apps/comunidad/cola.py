@@ -5,8 +5,8 @@ from django.urls import reverse
 from datetime import timedelta
 from django.utils import timezone
 from .models import (
-    Aporte, Colaboracion, ConfirmacionLugar, PropuestaLugar, Reporte, ReporteColaboracion, ReporteResenaLugar,
-    ResenaLugar,
+    Aporte, Colaboracion, Comentario, ConfirmacionLugar, PropuestaLugar, Reporte, ReporteColaboracion,
+    ReporteResenaLugar, ResenaLugar,
 )
 
 POR_SECCION = 10
@@ -69,5 +69,9 @@ def cola_moderacion(request):
             ConfirmacionLugar.objects.filter(abierto=False, fecha__gte=timezone.localdate() - timedelta(days=90),
                                              lugar__es_activo=True).select_related('lugar'),
             lambda c: c.lugar.nombre))
+    if request.user.has_perm('comunidad.view_comentario'):
+        secciones.append(seccion(
+            'Comentarios del sitio sin atender', Comentario, '?atendido__exact=0',
+            Comentario.objects.filter(atendido=False), lambda c: f'{c.get_tipo_display()} · {c.texto[:70]}'))
     contexto = {**admin.site.each_context(request), 'title': 'Cola de moderación', 'secciones': secciones}
     return render(request, 'admin/cola_moderacion.html', contexto)

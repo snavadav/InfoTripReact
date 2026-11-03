@@ -481,3 +481,25 @@ class PropuestaLugar(Moderable):
 
 class RevisionPropuestaLugar(RegistroModeracion):
     propuesta = models.ForeignKey(PropuestaLugar, on_delete=models.PROTECT, related_name='revisiones')
+
+
+class Comentario(models.Model):
+    """Problema o idea sobre el sitio, para el piloto. Solo lo lee el equipo; se borra al eliminar la cuenta."""
+    TIPOS = [('problema', 'Algo no funciona'), ('idea', 'Idea o sugerencia'), ('dato', 'Un dato está mal'),
+             ('otro', 'Otra cosa')]
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
+                                related_name='comentarios_del_sitio')
+    tipo = models.CharField(max_length=10, choices=TIPOS)
+    texto = models.TextField(max_length=1000)
+    # Ruta del sitio desde la que se escribió; ayuda a reproducir el problema.
+    pagina = models.CharField(max_length=300, blank=True)
+    atendido = models.BooleanField(default=False)
+    creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-creado', '-pk']
+        verbose_name = 'comentario del sitio'
+        verbose_name_plural = 'comentarios del sitio'
+
+    def __str__(self):
+        return f'{self.get_tipo_display()} · {self.texto[:60]}'

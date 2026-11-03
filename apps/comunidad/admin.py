@@ -3,8 +3,8 @@ from django.db import transaction
 from django.utils import timezone
 from django.utils.html import format_html, format_html_join
 from .models import (
-    Aporte, Colaboracion, Confirmacion, ConfirmacionLugar, Decision, InteresNegocio, PropuestaLugar, Reporte,
-    ReporteColaboracion, ReporteResenaLugar, ResenaLugar, RevisionColaboracion, RevisionPropuestaLugar,
+    Aporte, Colaboracion, Comentario, Confirmacion, ConfirmacionLugar, Decision, InteresNegocio, PropuestaLugar,
+    Reporte, ReporteColaboracion, ReporteResenaLugar, ResenaLugar, RevisionColaboracion, RevisionPropuestaLugar,
     RevisionResenaLugar,
 )
 from .moderacion import moderar
@@ -278,3 +278,18 @@ class RevisionPropuestaLugarAdmin(admin.ModelAdmin):
     def has_add_permission(self, request): return False
     def has_change_permission(self, request, obj=None): return False
     def has_delete_permission(self, request, obj=None): return False
+
+
+@admin.register(Comentario)
+class ComentarioAdmin(admin.ModelAdmin):
+    """Lo que escriben quienes prueban el sitio. Solo se marca como atendido."""
+    list_display = ['creado', 'tipo', 'texto', 'pagina', 'usuario', 'atendido']
+    list_filter = ['atendido', 'tipo']
+    search_fields = ['texto', 'pagina']
+    readonly_fields = ['usuario', 'tipo', 'texto', 'pagina', 'creado']
+    actions = ['marcar_atendidos']
+    def has_add_permission(self, request): return False
+
+    @admin.action(description='Marcar como atendidos', permissions=['change'])
+    def marcar_atendidos(self, request, queryset):
+        queryset.update(atendido=True)

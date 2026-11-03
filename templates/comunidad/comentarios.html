@@ -1,0 +1,27 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}Envíanos tus comentarios — InfoTrip{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/comunidad.css' %}">{% endblock %}
+{% block content %}{% include 'partials/navBar.html' %}
+<main class="explore-shell legal-page">
+  <span class="eyebrow">Ayúdanos a mejorar</span>
+  <h1>¿Algo no funciona o se te ocurre una idea?</h1>
+  <p>InfoTrip está en prueba. Cuéntanos qué te costó trabajo, qué falló o qué te gustaría encontrar. Solo lo lee el equipo.</p>
+  <form id="comentario-form" class="community-box community-form" data-desde="{{ desde }}">
+    <label>¿Qué nos quieres contar?<select name="tipo">
+      <option value="problema">Algo no funciona</option>
+      <option value="idea">Una idea o sugerencia</option>
+      <option value="dato">Un dato está mal</option>
+      <option value="otro">Otra cosa</option>
+    </select></label>
+    <label>Cuéntanos<textarea name="texto" required maxlength="1000" rows="4" placeholder="Qué intentabas hacer y qué pasó"></textarea></label>
+    {% if desde %}<p class="community-note">Se enviará también la página de la que vienes: {{ desde }}</p>{% endif %}
+    <label class="campo-trampa" aria-hidden="true">Sitio web<input name="sitio_web" tabindex="-1" autocomplete="off"></label>
+    <p class="community-note">No incluyas contraseñas ni datos de tarjetas. Si tienes sesión iniciada, lo asociamos a tu cuenta para poder responderte.</p>
+    <button type="submit">Enviar</button>
+    <p class="form-status" role="status"></p>
+  </form>
+  {% include 'destinos/footer.html' %}
+</main>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/cuenta-api.js' %}"></script><script src="{% static 'js/comentarios.js' %}" defer></script>{% endblock %}

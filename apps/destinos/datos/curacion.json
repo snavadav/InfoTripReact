@@ -1,0 +1,670 @@
+{
+ "nota": "Revisado a mano el 3/11/2026: nombres inventados, genéricos o lugares que no son destinos. Ver docs/mvp.md.",
+ "ocultar": [
+  {
+   "osm_id": "node/12993670840",
+   "nombre": "Acantilado El Poder De La Naturaleza"
+  },
+  {
+   "osm_id": "node/10689644505",
+   "nombre": "Administración Del Sistema Portuario Nacional Marina"
+  },
+  {
+   "osm_id": "node/11045371578",
+   "nombre": "Antiguo Acueducto Zapotiltic"
+  },
+  {
+   "osm_id": "way/1277632239",
+   "nombre": "AREA DE AGUA NATURAL MARINA"
+  },
+  {
+   "osm_id": "way/1277634765",
+   "nombre": "AREANA CHARCA"
+  },
+  {
+   "osm_id": "way/1277634232",
+   "nombre": "ARENA BEACH ARENAL LERMA"
+  },
+  {
+   "osm_id": "node/4742507425",
+   "nombre": "Autódromo Toloquilla (casi)"
+  },
+  {
+   "osm_id": "node/14282673870",
+   "nombre": "Banco De Material"
+  },
+  {
+   "osm_id": "node/6563824632",
+   "nombre": "Biblioteca CU Lagos Sede San Juan"
+  },
+  {
+   "osm_id": "node/14282372541",
+   "nombre": "Blancas"
+  },
+  {
+   "osm_id": "node/11094394986",
+   "nombre": "Bosque Muerto"
+  },
+  {
+   "osm_id": "node/12648254978",
+   "nombre": "Cacada De Comala N°1"
+  },
+  {
+   "osm_id": "node/12648254982",
+   "nombre": "Cacada De Comala N°2"
+  },
+  {
+   "osm_id": "way/377004790",
+   "nombre": "Cafe Cathedral Don Balbino"
+  },
+  {
+   "osm_id": "node/11204021929",
+   "nombre": "Cañada De La Tortuga"
+  },
+  {
+   "osm_id": "node/11204021932",
+   "nombre": "Cañada Del Arroyo De La Campana"
+  },
+  {
+   "osm_id": "node/14282407758",
+   "nombre": "Cañón De La Unión"
+  },
+  {
+   "osm_id": "node/11664144373",
+   "nombre": "Cascada Menor"
+  },
+  {
+   "osm_id": "node/6096954986",
+   "nombre": "Cascada secreto buena"
+  },
+  {
+   "osm_id": "node/4176314595",
+   "nombre": "Centro Comercial Plaza Los Arcos"
+  },
+  {
+   "osm_id": "node/10928009307",
+   "nombre": "Centro Holístico Macuilli Tepec"
+  },
+  {
+   "osm_id": "node/4152622889",
+   "nombre": "Club de Golf Las Lomas"
+  },
+  {
+   "osm_id": "node/13143760915",
+   "nombre": "Crépuscule"
+  },
+  {
+   "osm_id": "node/10936239541",
+   "nombre": "Curva De Los Muertos"
+  },
+  {
+   "osm_id": "node/4395595090",
+   "nombre": "Disco Roller"
+  },
+  {
+   "osm_id": "node/5496554844",
+   "nombre": "El arbol caído"
+  },
+  {
+   "osm_id": "node/11088491443",
+   "nombre": "El Cruce"
+  },
+  {
+   "osm_id": "node/12357329690",
+   "nombre": "El Mirador Flipante"
+  },
+  {
+   "osm_id": "node/14250627003",
+   "nombre": "El Pastizal"
+  },
+  {
+   "osm_id": "node/11094444505",
+   "nombre": "El Pequeño Puente"
+  },
+  {
+   "osm_id": "node/4286173098",
+   "nombre": "El Plan"
+  },
+  {
+   "osm_id": "node/12546501189",
+   "nombre": "El Playón"
+  },
+  {
+   "osm_id": "node/12092720487",
+   "nombre": "El Profundo Hoyo Negro"
+  },
+  {
+   "osm_id": "node/11918992321",
+   "nombre": "El Riachelo"
+  },
+  {
+   "osm_id": "node/14250604345",
+   "nombre": "El Riachueo"
+  },
+  {
+   "osm_id": "node/12092759407",
+   "nombre": "El Tótem De Roca (A)"
+  },
+  {
+   "osm_id": "node/14250598188",
+   "nombre": "El Tótem De Roca (B)"
+  },
+  {
+   "osm_id": "node/5832750382",
+   "nombre": "Explanada del Vergel"
+  },
+  {
+   "osm_id": "node/14250604337",
+   "nombre": "Falsa Roca Del Gorila"
+  },
+  {
+   "osm_id": "node/13761335042",
+   "nombre": "Flèches"
+  },
+  {
+   "osm_id": "node/5345611923",
+   "nombre": "Foco Tonal"
+  },
+  {
+   "osm_id": "node/13078685075",
+   "nombre": "Galerías De Agua"
+  },
+  {
+   "osm_id": "node/8869956417",
+   "nombre": "Horse Stable"
+  },
+  {
+   "osm_id": "node/14298411019",
+   "nombre": "Hueco De La Muerte"
+  },
+  {
+   "osm_id": "node/10927980705",
+   "nombre": "Ikal Temazcal"
+  },
+  {
+   "osm_id": "node/5832763979",
+   "nombre": "Kiosco principal"
+  },
+  {
+   "osm_id": "way/185032087",
+   "nombre": "La asención"
+  },
+  {
+   "osm_id": "node/12357329687",
+   "nombre": "La Boloncha"
+  },
+  {
+   "osm_id": "node/14118016467",
+   "nombre": "La Ciudad"
+  },
+  {
+   "osm_id": "node/13753273093",
+   "nombre": "La Curva Del Lobo Ártico"
+  },
+  {
+   "osm_id": "node/11885206094",
+   "nombre": "La Malgranda Monto"
+  },
+  {
+   "osm_id": "node/14250604344",
+   "nombre": "La Montaña Rocosa"
+  },
+  {
+   "osm_id": "node/13032322969",
+   "nombre": "La Muralla De La Naturaleza"
+  },
+  {
+   "osm_id": "node/12375013892",
+   "nombre": "La Roca Fotogénica A"
+  },
+  {
+   "osm_id": "node/12375013893",
+   "nombre": "La Roca Fotogénica B"
+  },
+  {
+   "osm_id": "node/10651155153",
+   "nombre": "La Rocher Plat"
+  },
+  {
+   "osm_id": "node/5904992192",
+   "nombre": "La virgen de Guadeloupe"
+  },
+  {
+   "osm_id": "node/11094444518",
+   "nombre": "Las Rocas En Balance"
+  },
+  {
+   "osm_id": "node/11741511946",
+   "nombre": "Le Grand Roche"
+  },
+  {
+   "osm_id": "node/11741511945",
+   "nombre": "Les Quatre Roches"
+  },
+  {
+   "osm_id": "node/12357329686",
+   "nombre": "Les Rochers"
+  },
+  {
+   "osm_id": "node/14118016466",
+   "nombre": "Los Tinacos"
+  },
+  {
+   "osm_id": "node/10928009306",
+   "nombre": "Luz Azul Temazcal"
+  },
+  {
+   "osm_id": "way/376577203",
+   "nombre": "Majahuitas Resort"
+  },
+  {
+   "osm_id": "node/2810165967",
+   "nombre": "Mirador"
+  },
+  {
+   "osm_id": "node/2876941101",
+   "nombre": "Mirador"
+  },
+  {
+   "osm_id": "node/11982373034",
+   "nombre": "Mirador"
+  },
+  {
+   "osm_id": "node/12494069001",
+   "nombre": "Mirador"
+  },
+  {
+   "osm_id": "node/11063778083",
+   "nombre": "Mirador De Andalùz"
+  },
+  {
+   "osm_id": "node/12293199488",
+   "nombre": "Mirador De La Cañada Del Arroyo De La Campana"
+  },
+  {
+   "osm_id": "node/13792757240",
+   "nombre": "Mirador De La Olla"
+  },
+  {
+   "osm_id": "node/11204021931",
+   "nombre": "Mirador De Las Tempranillas"
+  },
+  {
+   "osm_id": "node/11204021934",
+   "nombre": "Mirador De Los Ahuehuetes"
+  },
+  {
+   "osm_id": "node/11815971812",
+   "nombre": "Mirador De Los Eucaliptos"
+  },
+  {
+   "osm_id": "node/13690278840",
+   "nombre": "Mirador De Los Pueblos"
+  },
+  {
+   "osm_id": "node/11204021930",
+   "nombre": "Mirador De Los Susurros"
+  },
+  {
+   "osm_id": "node/12026978911",
+   "nombre": "Mirador De Obsidianas"
+  },
+  {
+   "osm_id": "node/13143748006",
+   "nombre": "Mirador Del Buitre"
+  },
+  {
+   "osm_id": "node/11968174241",
+   "nombre": "Mirador Del Cañon Escarpado"
+  },
+  {
+   "osm_id": "node/14052533524",
+   "nombre": "Mirador Del Diente"
+  },
+  {
+   "osm_id": "node/12851204139",
+   "nombre": "Mirador Del El Pinar"
+  },
+  {
+   "osm_id": "node/13143729467",
+   "nombre": "Mirador Del Ficus Insipida"
+  },
+  {
+   "osm_id": "node/13143729478",
+   "nombre": "Mirador Del Jabalí"
+  },
+  {
+   "osm_id": "node/14250541692",
+   "nombre": "Mirador Del Matemático"
+  },
+  {
+   "osm_id": "node/13690278859",
+   "nombre": "Mirador Del Ojo Del Obispo"
+  },
+  {
+   "osm_id": "node/13032319407",
+   "nombre": "Mirador Del Pinar"
+  },
+  {
+   "osm_id": "node/11982373035",
+   "nombre": "Mirador Del Riachuelo"
+  },
+  {
+   "osm_id": "node/12488877823",
+   "nombre": "Mirador Del Riachuelo"
+  },
+  {
+   "osm_id": "node/12374992847",
+   "nombre": "Mirador Del Riachuelo A"
+  },
+  {
+   "osm_id": "node/12374992889",
+   "nombre": "Mirador Del Riachuelo B"
+  },
+  {
+   "osm_id": "node/11079842188",
+   "nombre": "Mirador Del Rio"
+  },
+  {
+   "osm_id": "node/14250614057",
+   "nombre": "Mirador Del Rio De Agua Caliente"
+  },
+  {
+   "osm_id": "node/11204021933",
+   "nombre": "Mirador Del Taray"
+  },
+  {
+   "osm_id": "node/14250569498",
+   "nombre": "Mirador Difurcado"
+  },
+  {
+   "osm_id": "node/11094444519",
+   "nombre": "Mirador Flipante"
+  },
+  {
+   "osm_id": "node/11094400903",
+   "nombre": "Mirador Geotermica"
+  },
+  {
+   "osm_id": "node/12248816555",
+   "nombre": "Mirador JBBPDA 1"
+  },
+  {
+   "osm_id": "node/12248816554",
+   "nombre": "Mirador JBBPDA 2"
+  },
+  {
+   "osm_id": "node/12248816556",
+   "nombre": "Mirador JBBPDA 3"
+  },
+  {
+   "osm_id": "node/12248816557",
+   "nombre": "Mirador JBBPDA 4"
+  },
+  {
+   "osm_id": "node/11181411911",
+   "nombre": "Mirador La Ciudad"
+  },
+  {
+   "osm_id": "node/14298382491",
+   "nombre": "Mirador montañoso"
+  },
+  {
+   "osm_id": "node/4340368603",
+   "nombre": "Mirador Número Cuatro"
+  },
+  {
+   "osm_id": "node/4340367968",
+   "nombre": "Mirador Número Dos"
+  },
+  {
+   "osm_id": "node/4340368590",
+   "nombre": "Mirador Número Tres"
+  },
+  {
+   "osm_id": "node/4340366262",
+   "nombre": "Mirador Número Uno"
+  },
+  {
+   "osm_id": "node/12164594901",
+   "nombre": "Mirador Punto Muerto"
+  },
+  {
+   "osm_id": "node/13204176614",
+   "nombre": "Mirador Rocoso"
+  },
+  {
+   "osm_id": "node/10838917566",
+   "nombre": "Mirador Salto De La Campana"
+  },
+  {
+   "osm_id": "node/8011143747",
+   "nombre": "Mirador Vine a Comala"
+  },
+  {
+   "osm_id": "node/11741845798",
+   "nombre": "Montagnes Des Merveilles"
+  },
+  {
+   "osm_id": "node/11885206093",
+   "nombre": "Montara Belvidejo"
+  },
+  {
+   "osm_id": "node/13792775955",
+   "nombre": "Muro Bronx"
+  },
+  {
+   "osm_id": "node/12695792401",
+   "nombre": "Museo de Paleontología de Guadalajara \"Federico A. Solórzano Barreto\""
+  },
+  {
+   "osm_id": "node/4408814972",
+   "nombre": "Museo Del Periodismo"
+  },
+  {
+   "osm_id": "node/4348672496",
+   "nombre": "NATURA bosque fracc"
+  },
+  {
+   "osm_id": "node/11707468916",
+   "nombre": "Observatoire Du Roi Dakk"
+  },
+  {
+   "osm_id": "node/10828085417",
+   "nombre": "Oeufs De Dinosaures"
+  },
+  {
+   "osm_id": "way/1276578933",
+   "nombre": "ojo de agua"
+  },
+  {
+   "osm_id": "node/7172763485",
+   "nombre": "Oxxo mirador"
+  },
+  {
+   "osm_id": "node/4692814687",
+   "nombre": "Pequeño Mirador"
+  },
+  {
+   "osm_id": "node/10838495908",
+   "nombre": "Piedras Blancas"
+  },
+  {
+   "osm_id": "node/10922016818",
+   "nombre": "Piedras Bola II"
+  },
+  {
+   "osm_id": "node/10763046807",
+   "nombre": "Point De Veu, Montagne M"
+  },
+  {
+   "osm_id": "node/10763046806",
+   "nombre": "Point De Veu, Petit Montagne"
+  },
+  {
+   "osm_id": "node/12357329685",
+   "nombre": "Point De Vue De 17'"
+  },
+  {
+   "osm_id": "node/12092781496",
+   "nombre": "Point De Vue De La Forêt"
+  },
+  {
+   "osm_id": "node/12092759720",
+   "nombre": "Point De Vue De La Transmission Électrique"
+  },
+  {
+   "osm_id": "node/12357329688",
+   "nombre": "Point De Vue Rocheux"
+  },
+  {
+   "osm_id": "node/10833312124",
+   "nombre": "Point De Vue, La Vache Morte"
+  },
+  {
+   "osm_id": "node/13204180534",
+   "nombre": "Pont De Rivière Profonde"
+  },
+  {
+   "osm_id": "node/14100326715",
+   "nombre": "Puente De Las Explosiones"
+  },
+  {
+   "osm_id": "node/12098157558",
+   "nombre": "Puente De Madera"
+  },
+  {
+   "osm_id": "node/11079842187",
+   "nombre": "Puente Voladores De Papantla"
+  },
+  {
+   "osm_id": "node/12164702601",
+   "nombre": "Rio De La Mesita"
+  },
+  {
+   "osm_id": "node/12092759408",
+   "nombre": "Roca Del Gorila"
+  },
+  {
+   "osm_id": "node/14279118379",
+   "nombre": "Roca Mayor"
+  },
+  {
+   "osm_id": "node/12357329689",
+   "nombre": "Rocher - Château"
+  },
+  {
+   "osm_id": "node/11741511947",
+   "nombre": "Rocher d'angle"
+  },
+  {
+   "osm_id": "node/12042244703",
+   "nombre": "Roi Dakk"
+  },
+  {
+   "osm_id": "way/665685415",
+   "nombre": "Ruinas Chimulco Restaurante"
+  },
+  {
+   "osm_id": "node/10840683418",
+   "nombre": "Salto Basaltico"
+  },
+  {
+   "osm_id": "node/11088491445",
+   "nombre": "Salto Brujitas"
+  },
+  {
+   "osm_id": "node/10840878585",
+   "nombre": "Salto Seco"
+  },
+  {
+   "osm_id": "node/4209183895",
+   "nombre": "sanjuan"
+  },
+  {
+   "osm_id": "node/14117985293",
+   "nombre": "Subidas Del Infierno"
+  },
+  {
+   "osm_id": "node/11044594542",
+   "nombre": "Tanques \"Los Rusios\""
+  },
+  {
+   "osm_id": "node/10928011306",
+   "nombre": "TEMAZCAL-YAXCHÉ - SALUD Y BIENESTAR, SANA TU DOLOR."
+  },
+  {
+   "osm_id": "node/10927980706",
+   "nombre": "Temazcal ancestral los abuelos"
+  },
+  {
+   "osm_id": "node/10928009310",
+   "nombre": "Temazcal Los Colibries"
+  },
+  {
+   "osm_id": "node/10928009309",
+   "nombre": "Temazcal Tonalli Cihualpilli"
+  },
+  {
+   "osm_id": "node/10928009308",
+   "nombre": "Temazcal Tribu Panecatl"
+  },
+  {
+   "osm_id": "node/10927978806",
+   "nombre": "Temazcales Kay Pacha"
+  },
+  {
+   "osm_id": "node/11088463328",
+   "nombre": "Torre 1"
+  },
+  {
+   "osm_id": "node/11088463327",
+   "nombre": "Torre 2"
+  },
+  {
+   "osm_id": "node/11088463329",
+   "nombre": "Torre 3"
+  },
+  {
+   "osm_id": "node/12648067385",
+   "nombre": "Totem"
+  },
+  {
+   "osm_id": "node/13761335041",
+   "nombre": "Tower Rock"
+  },
+  {
+   "osm_id": "node/9768821317",
+   "nombre": "Travesia Cuatro"
+  },
+  {
+   "osm_id": "node/10971607644",
+   "nombre": "Trône Du Roi Dakk"
+  },
+  {
+   "osm_id": "node/10651155149",
+   "nombre": "Vista De Las Montañas"
+  },
+  {
+   "osm_id": "node/11094400904",
+   "nombre": "Vista Panoramica General"
+  },
+  {
+   "osm_id": "node/12068855303",
+   "nombre": "ZMG Sur"
+  }
+ ],
+ "renombrar": {
+  "node/12614243152": "Museo Interpretativo de Paisaje Agavero El Arenal",
+  "way/475942467": "Museo Arqueológico de Mascota",
+  "node/3645138241": "Museo Nacional de la Cerámica Jorge Wilmot",
+  "node/8439971417": "Museo Los Abuelos",
+  "node/4508993089": "Museo de la Ciudad de Guadalajara",
+  "node/6242921280": "Museo Cihuapilli (Casa de la Virgen)",
+  "node/4408820788": "Museo del Periodismo y las Artes Gráficas",
+  "node/3917709457": "Museo de Ripley Aunque Usted No lo Crea"
+ },
+ "unir_categorias": {
+  "Lagos": "Lago"
+ }
+}
