@@ -13,6 +13,7 @@ from django.conf.urls.static import static
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerSplitView
 from apps.comunidad.bote import unirse_al_bote
 from apps.comunidad.cola import cola_moderacion
+from apps.comunidad.comentarios import pagina_comentarios
 from apps.comunidad.negocios import pagina_negocios
 from apps.comunidad.pasaporte import pasaporte, pasaporte_publico
 from apps.comunidad.viajes import viaje_publico
@@ -43,6 +44,7 @@ urlpatterns = [
     path('mis-viajes/<int:pk>/bote/', TemplateView.as_view(template_name='comunidad/bote.html'), name='bote-pagina'),
     path('botes/<uuid:enlace>/', unirse_al_bote, name='bote-invitacion'),
     path('negocios/', pagina_negocios, name='negocios'),
+    path('comentarios/', pagina_comentarios, name='comentarios'),
     path('pasaporte/', pasaporte, name='pasaporte'),
     path('pasaporte/<uuid:enlace>/', pasaporte_publico, name='pasaporte-publico'),
     # Antes de admin.site.urls para que el admin no la tome como una app.
