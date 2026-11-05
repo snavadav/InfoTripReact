@@ -16,7 +16,7 @@ from django.core.cache import cache
 
 from apps.comunidad.models import Aporte, Comentario, InteresNegocio, PropuestaLugar, Viaje
 from apps.comunidad.moderacion import moderar
-from apps.destinos.models import Destino, Lugar, Municipio, Region
+from apps.destinos.models import Categoria, Destino, Lugar, Municipio, Region
 from apps.metricas.models import Evento
 from apps.usuarios.models import Usuario
 
@@ -86,7 +86,7 @@ class FlujosTests(StaticLiveServerTestCase):
         self.pagina.wait_for_url(lambda url: '/login/' not in url)
 
     def test_paginas_publicas_sin_violaciones_de_csp(self):
-        for ruta in ['/', '/destinos/', '/destinos/mirador/', '/destinos/mirador/costos/', '/costos/', '/misiones/', '/pasaporte/', '/negocios/', '/lugares/proponer/', '/login/', '/registro/', '/api/v1/docs/', '/no-existe/']:
+        for ruta in ['/', '/destinos/', '/destinos/mirador/', '/destinos/mirador/costos/', '/costos/', '/misiones/', '/pasaporte/', '/negocios/', '/planeador/', '/lugares/proponer/', '/login/', '/registro/', '/api/v1/docs/', '/no-existe/']:
             with self.subTest(ruta=ruta):
                 self.abrir(ruta)
                 self.pagina.wait_for_load_state('load')
@@ -513,6 +513,28 @@ class FlujosTests(StaticLiveServerTestCase):
         self.pagina.wait_for_selector('#comentario-form .form-status:has-text("Gracias")')
         comentario = Comentario.objects.get()
         self.assertEqual((comentario.pagina, comentario.tipo), ('/destinos/mirador/', 'problema'))
+
+    def test_armar_una_ruta_y_guardarla_en_mis_viajes(self):
+        self.destino.categorias.add(Categoria.objects.create(nombre='Miradores', slug='miradores'))
+        Lugar.objects.create(nombre='Cabañas del Bosque', tipo='dormir', subtipo='hotel', latitud=19.901,
+                             longitud=-103.701)
+        self.iniciar_sesion()
+        self.abrir('/planeador/')
+        self.pagina.check('#ruta-form input[value="miradores"]')
+        self.pagina.select_option('#ruta-form [name="dias"]', '2')
+        self.pagina.uncheck('#ruta-form [name="regresar"]')
+        self.pagina.click('#ruta-form button[type="submit"]')
+        self.pagina.wait_for_selector('#ruta-dias .planeador-dia')
+        self.assertIn('Mirador', self.pagina.inner_text('#ruta-dias'))
+        self.assertIn('Cabañas del Bosque', self.pagina.inner_text('#ruta-dias'))
+        # Un marcador numerado por parada, más el de salida.
+        self.assertEqual(self.pagina.locator('#ruta-mapa .pin-ruta').count(), 1)
+        self.pagina.click('#ruta-guardar')
+        self.pagina.wait_for_selector('#ruta-guardar-estado:has-text("Guardada")')
+        viaje = Viaje.objects.get(autor=self.usuario)
+        self.assertEqual(list(viaje.lugares.all()), [self.destino])
+        self.assertEqual(viaje.actividades[0]['titulo'], 'Mirador')
+        self.assertIn('Dormir: Cabañas del Bosque', [a['titulo'] for a in viaje.actividades])
 
     def test_guardar_favorito_y_cerrar_sesion(self):
         self.iniciar_sesion()

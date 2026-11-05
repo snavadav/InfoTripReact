@@ -257,6 +257,9 @@ class Parametros:
     cruce: float = 0.9
     mutacion: float = 0.3
     elite: int = 2
+    # Híbrido: parte de la población inicial sale del método voraz y de variaciones suyas.
+    # Con 0 es un genético puro, que empieza solo con órdenes al azar.
+    sembrados: float = 0.25
 
 
 def _cruce_ox(padre, madre, azar):
@@ -270,18 +273,33 @@ def _cruce_ox(padre, madre, azar):
 
 
 def _mutar(orden, azar):
-    """Intercambio de dos sitios o inversión de un tramo, con la misma probabilidad."""
+    """Intercambio de dos sitios, inversión de un tramo o mover un sitio a otra posición."""
     hijo = list(orden)
     a, b = sorted(azar.sample(range(len(hijo)), 2))
-    if azar.random() < 0.5:
+    tipo = azar.random()
+    if tipo < 1 / 3:
         hijo[a], hijo[b] = hijo[b], hijo[a]
-    else:
+    elif tipo < 2 / 3:
         hijo[a:b + 1] = reversed(hijo[a:b + 1])
+    else:
+        # Mover suele meter un sitio que no cabía en el hueco justo de otro día.
+        hijo.insert(b, hijo.pop(a))
     return hijo
 
 
+def _orden_voraz(problema):
+    """El orden que eligió el voraz, seguido de los sitios que no visitó, de más a menos puntaje."""
+    visitados = voraz(problema).visitados
+    resto = sorted(set(range(len(problema.sitios))) - set(visitados), key=lambda i: -problema.sitios[i].puntaje)
+    return visitados + resto
+
+
 def genetico(problema, parametros=None, semilla=None):
-    """Algoritmo genético con torneo, cruce OX, mutación y élite. Con la misma semilla da el mismo plan."""
+    """Algoritmo genético con torneo, cruce OX, mutación y élite. Con la misma semilla da el mismo plan.
+
+    Por omisión es híbrido (ver `Parametros.sembrados`): nunca queda por debajo del voraz y lo mejora cuando
+    hay un orden mejor.
+    """
     parametros = parametros or Parametros()
     azar = random.Random(semilla)
     inicio_reloj = time.perf_counter()
@@ -294,7 +312,12 @@ def genetico(problema, parametros=None, semilla=None):
     def evaluar(orden):
         return decodificar(problema, orden).aptitud
 
-    poblacion = [azar.sample(range(n), n) for _ in range(parametros.poblacion)]
+    sembrados = round(parametros.poblacion * parametros.sembrados)
+    poblacion = []
+    if sembrados:
+        base = _orden_voraz(problema)
+        poblacion = [base] + [_mutar(base, azar) for _ in range(sembrados - 1)]
+    poblacion += [azar.sample(range(n), n) for _ in range(parametros.poblacion - len(poblacion))]
     aptitudes = [evaluar(orden) for orden in poblacion]
     mejor_aptitud, sin_mejora, generacion = max(aptitudes), 0, 0
     for generacion in range(1, parametros.generaciones + 1):
