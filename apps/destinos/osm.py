@@ -5,6 +5,7 @@ identificado qué viene de ahí (Destino.osm_id). Se importa de vez en cuando co
 `importar_osm`; nunca se consulta en una visita, porque el servidor público pide un uso moderado.
 """
 import json
+import re
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -222,7 +223,10 @@ def interpretar_lugares(datos):
             'osm_id': clave, 'nombre': nombre[:200], 'tipo': TIPO_DE_SUBTIPO[subtipo], 'subtipo': subtipo,
             'municipio': municipio, 'latitud': round(centro['lat'], 6), 'longitud': round(centro['lon'], 6),
             'direccion': _direccion(etiquetas), 'sitio_web': _sitio_web(etiquetas),
-            'telefono': (etiquetas.get('phone') or etiquetas.get('contact:phone') or '').strip()[:60],
+            # Algunos llegan como número decimal: 3751409852.0
+            'telefono': re.sub(
+                r'\.0$', '', (etiquetas.get('phone') or etiquetas.get('contact:phone') or '').strip()
+            )[:60],
             'horario': etiquetas.get('opening_hours', '').strip()[:200],
         })
     return lugares, omitidos

@@ -62,8 +62,8 @@ class LugarAdmin(admin.ModelAdmin):
     """Editar un lugar lo protege de la siguiente importación. Para retirarlo, se oculta."""
     list_display = ['nombre', 'subtipo', 'municipio', 'es_activo', 'protegido']
     list_filter = ['tipo', 'es_activo', 'protegido', 'municipio__region']
-    search_fields = ['nombre', 'municipio__nombre', 'osm_id']
-    readonly_fields = ['fecha_creacion', 'fecha_actualizacion', 'osm_id', 'protegido']
+    search_fields = ['nombre', 'municipio__nombre', 'osm_id', 'denue_id']
+    readonly_fields = ['fecha_creacion', 'fecha_actualizacion', 'osm_id', 'denue_id', 'protegido']
     list_select_related = ['municipio']
     actions = ['ocultar', 'publicar']
     def has_delete_permission(self, request, obj=None): return False

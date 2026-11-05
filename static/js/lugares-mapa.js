@@ -48,6 +48,8 @@
       const credit = node('p', '© ', 'lugar-popup-credito');
       credit.append(link('colaboradores de OpenStreetMap', place.osm_url, true));
       box.append(credit);
+    } else if (place.atribucion) {
+      box.append(node('p', place.atribucion, 'lugar-popup-credito'));
     }
     return box;
   }

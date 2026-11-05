@@ -5,7 +5,7 @@ import unicodedata
 
 from django import forms
 from django.core.paginator import Paginator
-from django.db.models import F
+from django.db.models import BooleanField, Case, F, Value, When
 from django.http import Http404
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
@@ -98,8 +98,12 @@ def completar(lugar):
 
 
 def primero_lo_curado(destinos):
-    """Lo registrado por el equipo antes que lo importado: es lo que tiene descripción y fotografía."""
-    return destinos.order_by(F('osm_id').asc(nulls_first=True), 'nombre', 'pk')
+    """Primero lo que tiene fotografía; después, lo registrado por el equipo antes que lo importado."""
+    con_foto = Case(When(slug__in=list(FOTOS_CATALOGO), then=Value(True)), default=Value(False),
+                    output_field=BooleanField())
+    return destinos.annotate(con_foto_de_catalogo=con_foto).order_by(
+        '-con_foto_de_catalogo', F('osm_id').asc(nulls_first=True), 'nombre', 'pk'
+    )
 
 
 def punto_de_mapa(destino):

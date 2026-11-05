@@ -107,7 +107,7 @@ LUGARES = [
     (
         'Chapala',
         'Ribera de Chapala',
-        'Lagos',
+        'Lago',
         '20.298056',
         '-103.190278',
         'Explora una localidad junto al lago de Chapala y conoce sus paseos y espacios del centro.',

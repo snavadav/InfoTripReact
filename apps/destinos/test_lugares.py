@@ -52,6 +52,10 @@ class InterpretarTests(TestCase):
     def test_un_nombre_generico_solo_se_descarta_en_tiendas(self):
         self.assertEqual(len(interpretar_lugares(respuesta(lugar(1, 'Bodega', 19.9, -103.5, amenity='restaurant')))[0]), 1)
 
+    def test_telefono_sin_decimales(self):
+        sitio = interpretar_lugares(respuesta(lugar(1, 'Fonda', 19.9, -103.5, amenity='cafe', phone='3751409852.0')))[0][0]
+        self.assertEqual(sitio['telefono'], '3751409852')
+
     def test_omite_lo_que_no_aplica(self):
         lugares, omitidos = interpretar_lugares(respuesta(
             lugar(1, 'Fuera', 40, -103.5, amenity='pharmacy'),

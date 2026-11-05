@@ -97,3 +97,4 @@ details > form, details > p { margin-top: .6rem; }
 .cerca-distancia { flex: none; color: var(--texto-3); font-family: var(--fuente-mono); font-size: .75rem; }
 .cerca-grupo small { display: block; color: var(--texto-3); }
 .cerca-enlaces { display: flex; flex-wrap: wrap; gap: .1rem .7rem; font-size: .8125rem; }
+.practical-grid .community-note, .practical-grid .contribution-text { overflow-wrap: anywhere; }

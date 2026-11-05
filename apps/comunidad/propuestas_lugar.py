@@ -1,15 +1,14 @@
 """Propuestas de lugares que faltan en el mapa. Nada se publica hasta que el equipo lo aprueba."""
-from difflib import SequenceMatcher
 from math import cos, radians
 
 from django.db import transaction
-from django.utils.text import slugify
 from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework import generics, serializers
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.core.geo import distancia_km
+from apps.core.texto import se_parecen
 from apps.destinos.models import Lugar
 from apps.metricas.models import registrar
 from .models import PropuestaLugar
@@ -17,17 +16,9 @@ from .views import AporteThrottle
 
 METROS_DE_DUPLICADO = 150
 MAXIMO_PENDIENTES = 10
-SIMILITUD_MINIMA = 0.75
 # Jalisco con un pequeño margen: una propuesta fuera es casi seguro un error al marcar el mapa.
 LATITUDES_JALISCO = (18.8, 22.9)
 LONGITUDES_JALISCO = (-105.8, -101.4)
-
-
-def se_parecen(uno, otro):
-    a, b = slugify(uno), slugify(otro)
-    if not a or not b:
-        return uno.strip().lower() == otro.strip().lower()
-    return a in b or b in a or SequenceMatcher(None, a, b).ratio() >= SIMILITUD_MINIMA
 
 
 def lugares_parecidos(nombre, latitud, longitud):

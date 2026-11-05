@@ -12,7 +12,8 @@ from apps.usuarios.models import Usuario
 from .cuenta import anonimizar_cuenta
 from .models import Notificacion, PropuestaLugar
 from .moderacion import moderar
-from .propuestas_lugar import MAXIMO_PENDIENTES, se_parecen
+from apps.core.texto import se_parecen
+from .propuestas_lugar import MAXIMO_PENDIENTES
 
 URL = '/api/v1/lugares/propuestas/'
 DATOS = {'nombre': 'Fonda Nueva', 'subtipo': 'restaurant', 'latitud': '19.945000', 'longitud': '-103.757000'}

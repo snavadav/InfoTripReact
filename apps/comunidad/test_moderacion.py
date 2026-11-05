@@ -171,7 +171,8 @@ class ColaModeracionTests(DatosModeracion):
                                    'Reportes de información abiertos': 0, 'Lugares propuestos': 0,
                                    'Reseñas de lugares pendientes': 0,
                                    'Reportes de reseñas de lugares abiertos': 0,
-                                   'Lugares que alguien dice que cerraron (últimos 90 días)': 0})
+                                   'Lugares que alguien dice que cerraron (últimos 90 días)': 0,
+                                   'Comentarios del sitio sin atender': 0})
         primero = respuesta.context['secciones'][0]['elementos'][0]
         self.assertEqual(primero['enlace'], f'/admin/comunidad/aporte/{antiguo.pk}/change/')
         self.assertContains(self.client.get('/admin/'), 'href="/admin/moderacion/"')

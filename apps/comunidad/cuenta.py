@@ -18,7 +18,7 @@ from apps.usuarios.models import CodigoAcceso
 from apps.usuarios.sesion import borrar_cookie_refresh
 from .models import (
     Aporte, Colaboracion, Confirmacion, ConfirmacionLugar, Favorito, GastoReal, Notificacion, Participante,
-    PasaporteCompartido, PropuestaLugar, ResenaLugar, Viaje, VisitaComprobada,
+    Comentario, PasaporteCompartido, PropuestaLugar, ResenaLugar, Viaje, VisitaComprobada,
 )
 
 TEXTO_ELIMINADO = '[Eliminado por su autor]'
@@ -46,6 +46,7 @@ def anonimizar_cuenta(usuario):
     # Lo ya aprobado es un dato del lugar, no de la persona: se queda. Lo pendiente ya no se publicará.
     PropuestaLugar.objects.filter(autor=usuario, estado='pendiente').update(estado='oculto')
     PropuestaLugar.objects.filter(autor=usuario).update(nota='')
+    Comentario.objects.filter(usuario=usuario).delete()
     for modelo in (Viaje, Favorito, Confirmacion, ConfirmacionLugar, VisitaComprobada):
         modelo.objects.filter(autor=usuario).delete()
     # En botes de otras personas su parte se queda, para que las cuentas del grupo sigan cuadrando.

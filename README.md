@@ -188,6 +188,7 @@ docker compose --env-file .env.docker down
 | `/admin/metricas/` | Embudos, retención y fichas útiles (personal) |
 | `/escapadas/<id>/` | Escapada compartida, de solo lectura y sin cuenta |
 | `/pasaporte/`, `/pasaporte/<enlace>/` | Pasaporte de Pueblos Mágicos: un sello por visita comprobada y tarjeta para compartir |
+| `/comentarios/` | Problemas e ideas de quienes prueban el sitio; se revisan en la cola de moderación |
 | `/negocios/` | Interés de negocios locales; sin cobros, se revisa en el admin |
 | `/misiones/` | Misiones de la comunidad: qué dato falta o conviene confirmar, y cronistas por municipio |
 | `/costos/`, `/destinos/<slug>/costos/` | ¿Cuánto cuesta ir?: gastos reales, con un mínimo de 3 reportes por concepto |
@@ -258,6 +259,10 @@ Registrarse o iniciar sesión envía un código al correo, y `verificar-codigo` 
 | `python manage.py generar_miniaturas` | Crea las miniaturas de fotos anteriores a este campo; basta una vez |
 | `python manage.py purgar_eventos` | Borra los eventos de uso de más de 13 meses |
 | `python manage.py cargar_destinos_iniciales` | Carga opcional del catálogo inicial |
+| `python manage.py curar_catalogo` | Oculta destinos importados de poco valor, corrige nombres y une categorías ([MVP](docs/mvp.md)) |
+| `python manage.py crear_moderacion --agregar CORREO` | Da acceso de moderación a una persona sin hacerla superusuaria |
+| `python manage.py sembrar_contenido` | Carga horarios, costos y contactos de museos desde fuentes públicas, con su cita ([guía](docs/sembrar-contenido.md)) |
+| `python manage.py importar_denue` | Importa negocios del DENUE del INEGI; requiere `DENUE_TOKEN` ([guía](docs/importar-osm.md)) |
 | `python manage.py importar_lugares` | Importa dónde comer, dormir y servicios de OpenStreetMap; se publican de inmediato ([guía](docs/importar-osm.md)) |
 | `python manage.py importar_osm` | Importa lugares de OpenStreetMap, ocultos hasta publicarlos; gratis y sin cuenta ([guía](docs/importar-osm.md)) |
 

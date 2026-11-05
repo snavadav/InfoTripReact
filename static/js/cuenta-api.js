@@ -21,7 +21,7 @@
     actividades: 'Actividades', pendientes: 'Pendientes', notas: 'Notas', lugares: 'Lugares',
     negocio: 'Negocio', contacto: 'Tu nombre', correo: 'Correo', telefono: 'Teléfono', municipio: 'Municipio',
     mensaje: 'Mensaje', acepto: 'Autorización', subtipo: 'Tipo de lugar', latitud: 'Punto en el mapa',
-    longitud: 'Punto en el mapa', sitio_web: 'Sitio web', direccion: 'Dirección', horario: 'Horario', nota: 'Nota', descripcion: 'Descripción', fecha: 'Fecha', noches: 'Noches', pagado_por: 'Quién pagó', entre: 'Entre quiénes',
+    longitud: 'Punto en el mapa', sitio_web: 'Sitio web', pagina: 'Página', direccion: 'Dirección', horario: 'Horario', nota: 'Nota', descripcion: 'Descripción', fecha: 'Fecha', noches: 'Noches', pagado_por: 'Quién pagó', entre: 'Entre quiénes',
   };
   function message(data) {
     if (typeof data === 'string') return data;
