@@ -4,30 +4,48 @@
 {% block content %}{% include 'partials/navBar.html' %}
 <main class="explore-shell legal-page">
   <h1>Términos de uso</h1>
-  <p class="community-note">Versión preliminar de un proyecto académico de la Universidad de Guadalajara, pendiente de revisión legal.</p>
+  <p class="community-note">Versión preliminar de un proyecto académico de la Universidad de Guadalajara, pendiente de revisión legal. Última actualización: 8 de noviembre de 2026.</p>
 
   <h2>Qué es InfoTrip</h2>
-  <p>Un sitio para planear escapadas por Jalisco con información aportada por viajeros. No vendemos viajes ni hacemos reservaciones.</p>
+  <p>Un sitio gratuito para planear escapadas por Jalisco, con información de fuentes públicas y aportada por viajeros. Es un proyecto académico de estudiantes del CUCEI de la Universidad de Guadalajara. No vendemos viajes ni hacemos reservaciones. Al usar el sitio aceptas estos términos y el <a href="{% url 'privacidad' %}">aviso de privacidad</a>.</p>
+
+  <h2>Quién puede usarlo</h2>
+  <p>Para crear una cuenta debes tener 18 años o más, o contar con el permiso de tu madre, padre o tutor.</p>
 
   <h2>La información es orientativa</h2>
-  <p>Horarios, precios y condiciones provienen de la comunidad y pueden haber cambiado. Una revisión editorial no garantiza que un dato siga vigente ni acredita una visita. Confirma con el lugar antes de viajar.</p>
+  <ul>
+    <li>Horarios, precios y condiciones provienen de fuentes públicas (como el INEGI, OpenStreetMap y el Sistema de Información Cultural) y de la comunidad, y pueden haber cambiado. Una revisión editorial no garantiza que un dato siga vigente ni acredita una visita. Confirma con el lugar antes de viajar.</li>
+    <li>Los gastos que muestra el sitio son lo que reportaron otros viajeros, no precios oficiales.</li>
+    <li>El planeador de rutas calcula tiempos y distancias aproximados, en línea recta corregida, sin considerar tráfico, clima ni el estado de los caminos. Revisa tu ruta con un servicio de navegación y planea con margen.</li>
+    <li>El pasaporte, los sellos y las misiones son una actividad de InfoTrip; no son documentos oficiales ni están afiliados al programa Pueblos Mágicos ni a ninguna dependencia de gobierno.</li>
+    <li>El bote de una escapada solo lleva la cuenta de lo que anota el grupo: InfoTrip no recibe, guarda ni transfiere dinero.</li>
+  </ul>
 
   <h2>Lo que compartes</h2>
   <ul>
     <li>Comparte solo experiencias reales y datos que puedas respaldar con una fuente.</li>
-    <li>Sube únicamente fotografías propias o que tengas derecho a publicar.</li>
+    <li>Sube únicamente fotografías propias o que tengas derecho a publicar, y evita que aparezcan personas que no dieron su permiso.</li>
     <li>No publiques insultos, datos personales de otras personas ni publicidad.</li>
-    <li>Al publicar, nos permites mostrar ese contenido en InfoTrip mientras no lo retires.</li>
+    <li>Lo que publicas sigue siendo tuyo. Al publicarlo, nos das permiso gratuito y no exclusivo de mostrarlo en InfoTrip mientras no lo retires o elimines tu cuenta.</li>
   </ul>
 
   <h2>Moderación</h2>
-  <p>Revisamos los aportes antes de publicarlos y podemos ocultar contenido que incumpla estos términos. Cualquier persona con cuenta puede reportar contenido publicado.</p>
+  <p>Una persona del equipo revisa los aportes antes de publicarlos, y podemos ocultar contenido que incumpla estos términos. Cualquier persona con cuenta puede reportar contenido publicado.</p>
 
   <h2>Negocios</h2>
   <p>Un pago nunca cambia reseñas, orden en los resultados, moderación ni visibilidad. Hoy InfoTrip no cobra a negocios; si eso cambia, todo contenido pagado irá marcado como tal.</p>
 
+  <h2>Datos y contenido de terceros</h2>
+  <p>Los mapas, directorios y fotografías de terceros conservan sus licencias y se citan en <a href="{% url 'creditos' %}">Créditos</a>. Los enlaces a otros sitios, como "Cómo llegar", llevan a servicios que tienen sus propios términos.</p>
+
   <h2>Tu cuenta</h2>
-  <p>Eres responsable de lo que se haga con tu cuenta. Puedes eliminarla cuando quieras desde Mi perfil. Podemos suspender cuentas que abusen del servicio.</p>
+  <p>Eres responsable de lo que se haga con tu cuenta; no compartas tu contraseña. Puedes eliminarla cuando quieras desde Mi perfil. Podemos suspender cuentas que abusen del servicio o incumplan estos términos.</p>
+
+  <h2>Límites del servicio</h2>
+  <p>Ofrecemos InfoTrip tal como está, como proyecto académico y sin costo. Puede tener interrupciones o errores, y no respondemos por decisiones de viaje tomadas solo con su información.</p>
+
+  <h2>Cambios y contacto</h2>
+  <p>Si cambiamos estos términos, publicaremos la nueva versión en esta página con su fecha.{% if contacto %} Para dudas, escríbenos a <a href="mailto:{{ contacto }}">{{ contacto }}</a>.{% endif %} Estos términos se rigen por las leyes de México.</p>
   {% include 'destinos/footer.html' %}
 </main>
 {% endblock %}

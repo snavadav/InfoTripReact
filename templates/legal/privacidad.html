@@ -4,37 +4,77 @@
 {% block content %}{% include 'partials/navBar.html' %}
 <main class="explore-shell legal-page">
   <h1>Aviso de privacidad</h1>
-  <p class="community-note">Versión preliminar de un proyecto académico de la Universidad de Guadalajara, pendiente de revisión legal.</p>
+  <p class="community-note">Versión preliminar de un proyecto académico de la Universidad de Guadalajara, pendiente de revisión legal. Última actualización: 8 de noviembre de 2026.</p>
 
   <h2>Quién es responsable</h2>
-  <p>InfoTrip es un proyecto académico desarrollado por su equipo de estudiantes.{% if contacto %} Contacto: <a href="mailto:{{ contacto }}">{{ contacto }}</a>.{% endif %}</p>
+  <p>El equipo de estudiantes que desarrolla InfoTrip, proyecto académico del Centro Universitario de Ciencias Exactas e Ingenierías (CUCEI) de la Universidad de Guadalajara, es responsable de tus datos personales conforme a la Ley Federal de Protección de Datos Personales en Posesión de los Particulares.{% if contacto %} Puedes escribirnos a <a href="mailto:{{ contacto }}">{{ contacto }}</a> para cualquier asunto relacionado con tus datos.{% endif %}</p>
 
   <h2>Qué datos tratamos</h2>
+  <p>No pedimos datos sensibles (salud, religión, origen étnico, opiniones políticas o similares). Solo tratamos:</p>
   <ul>
     <li><strong>Cuenta:</strong> nombre, apellido, correo electrónico y contraseña cifrada.</li>
     <li><strong>Perfil, si decides agregarlo:</strong> ciudad de origen, descripción y fotografía.</li>
     <li><strong>Lo que aportas:</strong> reseñas, fotografías, gastos, datos prácticos, preguntas, respuestas, reportes, reseñas de lugares con su foto y gasto, tus respuestas a "¿Sigue abierto?" y los lugares que propones. Tu nombre no aparece junto a un lugar propuesto, y el punto marcado se guarda porque es la ubicación del lugar.</li>
     <li><strong>Lo que planeas:</strong> escapadas, presupuestos, notas y lugares guardados.</li>
     <li><strong>El bote de una escapada, si te unes:</strong> tu nombre y los gastos que anotes o que te incluyan, visibles para las demás personas de ese bote.</li>
-    <li><strong>Ubicación, solo si usas "Cerca de mí", comprobas una visita o la confirmas en una reseña:</strong> se usa una vez para calcular distancias o compararla con la del lugar, y no se guarda. Conservamos solo el resultado, el lugar y la fecha, nunca tus coordenadas. Si compartes tu pasaporte, quien tenga el enlace ve tu nombre y tus sellos, sin fechas.</li>
+    <li><strong>Ubicación, solo si usas "Cerca de mí", compruebas una visita, la confirmas en una reseña o sales desde tu ubicación en el planeador de rutas:</strong> se usa una vez para calcular distancias, armar el itinerario o compararla con la del lugar, y no se guarda. Conservamos solo el resultado, el lugar y la fecha, nunca tus coordenadas. Si compartes tu pasaporte, quien tenga el enlace ve tu nombre y tus sellos, sin fechas.</li>
     <li><strong>Si nos envías comentarios:</strong> lo que escribas y la página desde la que lo hiciste; con sesión iniciada, también tu cuenta, para poder responderte. Se borran al eliminar tu cuenta.</li>
     <li><strong>Si nos escribes como negocio:</strong> el nombre del negocio, tu nombre, correo, teléfono si lo das, municipio y mensaje. Solo los usamos para contactarte y puedes pedir que los borremos.</li>
     <li><strong>Uso del sitio:</strong> eventos como la apertura de una ficha o el guardado de un viaje, que se borran a los 13 meses. Los de acciones hechas con sesión se asocian a tu cuenta. No guardamos tu dirección IP con ellos ni usamos cookies de publicidad, y respetamos la señal «No rastrear» de tu navegador en los que envía la página.</li>
+    <li><strong>Registros de seguridad:</strong> el servidor registra la dirección IP, la fecha y la página de cada visita, y los intentos de inicio de sesión, para detectar abusos y errores. Solo se conservan los registros más recientes: los anteriores se borran automáticamente.</li>
   </ul>
 
   <h2>Para qué los usamos</h2>
+  <p><strong>Finalidades necesarias</strong>, sin las cuales no podemos darte el servicio:</p>
   <ul>
-    <li>Crear tu cuenta y confirmar que controlas tu correo.</li>
+    <li>Crear tu cuenta, confirmar que controlas tu correo y mantener tu sesión segura.</li>
     <li>Publicar y moderar lo que compartes. Tu nombre aparece junto a tus aportes publicados, salvo en los gastos enviados desde un bote, que se publican sin nombre.</li>
-    <li>Avisarte sobre tus aportes y viajes. Puedes desactivar estos correos desde Mi perfil.</li>
-    <li>Entender qué partes del sitio funcionan, con datos agregados.</li>
+    <li>Guardar tus escapadas, favoritos, bote, visitas y pasaporte.</li>
+    <li>Atender tus comentarios, reportes y solicitudes sobre tus datos.</li>
+    <li>Proteger el sitio contra abusos y corregir errores.</li>
+  </ul>
+  <p><strong>Finalidades adicionales</strong>, que puedes rechazar sin perder el servicio:</p>
+  <ul>
+    <li>Avisarte por correo de novedades sobre tus aportes, viajes y lugares guardados. Puedes desactivarlo desde Mi perfil o con el enlace de cada correo.</li>
+    <li>Entender qué partes del sitio funcionan y elaborar los reportes académicos del proyecto, siempre con datos agregados que no te identifican. Para que no midamos lo que haces desde la página, activa la señal «No rastrear» de tu navegador; para excluir también el resto de tus eventos, escríbenos.</li>
+  </ul>
+  <p>La publicación u ocultamiento de tus aportes lo decide una persona del equipo de moderación, no un sistema automático.</p>
+
+  <h2>Cookies y almacenamiento en tu navegador</h2>
+  <p>Solo usamos cookies necesarias para que el sitio funcione, no de publicidad:</p>
+  <ul>
+    <li>Una cookie para mantener tu sesión (hasta 7 días) y otra de protección contra solicitudes falsificadas (CSRF).</li>
+    <li>Si eliges "Recordar este dispositivo", una cookie de 30 días para no pedirte el código de correo en ese equipo. Deja de valer si cambias tu contraseña o tu correo.</li>
+    <li>Tu navegador guarda los datos de tu perfil (como tu nombre y correo) para mostrarlos en el menú; se borran al cerrar sesión. También guarda tus borradores de ruta y de escapada y si prefieres el modo claro u oscuro; eso se borra al limpiar los datos del sitio en tu navegador.</li>
   </ul>
 
   <h2>Con quién se comparten</h2>
-  <p>No vendemos tus datos. El sitio carga mapas y tipografías de terceros (Google Maps, OpenStreetMap, Google Fonts y unpkg), que pueden recibir tu dirección IP al mostrarlos.</p>
+  <p>No vendemos ni prestamos tus datos. Solo los manejan, por cuenta nuestra y para las finalidades de este aviso, los proveedores que necesitamos para operar:</p>
+  <ul>
+    <li><strong>Alojamiento del sitio y copias de seguridad</strong> (Amazon Web Services). Sus servidores pueden estar fuera de México.</li>
+    <li><strong>Envío de correos</strong> (Google, mediante Gmail).</li>
+    <li><strong>Registro de errores</strong>, si está activado (Sentry), configurado para no enviar datos personales.</li>
+  </ul>
+  <p>El sitio también carga mapas y tipografías de terceros (Google Maps, OpenStreetMap, Google Fonts y unpkg), que pueden recibir tu dirección IP al mostrarlos. Solo entregaríamos tus datos a una autoridad si la ley nos obliga.</p>
+
+  <h2>Cuánto tiempo los conservamos</h2>
+  <ul>
+    <li>Tu cuenta y lo que aportas, mientras tengas la cuenta.</li>
+    <li>Los eventos de uso, 13 meses.</li>
+    <li>Los registros de seguridad del servidor, hasta que los reemplazan los más recientes.</li>
+    <li>Las copias de seguridad, 14 días. Por eso, lo que borres puede seguir en una copia hasta que esta se reemplace.</li>
+  </ul>
 
   <h2>Tus derechos</h2>
-  <p>Puedes consultar y corregir tus datos en Mi perfil, y eliminar tu cuenta desde ahí en cualquier momento. Al hacerlo borramos tus datos de perfil, viajes, favoritos y aportes; solo conservamos un registro anónimo del historial de moderación. Para cualquier otra solicitud sobre tus datos, escríbenos{% if contacto %} a <a href="mailto:{{ contacto }}">{{ contacto }}</a>{% endif %}.</p>
+  <p>Tienes derecho a acceder a tus datos, rectificarlos, cancelarlos u oponerte a su uso (derechos ARCO), así como a revocar tu consentimiento y limitar el uso de tus datos.</p>
+  <ul>
+    <li><strong>Desde el sitio:</strong> en Mi perfil puedes consultar y corregir tus datos, desactivar los correos de novedades y eliminar tu cuenta en cualquier momento. Al eliminarla borramos tus datos de perfil, viajes, favoritos y aportes; solo conservamos un registro anónimo del historial de moderación.</li>
+    <li><strong>Por correo:</strong> para cualquier otra solicitud, escríbenos{% if contacto %} a <a href="mailto:{{ contacto }}">{{ contacto }}</a>{% endif %} desde el correo de tu cuenta, indicando tu nombre, qué derecho quieres ejercer y sobre qué datos. Te responderemos en un plazo máximo de 20 días hábiles.</li>
+  </ul>
+  <p>Si consideras que no atendimos tu solicitud, puedes acudir a la autoridad de protección de datos personales competente.</p>
+
+  <h2>Cambios a este aviso</h2>
+  <p>Si cambiamos este aviso, publicaremos la nueva versión en esta página con su fecha. Si el cambio afecta lo que hacemos con tus datos, te avisaremos además por correo.</p>
   {% include 'destinos/footer.html' %}
 </main>
 {% endblock %}
