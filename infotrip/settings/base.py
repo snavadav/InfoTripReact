@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'apps.comunidad',
     'apps.metricas',
     'apps.curador',
+    'apps.rutas',
 ]
 
 # ─── MIDDLEWARE ───────────────────────────────────────────────

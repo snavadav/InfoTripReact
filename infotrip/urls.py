@@ -25,6 +25,7 @@ from apps.destinos.frontend import (
 )
 from apps.curador.views import etiquetar as etiquetar_lugares
 from apps.metricas.views import EventosView, panel as panel_metricas
+from apps.rutas.views import pagina_planeador
 
 
 def vista_legal(plantilla):
@@ -61,6 +62,7 @@ urlpatterns = [
     # API v1
     path('api/v1/eventos/', EventosView.as_view(), name='eventos'),
     path('api/v1/', include('apps.comunidad.urls')),
+    path('api/v1/', include('apps.rutas.urls')),
     path('perfil/', TemplateView.as_view(template_name='comunidad/perfil.html'), name='perfil'),
     path('recuperar/', TemplateView.as_view(template_name='comunidad/recuperar.html'), name='recuperar'),
     path('privacidad/', vista_legal('legal/privacidad.html'), name='privacidad'),
@@ -77,6 +79,7 @@ urlpatterns = [
     path('destinos/<slug:slug>/costos/', costos_destino, name='destino-costos'),
     path('costos/', costos_indice, name='costos-indice'),
     path('misiones/', misiones, name='misiones'),
+    path('planeador/', pagina_planeador, name='planeador'),
     path('lugares/proponer/', proponer_lugar, name='proponer-lugar'),
     path('lugares/<int:pk>/', lugar_detalle, name='lugar-detalle'),
     path('',          inicio,         name='index'),

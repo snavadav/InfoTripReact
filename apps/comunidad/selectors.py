@@ -203,6 +203,16 @@ def dato_vigente_primero(correcciones):
     return correcciones.order_by('-fecha_dato', '-creado', '-pk')
 
 
+def textos_practicos(destino_ids, campos):
+    """{(destino_id, campo): texto} con la versión vigente publicada de cada dato práctico."""
+    vigentes = {}
+    for destino_id, campo, texto in dato_vigente_primero(
+        publicas().filter(destino_id__in=destino_ids, tipo='correccion', campo__in=campos)
+    ).values_list('destino_id', 'campo', 'texto'):
+        vigentes.setdefault((destino_id, campo), texto)
+    return vigentes
+
+
 def dato_vigente(correccion):
     """La versión publicada que hoy se muestra para el mismo destino y campo."""
     return dato_vigente_primero(

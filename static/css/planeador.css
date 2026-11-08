@@ -1,0 +1,35 @@
+/* Planeador de rutas: formulario a la izquierda, mapa e itinerario a la derecha. */
+.planeador-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 1.25rem; align-items: start; margin-top: 1rem; }
+.planeador-form { margin-top: 0; max-width: none; position: sticky; top: calc(var(--nav-alto) + 1rem); }
+.planeador-form > button[type="button"] { justify-self: start; }
+.planeador-fila { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+.planeador-intereses { border: 1px solid var(--linea); border-radius: var(--radio-s); padding: .5rem .75rem .75rem; display: grid; grid-template-columns: 1fr 1fr; gap: .35rem .75rem; }
+.planeador-intereses legend { padding: 0 .25rem; font-weight: 600; }
+.planeador-resultado { display: grid; gap: 1rem; min-width: 0; }
+.planeador-resumen { display: flex; flex-wrap: wrap; gap: .4rem 1rem; align-items: baseline; padding: .75rem 1rem; border: 1px solid var(--linea); border-radius: var(--radio); background: var(--panel); }
+.planeador-resumen strong { font-size: 1.125rem; }
+.planeador-resumen span { color: var(--texto-2); }
+.planeador-avisos { margin: 0; padding: .6rem 1rem .6rem 2rem; border-radius: var(--radio); background: var(--aviso-suave); color: var(--aviso); font-size: .875rem; display: grid; gap: .25rem; }
+.planeador-dia { margin-top: 0; }
+.planeador-dia + .planeador-dia { margin-top: 1rem; }
+.planeador-dia > h2 { display: flex; align-items: center; gap: .5rem; font-size: 1.0625rem; }
+.planeador-dia > h2::before { content: ''; width: .75rem; height: .75rem; border-radius: 50%; background: var(--color-dia); flex: none; }
+.planeador-paradas { list-style: none; margin: .5rem 0 0; padding: 0; display: grid; gap: .6rem; }
+.planeador-paradas > li { display: grid; gap: .1rem; padding-left: .75rem; border-left: 2px solid var(--linea); }
+.planeador-paradas small { color: var(--texto-2); }
+.planeador-parada { display: flex; gap: .6rem; align-items: baseline; flex-wrap: wrap; }
+.planeador-parada a { font-weight: 600; }
+.planeador-hora { font-family: var(--fuente-mono); font-size: .8125rem; color: var(--texto-2); white-space: nowrap; }
+.planeador-nota { color: var(--aviso) !important; }
+.planeador-util { display: block !important; border-left-style: dashed !important; font-size: .9rem; }
+.planeador-util > span:first-child { font-weight: 600; }
+.planeador-metodo { font-size: .875rem; color: var(--texto-2); }
+.planeador-metodo summary { cursor: pointer; font-weight: 600; color: var(--texto); }
+.planeador-metodo p { margin-top: .4rem; }
+/* Marcador numerado de cada parada, del color de su día. */
+.pin-ruta { display: grid; place-items: center; width: 26px; height: 26px; margin: 1px; border: 2px solid var(--panel); border-radius: 50%; background: var(--color-dia); color: #fff; font: 600 .75rem/1 var(--fuente); box-shadow: var(--sombra); }
+
+@media (max-width: 860px) {
+  .planeador-layout { grid-template-columns: minmax(0, 1fr); }
+  .planeador-form { position: static; }
+}

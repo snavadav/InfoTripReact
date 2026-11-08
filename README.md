@@ -176,6 +176,7 @@ docker compose --env-file .env.docker down
 | `/` | Página principal |
 | `/destinos/` | Exploración con filtros y mapa |
 | `/destinos/<slug>/` | Ficha del destino: datos prácticos, aportes y preguntas |
+| `/planeador/` | Planeador de rutas: itinerario de 1 a 3 días con horarios, distancias y presupuesto ([docs/planeador-rutas.md](docs/planeador-rutas.md)) |
 | `/login/`, `/registro/`, `/recuperar/` | Acceso a la cuenta |
 | `/perfil/` | Datos personales, avisos de moderación y aportes propios |
 | `/favoritos/`, `/mis-viajes/` | Lugares guardados y planes de viaje |
@@ -211,6 +212,7 @@ La referencia completa e interactiva está en `/api/v1/docs/` (Swagger) y el esq
 | Catálogo | `/api/v1/destinos/` | GET |
 | Catálogo | `/api/v1/destinos/<slug>/` | GET |
 | Catálogo | `/api/v1/regiones/`, `/municipios/`, `/categorias/`, `/servicios/` | GET |
+| Planeador | `/api/v1/rutas/planear/` | POST |
 | Aportes | `/api/v1/destinos/<slug>/aportes/` | GET, POST |
 | Aportes | `/api/v1/mis-aportes/` | GET |
 | Aportes | `/api/v1/aportes/<id>/` | GET, PATCH, DELETE |

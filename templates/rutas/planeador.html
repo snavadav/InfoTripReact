@@ -1,0 +1,61 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}Armar una ruta — InfoTrip{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/comunidad.css' %}"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""><link rel="stylesheet" href="{% static 'css/mapa.css' %}"><link rel="stylesheet" href="{% static 'css/planeador.css' %}">{% endblock %}
+{% block content %}{% include 'partials/navBar.html' %}
+<main class="explore-shell detail-shell">
+  <span class="eyebrow">Planeador</span>
+  <h1>Armar una ruta</h1>
+  <p class="propuesta-intro">Dinos cuándo sales y qué te gusta. Elegimos qué visitar y en qué orden para que te dé tiempo, respetando horarios y tu presupuesto.</p>
+  <div class="planeador-layout">
+    <form id="ruta-form" class="community-box community-form planeador-form">
+      <label>Sales de
+        <select name="municipio" id="ruta-municipio">
+          {% for municipio in municipios %}<option value="{{ municipio.slug }}"{% if municipio.slug == 'guadalajara' %} selected{% endif %}>{{ municipio.nombre }}</option>{% endfor %}
+        </select>
+      </label>
+      <button type="button" id="ruta-ubicacion" class="btn-ghost">Salir desde mi ubicación</button>
+      <p id="ruta-ubicacion-estado" class="community-note" role="status"></p>
+      <div class="planeador-fila">
+        <label>Fecha<input type="date" name="fecha" required value="{{ manana|date:'Y-m-d' }}" min="{{ hoy|date:'Y-m-d' }}"></label>
+        <label>Días<select name="dias"><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option></select></label>
+      </div>
+      <div class="planeador-fila">
+        <label>Desde<input type="time" name="hora_inicio" required value="09:00"></label>
+        <label>Hasta<input type="time" name="hora_fin" required value="19:00"></label>
+      </div>
+      <fieldset class="planeador-intereses">
+        <legend>Te interesa</legend>
+        {% for interes in intereses %}<label class="check-label"><input type="checkbox" name="intereses" value="{{ interes.slug }}"{% if interes.slug == 'ciudad-y-cultura' or interes.slug == 'pueblos' %} checked{% endif %}>{{ interes.nombre }}</label>{% endfor %}
+      </fieldset>
+      <label>Ritmo
+        <select name="ritmo"><option value="tranquilo">Tranquilo: más tiempo en cada sitio</option><option value="normal" selected>Normal</option><option value="intenso">Intenso: ver más sitios</option></select>
+      </label>
+      <div class="planeador-fila">
+        <label>Personas<input type="number" name="personas" min="1" max="20" value="2" required></label>
+        <label>Presupuesto para entradas (opcional)<input type="number" name="presupuesto" min="0" step="1" placeholder="Sin límite"></label>
+      </div>
+      <label class="check-label"><input type="checkbox" name="regresar" checked>Volver al punto de salida el último día</label>
+      <button type="submit">Armar mi ruta</button>
+      <p class="form-status" role="status"></p>
+    </form>
+    <section class="planeador-resultado" aria-live="polite">
+      <div id="ruta-mapa" class="ficha-mapa ficha-mapa--grande" aria-label="Mapa de la ruta"></div>
+      <div id="ruta-resultado" hidden>
+        <div class="planeador-resumen" id="ruta-resumen"></div>
+        <ul class="planeador-avisos" id="ruta-avisos"></ul>
+        <div id="ruta-dias"></div>
+        <div class="contribution-actions">
+          <button type="button" id="ruta-guardar">Guardar en Mis viajes</button>
+          <span id="ruta-guardar-estado" class="community-note" role="status"></span>
+        </div>
+        <details class="planeador-metodo">
+          <summary>¿Cómo se eligió?</summary>
+          <p id="ruta-metodo"></p>
+        </details>
+      </div>
+    </section>
+  </div>
+  {% include 'destinos/footer.html' %}
+</main>
+{% endblock %}
+{% block extra_js %}<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script><script src="{% static 'js/mapa-base.js' %}" defer></script><script src="{% static 'js/cuenta-api.js' %}"></script><script src="{% static 'js/planeador.js' %}" defer></script>{% endblock %}
