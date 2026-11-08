@@ -3,8 +3,17 @@
 #       docker compose --env-file .env.docker up --build
 # La aplicación queda en http://localhost:8080. Detalles en el README (sección Docker).
 
+# Los registros de web y nginx incluyen direcciones IP: se rotan para no guardarlos sin límite
+# (hasta 3 archivos de 10 MB por servicio), como dice el aviso de privacidad.
+x-registros: &registros
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 x-app: &app
   build: .
+  logging: *registros
   image: infotrip:local
   env_file: .env.docker
   depends_on:
@@ -98,6 +107,7 @@ services:
 
   nginx:
     image: nginx:1.28
+    logging: *registros
     ports:
       # Cambia el puerto con INFOTRIP_PUERTO en .env.docker si el 8080 está ocupado.
       - "${INFOTRIP_PUERTO:-8080}:80"

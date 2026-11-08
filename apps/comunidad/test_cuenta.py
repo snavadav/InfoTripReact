@@ -117,3 +117,15 @@ class PaginasLegalesTests(TestCase):
         self.assertContains(pie, 'href="/privacidad/"')
         self.assertContains(pie, 'href="/terminos/"')
         self.assertContains(self.client.get('/registro/'), 'href="/privacidad/"')
+
+    @override_settings(CONTACTO_PRIVACIDAD='contacto@example.com')
+    def test_aviso_cubre_lo_que_pide_la_ley_y_las_funciones_nuevas(self):
+        aviso = self.client.get('/privacidad/')
+        for texto in ('Quién es responsable', 'Finalidades adicionales', 'Cookies', 'Amazon Web Services',
+                      'derechos ARCO', '20 días hábiles', 'Cambios a este aviso', 'planeador de rutas',
+                      'Las copias de seguridad, 14 días'):
+            self.assertContains(aviso, texto)
+        terminos = self.client.get('/terminos/')
+        for texto in ('18 años', 'no recibe, guarda ni transfiere dinero', 'no son documentos oficiales',
+                      'href="/creditos/"', 'href="/privacidad/"', 'contacto@example.com'):
+            self.assertContains(terminos, texto)
