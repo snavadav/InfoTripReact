@@ -187,6 +187,7 @@ docker compose --env-file .env.docker down
 | `/admin/` | Administración del catálogo, usuarios y moderación |
 | `/admin/moderacion/` | Cola de moderación con contadores (personal) |
 | `/admin/metricas/` | Embudos, retención y fichas útiles (personal) |
+| `/admin/etiquetar-lugares/` | Etiquetar lugares para el curador automático; ver [docs/curador-lugares.md](docs/curador-lugares.md) (personal) |
 | `/escapadas/<id>/` | Escapada compartida, de solo lectura y sin cuenta |
 | `/pasaporte/`, `/pasaporte/<enlace>/` | Pasaporte de Pueblos Mágicos: un sello por visita comprobada y tarjeta para compartir |
 | `/comentarios/` | Problemas e ideas de quienes prueban el sitio; se revisan en la cola de moderación |

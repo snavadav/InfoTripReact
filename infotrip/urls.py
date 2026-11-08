@@ -23,6 +23,7 @@ from apps.usuarios.views_frontend import baja_avisos, login_view, registro_view
 from apps.destinos.frontend import (
     costos_destino, costos_indice, creditos, inicio, listado, detalle, lugar_detalle, misiones, proponer_lugar,
 )
+from apps.curador.views import etiquetar as etiquetar_lugares
 from apps.metricas.views import EventosView, panel as panel_metricas
 from apps.rutas.views import pagina_planeador
 
@@ -51,6 +52,7 @@ urlpatterns = [
     # Antes de admin.site.urls para que el admin no la tome como una app.
     path('admin/moderacion/', admin.site.admin_view(cola_moderacion), name='cola-moderacion'),
     path('admin/metricas/', admin.site.admin_view(panel_metricas), name='panel-metricas'),
+    path('admin/etiquetar-lugares/', admin.site.admin_view(etiquetar_lugares), name='etiquetar-lugares'),
     path('admin/', admin.site.urls),
 
     # Documentación de la API. La vista "split" no usa scripts en línea, que la CSP bloquearía.

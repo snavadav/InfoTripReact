@@ -19,6 +19,7 @@ PERMISOS = {
     },
     'destinos': {'destino': ('view', 'change'), 'lugar': ('view', 'change')},
     'metricas': {'evento': ('view',)},
+    'curador': {'etiquetalugar': ('view', 'add', 'change'), 'prediccionlugar': ('view',)},
 }
 
 

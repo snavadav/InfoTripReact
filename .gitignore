@@ -37,3 +37,6 @@ build/
 # Cobertura
 .coverage
 htmlcov/
+
+# Modelos entrenados (se generan con entrenar_curador)
+var/

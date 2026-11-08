@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'apps.destinos',
     'apps.comunidad',
     'apps.metricas',
+    'apps.curador',
     'apps.rutas',
 ]
 
@@ -234,3 +235,6 @@ LOGGING = {
         'infotrip': {'handlers': ['consola'], 'level': config('LOG_LEVEL', default='INFO'), 'propagate': False},
     },
 }
+
+# Modelo del curador de lugares (apps/curador). Se genera con `entrenar_curador`; no se versiona.
+CURADOR_MODELO = BASE_DIR / 'var' / 'curador.joblib'
