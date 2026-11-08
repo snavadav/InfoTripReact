@@ -5,6 +5,7 @@
 
     <ul class="nav-links">
       <li><a href="/destinos/">Explorar</a></li>
+      <li><a href="{% url 'planeador' %}">Armar ruta</a></li>
       <li><a href="/mis-viajes/" data-trip-label>Planear escapada</a></li>
       <li data-session-only hidden><a href="/favoritos/">Favoritos</a></li>
       <li><a href="{% url 'costos-indice' %}">Costos</a></li>
@@ -40,6 +41,7 @@
     <span class="user-name" id="mobileUserName"></span>
   </div>
   <a href="/destinos/">Explorar</a>
+  <a href="{% url 'planeador' %}">Armar ruta</a>
   <a href="/mis-viajes/" data-trip-label>Planear escapada</a>
   <a href="/favoritos/" data-session-only hidden>Favoritos</a>
   <a href="{% url 'costos-indice' %}">Costos</a>

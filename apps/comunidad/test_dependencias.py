@@ -25,7 +25,7 @@ def codigo(app):
 
 class DependenciasTests(SimpleTestCase):
     def test_sin_importaciones_dentro_de_funciones(self):
-        for app in ('comunidad', 'destinos', 'usuarios', 'core'):
+        for app in ('comunidad', 'destinos', 'usuarios', 'core', 'rutas'):
             for ruta in codigo(app):
                 for modulo, interna in importaciones(ruta):
                     self.assertFalse(interna, f'{ruta.relative_to(APPS)} importa {modulo} dentro de una función')
@@ -46,3 +46,17 @@ class DependenciasTests(SimpleTestCase):
         for ruta in codigo('core'):
             for modulo, _ in importaciones(ruta):
                 self.assertFalse(modulo.startswith('apps.'), ruta.name)
+
+    def test_el_optimizador_no_depende_de_django_ni_de_otras_apps(self):
+        """El algoritmo se puede ejecutar y medir por separado, como pide el análisis del Módulo 4."""
+        for nombre in ('horarios.py', 'optimizador.py'):
+            ruta = APPS / 'rutas' / nombre
+            if ruta.exists():
+                for modulo, _ in importaciones(ruta):
+                    self.assertFalse(modulo.startswith(('apps.', 'django')), f'{nombre} importa {modulo}')
+
+    def test_nadie_depende_del_planeador(self):
+        for app in ('comunidad', 'destinos', 'usuarios', 'core', 'metricas'):
+            for ruta in codigo(app):
+                for modulo, _ in importaciones(ruta):
+                    self.assertFalse(modulo.startswith('apps.rutas'), ruta.name)
