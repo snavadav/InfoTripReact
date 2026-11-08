@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'apps.destinos',
     'apps.comunidad',
     'apps.metricas',
+    'apps.curador',
 ]
 
 # ─── MIDDLEWARE ───────────────────────────────────────────────

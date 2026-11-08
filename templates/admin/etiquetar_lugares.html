@@ -1,0 +1,53 @@
+{% extends "admin/base_site.html" %}
+{% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url 'admin:index' %}">Inicio</a> › Etiquetar lugares</div>{% endblock %}
+{% block content %}
+<div id="content-main">
+{% if sin_permiso %}
+  <p>No tienes permiso para etiquetar lugares.</p>
+{% else %}
+  <p>Cada respuesta enseña al curador automático qué lugares mostrar en el mapa. Pregúntate:
+    <strong>si un viajero llega a este municipio, ¿querría encontrar este lugar en el mapa de InfoTrip?</strong></p>
+  <ul>
+    <li><strong>Sí:</strong> restaurantes, cafés, hoteles, gasolineras, farmacias, cajeros, tiendas de artesanías o de conveniencia que atienden al público.</li>
+    <li><strong>No:</strong> lo que no atiende al público o no le sirve a quien viaja (comedores de empresa, distribuidoras, oficinas), nombres sin sentido o que no dicen qué es, o un lugar que está en otro tipo y no encaja ahí.</li>
+    <li><strong>No sé:</strong> si con estos datos no puedes decidir. No se usa para entrenar.</li>
+  </ul>
+  {% if lugar %}
+  <div class="module">
+    <table>
+      <caption>{{ lugar.nombre }}</caption>
+      <tbody>
+        <tr><th scope="row">Tipo</th><td>{{ lugar.get_tipo_display }} · {{ lugar.get_subtipo_display }}</td></tr>
+        <tr><th scope="row">Municipio</th><td>{{ lugar.municipio.nombre|default:"—" }}</td></tr>
+        <tr><th scope="row">Dirección</th><td>{{ lugar.direccion|default:"—" }}</td></tr>
+        <tr><th scope="row">Teléfono</th><td>{{ lugar.telefono|default:"—" }}</td></tr>
+        <tr><th scope="row">Sitio web</th><td>{{ lugar.sitio_web|default:"—" }}</td></tr>
+        <tr><th scope="row">Horario</th><td>{{ lugar.horario|default:"—" }}</td></tr>
+        <tr><th scope="row">Fuente</th><td>{{ fuente }}{% if not lugar.es_activo %} · retirado del mapa{% endif %}</td></tr>
+        <tr><th scope="row">Ubicación</th><td><a href="https://www.openstreetmap.org/?mlat={{ lugar.latitud }}&amp;mlon={{ lugar.longitud }}#map=18/{{ lugar.latitud }}/{{ lugar.longitud }}" target="_blank" rel="noopener">Ver en OpenStreetMap</a></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="lugar" value="{{ lugar.pk }}">
+    <div class="submit-row">
+      <button type="submit" name="respuesta" value="si" class="default" accesskey="s">Sí le sirve</button>
+      <button type="submit" name="respuesta" value="no" accesskey="n">No le sirve</button>
+      <button type="submit" name="respuesta" value="no_se" accesskey="x">No sé</button>
+    </div>
+  </form>
+  {% else %}
+  <p>Ya etiquetaste todos los lugares. ¡Gracias!</p>
+  {% endif %}
+  <div class="module">
+    <table>
+      <caption>Avance: {{ total }} etiquetas útiles en total, {{ mias }} tuyas</caption>
+      <tbody>
+      {% for fila in por_tipo %}<tr><th scope="row">{{ fila.tipo }}</th><td>{{ fila.total }}</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endif %}
+</div>
+{% endblock %}
