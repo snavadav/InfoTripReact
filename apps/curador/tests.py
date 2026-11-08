@@ -58,7 +58,7 @@ class PantallaTests(TestCase):
         respuesta = self.client.get(URL)
         self.assertContains(respuesta, 'Birria Don Chuy')
         self.assertContains(respuesta, 'DENUE (INEGI)')
-        self.assertRedirects(self.client.post(URL, {'lugar': self.lugar.pk, 'respuesta': 'no'}), URL)
+        self.assertRedirects(self.client.post(URL, {'lugar': self.lugar.pk, 'respuesta': 'no'}), f'{URL}?modo=muestra')
         etiqueta = EtiquetaLugar.objects.get()
         self.assertEqual((etiqueta.autor, etiqueta.util), (self.ana, False))
         self.assertContains(self.client.get(URL), 'Ya etiquetaste todos los lugares')

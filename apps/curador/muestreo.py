@@ -1,10 +1,15 @@
 """Qué lugar mostrar a continuación para etiquetar.
 
-Se toma el tipo de lugar con menos etiquetas, para que la muestra no quede llena de restaurantes (son más de la
-mitad), y dentro de ese tipo un lugar en un orden pseudoaleatorio fijo: igual para todas las personas, sin
-depender del orden alfabético ni de la fuente, y repetible.
+Muestra: se toma el tipo de lugar con menos etiquetas, para que la muestra no quede llena de restaurantes (son
+más de la mitad), y dentro de ese tipo un lugar en un orden pseudoaleatorio fijo: igual para todas las personas,
+sin depender del orden alfabético ni de la fuente, y repetible. Sirve para medir el modelo sin sesgo.
+
+Dudas (aprendizaje activo): cuando ya hay un modelo, el lugar sobre el que está más indeciso (probabilidad más
+cercana a 0.5). Cada respuesta ahí le enseña más que una sobre un caso obvio. Estas etiquetas sirven para
+entrenar, pero no forman una muestra representativa.
 """
 from django.db.models import Count, F
+from django.db.models.functions import Abs
 
 from apps.destinos.models import Lugar
 
@@ -33,3 +38,10 @@ def siguiente(usuario):
         if lugar:
             return lugar
     return None
+
+
+def siguiente_dudoso(usuario):
+    """El lugar con la predicción más indecisa que esta persona no ha etiquetado; None si no hay predicciones."""
+    return (Lugar.objects.exclude(etiquetas__autor=usuario).filter(prediccion__isnull=False)
+            .select_related('municipio').annotate(duda=Abs(F('prediccion__probabilidad') - 0.5))
+            .order_by('duda', 'pk').first())

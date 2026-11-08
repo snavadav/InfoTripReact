@@ -25,3 +25,20 @@ class EtiquetaLugar(models.Model):
     def __str__(self):
         respuesta = {True: 'sirve', False: 'no sirve', None: 'no sé'}[self.util]
         return f'{self.lugar.nombre}: {respuesta}'
+
+
+class PrediccionLugar(models.Model):
+    """Lo que opina el curador de cada lugar. Solo sugiere: ocultar o publicar lo decide una persona."""
+    lugar = models.OneToOneField(Lugar, on_delete=models.CASCADE, related_name='prediccion')
+    probabilidad = models.FloatField(verbose_name='probabilidad de que sirva')
+    version = models.PositiveSmallIntegerField()
+    actualizado = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['probabilidad', 'pk']
+        verbose_name = 'predicción del curador'
+        verbose_name_plural = 'predicciones del curador'
+        indexes = [models.Index(fields=['probabilidad'], name='prediccion_probabilidad_idx')]
+
+    def __str__(self):
+        return f'{self.lugar.nombre}: {self.probabilidad:.0%}'

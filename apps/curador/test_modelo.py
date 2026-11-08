@@ -16,7 +16,7 @@ from apps.usuarios.models import Usuario
 from .caracteristicas import (
     _coordenadas_de_destinos, acuerdo_entre_personas, etiquetas_por_lugar, fila, km_al_destino_mas_cercano,
 )
-from .models import EtiquetaLugar
+from .models import EtiquetaLugar, PrediccionLugar
 from .modelo import entrenar, evaluar, medidas, probabilidad_de_servir
 
 SIRVEN = ['Restaurante La Hacienda', 'Hotel Plaza', 'Cafe del Centro', 'Mariscos El Puerto', 'Hotel Real',
@@ -131,3 +131,66 @@ class EntrenarCuradorTests(TestCase):
                 metodos = [f['metodo'] for f in csv.DictReader(archivo)]
         self.assertEqual(metodos, ['regla_actual', 'modelo_sin_nombre', 'modelo_completo'])
         self.assertIn('modelo_completo', salida.getvalue())
+
+
+class AplicarCuradorTests(TestCase):
+    """Entrena con datos de prueba, califica todos los lugares y usa las predicciones para elegir dudas."""
+
+    def setUp(self):
+        self.persona = Usuario.objects.create_superuser('p@example.com', 'P', 'Q', 'Prueba-segura-493!')
+        for i in range(5):
+            for nombre, util in [(n, True) for n in SIRVEN] + [(n, False) for n in NO_SIRVEN[:4]]:
+                lugar = Lugar.objects.create(nombre=f'{nombre} {i}', tipo='comer', subtipo='restaurant',
+                                             latitud='20.6', longitud='-103.3')
+                EtiquetaLugar.objects.create(lugar=lugar, autor=self.persona, util=util)
+        self.nuevo_no = Lugar.objects.create(nombre='Comedor Industrial Poniente', tipo='comer',
+                                             subtipo='restaurant', latitud='20.6', longitud='-103.3')
+        self.nuevo_si = Lugar.objects.create(nombre='Hotel del Lago', tipo='comer', subtipo='restaurant',
+                                             latitud='20.6', longitud='-103.3')
+        self.carpeta = tempfile.TemporaryDirectory()
+        self.ruta = str(Path(self.carpeta.name) / 'curador.joblib')
+        call_command('entrenar_curador', modelo=self.ruta, minimo=40, stdout=StringIO())
+
+    def tearDown(self):
+        self.carpeta.cleanup()
+
+    def test_califica_todo_sin_ocultar_nada_y_se_puede_repetir(self):
+        salida = StringIO()
+        call_command('aplicar_curador', modelo=self.ruta, stdout=salida)
+        call_command('aplicar_curador', modelo=self.ruta, stdout=StringIO())
+        self.assertEqual(PrediccionLugar.objects.count(), Lugar.objects.count())
+        self.nuevo_no.refresh_from_db()
+        self.nuevo_si.refresh_from_db()
+        self.assertLess(self.nuevo_no.prediccion.probabilidad, self.nuevo_si.prediccion.probabilidad)
+        self.assertTrue(Lugar.objects.filter(pk=self.nuevo_no.pk, es_activo=True).exists())
+        self.assertIn('probablemente no le sirven', salida.getvalue())
+
+    def test_sin_modelo_lo_dice(self):
+        with self.assertRaisesMessage(CommandError, 'entrenar_curador'):
+            call_command('aplicar_curador', modelo=str(Path(self.carpeta.name) / 'no.joblib'), stdout=StringIO())
+
+    def test_modo_dudas_elige_el_caso_mas_indeciso_y_el_admin_lo_lista(self):
+        call_command('aplicar_curador', modelo=self.ruta, stdout=StringIO())
+        dudoso = Lugar.objects.create(nombre='Lugar X', tipo='comer', subtipo='restaurant', latitud='20.6',
+                                      longitud='-103.3')
+        PrediccionLugar.objects.create(lugar=dudoso, probabilidad=0.51, version=1)
+        self.client.force_login(self.persona)
+        self.assertContains(self.client.get('/admin/etiquetar-lugares/?modo=dudas'), 'Lugar X')
+        respuesta = self.client.post('/admin/etiquetar-lugares/', {'lugar': dudoso.pk, 'respuesta': 'si',
+                                                                    'modo': 'dudas'})
+        self.assertRedirects(respuesta, '/admin/etiquetar-lugares/?modo=dudas', fetch_redirect_response=False)
+        self.assertNotContains(self.client.get('/admin/etiquetar-lugares/?modo=dudas'), 'Lugar X')
+        PrediccionLugar.objects.filter(lugar=self.nuevo_no).update(probabilidad=0.1)
+        PrediccionLugar.objects.filter(lugar=self.nuevo_si).update(probabilidad=0.9)
+        lista = self.client.get('/admin/curador/prediccionlugar/?rango=no')
+        self.assertContains(lista, 'Comedor Industrial Poniente')
+        self.assertContains(lista, '10%')
+        self.assertNotContains(lista, 'Hotel del Lago')
+
+    def test_sin_modelo_el_modo_dudas_usa_la_muestra(self):
+        PrediccionLugar.objects.all().delete()
+        self.client.force_login(self.persona)
+        respuesta = self.client.get('/admin/etiquetar-lugares/?modo=dudas')
+        self.assertEqual(respuesta.context['modo'], 'muestra')
+        self.assertIn(respuesta.context['lugar'], (self.nuevo_no, self.nuevo_si))
+        self.assertNotContains(respuesta, 'casos dudosos')

@@ -12,6 +12,9 @@
     <li><strong>No:</strong> lo que no atiende al público o no le sirve a quien viaja (comedores de empresa, distribuidoras, oficinas), nombres sin sentido o que no dicen qué es, o un lugar que está en otro tipo y no encaja ahí.</li>
     <li><strong>No sé:</strong> si con estos datos no puedes decidir. No se usa para entrenar.</li>
   </ul>
+  {% if hay_modelo %}
+  <p>Modo: {% if modo == 'dudas' %}<strong>casos dudosos</strong> (donde el curador está más indeciso) · <a href="?modo=muestra">cambiar a muestra al azar</a>{% else %}<strong>muestra al azar</strong> (para medir el curador) · <a href="?modo=dudas">cambiar a casos dudosos</a>{% endif %}</p>
+  {% endif %}
   {% if lugar %}
   <div class="module">
     <table>
@@ -31,6 +34,7 @@
   <form method="post">
     {% csrf_token %}
     <input type="hidden" name="lugar" value="{{ lugar.pk }}">
+    <input type="hidden" name="modo" value="{{ modo }}">
     <div class="submit-row">
       <button type="submit" name="respuesta" value="si" class="default" accesskey="s">Sí le sirve</button>
       <button type="submit" name="respuesta" value="no" accesskey="n">No le sirve</button>
