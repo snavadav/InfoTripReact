@@ -163,7 +163,9 @@ docker compose --env-file .env.docker down
 
 **Cómo se reparten el trabajo:** nginx sirve las fotos subidas (`/media/`) desde un volumen compartido y reenvía el resto a gunicorn. WhiteNoise sirve los archivos estáticos desde la aplicación. El servicio `avisos` ejecuta `enviar_avisos` cada 5 minutos.
 
-`.env.docker.example` está pensado para probar en tu equipo, sin HTTPS. Antes de publicar, revisa la lista de producción en [pendientes manuales](docs/pendientes-manuales.md).
+`.env.docker.example` está pensado para probar en tu equipo, sin HTTPS.
+
+**Publicar en internet:** [docs/despliegue-aws.md](docs/despliegue-aws.md) explica paso a paso cómo desplegar en un servidor EC2 de AWS (plan gratuito) con HTTPS automático. Usa `docker-compose.aws.yml`, que agrega Caddy al frente, y la plantilla `.env.docker.aws.example`. Para subir tu base local está `scripts/exportar_base.ps1`.
 
 ---
 
