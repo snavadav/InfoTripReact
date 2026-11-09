@@ -6,6 +6,7 @@ Ejecución:            E2E=1 python manage.py test e2e --settings=infotrip.setti
 import os
 import re
 from datetime import date
+from urllib.parse import quote
 from unittest import skipUnless
 
 from io import BytesIO
@@ -19,6 +20,7 @@ from apps.comunidad.models import Aporte, Colaboracion, Comentario, InteresNegoc
 from apps.comunidad.moderacion import moderar
 from apps.destinos.models import Categoria, Destino, Lugar, Municipio, Region
 from apps.metricas.models import Evento
+from apps.rutas.models import RutaCompartida
 from apps.usuarios.models import Usuario
 
 CLAVE = 'Prueba-segura-493!'
@@ -654,6 +656,50 @@ class FlujosTests(StaticLiveServerTestCase):
         self.assertEqual(list(viaje.lugares.all()), [self.destino])
         self.assertEqual(viaje.actividades[0]['titulo'], 'Mirador')
         self.assertIn('Dormir: Cabañas del Bosque', [a['titulo'] for a in viaje.actividades])
+
+    def test_compartir_una_ruta_por_enlace(self):
+        self.armar_ruta_de_dos_dias()
+        self.assertIn('google.com/maps/dir/', self.pagina.get_attribute('#ruta-detalle .planeador-dia-mapa a', 'href'))
+        self.pagina.click('#ruta-compartir')
+        self.pagina.wait_for_selector('#ruta-compartir-panel:not([hidden])')
+        ruta = RutaCompartida.objects.get()
+        enlace = self.pagina.input_value('#ruta-enlace')
+        self.assertEqual(enlace, f'{self.live_server_url}/planeador/r/{ruta.enlace}/')
+        # El foco queda en el enlace, listo para copiarlo; WhatsApp lleva el texto y el enlace, nada más.
+        self.assertEqual(self.pagina.evaluate('document.activeElement.id'), 'ruta-enlace')
+        whatsapp = self.pagina.get_attribute('#ruta-compartir-panel [data-whatsapp]', 'href')
+        self.assertTrue(whatsapp.startswith('https://wa.me/?text='))
+        self.assertIn(quote(enlace, safe=''), whatsapp)
+        self.assertIn('hasta el', self.pagina.inner_text('#ruta-compartir-panel'))
+
+        with self.pagina.expect_download() as descarga:
+            self.pagina.click('#ruta-ics')
+        self.assertIn('BEGIN:VEVENT', open(descarga.value.path(), encoding='utf-8').read())
+
+        # Quien recibe el enlace ve la ruta sin cuenta, con su mapa, y puede armar la suya.
+        self.abrir(f'/planeador/r/{ruta.enlace}/')
+        self.assertIn('Ruta de 2 días desde Tapalpa', self.pagina.inner_text('h1'))
+        self.assertIn('Mirador', self.pagina.inner_text('main'))
+        self.pagina.wait_for_selector('#ruta-mapa .pin-ruta')
+        self.assertEqual(self.pagina.get_attribute('meta[name="robots"]', 'content'), 'noindex')
+        self.pagina.focus('.planeador-compartir [data-copiar]')
+        self.pagina.keyboard.press('Enter')
+        self.pagina.wait_for_selector('.planeador-compartir [data-compartir-estado]:not(:empty)')
+        self.pagina.click('text=Armar mi propia ruta')
+        self.pagina.wait_for_url('**/planeador/')
+
+    def test_ruta_compartida_con_cuenta_se_borra_desde_el_perfil(self):
+        self.iniciar_sesion()
+        self.armar_ruta_de_dos_dias()
+        self.pagina.click('#ruta-compartir')
+        self.pagina.wait_for_selector('#ruta-compartir-panel:not([hidden])')
+        self.assertIn('Queda en tu perfil', self.pagina.inner_text('#ruta-compartir-panel'))
+        self.abrir('/perfil/')
+        self.pagina.wait_for_selector('#my-shared-routes h3 a')
+        self.pagina.on('dialog', lambda dialogo: dialogo.accept())
+        self.pagina.click('#my-shared-routes button:has-text("Borrar")')
+        self.pagina.wait_for_selector('#shared-routes-status:has-text("Ruta borrada")')
+        self.assertFalse(RutaCompartida.objects.exists())
 
     def armar_ruta_de_dos_dias(self):
         self.destino.categorias.add(Categoria.objects.create(nombre='Miradores', slug='miradores'))
