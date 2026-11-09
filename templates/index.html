@@ -2,78 +2,101 @@
 {% load static %}
 {% block title %}InfoTrip — Encuentra tu próxima escapada{% endblock %}
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/explorar.css' %}">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" integrity="sha256-YU3qCpj/P06tdPBJGPax0bm6Q1wltfwjsho5TR4+TYc=" crossorigin="">
-<link rel="stylesheet" href="{% static 'css/mapa.css' %}">
 <link rel="stylesheet" href="{% static 'css/inicio-interactivo.css' %}">
 {% endblock %}
 {% block content %}
 {% include 'partials/navBar.html' %}
-<main class="interactive-home">
-  <div class="home-stage">
-    <div id="home-map" aria-label="Mapa de los lugares de Jalisco"></div>
-    <div class="home-rail">
-      <section class="interactive-intro" id="explorar" aria-labelledby="home-title">
-        <span class="eyebrow">Jalisco · 20.6597° N, 103.3496° O</span>
-        <h1 id="home-title">Todo Jalisco, en un mapa.</h1>
-        <p>Encuentra un lugar, mira lo que cuentan quienes ya fueron y arma tu escapada.</p>
-        <form class="trip-search" action="{% url 'destinos-listado' %}" role="search">
-          <label class="sr-only" for="destination-query">¿Qué lugar tienes en mente?</label>
-          <div><input id="destination-query" type="search" name="q" maxlength="200" placeholder="Busca un destino o municipio"><button type="submit">Buscar</button></div>
-        </form>
-        <p class="home-cerca"><a href="{% url 'destinos-listado' %}#cerca">Ver qué hay cerca de mí →</a></p>
-      </section>
-      <section class="discovery" aria-labelledby="discovery-title">
-        <header class="discovery-toolbar">
-          <div class="discovery-title"><h2 id="discovery-title">¿Qué se te antoja?</h2><button id="surprise-place" class="surprise" type="button">Sorpréndeme</button></div>
-          <div class="discovery-filters" role="group" aria-label="Filtrar selección"><button type="button" data-category="" aria-pressed="true">Todo</button>{% for categoria in categorias_inicio %}<button type="button" data-category="{{ categoria }}" aria-pressed="false">{{ categoria }}</button>{% endfor %}</div>
-        </header>
-        <div class="discovery-board" id="discovery-board" hidden>
-          <div class="discovery-list">
-            <div class="discovery-list-heading"><span id="selection-count"></span><a href="{% url 'destinos-listado' %}">Ver todos</a></div>
-            <div class="discovery-cards" id="discovery-cards"></div>
-            <div class="list-controls"><button type="button" id="previous-place" aria-label="Destino anterior">←</button><p id="selection-position" role="status"></p><button type="button" id="next-place" aria-label="Siguiente destino">→</button></div>
-          </div>
-        </div>
-        <p id="discovery-empty" class="empty-catalog" hidden>No hay lugares en esta selección. <a href="{% url 'destinos-listado' %}">Explora el catálogo</a>.</p>
-        <noscript>{% include 'destinos/tarjetas.html' %}</noscript>
-      </section>
-    </div>
-    <section class="place-preview" id="place-preview" aria-labelledby="preview-name" hidden>
-      <div class="preview-visual">
-        <img id="preview-image" alt="">
-        <div id="preview-placeholder" hidden>Aún sin fotografía</div>
-        <iframe id="preview-map" title="Mapa del destino seleccionado" referrerpolicy="no-referrer-when-downgrade" hidden></iframe>
-        <div class="preview-modes" role="group" aria-label="Vista del destino"><button type="button" id="photo-mode" aria-pressed="true">Foto</button><button type="button" id="map-mode" aria-pressed="false">Mapa</button></div>
+<main class="home" id="contenido" tabindex="-1">
+  <section class="home-hero" aria-labelledby="home-title">
+    <p class="home-kicker">Escapadas por Jalisco</p>
+    <h1 id="home-title">¿A dónde quieres ir?</h1>
+    <p class="home-lead">Busca un pueblo, una playa o un municipio. Te decimos qué hay, cómo llegar y qué cuentan quienes ya fueron.</p>
+    <form class="home-search" action="{% url 'destinos-listado' %}" role="search">
+      <label class="sr-only" for="destination-query">Destino o municipio</label>
+      <div>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="destination-query" type="search" name="q" maxlength="200" placeholder="Ej. Tapalpa" autocomplete="off">
+        <button type="submit">Buscar</button>
       </div>
-      <div class="preview-copy">
-        <span id="preview-label" class="preview-label"></span>
-        <h3 id="preview-name"></h3>
-        <p id="preview-description"></p>
-        <div class="preview-heading"><a class="boton boton-primario preview-detail" id="preview-detail">Ver ficha</a><a class="boton" id="preview-directions" target="_blank" rel="noopener noreferrer" aria-label="Cómo llegar: abre un mapa en otra pestaña">Cómo llegar ↗</a></div>
-      </div>
-    </section>
-  </div>
-
-  <section class="home-features" aria-labelledby="features-title">
-    <h2 id="features-title">Lo que no te dice un mapa</h2>
-    <div class="home-features-grid">
-      <a href="{% url 'costos-indice' %}"><span>01</span><strong>¿Cuánto cuesta ir?</strong><p>Gastos reales de viajeros, por concepto, con su número de reportes.</p></a>
-      <a href="{% url 'mis-viajes' %}"><span>02</span><strong>Planea y divide</strong><p>Agenda, presupuesto y un bote para saber quién le debe a quién.</p></a>
-      <a href="{% url 'misiones' %}"><span>03</span><strong>Misiones</strong><p>Lo que falta saber de cada lugar. Si lo conoces, cuéntalo.</p></a>
-      <a href="{% url 'pasaporte' %}"><span>04</span><strong>Pasaporte</strong><p>Un sello por cada Pueblo Mágico que visites.</p></a>
-    </div>
-    <p class="home-features-cta"><a href="{% url 'registro' %}">Crear mi cuenta gratis →</a> · <a href="{% url 'negocios' %}">¿Tienes un negocio?</a></p>
-    {% include 'destinos/footer.html' %}
+    </form>
+    <p class="home-cerca"><a href="{% url 'destinos-listado' %}#cerca"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>Ver qué hay cerca de mí</a></p>
   </section>
+
+  <nav class="home-paths" aria-label="¿Qué quieres hacer?">
+    <a href="{% url 'destinos-listado' %}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15M15 6v15"/></svg>
+      <strong>Explorar el mapa</strong>
+      <span>Todos los lugares de Jalisco, con filtros por tipo de viaje.</span>
+    </a>
+    <a href="/mis-viajes/">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+      <strong>Planear una escapada</strong>
+      <span>Fechas, presupuesto y gastos compartidos con tu grupo.</span>
+    </a>
+    <a href="{% url 'costos-indice' %}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M15 9.5c-.5-1-1.6-1.5-3-1.5-1.7 0-3 .9-3 2s1.3 1.7 3 2 3 .9 3 2-1.3 2-3 2c-1.4 0-2.5-.5-3-1.5M12 6v2M12 16v2"/></svg>
+      <strong>¿Cuánto cuesta ir?</strong>
+      <span>Gastos reales de viajeros; una cifra aparece a partir de 3 reportes.</span>
+    </a>
+  </nav>
+
+  <section class="home-trust" aria-labelledby="trust-title">
+    <h2 id="trust-title" class="sr-only">Por qué confiar en InfoTrip</h2>
+    <ul>
+      <li><strong>Cada dato cita su fuente.</strong> OpenStreetMap, el DENUE del INEGI y otras fuentes públicas, con la fecha en que se consultaron.</li>
+      <li><strong>Nada se publica sin revisión.</strong> Reseñas, preguntas y gastos de la comunidad pasan por moderación humana.</li>
+      <li><strong>Si no sabemos algo, lo decimos.</strong> Preferimos "sin confirmar" a un dato inventado.</li>
+    </ul>
+  </section>
+
+  <section class="discovery" aria-labelledby="discovery-title">
+    <header class="discovery-toolbar">
+      <div class="discovery-title">
+        <div><h2 id="discovery-title">Ideas para empezar</h2><p>Destinos con ficha completa. Elige uno para ver de qué se trata.</p></div>
+        <button id="surprise-place" class="surprise" type="button">Sorpréndeme</button>
+      </div>
+      <div class="discovery-filters" role="group" aria-label="Filtrar ideas por tipo de viaje"><button type="button" data-category="" aria-pressed="true">Todo</button>{% for categoria in categorias_inicio %}<button type="button" data-category="{{ categoria }}" aria-pressed="false">{{ categoria }}</button>{% endfor %}</div>
+    </header>
+    <div class="discovery-layout">
+      <section class="place-preview" id="place-preview" aria-labelledby="preview-name" hidden>
+        <div class="preview-visual">
+          <img id="preview-image" alt="">
+          <div id="preview-placeholder" hidden>Aún sin fotografía</div>
+          <iframe id="preview-map" title="Mapa del destino seleccionado" referrerpolicy="no-referrer-when-downgrade" hidden></iframe>
+          <div class="preview-modes" role="group" aria-label="Vista del destino"><button type="button" id="photo-mode" aria-pressed="true">Foto</button><button type="button" id="map-mode" aria-pressed="false">Mapa</button></div>
+        </div>
+        <div class="preview-copy">
+          <p id="preview-label" class="preview-label"></p>
+          <h3 id="preview-name"></h3>
+          <p id="preview-description"></p>
+          <div class="preview-heading"><a class="boton boton-primario preview-detail" id="preview-detail">Ver ficha</a><a class="boton" id="preview-directions" target="_blank" rel="noopener noreferrer" aria-label="Cómo llegar (abre un mapa en otra pestaña)">Cómo llegar ↗</a></div>
+        </div>
+      </section>
+      <div class="discovery-board" id="discovery-board" hidden>
+        <div class="discovery-list">
+          <div class="discovery-list-heading"><span id="selection-count"></span><a href="{% url 'destinos-listado' %}">Ver todos en el mapa</a></div>
+          <div class="discovery-cards" id="discovery-cards"></div>
+          <div class="list-controls"><button type="button" id="previous-place" aria-label="Destino anterior">←</button><p id="selection-position" role="status"></p><button type="button" id="next-place" aria-label="Siguiente destino">→</button></div>
+        </div>
+      </div>
+    </div>
+    <p id="discovery-empty" class="empty-catalog" hidden>No hay ideas de este tipo todavía. <a href="{% url 'destinos-listado' %}">Explora el catálogo completo</a>.</p>
+    <noscript>{% include 'destinos/tarjetas.html' %}</noscript>
+  </section>
+
+  <section class="home-more" aria-labelledby="more-title">
+    <h2 id="more-title">Más para tu viaje</h2>
+    <div class="home-more-grid">
+      <a href="{% url 'planeador' %}"><strong>Armar una ruta</strong><span>Dinos cuándo sales y qué te gusta; te proponemos qué visitar y en qué orden.</span></a>
+      <a href="{% url 'pasaporte' %}"><strong>Pasaporte</strong><span>Un sello por cada Pueblo Mágico que visites.</span></a>
+      <a href="{% url 'misiones' %}"><strong>Misiones</strong><span>Lo que falta saber de cada lugar. Si lo conoces, cuéntalo.</span></a>
+    </div>
+    <p class="home-more-cta"><a class="boton boton-primario" href="{% url 'registro' %}">Crear mi cuenta gratis</a> <a href="{% url 'negocios' %}">¿Tienes un negocio en Jalisco?</a></p>
+  </section>
+  <div class="home-footer">{% include 'destinos/footer.html' %}</div>
 </main>
 {{ exploracion|json_script:'home-places' }}
-{{ puntos_mapa|json_script:'home-points' }}
 {% endblock %}
 {% block extra_js %}
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
-<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" integrity="sha256-Hk4dIpcqOSb0hZjgyvFOP+cEmDXUKKNE/tT542ZbNQg=" crossorigin="" defer></script>
-<script src="{% static 'js/mapa-base.js' %}" defer></script>
 <script src="{% static 'js/inicio-interactivo.js' %}" defer></script>
 {% endblock %}

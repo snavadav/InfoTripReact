@@ -1,15 +1,14 @@
 {% load static %}
+<a class="skip-link" href="#contenido">Saltar al contenido</a>
 <nav id="navbar" aria-label="Principal">
   <div class="nav-inner">
-    <a href="/" class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.6" fill="currentColor" stroke="none"/></svg>InfoTrip</a>
+    <a href="/" class="logo" aria-label="InfoTrip, ir al inicio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.6" fill="currentColor" stroke="none"/></svg>InfoTrip</a>
 
     <ul class="nav-links">
       <li><a href="/destinos/">Explorar</a></li>
-      <li><a href="{% url 'planeador' %}">Armar ruta</a></li>
       <li><a href="/mis-viajes/" data-trip-label>Planear escapada</a></li>
-      <li data-session-only hidden><a href="/favoritos/">Favoritos</a></li>
+      <li><a href="{% url 'planeador' %}">Armar ruta</a></li>
       <li><a href="{% url 'costos-indice' %}">Costos</a></li>
-      <li><a href="{% url 'pasaporte' %}">Pasaporte</a></li>
     </ul>
 
     <button type="button" class="theme-toggle" data-theme-toggle aria-label="Cambiar tema">
@@ -23,13 +22,21 @@
         <a href="/registro/" class="btn-primary">Registrarse</a>
       </div>
       <div class="nav-user-wrap" id="nav-user">
-        <div class="user-avatar" id="userAvatar"></div>
-        <span class="user-name" id="userName"></span>
-        <button class="btn-logout" id="logoutBtn">Cerrar sesión</button>
+        <button type="button" class="account-toggle" id="account-toggle" aria-expanded="false" aria-controls="account-menu">
+          <span class="user-avatar" id="userAvatar" aria-hidden="true"></span>
+          <span class="user-name" id="userName"></span>
+        </button>
+        <div class="account-menu" id="account-menu" hidden>
+          <a href="/perfil/">Mi perfil y aportes</a>
+          <a href="/favoritos/">Favoritos</a>
+          <a href="{% url 'pasaporte' %}">Pasaporte</a>
+          <hr>
+          <button type="button" class="btn-logout" id="logoutBtn">Cerrar sesión</button>
+        </div>
       </div>
     </div>
 
-    <button class="hamburger" id="hamburger" aria-label="Menú">
+    <button type="button" class="hamburger" id="hamburger" aria-label="Abrir menú" aria-expanded="false" aria-controls="mobileMenu">
       <span></span><span></span><span></span>
     </button>
   </div>
@@ -37,23 +44,23 @@
 
 <div class="mobile-menu" id="mobileMenu">
   <div class="mobile-user-info" id="mobileUserInfo">
-    <div class="user-avatar" id="mobileUserAvatar"></div>
+    <div class="user-avatar" id="mobileUserAvatar" aria-hidden="true"></div>
     <span class="user-name" id="mobileUserName"></span>
   </div>
   <a href="/destinos/">Explorar</a>
-  <a href="{% url 'planeador' %}">Armar ruta</a>
   <a href="/mis-viajes/" data-trip-label>Planear escapada</a>
-  <a href="/favoritos/" data-session-only hidden>Favoritos</a>
+  <a href="{% url 'planeador' %}">Armar ruta</a>
   <a href="{% url 'costos-indice' %}">Costos</a>
-  <a href="{% url 'pasaporte' %}">Pasaporte</a>
   <div class="sep"></div>
+  <a href="/favoritos/" class="mobile-secondary" data-session-only hidden>Favoritos</a>
+  <a href="{% url 'pasaporte' %}" class="mobile-secondary">Pasaporte</a>
   <div id="mobile-guest">
     <a href="/login/">Iniciar sesión</a>
     <a href="/registro/" class="btn-primary">Registrarse</a>
   </div>
-  <div id="mobile-auth" style="display:none;">
-    <a href="/perfil/">Mi perfil y aportes</a>
-    <a href="#" id="mobileLogoutBtn">Cerrar sesión</a>
+  <div id="mobile-auth" hidden>
+    <a href="/perfil/" class="mobile-secondary">Mi perfil y aportes</a>
+    <a href="#" class="mobile-secondary" id="mobileLogoutBtn">Cerrar sesión</a>
   </div>
 </div>
 

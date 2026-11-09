@@ -5,7 +5,7 @@
 {% block content %}{% include 'partials/navBar.html' %}
 <main class="explore-shell trips-shell" id="bote" data-viaje="{{ view.kwargs.pk }}">
   <a class="back-link" href="{% url 'mis-viajes' %}">← Mis viajes</a>
-  <span class="eyebrow">BOTE DE LA ESCAPADA</span>
+  <span class="eyebrow">Bote de la escapada</span>
   <h1 id="bote-nombre">Cargando…</h1>
   <p id="bote-estado" role="status"></p>
   <p id="bote-login" hidden><a href="{% url 'login' %}">Inicia sesión</a> para ver este bote.</p>
