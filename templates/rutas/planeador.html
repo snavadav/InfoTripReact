@@ -2,51 +2,97 @@
 {% block title %}Armar una ruta — InfoTrip{% endblock %}
 {% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/comunidad.css' %}"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""><link rel="stylesheet" href="{% static 'css/mapa.css' %}"><link rel="stylesheet" href="{% static 'css/planeador.css' %}">{% endblock %}
 {% block content %}{% include 'partials/navBar.html' %}
-<main class="explore-shell detail-shell">
+<main class="explore-shell detail-shell planeador">
   <span class="eyebrow">Planeador</span>
   <h1>Armar una ruta</h1>
-  <p class="propuesta-intro">Dinos cuándo sales y qué te gusta. Elegimos qué visitar y en qué orden para que te dé tiempo, respetando horarios y tu presupuesto.</p>
+  <p class="planeador-intro">Cuéntanos cuándo sales y qué te gusta. Elegimos qué visitar y en qué orden para que te dé tiempo, respetando horarios y tu presupuesto.</p>
   <div class="planeador-layout">
-    <form id="ruta-form" class="community-box community-form planeador-form">
-      <label>Sales de
+    <form id="ruta-form" class="planeador-form" novalidate>
+      <fieldset class="planeador-paso">
+        <legend><span class="planeador-num" aria-hidden="true">1</span>¿Desde dónde sales?</legend>
+        <label class="planeador-campo" for="ruta-municipio">Municipio de salida</label>
         <select name="municipio" id="ruta-municipio">
           {% for municipio in municipios %}<option value="{{ municipio.slug }}"{% if municipio.slug == 'guadalajara' %} selected{% endif %}>{{ municipio.nombre }}</option>{% endfor %}
         </select>
-      </label>
-      <button type="button" id="ruta-ubicacion" class="btn-ghost">Salir desde mi ubicación</button>
-      <p id="ruta-ubicacion-estado" class="community-note" role="status"></p>
-      <div class="planeador-fila">
-        <label>Fecha<input type="date" name="fecha" required value="{{ manana|date:'Y-m-d' }}" min="{{ hoy|date:'Y-m-d' }}"></label>
-        <label>Días<select name="dias"><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option></select></label>
-      </div>
-      <div class="planeador-fila">
-        <label>Desde<input type="time" name="hora_inicio" required value="09:00"></label>
-        <label>Hasta<input type="time" name="hora_fin" required value="19:00"></label>
-      </div>
-      <fieldset class="planeador-intereses">
-        <legend>Te interesa</legend>
-        {% for interes in intereses %}<label class="check-label"><input type="checkbox" name="intereses" value="{{ interes.slug }}"{% if interes.slug == 'ciudad-y-cultura' or interes.slug == 'pueblos' %} checked{% endif %}>{{ interes.nombre }}</label>{% endfor %}
+        <button type="button" id="ruta-ubicacion" class="planeador-secundario" aria-pressed="false">Salir desde mi ubicación</button>
+        <p id="ruta-ubicacion-estado" class="planeador-ayuda" role="status"></p>
       </fieldset>
-      <label>Ritmo
-        <select name="ritmo"><option value="tranquilo">Tranquilo: más tiempo en cada sitio</option><option value="normal" selected>Normal</option><option value="intenso">Intenso: ver más sitios</option></select>
-      </label>
-      <div class="planeador-fila">
-        <label>Personas<input type="number" name="personas" min="1" max="20" value="2" required></label>
-        <label>Presupuesto para entradas (opcional)<input type="number" name="presupuesto" min="0" step="1" placeholder="Sin límite"></label>
-      </div>
-      <label class="check-label"><input type="checkbox" name="regresar" checked>Volver al punto de salida el último día</label>
-      <button type="submit">Armar mi ruta</button>
-      <p class="form-status" role="status"></p>
+
+      <fieldset class="planeador-paso" id="ruta-paso-cuando" aria-describedby="ruta-error-cuando">
+        <legend><span class="planeador-num" aria-hidden="true">2</span>¿Cuándo?</legend>
+        <label class="planeador-campo" for="ruta-fecha">Día de salida</label>
+        <div class="planeador-atajos" role="group" aria-label="Atajos de fecha">
+          <button type="button" class="planeador-chip" data-fecha="{{ manana|date:'Y-m-d' }}" aria-pressed="true">Mañana</button>
+          {% if sabado != manana %}<button type="button" class="planeador-chip" data-fecha="{{ sabado|date:'Y-m-d' }}" aria-pressed="false">Sábado {{ sabado|date:'j M'|lower }}</button>{% endif %}
+        </div>
+        <input type="date" name="fecha" id="ruta-fecha" required value="{{ manana|date:'Y-m-d' }}" min="{{ hoy|date:'Y-m-d' }}" max="{{ limite|date:'Y-m-d' }}">
+        <span class="planeador-campo" id="ruta-dias-titulo">¿Cuántos días?</span>
+        <div class="planeador-chips planeador-chips--tres" role="radiogroup" aria-labelledby="ruta-dias-titulo">
+          {% for n in dias_opciones %}<label class="planeador-chip"><input type="radio" name="dias" value="{{ n }}"{% if n == 2 %} checked{% endif %}><span>{{ n }} {% if n == 1 %}día{% else %}días{% endif %}</span></label>{% endfor %}
+        </div>
+        <span class="planeador-campo" id="ruta-horario-titulo">Horario de cada día</span>
+        <div class="planeador-atajos" role="group" aria-labelledby="ruta-horario-titulo">
+          <button type="button" class="planeador-chip" data-inicio="09:00" data-fin="19:00" aria-pressed="true">Todo el día</button>
+          <button type="button" class="planeador-chip" data-inicio="08:00" data-fin="14:00" aria-pressed="false">Mañana</button>
+          <button type="button" class="planeador-chip" data-inicio="12:00" data-fin="20:00" aria-pressed="false">Tarde</button>
+        </div>
+        <div class="planeador-fila">
+          <label class="planeador-campo">Empiezas a las<input type="time" name="hora_inicio" required value="09:00" step="900"></label>
+          <label class="planeador-campo">Terminas a las<input type="time" name="hora_fin" required value="19:00" step="900"></label>
+        </div>
+        <p class="planeador-error" id="ruta-error-cuando" hidden></p>
+      </fieldset>
+
+      <fieldset class="planeador-paso" id="ruta-paso-intereses" aria-describedby="ruta-error-intereses">
+        <legend><span class="planeador-num" aria-hidden="true">3</span>¿Qué te gusta?</legend>
+        <p class="planeador-ayuda">Elige uno o varios.</p>
+        <div class="planeador-chips">
+          {% for interes in intereses %}<label class="planeador-chip"><input type="checkbox" name="intereses" value="{{ interes.slug }}"{% if interes.slug == 'ciudad-y-cultura' or interes.slug == 'pueblos' %} checked{% endif %}><span>{{ interes.nombre }}</span></label>{% endfor %}
+        </div>
+        <p class="planeador-error" id="ruta-error-intereses" hidden></p>
+      </fieldset>
+
+      <fieldset class="planeador-paso" id="ruta-paso-personas" aria-describedby="ruta-error-personas">
+        <legend><span class="planeador-num" aria-hidden="true">4</span>¿Quiénes van?</legend>
+        <label class="planeador-campo" for="ruta-personas">Personas</label>
+        <div class="planeador-contador">
+          <button type="button" data-paso="-1" aria-controls="ruta-personas" aria-label="Una persona menos">−</button>
+          <input type="number" name="personas" id="ruta-personas" min="1" max="20" value="2" required inputmode="numeric">
+          <button type="button" data-paso="1" aria-controls="ruta-personas" aria-label="Una persona más">+</button>
+        </div>
+        <details class="planeador-mas">
+          <summary>Más opciones: ritmo, presupuesto y regreso</summary>
+          <span class="planeador-campo" id="ruta-ritmo-titulo">Ritmo</span>
+          <div class="planeador-chips planeador-chips--tres" role="radiogroup" aria-labelledby="ruta-ritmo-titulo">
+            <label class="planeador-chip"><input type="radio" name="ritmo" value="tranquilo"><span>Tranquilo</span></label>
+            <label class="planeador-chip"><input type="radio" name="ritmo" value="normal" checked><span>Normal</span></label>
+            <label class="planeador-chip"><input type="radio" name="ritmo" value="intenso"><span>Intenso</span></label>
+          </div>
+          <p class="planeador-ayuda">Tranquilo deja más tiempo en cada sitio; intenso visita más sitios.</p>
+          <label class="planeador-campo">Presupuesto para entradas, por todo el grupo (opcional)<input type="number" name="presupuesto" min="0" step="1" inputmode="numeric" placeholder="Sin límite"></label>
+          <label class="planeador-check"><input type="checkbox" name="regresar" checked><span>Volver al punto de salida el último día</span></label>
+        </details>
+        <p class="planeador-error" id="ruta-error-personas" hidden></p>
+      </fieldset>
+
+      <button type="submit" class="planeador-enviar">Armar mi ruta</button>
+      <p class="form-status planeador-estado" role="status"></p>
     </form>
-    <section class="planeador-resultado" aria-live="polite">
-      <div id="ruta-mapa" class="ficha-mapa ficha-mapa--grande" aria-label="Mapa de la ruta"></div>
+
+    <section class="planeador-resultado" aria-labelledby="ruta-resultado-titulo">
+      <h2 id="ruta-resultado-titulo" class="sr-only">Tu ruta</h2>
+      <div id="ruta-vacio" class="planeador-vacio">
+        <p><strong>Tu ruta aparecerá aquí.</strong> Verás una tarjeta por día; elige una para ver sus paradas, qué hacer en cada una, horarios, precios y reseñas.</p>
+      </div>
       <div id="ruta-resultado" hidden>
         <div class="planeador-resumen" id="ruta-resumen"></div>
         <ul class="planeador-avisos" id="ruta-avisos"></ul>
-        <div id="ruta-dias"></div>
-        <div class="contribution-actions">
+        <div class="planeador-dias" id="ruta-dias" role="group" aria-label="Días de tu ruta: elige uno para ver sus paradas"></div>
+        <div id="ruta-mapa" class="ficha-mapa planeador-mapa" aria-label="Mapa de la ruta"></div>
+        <section id="ruta-detalle" class="planeador-detalle"></section>
+        <div class="planeador-acciones">
           <button type="button" id="ruta-guardar">Guardar en Mis viajes</button>
-          <span id="ruta-guardar-estado" class="community-note" role="status"></span>
+          <span id="ruta-guardar-estado" class="planeador-ayuda" role="status"></span>
         </div>
         <details class="planeador-metodo">
           <summary>¿Cómo se eligió?</summary>

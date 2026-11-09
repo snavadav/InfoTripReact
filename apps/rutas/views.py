@@ -101,11 +101,17 @@ class PlanearRutaView(APIView):
 
 
 def pagina_planeador(request):
+    hoy = timezone.localdate()
+    manana = hoy + timedelta(days=1)
     return render(request, 'rutas/planeador.html', {
         'municipios': municipios_de_salida(),
         'intereses': intereses_disponibles().order_by('nombre'),
-        'hoy': timezone.localdate(),
-        'manana': timezone.localdate() + timedelta(days=1),
+        'hoy': hoy,
+        'manana': manana,
+        # Atajo para la escapada de fin de semana: el próximo sábado desde mañana.
+        'sabado': manana + timedelta(days=(5 - manana.weekday()) % 7),
+        'limite': hoy + timedelta(days=DIAS_HACIA_ADELANTE),
+        'dias_opciones': sorted(RADIO_KM),
         'seo': {'titulo': 'Armar una ruta por Jalisco — InfoTrip',
                 'descripcion': 'Dinos cuántos días tienes y qué te gusta: armamos un itinerario por Jalisco que '
                                'respeta horarios, distancias y tu presupuesto.'},

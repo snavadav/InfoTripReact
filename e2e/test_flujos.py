@@ -5,6 +5,7 @@ Ejecución:            E2E=1 python manage.py test e2e --settings=infotrip.setti
 """
 import os
 import re
+from datetime import date
 from unittest import skipUnless
 
 from io import BytesIO
@@ -14,7 +15,7 @@ from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.core import mail
 from django.core.cache import cache
 
-from apps.comunidad.models import Aporte, Comentario, InteresNegocio, PropuestaLugar, Viaje
+from apps.comunidad.models import Aporte, Colaboracion, Comentario, InteresNegocio, PropuestaLugar, Viaje
 from apps.comunidad.moderacion import moderar
 from apps.destinos.models import Categoria, Destino, Lugar, Municipio, Region
 from apps.metricas.models import Evento
@@ -521,12 +522,13 @@ class FlujosTests(StaticLiveServerTestCase):
         self.iniciar_sesion()
         self.abrir('/planeador/')
         self.pagina.check('#ruta-form input[value="miradores"]')
-        self.pagina.select_option('#ruta-form [name="dias"]', '2')
+        self.pagina.check('#ruta-form [name="dias"][value="2"]')
+        self.pagina.click('#ruta-form .planeador-mas summary')
         self.pagina.uncheck('#ruta-form [name="regresar"]')
         self.pagina.click('#ruta-form button[type="submit"]')
-        self.pagina.wait_for_selector('#ruta-dias .planeador-dia')
-        self.assertIn('Mirador', self.pagina.inner_text('#ruta-dias'))
-        self.assertIn('Cabañas del Bosque', self.pagina.inner_text('#ruta-dias'))
+        self.pagina.wait_for_selector('#ruta-detalle .parada')
+        self.assertIn('Mirador', self.pagina.inner_text('#ruta-detalle'))
+        self.assertIn('Cabañas del Bosque', self.pagina.inner_text('#ruta-detalle'))
         # Un marcador numerado por parada, más el de salida.
         self.assertEqual(self.pagina.locator('#ruta-mapa .pin-ruta').count(), 1)
         self.pagina.click('#ruta-guardar')
@@ -535,6 +537,86 @@ class FlujosTests(StaticLiveServerTestCase):
         self.assertEqual(list(viaje.lugares.all()), [self.destino])
         self.assertEqual(viaje.actividades[0]['titulo'], 'Mirador')
         self.assertIn('Dormir: Cabañas del Bosque', [a['titulo'] for a in viaje.actividades])
+
+    def armar_ruta_de_dos_dias(self):
+        self.destino.categorias.add(Categoria.objects.create(nombre='Miradores', slug='miradores'))
+        self.abrir('/planeador/')
+        self.pagina.check('#ruta-form input[value="miradores"]')
+        self.pagina.check('#ruta-form [name="dias"][value="2"]')
+        self.pagina.click('#ruta-form button[type="submit"]')
+        self.pagina.wait_for_selector('#ruta-detalle .parada-extra .parada-bloque')
+
+    def test_dias_seleccionables_y_detalle_de_cada_parada(self):
+        Colaboracion.objects.create(destino=self.destino, autor=self.usuario, tipo='correccion', campo='horarios',
+                                    texto='Todos los días de 8 a 18 h', fuente='Ayuntamiento: https://tapalpa.gob.mx/',
+                                    estado='publicado', fecha_dato=date.today())
+        Aporte.objects.create(destino=self.destino, autor=self.usuario, tipo='resena', texto='Vista increíble al valle',
+                              calificacion=5, fecha_visita=date.today(), estado='publicado')
+        otra = Usuario.objects.create_user('beto@example.com', 'Beto', 'Prueba', CLAVE, es_verificado=True)
+        Aporte.objects.create(destino=self.destino, autor=otra, tipo='resena', texto='Sin moderar todavía',
+                              calificacion=1, fecha_visita=date.today(), estado='pendiente')
+        self.armar_ruta_de_dos_dias()
+        tarjetas = self.pagina.locator('#ruta-dias .planeador-dia-tarjeta')
+        self.assertEqual(tarjetas.count(), 2)
+        self.assertEqual(tarjetas.nth(0).get_attribute('aria-pressed'), 'true')
+        self.assertIn('1 parada', tarjetas.nth(0).inner_text())
+        self.assertIn('Sin paradas', tarjetas.nth(1).inner_text())
+        detalle = self.pagina.inner_text('#ruta-detalle')
+        for texto in ['Lugar de prueba', 'Todos los días de 8 a 18 h', 'Ayuntamiento', 'Llegas', 'Sales',
+                      'Vista increíble al valle', '5 de 5 estrellas']:
+            self.assertIn(texto, detalle)
+        self.assertNotIn('Sin moderar todavía', detalle)
+        self.assertEqual(self.pagina.get_attribute('#ruta-detalle .parada-fuente a', 'href'), 'https://tapalpa.gob.mx/')
+        self.assertEqual(self.pagina.get_attribute('#ruta-detalle .parada-acciones a.principal', 'href'),
+                         '/destinos/mirador/')
+        self.assertIn('google.com/maps/dir/',
+                      self.pagina.get_attribute('#ruta-detalle .parada-acciones a[target="_blank"]', 'href'))
+        # Con el teclado: Tab lleva a la tarjeta del día 2, que muestra su foco y se elige con Enter.
+        tarjetas.nth(0).focus()
+        self.pagina.keyboard.press('Tab')
+        self.assertEqual(self.pagina.evaluate('document.activeElement.dataset.dia'), '1')
+        self.assertEqual(self.pagina.evaluate('getComputedStyle(document.activeElement).outlineStyle'), 'solid')
+        self.pagina.keyboard.press('Enter')
+        self.assertEqual(tarjetas.nth(1).get_attribute('aria-pressed'), 'true')
+        self.assertEqual(tarjetas.nth(0).get_attribute('aria-pressed'), 'false')
+        self.assertIn('Día 2', self.pagina.inner_text('#ruta-detalle h3'))
+        self.assertIn('no cabe ninguna visita', self.pagina.inner_text('#ruta-detalle'))
+
+    def test_errores_comprensibles_y_lugar_sin_resenas(self):
+        self.destino.categorias.add(Categoria.objects.create(nombre='Miradores', slug='miradores'))
+        self.abrir('/planeador/')
+        self.pagina.fill('#ruta-form [name="hora_fin"]', '08:00')
+        self.pagina.click('#ruta-form button[type="submit"]')
+        self.assertIn('al menos una cosa que te guste', self.pagina.inner_text('#ruta-error-intereses'))
+        self.assertIn('después de la de empezar', self.pagina.inner_text('#ruta-error-cuando'))
+        self.assertEqual(self.pagina.get_attribute('#ruta-paso-intereses', 'aria-invalid'), 'true')
+        self.assertTrue(self.pagina.locator('#ruta-resultado').is_hidden())
+        self.pagina.click('#ruta-form [data-inicio="09:00"]')
+        self.pagina.check('#ruta-form input[value="miradores"]')
+        self.assertTrue(self.pagina.locator('#ruta-error-intereses').is_hidden())
+        self.pagina.click('#ruta-form button[type="submit"]')
+        self.pagina.wait_for_selector('#ruta-detalle .parada-sin-resenas')
+        self.assertIn('Aún no hay reseñas', self.pagina.inner_text('#ruta-detalle .parada-sin-resenas'))
+        self.assertEqual(self.pagina.get_attribute('#ruta-detalle .parada-sin-resenas a', 'href'),
+                         '/destinos/mirador/#reportar-gasto')
+
+    def test_planeador_en_movil_legible_y_facil_de_tocar(self):
+        self.pagina.set_viewport_size({'width': 375, 'height': 812})
+        self.armar_ruta_de_dos_dias()
+        self.assertEqual(self.pagina.evaluate('document.documentElement.scrollWidth'), 375)
+        pequenos = self.pagina.evaluate('''[...document.querySelectorAll(
+            '.planeador button, .planeador input:not([type="checkbox"]), .planeador select, .planeador summary,'
+            + ' .planeador .parada-acciones a, .planeador label.planeador-chip, .planeador .planeador-check')]
+            .filter(e => !e.closest('.leaflet-container'))
+            .filter(e => { const r = e.getBoundingClientRect(); return r.height > 0 && r.height < 44; })
+            .map(e => e.outerHTML.slice(0, 80))''')
+        self.assertEqual(pequenos, [])
+        chicos = self.pagina.evaluate('''[...document.querySelectorAll('.planeador-layout *')]
+            .filter(e => !e.closest('.leaflet-container') && !e.closest('.sr-only'))
+            .filter(e => [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()))
+            .filter(e => parseFloat(getComputedStyle(e).fontSize) < 16)
+            .map(e => e.tagName + '.' + e.className)''')
+        self.assertEqual(chicos, [])
 
     def test_guardar_favorito_y_cerrar_sesion(self):
         self.iniciar_sesion()
