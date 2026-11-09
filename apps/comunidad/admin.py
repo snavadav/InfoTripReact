@@ -1,11 +1,14 @@
 from django.contrib import admin
 from django.db import transaction
+from django.http import FileResponse
+from django.shortcuts import get_object_or_404
+from django.urls import path, reverse
 from django.utils import timezone
 from django.utils.html import format_html, format_html_join
 from .models import (
-    Aporte, Colaboracion, Comentario, Confirmacion, ConfirmacionLugar, Decision, InteresNegocio, PropuestaLugar,
-    Reporte, ReporteColaboracion, ReporteResenaLugar, ResenaLugar, RevisionColaboracion, RevisionPropuestaLugar,
-    RevisionResenaLugar,
+    Aporte, Colaboracion, Comentario, Confirmacion, ConfirmacionLugar, Decision, FotoPasaporte, InteresNegocio,
+    PropuestaLugar, Reporte, ReporteColaboracion, ReporteResenaLugar, ResenaLugar, RevisionColaboracion,
+    RevisionFotoPasaporte, RevisionPropuestaLugar, RevisionResenaLugar,
 )
 from .moderacion import moderar
 from .propuestas_lugar import lugares_parecidos
@@ -293,3 +296,53 @@ class ComentarioAdmin(admin.ModelAdmin):
     @admin.action(description='Marcar como atendidos', permissions=['change'])
     def marcar_atendidos(self, request, queryset):
         queryset.update(atendido=True)
+
+
+@admin.register(FotoPasaporte)
+class FotoPasaporteAdmin(admin.ModelAdmin):
+    """Solo llegan a la cola las que su autor quiere mostrar en el pasaporte compartido."""
+    list_display = ['id', 'destino', 'autor', 'mostrar', 'estado', 'creado']
+    list_filter = ['estado', 'mostrar']
+    search_fields = ['destino__nombre', 'autor__email']
+    list_select_related = ['destino', 'autor']
+    readonly_fields = ['vista_previa', 'destino', 'autor', 'mostrar', 'estado', 'creado', 'actualizado']
+    exclude = ['imagen']
+    actions = ['publicar', 'ocultar']
+    def has_add_permission(self, request): return False
+    def has_delete_permission(self, request, obj=None): return False
+
+    def get_urls(self):
+        return [path('<int:pk>/imagen/', self.admin_site.admin_view(self.imagen),
+                     name='comunidad_fotopasaporte_imagen'), *super().get_urls()]
+
+    def imagen(self, request, pk):
+        """El archivo no se sirve desde /media/: el personal lo ve a través del admin."""
+        if not self.has_view_permission(request):
+            return self.admin_site.login(request)
+        return FileResponse(get_object_or_404(FotoPasaporte, pk=pk).imagen.open('rb'), content_type='image/jpeg')
+
+    @admin.display(description='Foto')
+    def vista_previa(self, foto):
+        url = reverse('admin:comunidad_fotopasaporte_imagen', args=[foto.pk])
+        return format_html('<img src="{}" alt="Foto de {}" width="480">', url, foto.destino.nombre)
+
+    @admin.action(description='Aprobar para el pasaporte compartido', permissions=['change'])
+    def publicar(self, request, queryset):
+        with transaction.atomic():
+            for foto in queryset.select_for_update():
+                moderar(foto, request.user, 'publicado', 'Revisión editorial: foto de pasaporte aprobada.')
+
+    @admin.action(description='No aprobar para el pasaporte compartido', permissions=['change'])
+    def ocultar(self, request, queryset):
+        with transaction.atomic():
+            for foto in queryset.select_for_update():
+                moderar(foto, request.user, 'oculto', 'Revisión editorial: foto de pasaporte no aprobada.')
+
+
+@admin.register(RevisionFotoPasaporte)
+class RevisionFotoPasaporteAdmin(admin.ModelAdmin):
+    list_display = ['foto', 'moderador', 'estado_anterior', 'estado_nuevo', 'creado']
+    readonly_fields = ['foto', 'moderador', 'estado_anterior', 'estado_nuevo', 'motivo', 'creado']
+    def has_add_permission(self, request): return False
+    def has_change_permission(self, request, obj=None): return False
+    def has_delete_permission(self, request, obj=None): return False

@@ -503,3 +503,55 @@ class Comentario(models.Model):
 
     def __str__(self):
         return f'{self.get_tipo_display()} · {self.texto[:60]}'
+
+
+class FotoPasaporte(Moderable):
+    """Foto propia de un destino con visita comprobada, para la página de ese destino en el pasaporte.
+
+    Es privada: solo la ve su autor. Aparece en el pasaporte compartido únicamente si la persona marca
+    `mostrar` y la moderación la publica. El archivo no se sirve desde /media/, sino por vistas que
+    comprueban esas condiciones (pasaporte.py); nginx niega /media/pasaporte/ por si alguien adivina la ruta.
+    """
+    ESTADOS = [('pendiente', 'Sin revisar'), ('publicado', 'Aprobada'), ('oculto', 'No aprobada')]
+    autor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='fotos_pasaporte')
+    destino = models.ForeignKey('destinos.Destino', on_delete=models.CASCADE, related_name='fotos_pasaporte')
+    imagen = models.ImageField(upload_to='pasaporte/')
+    mostrar = models.BooleanField('mostrar en el pasaporte compartido', default=False)
+    estado = models.CharField(max_length=12, choices=ESTADOS, default='pendiente')
+    creado = models.DateTimeField(auto_now_add=True)
+    actualizado = models.DateTimeField(auto_now=True)
+
+    CAMPOS_AL_MODERAR = ['estado', 'actualizado']
+
+    class Meta:
+        ordering = ['-creado', '-pk']
+        verbose_name = 'foto de pasaporte'
+        verbose_name_plural = 'fotos de pasaporte'
+        constraints = [models.UniqueConstraint(fields=['autor', 'destino'], name='una_foto_de_pasaporte_por_destino')]
+        indexes = [models.Index(fields=['estado', 'mostrar'], name='foto_pasaporte_cola_idx')]
+
+    def __str__(self):
+        return f'{self.destino.nombre} · {self.autor.nombre}'
+
+    @property
+    def visible_en_compartido(self):
+        return self.mostrar and self.estado == 'publicado'
+
+    def registrar_moderacion(self, **campos):
+        return self.revisiones.create(**campos)
+
+    def enlace_publicado(self):
+        return reverse('pasaporte')
+
+    def aviso_para_autor(self, anterior, estado):
+        if estado == 'publicado':
+            return f'Aprobamos tu foto de {self.destino.nombre}: ya se ve en tu pasaporte compartido.'
+        if estado == 'oculto':
+            return (f'Revisamos tu foto de {self.destino.nombre} y no la mostraremos en tu pasaporte compartido. '
+                    'Sigue visible para ti.')
+        return None
+
+
+class RevisionFotoPasaporte(RegistroModeracion):
+    # CASCADE y no PROTECT: la foto es de la persona y puede borrarla; su historial no tiene otro uso.
+    foto = models.ForeignKey(FotoPasaporte, on_delete=models.CASCADE, related_name='revisiones')
