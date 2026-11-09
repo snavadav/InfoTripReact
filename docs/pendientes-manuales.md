@@ -44,7 +44,8 @@ Tareas que no se pueden automatizar desde el código. Marca cada una al completa
 - [ ] **Definir `CONTACTO_PRIVACIDAD`** con un correo real. Sin él, el aviso no muestra cómo contactar al equipo.
 
 - [ ] **Sacar las copias de seguridad del servidor.** El servicio `respaldos` las guarda en un volumen local; activa la subida a S3 ([paso 10 de la guía de AWS](despliegue-aws.md#paso-10-respaldos-en-s3)).
-- [ ] **Definir `SENTRY_DSN`** si quieres alertas de errores (opcional).
+- [ ] **Definir `SENTRY_DSN`** para recibir avisos de errores ([paso 11](despliegue-aws.md#paso-11-avisos-de-errores-con-sentry)).
+- [ ] **Avisos de caída:** monitor de UptimeRobot en `/health/` y alarmas de CloudWatch ([paso 12](despliegue-aws.md#paso-12-avisos-si-el-sitio-se-cae)).
 
 - [ ] **Sembrar datos prácticos** en los destinos: [guía](sembrar-contenido.md). Sin ellos, las fichas dicen "Sin confirmar" y el sitio aporta poco valor.
 - [ ] **Confirmar el origen de `tequila.jpg` y `ptVallarta.jpg`**: ya estaban en el proyecto sin autor ni licencia documentados. Si no son propias, hay que sustituirlas.

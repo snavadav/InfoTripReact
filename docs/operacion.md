@@ -141,7 +141,25 @@ Lo que sí llega: el tipo de error, el mensaje (sin correos), la ruta, las líne
 (`User-Agent`). Si agregas código que guarda datos personales en un mensaje de error, tápalos también en
 `limpiar_evento`.
 
-Para saber si el sitio está en pie, apunta un monitor a `/health/`: responde 200 si la base de datos y la caché funcionan, y 503 si no.
+## Disponibilidad
+
+`/health/` responde 200 con `{"estado": "ok", …}` si la base de datos y la caché funcionan, y 503 con el componente que falla si no.
+
+En el servidor de AWS hay dos vigilantes que avisan por correo. Cómo crearlos:
+[paso 12 de despliegue-aws.md](despliegue-aws.md#paso-12-avisos-si-el-sitio-se-cae).
+
+- **UptimeRobot** revisa `https://infotrip.online/health/` cada 5 minutos desde fuera de AWS.
+- **CloudWatch** tiene tres alarmas:
+  - `infotrip-hardware`: falla el equipo físico de AWS; recupera la instancia sola.
+  - `infotrip-sistema`: falla el sistema de la instancia; la reinicia.
+  - `infotrip-cpu`: CPU arriba de 80 % durante 15 minutos; solo avisa.
+
+Si llega un aviso de caída:
+
+1. Abre `https://infotrip.online/health/` y mira qué componente dice `error`.
+2. Entra al servidor y revisa `dc ps`: todos los servicios deben decir `running` o `healthy`.
+3. Busca la causa con `dc logs --tail 100 web nginx caddy`.
+4. Si el servidor no responde por SSH, reinícialo desde *EC2 → Instances → Reboot instance*.
 
 ## Registros
 

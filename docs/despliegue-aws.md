@@ -226,7 +226,7 @@ alias dc='docker compose -f docker-compose.yml -f docker-compose.aws.yml --env-f
 
 - Abre `https://infotrip.online`. El candado debe aparecer: Caddy pide el certificado solo, en menos de un minuto.
 - `https://www.infotrip.online` debe llevarte a `https://infotrip.online`.
-- `https://…/health/` debe responder `{"status": "ok"}` o similar.
+- `https://infotrip.online/health/` debe responder `{"estado": "ok", "base_de_datos": "ok", "cache": "ok"}`.
 - Recorre en el celular: registro (el código llega por correo), mapa, **Cerca de mí** (pide permiso de ubicación),
   ficha, reseña, costos, Mis viajes, planeador y comentarios.
 - Si algo falla, revisa los registros:
@@ -417,6 +417,73 @@ la integración: solo falta la dirección del proyecto, el **DSN**. No se envía
 
 El plan gratuito admite un solo usuario, así que los avisos llegan al correo con el que crearon la cuenta. Usen el
 correo del proyecto y reenvíenlo al equipo con una regla de Gmail.
+
+## Paso 12. Avisos si el sitio se cae
+
+Dos vigilantes que no cuestan nada y avisan por correo:
+
+| Vigilante | Qué detecta | Desde dónde |
+|---|---|---|
+| Monitor externo en `/health/` | El sitio no responde, da error o falla la base de datos o la caché. | Fuera de AWS: sigue avisando aunque la cuenta o la región tengan problemas. |
+| Alarmas de CloudWatch | Falla el hardware de AWS o el sistema de la instancia, o el CPU se queda al tope. | Dentro de AWS: además del aviso, puede reiniciar o recuperar la instancia sola. |
+
+`/health/` responde 200 con `{"estado": "ok", …}` si la base de datos y la caché funcionan, y 503 si alguna falla.
+
+### 12.1 Monitor externo (UptimeRobot)
+
+1. Crea una cuenta en https://uptimerobot.com con el correo del proyecto. El plan **Free** da 50 monitores revisados
+   cada 5 minutos, con avisos por correo, y es para uso no comercial, como este proyecto escolar.
+2. Pulsa *+ New monitor* y llena:
+
+   | Campo | Valor |
+   |---|---|
+   | Monitor type | **HTTP / website monitoring** |
+   | URL to monitor | `https://infotrip.online/health/` |
+   | Monitor interval | 5 minutes |
+   | How will we notify you? | **E-mail**, al correo del proyecto |
+
+3. Pulsa *Create monitor*. En un par de minutos debe verse **Up** en verde.
+4. Opcional: en *Integrations & API → Alert contacts* agrega el correo de cada persona del equipo y márcalos en el
+   monitor.
+
+Cualquier respuesta distinta de 2xx cuenta como caída, incluido el 503 de `/health/`. El aviso llega cuando el sitio
+se cae y cuando vuelve. Si prefieren otra opción, [Better Stack](https://betterstack.com/uptime) tiene un plan
+gratuito equivalente: 10 monitores cada 3 minutos.
+
+### 12.2 Alarmas de CloudWatch
+
+El nivel gratuito permanente de CloudWatch incluye 10 alarmas y las métricas básicas de EC2, y el de SNS, 1,000
+correos al mes. Con estas tres alarmas no se gasta nada.
+
+En la región de la instancia (`us-east-2`), entra a *EC2 → Instances → infotrip → Actions → Monitor and
+troubleshoot → Manage CloudWatch alarms* y crea cada alarma de esta tabla con *Create an alarm*:
+
+| Campo | Alarma 1: hardware de AWS | Alarma 2: sistema de la instancia | Alarma 3: CPU al tope |
+|---|---|---|---|
+| Alarm notification | Activada. La primera vez, *Create topic* `infotrip-avisos` con el correo del proyecto. | Tema `infotrip-avisos` | Tema `infotrip-avisos` |
+| Alarm action | Activada: **Recover** | Activada: **Reboot** | Desactivada |
+| Group samples by | Maximum | Maximum | Average |
+| Type of data to sample | **Status check failed: system** | **Status check failed: instance** | **CPU utilization** |
+| Alarm when | >= 1 | >= 1 | >= **80** % |
+| Consecutive periods | 2 | 3 | 3 |
+| Period | 1 minute | 1 minute | 5 minutes |
+| Alarm name | `infotrip-hardware` | `infotrip-sistema` | `infotrip-cpu` |
+
+- **Recover** mueve la instancia a otro equipo físico de AWS. Conserva la IP, el disco y los datos.
+- **Reboot** reinicia el servidor. Los contenedores vuelven solos porque tienen `restart: unless-stopped`.
+- **CPU al 80 % por 15 minutos** suele ser tráfico anormal o un proceso atorado. `t3.small` puede pasar un rato de
+  su nivel base (20 %) con créditos de CPU, pero si se mantiene alto en modo *unlimited* cobra un extra. Revísalo con
+  `dc stats` y `dc logs --tail 100 web`.
+
+Al crear el tema llega un correo de AWS Notifications: **pulsa *Confirm subscription***, o no llegará ningún aviso.
+Para agregar a otra persona: *SNS → Topics → infotrip-avisos → Create subscription*, protocolo *Email*.
+
+Comprueba que el aviso llega. Abre **CloudShell**, el ícono `>_` de la barra superior de la consola, y fuerza la alarma
+de CPU, que no tiene acción. En un par de minutos vuelve sola a *OK*:
+
+```bash
+aws cloudwatch set-alarm-state --region us-east-2 --alarm-name infotrip-cpu --state-value ALARM --state-reason "Prueba de aviso"
+```
 
 ## Mantenimiento
 
