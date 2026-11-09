@@ -130,6 +130,20 @@ jobs:
           estatico=$(curl --fail --silent http://localhost:8080/destinos/ | grep -o '/static/css/[^"]*' | head -1)
           curl --fail --silent --show-error --output /dev/null "http://localhost:8080$estatico"
           curl --fail --silent --show-error --head http://localhost:8080/ | grep -i '^content-security-policy'
+      - name: test_pwa (service worker, manifiesto y página sin conexión a través de nginx)
+        run: |
+          set -o pipefail
+          sw=$(curl --fail --silent --show-error --head http://localhost:8080/sw.js)
+          echo "$sw" | grep -i '^content-type: text/javascript'
+          echo "$sw" | grep -i '^cache-control: no-cache'
+          curl --fail --silent --show-error --head http://localhost:8080/manifest.webmanifest | grep -i '^content-type: application/manifest+json'
+          # Los íconos del manifiesto existen con su nombre con hash de collectstatic.
+          iconos=$(curl --fail --silent http://localhost:8080/manifest.webmanifest | grep -o '/static/images/app/[^"]*')
+          test -n "$iconos"
+          for icono in $iconos; do curl --fail --silent --show-error --output /dev/null "http://localhost:8080$icono"; done
+          # La caché del service worker se versiona con los estáticos con hash.
+          curl --fail --silent http://localhost:8080/sw.js | grep -E '^const PRECACHE = \["/sin-conexion/", "/static/css/[a-z-]+\.[0-9a-f]{12}\.css"'
+          curl --fail --silent --show-error http://localhost:8080/sin-conexion/ | grep -c 'Estás sin conexión'
       - name: Comprobar que la aplicación puede guardar fotos y nginx servirlas
         run: |
           docker compose --env-file .env.docker exec -T web sh -c 'echo prueba > /app/media/prueba-ci.txt'

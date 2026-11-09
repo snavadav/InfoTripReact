@@ -102,7 +102,8 @@ class ServiceWorkerTests(TestCase):
             self.client.get('/sw.js')
         self.assertEqual(calcular.call_count, 1)
 
-    def test_solo_get(self):
+    def test_solo_get_y_head(self):
+        self.assertEqual(self.client.head('/sw.js').status_code, 200)
         self.assertEqual(self.client.post('/sw.js').status_code, 405)
         self.assertEqual(self.client.post('/manifest.webmanifest').status_code, 405)
 

@@ -19,7 +19,7 @@ from django.templatetags.static import static
 from django.urls import reverse
 from django.utils.csp import CSP
 from django.views.decorators.csp import csp_override
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_safe
 
 FUENTE_SW = Path(__file__).with_name('sw.js')
 # Colores de static/css/style.css: --panel (la barra) y --fondo (la página) del tema claro, el predeterminado.
@@ -70,7 +70,7 @@ def configuracion():
     return calcular_configuracion() if settings.DEBUG else configuracion_fija()
 
 
-@require_GET
+@require_safe
 def manifiesto(request):
     datos = {
         'id': '/',
@@ -100,7 +100,7 @@ def manifiesto(request):
     'default-src': [CSP.NONE],
     'connect-src': [CSP.SELF, 'https://unpkg.com', 'https://tile.openstreetmap.org'],
 })
-@require_GET
+@require_safe
 def service_worker(request):
     datos = configuracion()
     cabecera = (
@@ -116,7 +116,7 @@ def service_worker(request):
     return respuesta
 
 
-@require_GET
+@require_safe
 def sin_conexion(request):
     """La muestra el service worker cuando no hay red y la página pedida no está guardada."""
     return render(request, 'sin_conexion.html', {
