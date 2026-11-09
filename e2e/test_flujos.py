@@ -23,6 +23,8 @@ from apps.usuarios.models import Usuario
 
 CLAVE = 'Prueba-segura-493!'
 SIN_SALUDO = "try { localStorage.setItem('infotrip_axo_saludo', new Date().toLocaleDateString('en-CA')); } catch {}"
+# El botón "Instalar app" (iPhone o Chrome instalable) no debe tapar nada en las demás pruebas.
+SIN_INSTALAR = "try { localStorage.setItem('infotrip_instalar_cerrado', '1'); } catch {}"
 
 
 @skipUnless(os.environ.get('E2E'), 'Pruebas de navegador: definir E2E=1')
@@ -58,7 +60,10 @@ class FlujosTests(StaticLiveServerTestCase):
         self.pagina.on('response', self.revisar_respuesta)
 
     def nuevo_contexto(self, saludo=False, **opciones):
+        # Playwright no ve ni intercepta lo que pide un service worker: solo la prueba de la app lo activa.
+        opciones.setdefault('service_workers', 'block')
         contexto = self.navegador.new_context(**opciones)
+        contexto.add_init_script(SIN_INSTALAR)
         if not saludo:
             # La burbuja de bienvenida de Axo ya salió hoy: así no tapa botones en las demás pruebas.
             contexto.add_init_script(SIN_SALUDO)
@@ -95,10 +100,44 @@ class FlujosTests(StaticLiveServerTestCase):
         self.pagina.wait_for_url(lambda url: '/login/' not in url)
 
     def test_paginas_publicas_sin_violaciones_de_csp(self):
-        for ruta in ['/', '/destinos/', '/destinos/mirador/', '/destinos/mirador/costos/', '/costos/', '/misiones/', '/pasaporte/', '/negocios/', '/planeador/', '/lugares/proponer/', '/login/', '/registro/', '/api/v1/docs/', '/no-existe/']:
+        for ruta in ['/', '/destinos/', '/destinos/mirador/', '/destinos/mirador/costos/', '/costos/', '/misiones/', '/pasaporte/', '/negocios/', '/planeador/', '/lugares/proponer/', '/login/', '/registro/', '/api/v1/docs/', '/no-existe/',
+                     '/sin-conexion/']:
             with self.subTest(ruta=ruta):
                 self.abrir(ruta)
                 self.pagina.wait_for_load_state('load')
+
+    def test_sin_senal_se_ve_lo_guardado_o_la_pagina_sin_conexion(self):
+        self.contexto.close()
+        self.contexto = self.nuevo_contexto(service_workers='allow')
+        self.pagina = self.contexto.new_page()
+        self.pagina.on('console', self.revisar_consola)
+        self.pagina.on('response', self.revisar_respuesta)
+        self.abrir('/destinos/')
+        # Con clients.claim() el service worker controla la página en cuanto se activa.
+        # (evaluate y no wait_for_function: este evalúa texto en la página y la CSP lo bloquea).
+        self.pagina.evaluate("navigator.serviceWorker.controller || new Promise(listo =>"
+                             " navigator.serviceWorker.addEventListener('controllerchange', listo))")
+        self.abrir('/destinos/mirador/')
+        self.pagina.wait_for_load_state('load')
+        self.assertTrue(self.pagina.evaluate("caches.keys().then(n => n.some(c => c.startsWith('infotrip-paginas-')))"))
+
+        self.contexto.set_offline(True)
+        self.pagina.reload()
+        self.pagina.get_by_role('heading', name='Mirador', level=1).wait_for()
+
+        # Una página que no se visitó: la de sin conexión, con lo que sí está guardado.
+        self.abrir('/misiones/')
+        self.pagina.get_by_role('heading', name='Estás sin conexión').wait_for()
+        guardadas = self.pagina.locator('#paginasGuardadas a')
+        guardadas.first.wait_for()
+        rutas = guardadas.evaluate_all('enlaces => enlaces.map(a => a.getAttribute("href"))')
+        self.assertIn('/destinos/mirador/', rutas)
+        # La API nunca se guarda: sin red falla aunque se haya pedido antes.
+        self.assertFalse(self.pagina.evaluate(
+            "caches.keys().then(async nombres => { for (const n of nombres) {"
+            " for (const p of await (await caches.open(n)).keys()) if (new URL(p.url).pathname.startsWith('/api/'))"
+            " return true; } return false; })"))
+        self.contexto.set_offline(False)
 
     def test_el_mapa_de_la_portada_se_puede_abrir(self):
         self.abrir('/')
