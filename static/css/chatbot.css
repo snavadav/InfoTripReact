@@ -28,10 +28,10 @@
   box-shadow: var(--sombra-flotante);
 }
 .trip-chat-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; padding: .9rem 1rem .6rem; }
-.trip-chat-eyebrow { color: var(--texto-3); font-family: var(--fuente-mono); font-size: .6875rem; letter-spacing: .04em; }
+.trip-chat-eyebrow { color: var(--texto-3); font-variant-numeric: tabular-nums; font-size: .8125rem; letter-spacing: .04em; }
 .trip-chat-header h2 { font-size: 1rem; }
 .trip-chat-header button { width: 36px; min-height: 36px; padding: 0; border-color: transparent; background: transparent; font-size: 1.25rem; }
-.trip-chat-notice { padding: 0 1rem .6rem; border-bottom: 1px solid var(--linea); color: var(--texto-3); font-size: .75rem; }
+.trip-chat-notice { padding: 0 1rem .6rem; border-bottom: 1px solid var(--linea); color: var(--texto-3); font-size: .8125rem; }
 .trip-chat-log { flex: 1; display: flex; flex-direction: column; gap: .5rem; min-height: 100px; padding: .75rem 1rem; overflow-y: auto; }
 .trip-chat-message {
   align-self: flex-start;
@@ -39,7 +39,7 @@
   padding: .5rem .7rem;
   border-radius: var(--radio);
   background: var(--panel-2);
-  font-size: .875rem;
+  font-size: .9375rem;
   white-space: pre-line;
 }
 .trip-chat-message-user { align-self: flex-end; background: var(--acento-suave); color: var(--texto); }
@@ -53,13 +53,13 @@
   border-radius: var(--radio-s);
   background: var(--panel);
   color: var(--texto);
-  font-size: .8125rem;
+  font-size: .875rem;
   font-weight: 500;
   text-decoration: none;
 }
 .trip-chat-options button:hover, .trip-chat-options a:hover { background: var(--panel-3); }
-.trip-chat-footer { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .5rem 1rem; border-top: 1px solid var(--linea); color: var(--texto-3); font-size: .75rem; }
-.trip-chat-footer button { min-height: 32px; padding: .2rem .5rem; border-color: transparent; background: transparent; color: var(--acento); font-size: .75rem; }
+.trip-chat-footer { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .5rem 1rem; border-top: 1px solid var(--linea); color: var(--texto-3); font-size: .8125rem; }
+.trip-chat-footer button { min-height: 32px; padding: .2rem .5rem; border-color: transparent; background: transparent; color: var(--acento); font-size: .8125rem; }
 @media (max-width: 860px) {
   .trip-chat-options button, .trip-chat-options a, .trip-chat-footer button, .trip-chat-header button { min-height: 44px; }
 }

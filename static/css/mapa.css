@@ -5,11 +5,11 @@
 .leaflet-bar a, .leaflet-bar a:hover { width: 36px; height: 36px; border-color: var(--linea); background: var(--panel); color: var(--texto); line-height: 36px; }
 .leaflet-bar a:hover { background: var(--panel-3); }
 .leaflet-bar a.leaflet-disabled { background: var(--panel-2); color: var(--texto-3); }
-.leaflet-container .leaflet-control-attribution { background: var(--panel); color: var(--texto-3); font-size: .6875rem; }
+.leaflet-container .leaflet-control-attribution { background: var(--panel); color: var(--texto-3); font-size: .8125rem; }
 .leaflet-control-attribution a { color: var(--texto-2); }
 .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: var(--panel); color: var(--texto); box-shadow: var(--sombra); }
 .leaflet-popup-content-wrapper { border-radius: var(--radio-s); }
-.leaflet-popup-content { margin: .7rem .85rem; font-size: .875rem; }
+.leaflet-popup-content { margin: .7rem .85rem; font-size: .9375rem; }
 .leaflet-popup-content strong { display: block; font-weight: 600; }
 .leaflet-popup-content p { margin: .1rem 0 .3rem; color: var(--texto-2); }
 .leaflet-container a.leaflet-popup-close-button { color: var(--texto-3); }
@@ -43,8 +43,8 @@
   border-radius: 50%;
   background: var(--panel);
   color: var(--texto);
-  font-family: var(--fuente-mono);
-  font-size: .75rem;
+  font-variant-numeric: tabular-nums;
+  font-size: .8125rem;
   font-weight: 500;
   box-shadow: 0 1px 4px rgba(0, 0, 0, .3);
 }
@@ -65,8 +65,8 @@
   box-shadow: 0 1px 4px rgba(0, 0, 0, .35);
 }
 .pin-lugar svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.lugar-popup p { margin: .15rem 0; font-size: .8125rem; }
-.lugar-popup-acciones { display: flex; flex-wrap: wrap; gap: .25rem .7rem; margin-top: .35rem; font-size: .8125rem; }
-.leaflet-popup-content .lugar-popup-credito { margin-top: .35rem; color: var(--texto-3); font-size: .6875rem; }
+.lugar-popup p { margin: .15rem 0; font-size: .875rem; }
+.lugar-popup-acciones { display: flex; flex-wrap: wrap; gap: .25rem .7rem; margin-top: .35rem; font-size: .875rem; }
+.leaflet-popup-content .lugar-popup-credito { margin-top: .35rem; color: var(--texto-3); font-size: .8125rem; }
 
 .leaflet-popup-content .lugar-popup-nota { color: var(--texto); font-weight: 600; }
