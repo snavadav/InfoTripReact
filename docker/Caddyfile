@@ -1,0 +1,12 @@
+# HTTPS para el servidor de AWS: Caddy obtiene y renueva solo el certificado de Let's Encrypt para
+# $DOMINIO y reenvía todo a nginx. Lo usa docker-compose.aws.yml; en tu equipo no hace falta.
+{
+	email {$CORREO_CERTIFICADO}
+}
+
+{$DOMINIO} {
+	encode zstd gzip
+	# Caddy reemplaza X-Forwarded-For con la IP real del visitante (no confía en la que mande él)
+	# y añade X-Forwarded-Proto: https. nginx los pasa tal cual a Django.
+	reverse_proxy nginx:80
+}

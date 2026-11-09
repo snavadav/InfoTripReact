@@ -153,3 +153,51 @@ jobs:
       - name: Apagar
         if: always()
         run: docker compose --env-file .env.docker down --volumes
+
+  despliegue-aws:
+    name: Despliegue de AWS con HTTPS (Caddy)
+    runs-on: ubuntu-latest
+    env:
+      DC: docker compose -f docker-compose.yml -f docker-compose.aws.yml --env-file .env.docker
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configuración de prueba con la plantilla de AWS (dominio localhost, valores aleatorios)
+        run: |
+          clave=$(python3 -c "import secrets; print(secrets.token_urlsafe(60))")
+          contrasena=$(python3 -c "import secrets; print(secrets.token_urlsafe(24))")
+          sed -e "s|^DOMINIO=.*|DOMINIO=localhost|" -e "s|^ALLOWED_HOSTS=.*|ALLOWED_HOSTS=localhost|" \
+              -e "s|^PUBLIC_BASE_URL=.*|PUBLIC_BASE_URL=https://localhost|" \
+              -e "s|^SECRET_KEY=.*|SECRET_KEY=$clave|" \
+              -e "s|^POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=$contrasena|" \
+              -e "s|^DB_PASSWORD=.*|DB_PASSWORD=$contrasena|" \
+              -e "s|^EMAIL_BACKEND=.*|EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend|" \
+              .env.docker.aws.example > .env.docker
+      - name: Construir y levantar con Caddy
+        run: $DC up --build --detach --wait --wait-timeout 180
+      - name: HTTPS, redirección y cabeceras
+        run: |
+          curl --fail --silent --show-error --insecure --retry 10 --retry-delay 3 --retry-all-errors https://localhost/health/
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost/)" = 308
+          curl --fail --silent --insecure --head https://localhost/ | grep -i '^strict-transport-security'
+          curl --fail --silent --show-error --insecure --output /dev/null https://localhost/destinos/
+      - name: nginx no queda expuesto y la IP no se puede falsear
+        run: |
+          ! curl --silent --max-time 5 http://localhost:8080/health/
+          # El planeador acepta 10 peticiones por minuto por IP: con X-Forwarded-For inventadas debe frenar igual.
+          for i in $(seq 1 11); do
+            codigo=$(curl -sk -o /dev/null -w '%{http_code}' -H 'Content-Type: application/json' \
+              -H "X-Forwarded-For: 10.0.0.$i" -d '{}' https://localhost/api/v1/rutas/planear/)
+          done
+          test "$codigo" = 429
+      - name: CSRF de la sesión por HTTPS
+        run: |
+          token=csrfprueba0123456789abcdef012345
+          ruta=https://localhost/api/v1/auth/logout/
+          test "$(curl -sk -o /dev/null -w '%{http_code}' -X POST -H "Cookie: csrftoken=$token" -H "X-CSRFToken: $token" -H "Origin: https://ajeno.example" $ruta)" = 403
+          test "$(curl -sk -o /dev/null -w '%{http_code}' -X POST -H "Cookie: csrftoken=$token" -H "X-CSRFToken: $token" -H "Origin: https://localhost" -H "Referer: https://localhost/" $ruta)" = 400
+      - name: Registros si algo falló
+        if: failure()
+        run: $DC logs --no-color
+      - name: Apagar
+        if: always()
+        run: $DC down --volumes

@@ -1,0 +1,35 @@
+# Servidor de AWS: lo mismo que docker-compose.yml, más Caddy al frente con HTTPS automático.
+# Uso (guía completa en docs/despliegue-aws.md):
+#   docker compose -f docker-compose.yml -f docker-compose.aws.yml --env-file .env.docker up -d --build
+
+services:
+  nginx:
+    # Sin puertos públicos: solo Caddy le habla, así nadie puede saltarse HTTPS ni falsear su IP.
+    ports: !reset []
+    volumes: !override
+      - ./docker/nginx-https.conf:/etc/nginx/conf.d/default.conf:ro
+      - media:/srv/media:ro
+
+  caddy:
+    image: caddy:2.10
+    env_file: .env.docker
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_datos:/data
+      - caddy_config:/config
+    depends_on:
+      - nginx
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+
+volumes:
+  caddy_datos:
+  caddy_config:
