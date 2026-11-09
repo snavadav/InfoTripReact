@@ -249,6 +249,135 @@ Para dar acceso de moderación a una persona del equipo, después de que se regi
 dc exec web python manage.py crear_moderacion --agregar correo@ejemplo.com
 ```
 
+## Paso 10. Respaldos en S3
+
+Sin este paso, los respaldos diarios quedan en el mismo servidor y se pierden con él. Aquí se crea un bucket donde el
+servidor sube cada copia usando un rol de IAM, sin guardar llaves en el servidor. Quedan **7 copias diarias y 4
+semanales**. Toma unos 15 minutos.
+
+**Costo.** Cada copia es la base más las fotos. Mide su tamaño con `dc exec respaldos du -sh /respaldos` y divídelo
+entre las copias que haya. Con copias de 200 MB, las 11 suman ≈ 2.2 GB, unos **US$0.05 al mes** de los créditos. Subir
+datos a S3 no se cobra. La alerta de presupuesto del paso 1 avisa si el gasto crece.
+
+Haz todo en la **misma región que la instancia** (`us-east-2`, Ohio).
+
+### 10.1 Crear el bucket
+
+*S3 → Create bucket*:
+
+| Campo | Valor |
+|---|---|
+| Bucket type | General purpose |
+| Bucket name | `infotrip-respaldos-` más algo único, por ejemplo la fecha: `infotrip-respaldos-20261109`. El nombre es global en todo AWS. |
+| Object Ownership | ACLs disabled |
+| Block Public Access | **Block all public access** marcado |
+| Bucket Versioning | Disable: con versiones, las copias borradas seguirían ocupando y cobrándose |
+| Default encryption | SSE-S3 |
+
+Pulsa *Create bucket* y **anota el nombre**.
+
+### 10.2 Reglas de borrado automático
+
+En el bucket, *Management → Create lifecycle rule*. Crea dos reglas:
+
+| Campo | Regla 1 | Regla 2 |
+|---|---|---|
+| Lifecycle rule name | `diarias-7-dias` | `semanales-28-dias` |
+| Rule scope | *Limit the scope… using filters*, prefijo `infotrip/diarias/` | prefijo `infotrip/semanales/` |
+| Actions | *Expire current versions of objects* y *Delete expired object delete markers or incomplete multipart uploads* | igual |
+| Days after object creation | **7** | **28** |
+| Delete incomplete multipart uploads | 1 día | 1 día |
+
+Las subidas incompletas son restos de una subida cortada: también ocupan espacio y se cobran.
+
+### 10.3 Permiso mínimo
+
+*IAM → Policies → Create policy → JSON*. Pega esto, cambia las dos veces `NOMBRE-DEL-BUCKET` y llama a la política
+`infotrip-respaldos-s3`:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "SubirYLeerRespaldos",
+      "Effect": "Allow",
+      "Action": ["s3:PutObject", "s3:GetObject"],
+      "Resource": "arn:aws:s3:::NOMBRE-DEL-BUCKET/infotrip/*"
+    },
+    {
+      "Sid": "ListarRespaldos",
+      "Effect": "Allow",
+      "Action": "s3:ListBucket",
+      "Resource": "arn:aws:s3:::NOMBRE-DEL-BUCKET",
+      "Condition": {"StringLike": {"s3:prefix": ["infotrip/*"]}}
+    }
+  ]
+}
+```
+
+La política deja subir, leer y listar copias solo dentro de `infotrip/`. **No deja borrar**: de eso se encargan las
+reglas del paso 10.2.
+
+### 10.4 Rol para la instancia
+
+1. En *IAM → Roles → Create role*, elige *AWS service* y luego *EC2*.
+2. Marca la política `infotrip-respaldos-s3`.
+3. Llama al rol `infotrip-ec2-respaldos` y créalo.
+4. En *EC2 → Instances → infotrip → Actions → Security → Modify IAM role*, elige `infotrip-ec2-respaldos` y pulsa
+   *Update IAM role*.
+
+### 10.5 Dejar que los contenedores lleguen al rol
+
+En *EC2 → Instances → infotrip → Actions → Instance settings → Modify instance metadata options*:
+
+| Campo | Valor |
+|---|---|
+| Instance metadata service | Enable |
+| IMDSv2 | **Required** |
+| Metadata response hop limit | **2** |
+
+Las credenciales del rol se piden a una dirección interna de la instancia. Desde un contenedor de Docker hay un salto
+de red más, y con el límite de 1, que suele venir por defecto, la petición nunca llega.
+
+### 10.6 Encender la subida en el servidor
+
+```bash
+cd ~/infotrip && git pull
+```
+
+```bash
+nano .env.docker
+```
+
+Pon el nombre del bucket en `RESPALDO_S3_BUCKET` y la región en `RESPALDO_S3_REGION=us-east-2`. Si tu `.env.docker`
+es anterior a este paso y no tiene esas líneas, cópialas del final de `.env.docker.aws.example`.
+
+La primera vez se construye la imagen de respaldos con el cliente de AWS, lo que tarda 1 o 2 minutos:
+
+```bash
+dc up -d --build
+```
+
+Comprueba que el contenedor ve el rol. Debe aparecer `assumed-role/infotrip-ec2-respaldos`:
+
+```bash
+dc exec respaldos aws sts get-caller-identity
+```
+
+Haz un respaldo de prueba y míralo en el bucket:
+
+```bash
+dc exec respaldos sh /respaldo.sh --una-vez
+```
+
+```bash
+dc exec respaldos aws s3 ls --recursive --human-readable s3://NOMBRE-DEL-BUCKET/infotrip/diarias/
+```
+
+Desde ese momento, cada respaldo diario se sube solo. Cómo restaurar desde S3:
+[operacion.md](operacion.md#restaurar-desde-s3).
+
 ## Mantenimiento
 
 **Actualizar a la última versión de `master`.** Las migraciones se aplican solas al arrancar.
@@ -258,9 +387,11 @@ cd ~/infotrip && git pull && dc up -d --build
 ```
 
 **Respaldos.** El servicio `respaldos` guarda cada día la base y las fotos en el mismo servidor, y conserva 14 días.
-Bájalos a tu computadora al menos una vez por semana: si el servidor se pierde, se pierden con él.
+Con el [paso 10](#paso-10-respaldos-en-s3) hecho, también se suben a S3. Sin él, bájalos a tu computadora al menos
+una vez por semana: si el servidor se pierde, se pierden con él. Aun con S3, bajar una copia de vez en cuando no
+está de más.
 
-Primero, en el **servidor**, copia los respaldos a tu carpeta. El volumen de Docker solo lo puede leer root:
+Para bajarlos, primero, en el **servidor**, copia los respaldos a tu carpeta. El volumen de Docker solo lo puede leer root:
 
 ```bash
 rm -rf ~/respaldos && sudo cp -r /var/lib/docker/volumes/infotrip_respaldos/_data ~/respaldos && sudo chown -R ubuntu ~/respaldos

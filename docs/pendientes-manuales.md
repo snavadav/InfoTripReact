@@ -43,7 +43,7 @@ Tareas que no se pueden automatizar desde el código. Marca cada una al completa
 - [ ] **Revisar con alguien de derecho el aviso de privacidad y los términos** (`templates/legal/`). Son un borrador, marcado así en la página.
 - [ ] **Definir `CONTACTO_PRIVACIDAD`** con un correo real. Sin él, el aviso no muestra cómo contactar al equipo.
 
-- [ ] **Sacar las copias de seguridad del servidor.** El servicio `respaldos` las guarda en un volumen local; hay que copiarlas a otro lugar ([guía](operacion.md)).
+- [ ] **Sacar las copias de seguridad del servidor.** El servicio `respaldos` las guarda en un volumen local; activa la subida a S3 ([paso 10 de la guía de AWS](despliegue-aws.md#paso-10-respaldos-en-s3)).
 - [ ] **Definir `SENTRY_DSN`** si quieres alertas de errores (opcional).
 
 - [ ] **Sembrar datos prácticos** en los destinos: [guía](sembrar-contenido.md). Sin ellos, las fichas dicen "Sin confirmar" y el sitio aporta poco valor.
