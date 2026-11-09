@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Destino, Lugar, Region, Municipio, Categoria, Servicio
+from .models import Destino, Lugar, Region, Municipio, Categoria, ReferenciaCosto, Servicio
 
 
 class OrigenFilter(admin.SimpleListFilter):
@@ -79,3 +79,13 @@ class LugarAdmin(admin.ModelAdmin):
     @admin.action(description='Publicar lugares seleccionados', permissions=['change'])
     def publicar(self, request, queryset):
         queryset.update(es_activo=True, protegido=True)
+
+
+@admin.register(ReferenciaCosto)
+class ReferenciaCostoAdmin(admin.ModelAdmin):
+    """Precios de fuentes oficiales. Se cargan con cargar_referencias_costo desde un CSV versionado."""
+    list_display = ['destino', 'concepto', 'monto', 'fuente_nombre', 'fecha_fuente', 'fecha_consulta']
+    list_filter = ['concepto', 'fuente_nombre']
+    search_fields = ['destino__nombre', 'descripcion', 'fuente_nombre']
+    autocomplete_fields = ['destino']
+    list_select_related = ['destino']
