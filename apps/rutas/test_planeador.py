@@ -143,5 +143,9 @@ class PlaneadorTests(APITestCase):
         self.assertContains(pagina, 'id="ruta-form"')
         self.assertContains(pagina, '<option value="guadalajara" selected>Guadalajara</option>', html=True)
         self.assertContains(pagina, 'value="miradores"')
+        # Días como opciones grandes, con dos marcado; atajos de fecha con la fecha de mañana.
+        self.assertContains(pagina, '<input type="radio" name="dias" value="2" checked>', html=True)
+        manana = (timezone.localdate() + timedelta(days=1)).isoformat()
+        self.assertContains(pagina, f'data-fecha="{manana}"')
         self.assertContains(self.client.get('/destinos/'), 'href="/planeador/"')
         self.assertContains(self.client.get('/sitemap.xml'), '/planeador/')

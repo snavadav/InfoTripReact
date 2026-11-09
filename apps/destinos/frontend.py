@@ -21,8 +21,9 @@ from apps.comunidad.selectors import (
 )
 from .filtros import filtrar_destinos
 from .lugares import activos as lugares_activos, cercanos_de_destino
+from .management.commands.sembrar_contenido import TEXTO_AUTOMATICO
 from .fotos import FOTOS_CATALOGO
-from .models import Destino, Categoria, Lugar, Municipio, Region, Servicio, TIPO_DE_SUBTIPO
+from .models import Destino, Categoria, Lugar, Municipio, ReferenciaCosto, Region, Servicio, TIPO_DE_SUBTIPO
 from .seo import seo_de_destino
 from .views import destinos_publicos
 
@@ -106,6 +107,19 @@ def primero_lo_curado(destinos):
     )
 
 
+LARGO_RESUMEN = 120
+
+
+def resumen_corto(texto, largo=LARGO_RESUMEN):
+    """Inicio de la descripción, cortado entre palabras. El texto automático de lo importado no describe nada."""
+    texto = ' '.join(texto.split())
+    if not texto or TEXTO_AUTOMATICO in texto:
+        return ''
+    if len(texto) <= largo:
+        return texto
+    return texto[:largo].rsplit(' ', 1)[0].rstrip(' ,;:.') + '…'
+
+
 def punto_de_mapa(destino):
     """Solo lo que el mapa pinta al abrir: con cientos de puntos, cada campo se nota en el tamaño de la página."""
     lugar = completar(presentar(destino))
@@ -114,7 +128,7 @@ def punto_de_mapa(destino):
         'categoria': lugar['categoria'], 'categorias': lugar['categorias'],
         'latitud': lugar['latitud'], 'longitud': lugar['longitud'],
         'url': lugar['url'], 'maps_url': lugar['maps_url'], 'miniatura_url': lugar['miniatura_url'],
-        'destacado': bool(lugar['miniatura_url']),
+        'resumen': resumen_corto(lugar['descripcion']), 'destacado': bool(lugar['miniatura_url']),
     }
 
 
@@ -278,8 +292,10 @@ def costos_destino(request, slug):
     seo = seo_de_destino(lugar)
     seo['titulo'] = f"¿Cuánto cuesta ir a {lugar['nombre']}? Gastos reales de viajeros — InfoTrip"
     seo['descripcion'] = descripcion_de_costos(lugar['nombre'], costos)
+    # Precios de fuentes oficiales: se muestran aparte y no entran en la mediana ni en el mínimo de reportes.
     return render(request, 'destinos/costos.html', {
         'lugar': lugar, 'costos': costos, 'seo': seo, 'minimo': MINIMO_REPORTES,
+        'referencias': destino.referencias_costo.order_by('concepto', 'monto', 'pk'),
     })
 
 
@@ -298,9 +314,11 @@ def costos_indice(request):
     seo = {'titulo': '¿Cuánto cuesta viajar por Jalisco? — InfoTrip',
            'descripcion': ('Compara lo que gastaron viajeros en destinos de Jalisco: '
                            'entrada, comida, alojamiento y transporte.')}
+    referencias = (ReferenciaCosto.objects.filter(destino__es_activo=True).select_related('destino')
+                   .order_by('destino__nombre', 'destino__pk', 'concepto', 'monto', 'pk'))
     return render(request, 'destinos/costos_indice.html', {
         'filas': filas, 'seo': seo, 'minimo': MINIMO_REPORTES,
-        'encabezados': [nombre for _, nombre in Aporte.CONCEPTOS],
+        'encabezados': [nombre for _, nombre in Aporte.CONCEPTOS], 'referencias': referencias,
     })
 
 

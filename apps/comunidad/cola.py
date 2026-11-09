@@ -5,7 +5,7 @@ from django.urls import reverse
 from datetime import timedelta
 from django.utils import timezone
 from .models import (
-    Aporte, Colaboracion, Comentario, ConfirmacionLugar, PropuestaLugar, Reporte, ReporteColaboracion,
+    Aporte, Colaboracion, Comentario, ConfirmacionLugar, FotoPasaporte, PropuestaLugar, Reporte, ReporteColaboracion,
     ReporteResenaLugar, ResenaLugar,
 )
 
@@ -69,6 +69,11 @@ def cola_moderacion(request):
             ConfirmacionLugar.objects.filter(abierto=False, fecha__gte=timezone.localdate() - timedelta(days=90),
                                              lugar__es_activo=True).select_related('lugar'),
             lambda c: c.lugar.nombre))
+    if request.user.has_perm('comunidad.view_fotopasaporte'):
+        secciones.append(seccion(
+            'Fotos de pasaporte por revisar', FotoPasaporte, '?estado__exact=pendiente&mostrar__exact=1',
+            FotoPasaporte.objects.filter(estado='pendiente', mostrar=True).select_related('destino', 'autor'),
+            lambda f: f'{f.destino.nombre} · {f.autor.nombre}'))
     if request.user.has_perm('comunidad.view_comentario'):
         secciones.append(seccion(
             'Comentarios del sitio sin atender', Comentario, '?atendido__exact=0',

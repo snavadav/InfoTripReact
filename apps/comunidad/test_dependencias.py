@@ -40,7 +40,8 @@ class DependenciasTests(SimpleTestCase):
         for ruta in codigo('comunidad'):
             for modulo, _ in importaciones(ruta):
                 if modulo.startswith('apps.destinos'):
-                    self.assertEqual(modulo, 'apps.destinos.models', ruta.name)
+                    # fotos.py son solo datos (los créditos del catálogo), sin importaciones propias.
+                    self.assertIn(modulo, ('apps.destinos.models', 'apps.destinos.fotos'), ruta.name)
 
     def test_core_no_depende_de_ninguna_app(self):
         for ruta in codigo('core'):

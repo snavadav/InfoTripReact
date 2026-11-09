@@ -1,27 +1,39 @@
 {% extends 'base.html' %}{% load static %}
 {% block title %}El pasaporte de {{ nombre }} — InfoTrip{% endblock %}
 {% block robots %}<meta name="robots" content="noindex">{% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/comunidad.css' %}">{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/comunidad.css' %}"><link rel="stylesheet" href="{% static 'css/pasaporte.css' %}">{% endblock %}
 {% block content %}{% include 'partials/navBar.html' %}
-<main class="explore-shell legal-page">
-  <section class="passport-card">
-    <span class="eyebrow">PASAPORTE DE JALISCO</span>
-    <h1>{{ nombre }} lleva {{ total }} de {{ de }} Pueblos Mágicos</h1>
-    <div class="passport-grid">
-      {% for sello in sellos %}
-      <article class="passport-stamp{% if sello.sello %} passport-stamp--done{% endif %}">
-        <h2>{{ sello.nombre }}</h2>
-        <p class="passport-state">{% if sello.sello %}Con sello{% else %}Pendiente{% endif %}</p>
-      </article>
-      {% endfor %}
+<main class="explore-shell pasaporte pasaporte--compartido">
+  {% include 'comunidad/_tinta.html' %}
+  <section class="portada" aria-labelledby="portada-titulo">
+    <div class="portada__cubierta">
+      <p class="portada__marca">Pasaporte de Jalisco · InfoTrip</p>
+      <h1 id="portada-titulo"><span class="portada__de">Pasaporte de</span> {{ nombre }}</h1>
+      <p class="portada__contador"><span class="sr-only">{{ nombre }} lleva {{ total }} de {{ de }} Pueblos Mágicos.</span><span aria-hidden="true"><strong>{{ total }}</strong> de {{ de }} destinos sellados</span></p>
+    </div>
+    <div class="portada__avance">
+      <h2>Avance por región</h2>
+      <ul class="regiones">
+        {% for region in regiones %}
+        <li class="region" style="--tinta: {{ region.tinta }}">
+          <span class="region__nombre">{{ region.nombre }}</span>
+          <span class="region__cuenta">{{ region.sellados }} de {{ region.total }}</span>
+          <span class="region__barra" aria-hidden="true"><span style="width: {% widthratio region.sellados region.total 100 %}%"></span></span>
+        </li>
+        {% endfor %}
+      </ul>
     </div>
   </section>
+  <ol class="libro" aria-label="Páginas del pasaporte">
+    {% for pagina in paginas %}{% include 'comunidad/_pagina.html' %}{% endfor %}
+  </ol>
   <section class="community-box">
     <h2>¿Cuántos llevas tú?</h2>
     <p>Junta tus sellos visitando los pueblos de Jalisco.</p>
     <a href="{% url 'pasaporte' %}">Ver mi pasaporte →</a>
   </section>
-  <p class="community-note">Los sellos se ganan confirmando la ubicación en cada lugar, y una ubicación se puede falsear. No es una constancia oficial.</p>
+  <p class="community-note">Los sellos se ganan confirmando la ubicación en cada lugar, y una ubicación se puede falsear. No es una constancia oficial ni está afiliado al programa Pueblos Mágicos.</p>
   {% include 'destinos/footer.html' %}
 </main>
 {% endblock %}
+{% block extra_js %}<script src="{% static 'js/pasaporte.js' %}" defer></script>{% endblock %}

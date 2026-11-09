@@ -267,6 +267,7 @@ Registrarse o iniciar sesión envía un código al correo, y `verificar-codigo` 
 | `python manage.py curar_catalogo` | Oculta destinos importados de poco valor, corrige nombres y une categorías ([MVP](docs/mvp.md)) |
 | `python manage.py crear_moderacion --agregar CORREO` | Da acceso de moderación a una persona sin hacerla superusuaria |
 | `python manage.py sembrar_contenido` | Carga horarios, costos y contactos de museos desde fuentes públicas, con su cita ([guía](docs/sembrar-contenido.md)) |
+| `python manage.py cargar_referencias_costo` | Carga precios de fuentes oficiales con su cita, aparte de los gastos de viajeros ([guía](docs/referencias-costo.md)) |
 | `python manage.py importar_denue` | Importa negocios del DENUE del INEGI; requiere `DENUE_TOKEN` ([guía](docs/importar-osm.md)) |
 | `python manage.py importar_lugares` | Importa dónde comer, dormir y servicios de OpenStreetMap; se publican de inmediato ([guía](docs/importar-osm.md)) |
 | `python manage.py importar_osm` | Importa lugares de OpenStreetMap, ocultos hasta publicarlos; gratis y sin cuenta ([guía](docs/importar-osm.md)) |

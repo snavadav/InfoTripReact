@@ -126,6 +126,25 @@ class ExploracionMapaTests(TestCase):
         self.assertEqual(respuesta.context['puntos_mapa'][0]['latitud'], '20.123456')
         self.assertNotContains(respuesta, '</script><script>alert(1)</script>')
 
+    def test_marcador_con_resumen_corto_de_la_descripcion(self):
+        larga = 'Bosque de pinos con senderos, cabañas y un mirador sobre la presa. ' * 4
+        self.crear_destino(slug='corto', descripcion='Senderos  y\ndescanso')
+        self.crear_destino(slug='largo', descripcion=larga)
+        self.crear_destino(slug='importado', descripcion=(
+            'Mirador en Municipio prueba, Jalisco. Todavía no tenemos una descripción: '
+            'si lo conoces, ayúdanos con información práctica.'))
+        self.crear_destino(slug='vacio', descripcion='')
+        puntos = {punto['slug']: punto for punto in self.client.get('/destinos/').context['puntos_mapa']}
+        self.assertEqual(puntos['corto']['resumen'], 'Senderos y descanso')
+        self.assertLessEqual(len(puntos['largo']['resumen']), 121)
+        self.assertTrue(puntos['largo']['resumen'].endswith('…'))
+        self.assertTrue(larga.startswith(puntos['largo']['resumen'][:-1]))
+        # El texto automático de lo importado no es una descripción: la tarjeta muestra solo nombre y municipio.
+        self.assertEqual(puntos['importado']['resumen'], '')
+        self.assertEqual(puntos['vacio']['resumen'], '')
+        self.assertEqual(puntos['corto']['municipio'], 'Municipio prueba')
+        self.assertEqual(self.client.get('/').context['puntos_mapa'][0].keys(), puntos['corto'].keys())
+
     def test_editorial_filtrada_sin_coordenadas_inventadas(self):
         respuesta = self.client.get('/destinos/', {'municipio': 'tequila', 'categoria': 'pueblos'})
         self.assertEqual(respuesta.context['pagina'].paginator.count, 1)

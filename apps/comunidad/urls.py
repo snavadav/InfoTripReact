@@ -9,7 +9,7 @@ from .bote import (
 from .comentarios import ComentariosView
 from .cuenta import EliminarCuentaView
 from .negocios import InteresNegocioView
-from .pasaporte import CompartirPasaporteView, MiPasaporteView
+from .pasaporte import CompartirPasaporteView, FotoPasaporteView, ImagenFotoPasaporteView, MiPasaporteView
 from .propuestas_lugar import PropuestasLugarView
 from .resenas_lugar import (
     EstadoLugarView, MiOpinionLugarView, MisResenasLugarView, ReportarResenaLugarView, ResenasLugarView,
@@ -40,6 +40,9 @@ urlpatterns = [
     path('mis-resenas-lugar/', MisResenasLugarView.as_view(), name='mis-resenas-lugar'),
     path('mi-pasaporte/', MiPasaporteView.as_view(), name='mi-pasaporte'),
     path('mi-pasaporte/compartir/', CompartirPasaporteView.as_view(), name='compartir-pasaporte'),
+    path('mi-pasaporte/<slug:slug>/foto/', FotoPasaporteView.as_view(), name='mi-pasaporte-foto'),
+    path('mi-pasaporte/<slug:slug>/foto/imagen/', ImagenFotoPasaporteView.as_view(),
+         name='mi-pasaporte-foto-imagen'),
     path('destinos/<slug:slug>/colaboraciones/', ColaboracionesView.as_view(), name='colaboraciones'),
     path('colaboraciones/<int:pk>/confirmar/', ConfirmarDatoView.as_view(), name='confirmar-dato'),
     path('colaboraciones/<int:pk>/reportar/', ReportarColaboracionView.as_view(), name='reportar-colaboracion'),

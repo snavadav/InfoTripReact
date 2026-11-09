@@ -1,0 +1,5 @@
+<li class="referencia-oficial">
+  <p><span class="referencia-concepto">{{ referencia.get_concepto_display }}</span> <strong>{% if referencia.monto %}${{ referencia.monto|floatformat:"-2g" }} MXN{% else %}Sin costo{% endif %}</strong></p>
+  <p>{{ referencia.descripcion }}</p>
+  <p class="community-note">Fuente: <a href="{{ referencia.fuente_url }}" target="_blank" rel="noopener">{{ referencia.fuente_nombre }}</a>{% if referencia.fecha_fuente %} · fecha de la fuente: {{ referencia.fecha_fuente|date:'d/m/Y' }}{% endif %} · consultada el {{ referencia.fecha_consulta|date:'d/m/Y' }}</p>
+</li>

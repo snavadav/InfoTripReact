@@ -34,6 +34,15 @@
 
   <p><a href="{{ lugar.url }}#reportar-gasto">¿Ya fuiste? Reporta lo que gastaste →</a></p>
   <p class="community-note">Son gastos reportados por viajeros en el último año y revisados antes de publicarse. No son cotizaciones ni precios oficiales. "Lo habitual" es la mediana: la mitad de los reportes está por debajo y la mitad por encima. Confirma con el lugar antes de viajar.</p>
+
+  {% if referencias %}
+  <section class="referencias-oficiales" aria-labelledby="referencia-oficial">
+    <h2 id="referencia-oficial">Referencia oficial</h2>
+    <p class="community-note">Precio oficial publicado; puede haber cambiado. Va aparte de lo que reportan los viajeros y no cuenta para sus cifras.</p>
+    <ul>{% for referencia in referencias %}{% include 'destinos/referencia_costo.html' %}{% endfor %}</ul>
+  </section>
+  {% endif %}
+
   <p><a href="{% url 'costos-indice' %}">Comparar con otros destinos →</a></p>
   {% include 'destinos/footer.html' %}
 </main>

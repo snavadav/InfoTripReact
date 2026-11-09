@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Marco del sello del pasaporte de InfoTrip. Diseño propio: no reproduce sellos ni logotipos oficiales.
+       Se usa como máscara (CSS mask-image): lo negro es tinta y el color lo pone la región en la página.
+       El ruido deforma los bordes y deja huecos, como un sello de goma con poca tinta. -->
+  <defs>
+    <filter id="tinta" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="grano"/>
+      <feDisplacementMap in="SourceGraphic" in2="grano" scale="3.2" xChannelSelector="R" yChannelSelector="G" result="borde"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.22" numOctaves="3" seed="3" result="manchas"/>
+      <feColorMatrix in="manchas" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -5 3.55" result="huecos"/>
+      <feComposite in="borde" in2="huecos" operator="in"/>
+    </filter>
+  </defs>
+  <g filter="url(#tinta)" fill="none" stroke="#000">
+    <!-- Doble aro exterior y aro interior: entre ellos va el nombre del destino y la región. -->
+    <circle cx="100" cy="100" r="95" stroke-width="5"/>
+    <circle cx="100" cy="100" r="88.5" stroke-width="1.6"/>
+    <circle cx="100" cy="100" r="57" stroke-width="2.2"/>
+    <!-- Separadores a los lados: dos rombos. -->
+    <path d="M14 100 l6 -6 l6 6 l-6 6 z M174 100 l6 -6 l6 6 l-6 6 z" fill="#000" stroke="none"/>
+    <!-- Motivo central: sol sobre dos cerros con un camino, el paisaje de una escapada. -->
+    <g stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="100" cy="62" r="6.5" fill="#000" stroke="none"/>
+      <path d="M100 50.5 v-4 M110.5 55 l3 -3 M89.5 55 l-3 -3 M114 62 h4 M86 62 h-4"/>
+      <path d="M70 84 l14 -12 l9 7 l11 -11 l26 16"/>
+      <path d="M96 84 q4 -5 10 -6"/>
+    </g>
+    <!-- Línea bajo la fecha. -->
+    <path d="M72 140 h56" stroke-width="2" stroke-linecap="round"/>
+    <!-- Puntos de la orla exterior. -->
+    <g fill="#000" stroke="none">
+      <circle cx="100" cy="2.5" r="1.4"/><circle cx="100" cy="197.5" r="1.4"/>
+    </g>
+  </g>
+</svg>

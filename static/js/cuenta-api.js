@@ -42,7 +42,8 @@
       .finally(() => {renewing = null;});
     return renewing;
   }
-  async function api(url, {method='GET', body, auth=true} = {}, retry=true) {
+  // `blob`: devuelve el archivo (por ejemplo una foto privada) en lugar de JSON.
+  async function api(url, {method='GET', body, auth=true, blob=false} = {}, retry=true) {
     const headers = {};
     if (auth) {
       if (!hasSession()) throw new Error('Inicia sesión y confirma tu correo para continuar.');
@@ -55,8 +56,9 @@
     if (response.status === 401 && auth && retry) {
       access = null;
       await renew();
-      return api(url, {method, body:headers['Content-Type'] ? JSON.parse(body || 'null') : body, auth}, false);
+      return api(url, {method, body:headers['Content-Type'] ? JSON.parse(body || 'null') : body, auth, blob}, false);
     }
+    if (blob && response.ok) return response.blob();
     const data = response.status === 204 ? null : await response.json().catch(() => ({detail:'No pudimos completar la solicitud.'}));
     if (!response.ok) {
       const error = new Error(message(data));

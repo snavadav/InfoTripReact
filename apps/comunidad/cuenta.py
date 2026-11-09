@@ -18,7 +18,7 @@ from apps.usuarios.models import CodigoAcceso
 from apps.usuarios.sesion import borrar_cookie_refresh
 from .models import (
     Aporte, Colaboracion, Confirmacion, ConfirmacionLugar, Favorito, GastoReal, Notificacion, Participante,
-    Comentario, PasaporteCompartido, PropuestaLugar, ResenaLugar, Viaje, VisitaComprobada,
+    Comentario, FotoPasaporte, PasaporteCompartido, PropuestaLugar, ResenaLugar, Viaje, VisitaComprobada,
 )
 
 TEXTO_ELIMINADO = '[Eliminado por su autor]'
@@ -34,6 +34,7 @@ def anonimizar_cuenta(usuario):
                 for archivo in (aporte.imagen, aporte.miniatura) if archivo]
     archivos += [archivo for resena in ResenaLugar.objects.filter(autor=usuario).exclude(imagen='')
                  for archivo in (resena.imagen, resena.miniatura) if archivo]
+    archivos += [foto.imagen for foto in FotoPasaporte.objects.filter(autor=usuario)]
     if usuario.foto_perfil:
         archivos.append(usuario.foto_perfil)
     Aporte.objects.filter(autor=usuario).update(
@@ -47,7 +48,7 @@ def anonimizar_cuenta(usuario):
     PropuestaLugar.objects.filter(autor=usuario, estado='pendiente').update(estado='oculto')
     PropuestaLugar.objects.filter(autor=usuario).update(nota='')
     Comentario.objects.filter(usuario=usuario).delete()
-    for modelo in (Viaje, Favorito, Confirmacion, ConfirmacionLugar, VisitaComprobada):
+    for modelo in (Viaje, Favorito, Confirmacion, ConfirmacionLugar, VisitaComprobada, FotoPasaporte):
         modelo.objects.filter(autor=usuario).delete()
     # En botes de otras personas su parte se queda, para que las cuentas del grupo sigan cuadrando.
     Participante.objects.filter(usuario=usuario).update(usuario=None)

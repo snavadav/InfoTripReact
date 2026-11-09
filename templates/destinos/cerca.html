@@ -1,11 +1,11 @@
 {% if cerca %}
 <section class="community-section" id="cerca-de-aqui" aria-labelledby="cerca-titulo">
   <h2 id="cerca-titulo">Cerca de aquí</h2>
-  <p class="community-note">A menos de 5 km en línea recta. Datos de <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© colaboradores de OpenStreetMap</a> y del DENUE (fuente: INEGI); pueden estar desactualizados, así que confirma antes de ir. Cada ficha indica su origen.</p>
+  <p class="community-note">Comida, hospedaje y servicios a menos de 5 km en línea recta. Toca un grupo para verlos. Datos de <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© colaboradores de OpenStreetMap</a> y del DENUE (fuente: INEGI); pueden estar desactualizados, así que confirma antes de ir. Cada ficha indica su origen.</p>
   <div class="cerca-grupos">
     {% for grupo in cerca %}
-    <div class="community-box cerca-grupo">
-      <h3>{{ grupo.titulo }}</h3>
+    <details class="community-box cerca-grupo">
+      <summary><h3>{{ grupo.titulo }}</h3><span>{{ grupo.lugares|length }} lugar{{ grupo.lugares|length|pluralize:"es" }} · el más cercano a {{ grupo.lugares.0.distancia_legible }}</span></summary>
       <ul>
         {% for sitio in grupo.lugares %}
         <li>
@@ -15,7 +15,7 @@
         </li>
         {% endfor %}
       </ul>
-    </div>
+    </details>
     {% endfor %}
   </div>
   <p class="explorer-enlace"><a href="{% url 'proponer-lugar' %}">¿Falta un lugar? Propónlo →</a></p>
