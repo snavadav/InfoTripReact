@@ -182,13 +182,14 @@
 .ilustracion__cerro { fill: var(--cerro); }
 .ilustracion__camino { stroke: var(--cielo-2); stroke-width: 5; stroke-linecap: round; stroke-dasharray: 10 8; }
 .pagina__municipio {
-  position: relative;
-  margin-top: -18%;
-  padding: 0 1rem;
+  position: absolute;
+  top: 12%;
+  left: 7%;
+  max-width: 60%;
   font-size: clamp(1.25rem, 3.2vw, 1.9rem);
   font-weight: 700;
   letter-spacing: .02em;
-  text-align: center;
+  line-height: 1.1;
   color: var(--papel-texto);
 }
 
