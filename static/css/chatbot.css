@@ -103,13 +103,16 @@
   .trip-chat-panel { width: calc(100vw - 1rem); max-height: calc(100dvh - var(--nav-alto) - 56px - 1.6rem); }
 }
 
-/* Burbuja de bienvenida: pequeña, junto a Axo, para no tapar contenido en móvil. */
+/* Burbuja de bienvenida: pequeña, junto a Axo, para no tapar contenido en móvil. Va fuera del flujo: si
+   agrandara el contenedor, Axo contaría como contenido que se mueve solo (CLS de 0,032 en cada página). */
 .trip-chat-saludo {
-  position: relative;
+  position: absolute;
+  right: .25rem;
+  bottom: calc(100% + .6rem);
   display: flex;
   align-items: flex-start;
+  width: max-content;
   max-width: min(280px, calc(100vw - 2rem));
-  margin-right: .25rem;
   border: 1px solid var(--linea-fuerte);
   border-radius: var(--radio-l) var(--radio-l) 4px var(--radio-l);
   background: var(--panel);

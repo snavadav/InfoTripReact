@@ -226,6 +226,23 @@ class CatalogoInicialTests(TestCase):
         self.assertContains(creditos, 'Esteban Tucci')
         self.assertContains(creditos, 'CC BY-SA 4.0')
 
+    def test_las_tarjetas_usan_un_icono_webp_ligero(self):
+        # Las tarjetas pintan la foto en 56-76 px; scripts/imagenes_webp.py genera el icono de 160 px.
+        from .frontend import INSPIRACION
+        for imagen in [foto['imagen'] for foto in FOTOS_CATALOGO.values()] + [lugar['imagen'] for lugar in INSPIRACION]:
+            with self.subTest(imagen=imagen):
+                self.assertIsNotNone(finders.find(imagen.rsplit('.', 1)[0] + '-i.webp'))
+                self.assertIsNotNone(finders.find(imagen.rsplit('.', 1)[0] + '-828.webp'))
+        call_command('cargar_destinos_iniciales', stdout=StringIO())
+        listado = self.client.get('/destinos/')
+        self.assertContains(listado, 'images/destinos/guachimontones-i.webp')
+        self.assertContains(listado, 'width="160" height="160" loading="lazy"')
+        self.assertNotContains(listado, 'guachimontones-m.jpg" alt')
+        # La ficha ofrece la foto de 828 px en WebP; el JPEG original queda para pantallas grandes.
+        ficha = self.client.get('/destinos/guachimontones/')
+        self.assertContains(ficha, 'srcset="/static/images/destinos/guachimontones-828.webp 828w, '
+                                   '/static/images/destinos/guachimontones.jpg 1280w"')
+
     def test_la_foto_de_la_comunidad_reemplaza_a_la_del_catalogo_sin_su_credito(self):
         call_command('cargar_destinos_iniciales', stdout=StringIO())
         destino = Destino.objects.get(slug='guachimontones')
@@ -234,6 +251,9 @@ class CatalogoInicialTests(TestCase):
                               fecha_visita=timezone.localdate(), estado='publicado')
         ficha = self.client.get('/destinos/guachimontones/')
         self.assertEqual(ficha.context['lugar']['alt'], 'Mi foto')
+        # El icono también es el de la comunidad, no el del catálogo.
+        self.assertNotIn('-i.webp', ficha.context['lugar']['icono_url'])
+        self.assertNotContains(ficha, 'srcset=')
         self.assertNotContains(ficha, 'Esteban Tucci')
 
 
