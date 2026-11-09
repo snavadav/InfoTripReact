@@ -30,3 +30,12 @@ El servidor local utiliza:
 ```powershell
 .\.venv314\Scripts\python.exe -B manage.py runserver --settings=infotrip.settings_local
 ```
+
+## Destinos cerca de ti (Explorar sin búsqueda)
+
+Al entrar a `/destinos/` sin búsqueda ni filtros, arriba de la lista aparece «Destinos cerca de ti» con los 8 destinos más cercanos y su distancia («Tapalpa · 42 km»).
+
+- **Permiso.** Si `navigator.permissions` dice `granted`, se ordena sola al cargar. Si dice `prompt` o el navegador no tiene esa API, no se pide nada al cargar: se ofrece la tarjeta «Ver qué hay cerca de ti». Si dice `denied` o la ubicación falla, se muestra un aviso amable y la lista de siempre. Si la persona da permiso desde otro botón («Mi ubicación», «Cerca de mí»), la sección se ordena sola.
+- **Privacidad.** La distancia se calcula en el navegador (`static/js/destinos-cerca.js`, fórmula de haversine, en línea recta) con los puntos que ya recibe el mapa. La ubicación no va al servidor, a la URL, a `localStorage` ni a ningún registro; solo vive en memoria mientras se ordena. La prueba e2e lo comprueba revisando las peticiones y el almacenamiento.
+- **Paginación (decisión).** La lista sigue paginada en el servidor de 8 en 8, sin cambios. Ordenar toda la lista por distancia exigiría mandar la ubicación al servidor o cargar todas las tarjetas en el navegador. En cambio, el mapa ya recibe todos los resultados con coordenadas, así que el navegador elige los 8 más cercanos de todo el catálogo y los muestra en una sección propia arriba de la primera página. La lista normal y sus páginas quedan debajo, tal como estaban. El servidor solo decide si ofrecer la sección (`cerca_de_ti`): página 1, formulario válido y sin búsqueda, filtros ni orden.
+- **Lo demás.** Al ordenar, el mapa se centra en la persona y en los 5 destinos más cercanos (sin animación con `prefers-reduced-motion`). Las tarjetas nuevas abren el destino en el mapa igual que las de la lista. Si la persona busca o filtra, la página nueva ya no muestra la sección. Los cambios se anuncian con `role="status"` y, al responder la ubicación, el foco pasa al título de la sección.
