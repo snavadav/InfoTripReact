@@ -82,6 +82,8 @@
   function centerMap(point, nearest) {
     const map = window.InfoTripExplorador?.map;
     if (!map || !window.L) return;
+    // Si la persona abrió "Cerca de mí" (servicios), el mapa ya muestra lo que pidió: no se le mueve.
+    if (byId('nearby-panel') && !byId('nearby-panel').hidden) return;
     if (userLayer) map.removeLayer(userLayer);
     userLayer = L.circleMarker(point, {radius: 7, className: 'mi-ubicacion'}).bindTooltip('Tu ubicación aproximada').addTo(map);
     const bounds = [point, ...nearest.slice(0, 5).map(place => [place.lat, place.lng])];
