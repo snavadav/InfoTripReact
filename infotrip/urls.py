@@ -15,7 +15,7 @@ from apps.comunidad.bote import unirse_al_bote
 from apps.comunidad.cola import cola_moderacion
 from apps.comunidad.comentarios import pagina_comentarios
 from apps.comunidad.negocios import pagina_negocios
-from apps.comunidad.pasaporte import pasaporte, pasaporte_publico
+from apps.comunidad.pasaporte import foto_publica, pasaporte, pasaporte_publico
 from apps.comunidad.viajes import viaje_publico
 from apps.core.views import robots, salud
 from apps.destinos.sitemaps import CostosSitemap, DestinosSitemap, PaginasSitemap
@@ -49,6 +49,7 @@ urlpatterns = [
     path('comentarios/', pagina_comentarios, name='comentarios'),
     path('pasaporte/', pasaporte, name='pasaporte'),
     path('pasaporte/<uuid:enlace>/', pasaporte_publico, name='pasaporte-publico'),
+    path('pasaporte/<uuid:enlace>/foto/<slug:slug>/', foto_publica, name='pasaporte-publico-foto'),
     # Antes de admin.site.urls para que el admin no la tome como una app.
     path('admin/moderacion/', admin.site.admin_view(cola_moderacion), name='cola-moderacion'),
     path('admin/metricas/', admin.site.admin_view(panel_metricas), name='panel-metricas'),

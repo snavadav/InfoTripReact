@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.db import transaction
-from django.http import FileResponse
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.urls import path, reverse
 from django.utils import timezone
@@ -319,7 +319,8 @@ class FotoPasaporteAdmin(admin.ModelAdmin):
         """El archivo no se sirve desde /media/: el personal lo ve a través del admin."""
         if not self.has_view_permission(request):
             return self.admin_site.login(request)
-        return FileResponse(get_object_or_404(FotoPasaporte, pk=pk).imagen.open('rb'), content_type='image/jpeg')
+        with get_object_or_404(FotoPasaporte, pk=pk).imagen.open('rb') as archivo:
+            return HttpResponse(archivo.read(), content_type='image/jpeg')
 
     @admin.display(description='Foto')
     def vista_previa(self, foto):

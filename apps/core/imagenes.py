@@ -5,7 +5,8 @@ from django.core.files.base import ContentFile
 from rest_framework import serializers
 
 
-def imagen_segura(archivo):
+def imagen_segura(archivo, lado=2400):
+    """Valida tipo, tamaño y megapíxeles y vuelve a codificar en JPEG: así se descartan EXIF y GPS."""
     if archivo.size > 5 * 1024 * 1024:
         raise serializers.ValidationError('La imagen no puede superar 5 MB.')
     try:
@@ -15,7 +16,7 @@ def imagen_segura(archivo):
             imagen.load()
             salida = BytesIO()
             limpia = ImageOps.exif_transpose(imagen).convert('RGB')
-            limpia.thumbnail((2400, 2400))
+            limpia.thumbnail((lado, lado))
             limpia.save(salida, format='JPEG', quality=88)
         return ContentFile(salida.getvalue(), name=f'{uuid4().hex}.jpg')
     except (UnidentifiedImageError, OSError, ValueError, Image.DecompressionBombError):
