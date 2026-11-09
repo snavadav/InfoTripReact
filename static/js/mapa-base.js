@@ -26,8 +26,45 @@ window.InfoTripMapa = (() => {
       iconSize: [32, 32],
       iconAnchor: [16, 16],
       popupAnchor: [0, -14],
+      tooltipAnchor: [0, -14],
     });
   }
+
+  // Tarjeta al pasar el ratón o enfocar con el teclado. Se arma al abrirse: con cientos de puntos, no antes.
+  // Todo va como texto, nunca como HTML: los nombres y descripciones los escriben personas.
+  function tarjeta(punto) {
+    const caja = document.createElement('div');
+    caja.className = 'pin-tarjeta-contenido';
+    if (punto.miniatura_url) {
+      const foto = document.createElement('img');
+      foto.src = punto.miniatura_url;
+      foto.alt = '';
+      foto.width = 56;
+      foto.height = 56;
+      foto.decoding = 'async';
+      foto.addEventListener('error', () => foto.remove());
+      caja.append(foto);
+    }
+    const texto = document.createElement('div');
+    const nombre = document.createElement('strong');
+    nombre.textContent = punto.nombre;
+    texto.append(nombre);
+    if (punto.municipio) {
+      const municipio = document.createElement('span');
+      municipio.className = 'pin-tarjeta-municipio';
+      municipio.textContent = punto.municipio;
+      texto.append(municipio);
+    }
+    if (punto.resumen) {
+      const resumen = document.createElement('p');
+      resumen.textContent = punto.resumen;
+      texto.append(resumen);
+    }
+    caja.append(texto);
+    return caja;
+  }
+  // En pantallas solo táctiles un toque ya abre el lugar; la tarjeta solo taparía el mapa.
+  const conPuntero = () => window.matchMedia('(any-hover: hover)').matches;
 
   // Lugares útiles: redondos y neutros, para distinguirlos de los destinos a primera vista.
   const TRAZOS_LUGAR = {
@@ -88,12 +125,27 @@ window.InfoTripMapa = (() => {
   // Devuelve {slug: marcador} con los puntos que tienen coordenadas válidas.
   function agregarPuntos(grupo, puntos, alElegir) {
     const marcadores = new Map();
+    const conTarjeta = conPuntero();
     puntos.forEach(punto => {
       const posicion = coordenadas(punto);
       if (!posicion) return;
-      const marcador = L.marker(posicion, {icon: icono(punto), title: punto.nombre, alt: punto.nombre, riseOnHover: true});
-      marcador.on('click', () => alElegir(punto, marcador));
-      marcador.on('keypress', evento => { if (evento.originalEvent.key === 'Enter') alElegir(punto, marcador); });
+      // Con tarjeta, el nombre va en aria-label y no en title: el globo del navegador la taparía.
+      const marcador = L.marker(posicion, {
+        icon: icono(punto), title: conTarjeta ? '' : punto.nombre, alt: punto.nombre, riseOnHover: true,
+      });
+      if (conTarjeta) {
+        // Solo en marcadores sueltos: los grupos de markercluster son otra capa y no la llevan.
+        marcador.bindTooltip(() => tarjeta(punto), {direction: 'top', className: 'pin-tarjeta', opacity: 1});
+        // Cada vez que el grupo vuelve a mostrar el marcador, Leaflet crea otro elemento.
+        marcador.on('add', () => marcador.getElement()?.setAttribute('aria-label', punto.nombre));
+      }
+      // Al elegir, la ficha o el popup ya dicen qué lugar es: la tarjeta se cierra para no encimarse.
+      marcador.on('click', () => { alElegir(punto, marcador); marcador.closeTooltip(); });
+      marcador.on('keypress', evento => {
+        if (evento.originalEvent.key !== 'Enter') return;
+        alElegir(punto, marcador);
+        marcador.closeTooltip();
+      });
       marcadores.set(punto.slug, marcador);
       grupo.addLayer(marcador);
     });

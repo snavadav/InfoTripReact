@@ -21,6 +21,7 @@ from apps.comunidad.selectors import (
 )
 from .filtros import filtrar_destinos
 from .lugares import activos as lugares_activos, cercanos_de_destino
+from .management.commands.sembrar_contenido import TEXTO_AUTOMATICO
 from .fotos import FOTOS_CATALOGO
 from .models import Destino, Categoria, Lugar, Municipio, ReferenciaCosto, Region, Servicio, TIPO_DE_SUBTIPO
 from .seo import seo_de_destino
@@ -106,6 +107,19 @@ def primero_lo_curado(destinos):
     )
 
 
+LARGO_RESUMEN = 120
+
+
+def resumen_corto(texto, largo=LARGO_RESUMEN):
+    """Inicio de la descripción, cortado entre palabras. El texto automático de lo importado no describe nada."""
+    texto = ' '.join(texto.split())
+    if not texto or TEXTO_AUTOMATICO in texto:
+        return ''
+    if len(texto) <= largo:
+        return texto
+    return texto[:largo].rsplit(' ', 1)[0].rstrip(' ,;:.') + '…'
+
+
 def punto_de_mapa(destino):
     """Solo lo que el mapa pinta al abrir: con cientos de puntos, cada campo se nota en el tamaño de la página."""
     lugar = completar(presentar(destino))
@@ -114,7 +128,7 @@ def punto_de_mapa(destino):
         'categoria': lugar['categoria'], 'categorias': lugar['categorias'],
         'latitud': lugar['latitud'], 'longitud': lugar['longitud'],
         'url': lugar['url'], 'maps_url': lugar['maps_url'], 'miniatura_url': lugar['miniatura_url'],
-        'destacado': bool(lugar['miniatura_url']),
+        'resumen': resumen_corto(lugar['descripcion']), 'destacado': bool(lugar['miniatura_url']),
     }
 
 
