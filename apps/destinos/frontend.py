@@ -86,8 +86,12 @@ def presentar(destino):
 def completar(lugar):
     lugar = dict(lugar)
     lugar['url'] = reverse('destino-detalle', kwargs={'slug': lugar['slug']})
+    del_catalogo = bool(lugar['imagen']) and not lugar.get('foto_url')
     lugar['foto_url'] = lugar.get('foto_url') or (static(lugar['imagen']) if lugar['imagen'] else '')
     lugar['miniatura_url'] = lugar.get('miniatura_url') or lugar['foto_url']
+    # Las tarjetas pintan la foto en 56-76 px: el icono WebP de 160 px pesa ~6 KB (scripts/imagenes_webp.py).
+    lugar['icono_url'] = (static(lugar['imagen'].rsplit('.', 1)[0] + '-i.webp') if del_catalogo
+                          else lugar['miniatura_url'])
     if lugar['editorial']:
         # En inspiración se busca el nombre del lugar; no se inventa un punto GPS.
         destino_maps = f"{lugar['nombre']}, Jalisco, México"

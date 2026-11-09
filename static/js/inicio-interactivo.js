@@ -60,8 +60,9 @@
       // Sin aria-label: el nombre accesible es el texto visible (WCAG 2.5.3, etiqueta en el nombre).
       if (place.foto_url) {
         const photo = document.createElement('img');
-        photo.src = place.miniatura_url;
+        photo.src = place.icono_url;
         photo.alt = '';
+        photo.width = photo.height = 160;
         photo.loading = 'lazy';
         card.append(photo);
       }
