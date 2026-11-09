@@ -1,6 +1,7 @@
 """Producción: falla al arrancar si falta configuración crítica en lugar de usar valores inseguros."""
-import sentry_sdk
 from django.core.exceptions import ImproperlyConfigured
+
+from infotrip.monitoreo import iniciar as iniciar_monitoreo
 
 from .base import *  # noqa: F403
 from .base import config
@@ -21,10 +22,10 @@ if not REDIS_URL:  # noqa: F405
     )
 
 # ─── MONITOREO DE ERRORES (opcional; compatible con Sentry y GlitchTip) ────
+# Sin datos personales: ni IP, ni cookies, ni variables locales, ni consulta de la URL, ni correos.
+# Detalle en infotrip/monitoreo.py.
 SENTRY_DSN = config('SENTRY_DSN', default='')
-if SENTRY_DSN:
-    # Sin el cuerpo de las peticiones: una ubicación enviada para comprobar una visita nunca debe guardarse.
-    sentry_sdk.init(dsn=SENTRY_DSN, send_default_pii=False, traces_sample_rate=0, max_request_body_size='never')
+iniciar_monitoreo(SENTRY_DSN)
 
 # ─── ARCHIVOS ESTÁTICOS ───────────────────────────────────────
 # WhiteNoise con nombres con hash y compresión: caché de larga duración sin servir versiones viejas.

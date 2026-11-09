@@ -124,7 +124,22 @@ Sirve si se perdió el servidor, o si la copia que buscas ya no está en el volu
 
 ## Monitoreo de errores
 
-Define `SENTRY_DSN` para enviar los errores del servidor a un servicio compatible con Sentry. Sin esa variable, no se envía nada. [GlitchTip](https://glitchtip.com/) es una opción gratuita si lo alojas tú; Sentry tiene un plan gratuito limitado. No se envían datos personales (`send_default_pii=False`).
+Define `SENTRY_DSN` en `.env.docker` para enviar los errores del servidor a Sentry; sin esa variable no se envía nada. Crear la cuenta gratuita y poner el DSN: [paso 11 de despliegue-aws.md](despliegue-aws.md#paso-11-avisos-de-errores-con-sentry). [GlitchTip](https://glitchtip.com/) es compatible, por si prefieren alojarlo ustedes.
+
+**No se envían datos personales.** `infotrip/monitoreo.py` configura Sentry así, y `infotrip/test_monitoreo.py` lo comprueba con una petición real que falla:
+
+| Dato | Qué se hace |
+|---|---|
+| IP, cookies, cabeceras de sesión, usuario y valores de las consultas SQL | No se envían (`send_default_pii=False`). |
+| Cuerpo de la petición: ubicaciones, reseñas o contraseñas | No se envía. |
+| Variables locales de cada línea del error | No se envían. |
+| Consulta de la URL, como el `?t=` del enlace de baja de avisos | Se quita; queda solo la ruta. |
+| Correos dentro del mensaje de error, de los registros o de las migas de pan | Se cambian por `[oculto]`. |
+| Rendimiento (trazas) | Apagado: solo se envían errores. |
+
+Lo que sí llega: el tipo de error, el mensaje (sin correos), la ruta, las líneas de código, la versión y el navegador
+(`User-Agent`). Si agregas código que guarda datos personales en un mensaje de error, tápalos también en
+`limpiar_evento`.
 
 Para saber si el sitio está en pie, apunta un monitor a `/health/`: responde 200 si la base de datos y la caché funcionan, y 503 si no.
 

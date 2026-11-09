@@ -378,6 +378,46 @@ dc exec respaldos aws s3 ls --recursive --human-readable s3://NOMBRE-DEL-BUCKET/
 Desde ese momento, cada respaldo diario se sube solo. Cómo restaurar desde S3:
 [operacion.md](operacion.md#restaurar-desde-s3).
 
+## Paso 11. Avisos de errores con Sentry
+
+Cuando una página falla con un error 500, Sentry manda un correo con la línea de código que falló. InfoTrip ya trae
+la integración: solo falta la dirección del proyecto, el **DSN**. No se envían datos personales; el detalle está en
+[operacion.md](operacion.md#monitoreo-de-errores).
+
+1. Crea una cuenta en https://sentry.io/signup/ con el correo del equipo. El plan **Developer** es gratis: 1 usuario
+   y 5,000 errores al mes. Si te ofrece una prueba de Business, al terminar vuelve sola al plan gratuito.
+2. Elige la región de datos **United States** y crea una organización, por ejemplo `infotrip`.
+3. *Projects → Create Project*: plataforma **Django**, nombre `infotrip`, alertas *Alert me on high priority issues*.
+4. Copia el DSN que muestra. Tiene la forma `https://<clave>@o<número>.ingest.us.sentry.io/<número>`. También está en
+   *Settings → Projects → infotrip → Client Keys (DSN)*. Ignora el resto de las instrucciones de instalación: el
+   código ya está hecho.
+5. En el servidor, ponlo en `.env.docker`:
+
+   ```bash
+   nano .env.docker
+   ```
+
+   ```
+   SENTRY_DSN=https://<clave>@o<número>.ingest.us.sentry.io/<número>
+   ```
+
+   El DSN no es una contraseña, pero tampoco lo subas a git: con él, cualquiera podría llenar tu cuota con
+   errores falsos.
+6. Aplica el cambio. `up -d` recrea los contenedores que usan `.env.docker`:
+
+   ```bash
+   dc up -d
+   ```
+
+7. Manda un error de prueba. Debe aparecer en *Issues* en menos de un minuto y llegarte por correo:
+
+   ```bash
+   dc exec web python manage.py shell -c "import sentry_sdk; sentry_sdk.capture_message('Prueba de InfoTrip'); sentry_sdk.flush()"
+   ```
+
+El plan gratuito admite un solo usuario, así que los avisos llegan al correo con el que crearon la cuenta. Usen el
+correo del proyecto y reenvíenlo al equipo con una regla de Gmail.
+
 ## Mantenimiento
 
 **Actualizar a la última versión de `master`.** Las migraciones se aplican solas al arrancar.
