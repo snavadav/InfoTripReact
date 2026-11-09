@@ -4,7 +4,7 @@ Esta guía publica InfoTrip en internet con HTTPS, en un solo servidor EC2 de AW
 duren los créditos del plan gratuito.
 
 Se probó completa en local el 8 de noviembre de 2026: Caddy con HTTPS, restauración del respaldo, páginas, API,
-planeador y límites de peticiones.
+planeador y límites de peticiones. Ese mismo día se publicó así en https://infotrip.online.
 
 ```
 Internet ──HTTPS──▶ Caddy (certificado automático) ──▶ nginx (fotos) ──▶ Django/gunicorn ──▶ PostgreSQL + Redis
@@ -46,8 +46,9 @@ Revisa las condiciones vigentes en https://aws.amazon.com/free/ antes de empezar
    MFA*.
 3. Crea una alerta de presupuesto en *Billing and Cost Management → Budgets → Create budget → Use a template →
    Zero spend budget*. Pon el correo del equipo. Te avisa si algo empieza a costar dinero real.
-4. Arriba a la derecha elige la región **US East (N. Virginia) `us-east-1`**. Es de las más baratas y tiene todos
-   los tipos de servidor. La latencia desde Jalisco es aceptable.
+4. Arriba a la derecha elige la región **US East (N. Virginia) `us-east-1`** u **Ohio `us-east-2`**. Las dos son de
+   las más baratas y tienen todos los tipos de servidor; InfoTrip corre en Ohio. Crea **todo** (instancia e IP
+   elástica) en la misma región.
 
 ## Paso 2. Crear el servidor (EC2)
 
@@ -62,37 +63,57 @@ En *EC2 → Launch instance*:
 | Network settings | Marca **Allow SSH traffic from: My IP**, **Allow HTTPS traffic from the internet** y **Allow HTTP traffic from the internet**. |
 | Storage | **30 GiB gp3** |
 
-Pulsa *Launch instance*.
+La consola en español trae otros valores por defecto: cambia la AMI de Amazon Linux a **Ubuntu**, el tipo de
+`t3.micro` a **`t3.small`** y el disco de 8 a **30 GiB**. Pulsa *Launch instance*.
+
+**Revisa la regla de SSH.** Si tu navegador usa IPv6, *My IP* guarda tu dirección IPv6, pero `ssh` entra por IPv4 y
+queda bloqueado (`Connection timed out`). En *EC2 → Security Groups → launch-wizard-1 → Edit inbound rules*, elimina
+la regla SSH y crea otra: tipo **SSH**, origen **Custom**, tu IPv4 con `/32` (la ves en https://checkip.amazonaws.com).
 
 Después, en *EC2 → Elastic IPs → Allocate Elastic IP address*, crea una IP y asóciala con *Actions → Associate* a la
 instancia `infotrip`. Así la dirección no cambia si reinicias el servidor. **Anota la IP.**
 
-## Paso 3. Dominio gratuito (DuckDNS)
+## Paso 3. Dominio
 
-Los navegadores solo dan la ubicación en sitios con HTTPS, y HTTPS necesita un nombre de dominio.
+Los navegadores solo dan la ubicación en sitios con HTTPS, y HTTPS necesita un nombre de dominio. InfoTrip usa
+`infotrip.online`, comprado en Hostinger; los ejemplos de esta guía usan ese nombre.
 
-1. Entra a https://www.duckdns.org con una cuenta de GitHub o de Google.
-2. Crea un subdominio, por ejemplo `infotrip-jalisco`. Quedará `infotrip-jalisco.duckdns.org`.
-3. En *current ip* escribe la Elastic IP del paso 2 y pulsa *update ip*.
+En *hPanel → Dominios → tu dominio → DNS / Nameservers* (con los nameservers de Hostinger):
 
-Compruébalo desde tu computadora. Debe responder con la IP de AWS:
+| Acción | Tipo | Nombre | Apunta a | TTL |
+|---|---|---|---|---|
+| Editar o crear | A | `@` | la Elastic IP del paso 2 | 300 |
+| Crear | A | `www` | la misma IP | 300 |
+| Borrar si existen | CNAME `www`, AAAA, CAA | | | |
+
+No toques los registros MX ni TXT del correo. Activa también la privacidad WHOIS. Un dominio recién comprado tarda
+de minutos a horas en publicarse; confirma el correo de verificación que manda Hostinger.
+
+Compruébalo desde tu computadora. Los dos deben responder con la IP de AWS:
 
 ```bash
-nslookup infotrip-jalisco.duckdns.org
+nslookup infotrip.online 8.8.8.8
+nslookup www.infotrip.online 8.8.8.8
 ```
+
+**Sin presupuesto para dominio:** https://www.duckdns.org da un subdominio gratis (`algo.duckdns.org`). Funciona
+igual, salvo que no tiene `www`: Caddy dejará avisos sobre él en su registro, sin afectar al sitio.
+
+No arranques el paso 7 hasta que el dominio responda: Let's Encrypt limita los intentos fallidos de certificado.
 
 ## Paso 4. Preparar el servidor
 
 Desde PowerShell en tu computadora:
 
 ```bash
-ssh -i $HOME\.ssh\infotrip.pem ubuntu@infotrip-jalisco.duckdns.org
+ssh -i $HOME\.ssh\infotrip.pem ubuntu@infotrip.online
 ```
 
 Si Windows avisa que la llave tiene permisos demasiado abiertos, quítale el acceso a los demás usuarios:
 
 ```bash
-icacls $HOME\.ssh\infotrip.pem /inheritance:r /grant:r "$($env:USERNAME):R"
+icacls $HOME\.ssh\infotrip.pem /inheritance:r
+icacls $HOME\.ssh\infotrip.pem /grant:r "$($env:USERNAME):(R)"
 ```
 
 Ya dentro del servidor, instala Docker desde los repositorios de Ubuntu:
@@ -120,8 +141,10 @@ Sal con `exit` y vuelve a entrar con `ssh` para que el permiso de Docker aplique
 ## Paso 5. Descargar el proyecto y configurarlo
 
 ```bash
-git clone https://github.com/snavadav/InfoTripReact.git infotrip && cd infotrip
+git clone -b master https://github.com/snavadav/InfoTripReact.git infotrip && cd infotrip
 ```
+
+El `-b master` es necesario: la rama por defecto del repositorio en GitHub es otro proyecto.
 
 ```bash
 cp .env.docker.aws.example .env.docker && chmod 600 .env.docker
@@ -137,6 +160,14 @@ Edita el archivo con `nano .env.docker`. Guarda con Ctrl+O, Enter, y sal con Ctr
 
 - Llena todo lo marcado con **CAMBIAR**: dominio, correos, `SECRET_KEY`, contraseña de la base de datos (la misma en
   `POSTGRES_PASSWORD` y `DB_PASSWORD`) y la contraseña de aplicación de Gmail.
+- `ALLOWED_HOSTS` lleva el dominio con y sin `www`: `infotrip.online,www.infotrip.online`.
+- No copies valores desde un chat o una página web: pueden pegarse como enlaces (`[www…](https://…)`).
+
+Comprueba que no quedó ningún valor de ejemplo. Solo debe salir la línea del comentario del principio:
+
+```bash
+grep -nE "cambia-esto|ejemplo.com|correo-del-proyecto|^EMAIL_HOST_PASSWORD=$" .env.docker
+```
 
 ## Paso 6. Subir tu base de datos
 
@@ -150,7 +181,7 @@ powershell -ExecutionPolicy Bypass -File scripts\exportar_base.ps1
 Súbelo al servidor. Cambia el nombre del archivo por el que mostró el script:
 
 ```bash
-scp -i $HOME\.ssh\infotrip.pem $HOME\infotrip-respaldos\infotrip-AAAA-MM-DD-HHMM.dump ubuntu@infotrip-jalisco.duckdns.org:~/base.dump
+scp -i $HOME\.ssh\infotrip.pem $HOME\infotrip-respaldos\infotrip-AAAA-MM-DD-HHMM.dump ubuntu@infotrip.online:~/base.dump
 ```
 
 ## Paso 7. Arrancar y restaurar
@@ -193,8 +224,8 @@ alias dc='docker compose -f docker-compose.yml -f docker-compose.aws.yml --env-f
 
 ## Paso 8. Comprobar
 
-- Abre `https://infotrip-jalisco.duckdns.org`. El candado debe aparecer: Caddy pide el certificado solo, en menos de
-  un minuto.
+- Abre `https://infotrip.online`. El candado debe aparecer: Caddy pide el certificado solo, en menos de un minuto.
+- `https://www.infotrip.online` debe llevarte a `https://infotrip.online`.
 - `https://…/health/` debe responder `{"status": "ok"}` o similar.
 - Recorre en el celular: registro (el código llega por correo), mapa, **Cerca de mí** (pide permiso de ubicación),
   ficha, reseña, costos, Mis viajes, planeador y comentarios.
@@ -238,7 +269,7 @@ rm -rf ~/respaldos && sudo cp -r /var/lib/docker/volumes/infotrip_respaldos/_dat
 Luego, en **tu computadora**, bájalos:
 
 ```bash
-scp -i $HOME\.ssh\infotrip.pem -r ubuntu@infotrip-jalisco.duckdns.org:~/respaldos $HOME\infotrip-respaldos\servidor
+scp -i $HOME\.ssh\infotrip.pem -r ubuntu@infotrip.online:~/respaldos $HOME\infotrip-respaldos\servidor
 ```
 
 Cómo restaurar un respaldo: [operacion.md](operacion.md).
@@ -265,7 +296,9 @@ ejecuta `dc up -d`.
 
 | Síntoma | Causa probable |
 |---|---|
-| El navegador dice que el certificado no es válido | DuckDNS todavía no apunta a la IP correcta, o los puertos 80/443 no están abiertos en el grupo de seguridad. Revisa con `dc logs caddy`. |
+| El navegador dice que el certificado no es válido | El dominio todavía no apunta a la IP correcta, o los puertos 80/443 no están abiertos en el grupo de seguridad. Revisa con `dc logs caddy`. |
+| `ssh: … Connection timed out` | La regla SSH del grupo de seguridad no tiene tu IPv4 actual (o quedó en IPv6). Ver paso 2. |
+| `cp: cannot stat '.env.docker.aws.example'` | Clonaste la rama por defecto. Ejecuta `git checkout master`. |
 | "Bad Request (400)" | `ALLOWED_HOSTS` no coincide exactamente con el dominio. |
 | Error 403 al iniciar sesión o cerrar sesión | Falta `DETRAS_DE_PROXY_HTTPS=True`. |
 | No llegan los correos | Contraseña de aplicación incorrecta, o `EMAIL_BACKEND` sigue en `console`. Prueba con `dc exec web python manage.py sendtestemail tu@correo.com`. |

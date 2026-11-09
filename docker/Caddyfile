@@ -10,3 +10,9 @@
 	# y añade X-Forwarded-Proto: https. nginx los pasa tal cual a Django.
 	reverse_proxy nginx:80
 }
+
+# www.$DOMINIO lleva al dominio principal, con su propio certificado. Necesita un registro A `www` hacia la misma IP;
+# sin él, Caddy solo deja avisos en su registro y el dominio principal sigue funcionando.
+www.{$DOMINIO} {
+	redir https://{$DOMINIO}{uri} permanent
+}
