@@ -115,7 +115,7 @@ class TarjetaTests(PasaporteBase):
         pagina = self.client.get(f'/pasaporte/{enlace}/')
         self.assertContains(pagina, 'Ana lleva 1 de 12')
         self.assertContains(pagina, 'noindex')
-        self.assertContains(pagina, 'passport-stamp--done', count=1)
+        self.assertContains(pagina, 'pagina--sellada', count=1)
         self.assertNotContains(pagina, 'ana@example.com')
         self.assertNotContains(pagina, timezone.localdate().strftime('%d/%m/%Y'))
 
@@ -140,7 +140,7 @@ class PaginasTests(PasaporteBase):
     def test_pagina_publica_con_los_doce_pueblos(self):
         self.client.force_authenticate(None)
         pagina = self.client.get('/pasaporte/')
-        self.assertContains(pagina, 'class="passport-stamp"', count=12)
+        self.assertContains(pagina, 'data-pagina=', count=12)
         self.assertContains(pagina, '/destinos/tapalpa/')
         self.assertContains(pagina, 'Aún sin ficha')
         self.assertContains(pagina, 'no está afiliado')

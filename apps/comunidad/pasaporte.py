@@ -74,6 +74,8 @@ def paginas():
             'foto': credito_de_catalogo(slug), 'sello': False,
             # Los nombres largos se escriben más pequeños para que quepan en el borde del sello.
             'sello_letra': 13 if len(nombre) > 16 else 15 if len(nombre) > 11 else 17,
+            # Cada sello cae un poco girado, siempre igual en la misma página.
+            'giro': (numero * 37) % 17 - 8,
         })
     return resultado
 

@@ -1,28 +1,67 @@
 {% extends 'base.html' %}{% load static %}
 {% block title %}Pasaporte de Pueblos Mágicos de Jalisco — InfoTrip{% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/comunidad.css' %}">{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/comunidad.css' %}"><link rel="stylesheet" href="{% static 'css/pasaporte.css' %}">{% endblock %}
 {% block content %}{% include 'partials/navBar.html' %}
-<main class="explore-shell legal-page" id="pasaporte">
+<main class="explore-shell pasaporte" id="pasaporte">
   <a class="back-link" href="{% url 'destinos-listado' %}">← Explorar destinos</a>
-  <span class="eyebrow">PASAPORTE DE JALISCO</span>
-  <h1>Los Pueblos Mágicos de Jalisco</h1>
-  <p>Abre la ficha de un pueblo cuando estés allí y comprueba tu visita con tu ubicación: ganas su sello. Tu ubicación solo se compara con la del lugar y no se guarda.</p>
-  <p id="pasaporte-progreso" role="status"><a href="{% url 'login' %}">Inicia sesión</a> para ver tus sellos.</p>
-  <div class="passport-grid">
-    {% for sello in sellos %}
-    <article class="passport-stamp" data-sello="{{ sello.slug }}">
-      <h2>{% if sello.disponible %}<a href="{% url 'destino-detalle' sello.slug %}">{{ sello.nombre }}</a>{% else %}{{ sello.nombre }}{% endif %}</h2>
-      <p class="passport-state">{% if sello.disponible %}Sin sello{% else %}Aún sin ficha en InfoTrip{% endif %}</p>
-    </article>
-    {% endfor %}
-  </div>
+  {% include 'comunidad/_tinta.html' %}
+  <section class="portada" aria-labelledby="portada-titulo">
+    <div class="portada__cubierta">
+      <p class="portada__marca">Pasaporte de Jalisco · InfoTrip</p>
+      <h1 id="portada-titulo"><span class="portada__de">Pasaporte de</span> <span id="pasaporte-nombre">los Pueblos Mágicos</span></h1>
+      <p class="portada__contador" id="pasaporte-progreso" role="status"><a href="{% url 'login' %}?next={% url 'pasaporte' %}">Inicia sesión</a> para ver tus sellos.</p>
+      <p class="portada__intro">Abre la ficha de un pueblo cuando estés allí y comprueba tu visita con tu ubicación: ganas su sello. Tu ubicación solo se compara con la del lugar y no se guarda.</p>
+    </div>
+    <div class="portada__avance">
+      <h2>Avance por región</h2>
+      <ul class="regiones" id="pasaporte-regiones">
+        {% for region in regiones %}
+        <li class="region" data-region="{{ region.slug }}" style="--tinta: {{ region.tinta }}">
+          <span class="region__nombre">{{ region.nombre }}</span>
+          <span class="region__cuenta" data-cuenta>— de {{ region.total }}</span>
+          <span class="region__barra" aria-hidden="true"><span data-barra style="width: 0%"></span></span>
+        </li>
+        {% endfor %}
+      </ul>
+      <nav class="indice" aria-label="Páginas del pasaporte">
+        <h2>Índice</h2>
+        <ol>
+          {% for pagina in paginas %}<li><a href="#pagina-{{ pagina.slug }}" data-indice="{{ pagina.slug }}" style="--tinta: {{ pagina.tinta }}"><span class="indice__numero">{{ pagina.numero|stringformat:"02d" }}</span> {{ pagina.nombre }}<span class="indice__marca" aria-hidden="true"></span><span class="sr-only" data-indice-estado></span></a></li>{% endfor %}
+        </ol>
+      </nav>
+    </div>
+  </section>
+
+  <p class="pasaporte__aviso" id="pasaporte-distancias" role="status" hidden></p>
+  <ol class="libro" aria-label="Páginas del pasaporte">
+    {% for pagina in paginas %}{% include 'comunidad/_pagina.html' %}{% endfor %}
+  </ol>
+
+  <template id="plantilla-mi-foto">
+    <details class="mi-foto">
+      <summary>Tu foto de este lugar</summary>
+      <form class="mi-foto__form" novalidate>
+        <p class="mi-foto__estado" data-foto-estado></p>
+        <label class="mi-foto__archivo">Elige una foto <span class="mi-foto__ayuda">JPEG, PNG o WebP, hasta 5 MB. Quitamos los datos de ubicación de la cámara.</span>
+          <input type="file" name="imagen" accept="image/jpeg,image/png,image/webp">
+        </label>
+        <label class="mi-foto__mostrar"><input type="checkbox" name="mostrar"> Mostrar en mi pasaporte compartido <span class="mi-foto__ayuda">Solo después de que la revisemos. Sin marcar, solo la ves tú.</span></label>
+        <div class="mi-foto__botones">
+          <button type="submit">Subir foto</button>
+          <button type="button" data-quitar hidden>Quitar mi foto</button>
+        </div>
+        <p class="form-status" role="status"></p>
+      </form>
+    </details>
+  </template>
+
   <section class="community-box" id="pasaporte-compartir" hidden>
     <h2>Comparte tu pasaporte</h2>
-    <p>El enlace muestra tu nombre y qué pueblos llevas, sin fechas. Puedes retirarlo cuando quieras.</p>
+    <p>Quien tenga el enlace ve tu nombre y tus sellos, sin fechas. Tus fotos solo aparecen si marcas «Mostrar en mi pasaporte compartido» y las aprobamos. Puedes retirar el enlace cuando quieras.</p>
     <div class="contribution-actions"><button id="pasaporte-enlace" type="button">Compartir mi pasaporte</button><button id="pasaporte-retirar" type="button" hidden>Dejar de compartir</button></div>
     <p id="pasaporte-estado" role="status"></p>
   </section>
-  <p class="community-note">Una ubicación se puede falsear: el pasaporte es un juego, no una constancia oficial. InfoTrip no está afiliado a la Secretaría de Turismo ni al programa Pueblos Mágicos.</p>
+  <p class="community-note">Una ubicación se puede falsear: el pasaporte es un juego, no una constancia oficial. InfoTrip no está afiliado a la Secretaría de Turismo ni al programa Pueblos Mágicos, y sus sellos no imitan los oficiales.</p>
   {% include 'destinos/footer.html' %}
 </main>
 {% endblock %}
