@@ -194,6 +194,8 @@ class ExploracionForm(forms.Form):
 
     def __init__(self, *args, editorial=False, **kwargs):
         super().__init__(*args, **kwargs)
+        if not editorial:
+            self.fields['q'].widget.attrs['data-autocompletar'] = reverse('destinos:sugerencias')
         # Solo lo que tiene destinos publicados: un filtro sin resultados no le sirve a nadie.
         for campo, modelo, relacion in [
             ('categoria', Categoria, 'destinos__es_activo'),
