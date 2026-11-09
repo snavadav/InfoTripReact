@@ -336,7 +336,7 @@ summary { cursor: pointer; font-size: .9375rem; font-weight: 550; }
 .mobile-menu a:hover, .mobile-menu .mobile-theme:hover:not(:disabled) { background: var(--panel-3); color: var(--texto); }
 .mobile-menu a[aria-current="page"] { box-shadow: inset 3px 0 var(--acento); }
 .mobile-menu .mobile-secondary { color: var(--texto-2); font-size: 1rem; font-weight: 500; }
-.mobile-menu a.btn-primary { justify-content: center; margin-top: .4rem; color: var(--sobre-acento); }
+.mobile-menu a.btn-primary, .mobile-menu a.btn-primary:hover { justify-content: center; margin-top: .4rem; border: 1px solid var(--acento); background: var(--acento); color: var(--sobre-acento); }
 .mobile-menu .sep { height: 1px; margin: .5rem 0; background: var(--linea); }
 .mobile-user-info { display: none; align-items: center; gap: .6rem; padding: .5rem .75rem; }
 
