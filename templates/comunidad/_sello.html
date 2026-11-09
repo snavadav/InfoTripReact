@@ -1,0 +1,13 @@
+{% comment %}Sello de una página. El marco es static/images/pasaporte/sello.svg (máscara); aquí van el color de la región y el texto.
+La fecha la escribe pasaporte.js solo en el pasaporte propio: el compartido nunca la lleva.{% endcomment %}
+<div class="sello" data-sello style="--giro: {{ pagina.giro }}deg" role="img" aria-label="{{ pagina.nombre }}, visitado"{% if not pagina.sello %} hidden{% endif %}>
+  <span class="sello__marco" aria-hidden="true"></span>
+  <svg class="sello__texto" viewBox="0 0 200 200" aria-hidden="true" focusable="false">
+    <path id="sello-arco-a-{{ pagina.slug }}" d="M 34,100 A 66,66 0 0 1 166,100" fill="none"/>
+    <path id="sello-arco-b-{{ pagina.slug }}" d="M 20,100 A 80,80 0 0 0 180,100" fill="none"/>
+    <text class="sello__nombre" font-size="{{ pagina.sello_letra }}"><textPath href="#sello-arco-a-{{ pagina.slug }}" startOffset="50%" text-anchor="middle">{{ pagina.nombre|upper }}</textPath></text>
+    <text class="sello__region" font-size="10"><textPath href="#sello-arco-b-{{ pagina.slug }}" startOffset="50%" text-anchor="middle">{{ pagina.region|default:"Jalisco"|upper }}</textPath></text>
+    <text class="sello__visitado" x="100" y="113" text-anchor="middle">VISITADO</text>
+    <text class="sello__fecha" x="100" y="132" text-anchor="middle" data-sello-fecha></text>
+  </svg>
+</div>

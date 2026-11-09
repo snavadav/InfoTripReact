@@ -1,0 +1,33 @@
+{% comment %}Una página del pasaporte. La comparten el pasaporte propio (pasaporte.js la completa) y el compartido.{% endcomment %}
+<li class="pagina{% if pagina.sello %} pagina--sellada{% endif %}{% if not pagina.disponible %} pagina--sin-ficha{% endif %}" id="pagina-{{ pagina.slug }}" data-pagina="{{ pagina.slug }}" data-latitud="{{ pagina.latitud }}" data-longitud="{{ pagina.longitud }}" data-nombre="{{ pagina.nombre }}" style="--tinta: {{ pagina.tinta }}">
+  <article class="pagina__hoja" aria-labelledby="pagina-{{ pagina.slug }}-titulo">
+    <div class="pagina__lamina">
+      {% if pagina.foto_propia %}
+      <img class="pagina__foto" src="{{ pagina.foto_propia }}" alt="Foto de {{ pagina.nombre }} tomada por {{ nombre }}" width="960" height="640" loading="lazy" decoding="async">
+      {% elif pagina.foto %}
+      <img class="pagina__foto" data-foto-catalogo src="{{ pagina.foto.url }}" alt="{{ pagina.foto.alt }}" width="960" height="640" loading="lazy" decoding="async">
+      {% else %}
+      <div class="pagina__ilustracion" data-foto-catalogo>
+        <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
+          <circle cx="272" cy="48" r="20" class="ilustracion__sol"/>
+          <path class="ilustracion__cerro-lejos" d="M0 132 L58 88 L104 118 L170 70 L236 112 L284 92 L320 108 V200 H0 Z"/>
+          <path class="ilustracion__cerro" d="M0 160 Q70 118 140 150 T320 138 V200 H0 Z"/>
+          <path class="ilustracion__camino" d="M150 200 Q170 172 214 156" fill="none"/>
+        </svg>
+        <span class="pagina__municipio">{{ pagina.municipio }}</span>
+        <span class="sr-only">Sin fotografía: ilustración con el nombre de {{ pagina.municipio }}.</span>
+      </div>
+      {% endif %}
+      {% include 'comunidad/_sello.html' %}
+    </div>
+    <div class="pagina__texto">
+      <h2 id="pagina-{{ pagina.slug }}-titulo">{% if pagina.disponible %}<a href="{% url 'destino-detalle' pagina.slug %}">{{ pagina.nombre }}</a>{% else %}{{ pagina.nombre }}{% endif %}</h2>
+      <p class="pagina__lugar">{% if pagina.region %}{{ pagina.municipio }} · {{ pagina.region }}{% else %}Jalisco{% endif %}</p>
+      <p class="pagina__estado" data-estado>{% if pagina.sello %}Sellado{% elif pagina.disponible %}Aún sin sello{% else %}Aún sin ficha en InfoTrip{% endif %}</p>
+      {% if pagina.foto and not pagina.foto_propia %}<p class="pagina__credito" data-credito>Foto: <a href="{{ pagina.foto.fuente }}" target="_blank" rel="noopener noreferrer">{{ pagina.foto.autor }}</a>, <a href="{{ pagina.foto.licencia_url }}" target="_blank" rel="noopener noreferrer">{{ pagina.foto.licencia }}</a></p>{% endif %}
+      {% if pagina.foto_propia %}<p class="pagina__credito">Foto de {{ nombre }}</p>{% endif %}
+      <div class="pagina__acciones" data-acciones></div>
+    </div>
+    <p class="pagina__numero"><span class="sr-only">Página </span>{{ pagina.numero|stringformat:"02d" }}<span class="sr-only"> de {{ de }}</span></p>
+  </article>
+</li>

@@ -328,13 +328,13 @@ class FlujosTests(StaticLiveServerTestCase):
         self.pagina.click('#visit-check')
         self.pagina.wait_for_selector('#visit-status:has-text("Ganaste un sello")')
         self.abrir('/pasaporte/')
-        self.pagina.wait_for_selector('[data-sello="tapalpa"].passport-stamp--done')
+        self.pagina.wait_for_selector('#pagina-tapalpa.pagina--sellada [data-sello]:not([hidden])')
         self.assertIn('1 de 12', self.pagina.inner_text('#pasaporte-progreso'))
         self.pagina.evaluate('delete Navigator.prototype.share')
         self.pagina.click('#pasaporte-enlace')
         self.pagina.wait_for_selector('#pasaporte-retirar:not([hidden])')
         self.abrir(f'/pasaporte/{self.usuario.pasaporte.enlace}/')
-        self.pagina.wait_for_selector('.passport-stamp--done')
+        self.pagina.wait_for_selector('#pagina-tapalpa.pagina--sellada [aria-label="Tapalpa, visitado"]')
 
     def test_un_negocio_deja_sus_datos_sin_cuenta(self):
         self.abrir('/negocios/')
