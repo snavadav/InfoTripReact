@@ -1,7 +1,8 @@
 <aside id="trip-chat" class="trip-chat" aria-label="Asistente de InfoTrip" hidden>
   <section id="trip-chat-panel" class="trip-chat-panel" aria-labelledby="trip-chat-title" hidden>
     <header class="trip-chat-header">
-      <div><span class="trip-chat-eyebrow">TE AYUDAMOS A EMPEZAR</span><h2 id="trip-chat-title">Tu asistente InfoTrip</h2></div>
+      <div id="trip-chat-avatar" class="trip-chat-avatar">{% include 'partials/axo.svg' %}</div>
+      <div class="trip-chat-titulo"><span class="trip-chat-eyebrow">TU GUÍA POR JALISCO</span><h2 id="trip-chat-title">Axo, asistente de InfoTrip</h2></div>
       <button id="trip-chat-close" type="button" aria-label="Cerrar asistente">×</button>
     </header>
     <p class="trip-chat-notice">Guía con respuestas básicas. El catálogo está creciendo.</p>
@@ -9,6 +10,6 @@
     <div id="trip-chat-options" class="trip-chat-options" role="group" aria-label="Elige una opción"></div>
     <footer class="trip-chat-footer"><span>Selecciona una opción para continuar</span><button id="trip-chat-reset" type="button">Volver al inicio</button></footer>
   </section>
-  <button id="trip-chat-toggle" class="trip-chat-toggle" type="button" aria-controls="trip-chat-panel" aria-expanded="false"><span aria-hidden="true">✦</span> <span class="trip-chat-label">¿Planeamos tu viaje?</span></button>
+  <button id="trip-chat-toggle" class="trip-chat-toggle" type="button" aria-controls="trip-chat-panel" aria-expanded="false">{% include 'partials/axo.svg' %}<span class="sr-only">Hablar con Axo, tu asistente de viaje</span></button>
   <div id="trip-chat-links" hidden data-trips="{% url 'mis-viajes' %}" data-catalog="{% url 'destinos-listado' %}" data-register="{% url 'registro' %}" data-profile="{% url 'perfil' %}"></div>
 </aside>

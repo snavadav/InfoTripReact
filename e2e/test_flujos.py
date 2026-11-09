@@ -238,7 +238,7 @@ class FlujosTests(StaticLiveServerTestCase):
         self.assertEqual(pequenos, 0)
         chat = self.pagina.locator('#trip-chat-toggle').bounding_box()
         self.assertLessEqual(chat['width'], 56)
-        self.assertEqual(self.pagina.get_by_role('button', name='¿Planeamos tu viaje?').count(), 1)
+        self.assertEqual(self.pagina.get_by_role('button', name='Hablar con Axo, tu asistente de viaje').count(), 1)
 
     def test_el_teclado_muestra_el_foco(self):
         self.abrir('/login/')

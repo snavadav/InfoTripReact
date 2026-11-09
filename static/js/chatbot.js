@@ -17,7 +17,7 @@
   // Respuestas editoriales: no representan precios, disponibilidad ni visitas verificadas.
   const flows = {
     trips: { text: 'En Mis viajes puedes crear una escapada, introducir tus propios gastos y calcular el total del grupo y el reparto por persona. Inicia sesión para guardar el plan. Los importes son estimaciones tuyas, no cotizaciones.', links: [['Crear mi escapada →', 'trips']], choices: [['Preparar presupuesto', 'budget']] },
-    home: { text: '¡Hola! Soy el asistente de InfoTrip. Te ayudo a preparar una escapada por Jalisco y a usar la app. Por ahora respondo mediante estas opciones. ¿Por dónde empezamos?', choices: menu },
+    home: { text: '¡Hola! Soy Axo, el asistente de InfoTrip. Te ayudo a preparar una escapada por Jalisco y a usar la app. Por ahora respondo mediante estas opciones. ¿Por dónde empezamos?', choices: menu },
     plan: { text: 'Empecemos por el tiempo que tienes. Esta guía es general: confirma horarios y condiciones con cada lugar antes de salir. ¿Qué tipo de salida estás preparando?', choices: [['Un día', 'day'], ['Un fin de semana', 'weekend'], ['Todavía no sé', 'explore']] },
     day: { text: 'Para una salida de un día:\n• Elige una actividad principal.\n• Considera el traslado de ida y vuelta.\n• Aparta tiempo y presupuesto para comer.\n• Confirma el horario de regreso de tu transporte.\n\nPuedes explorar el catálogo para elegir tu destino.', choices: [['Ver qué llevar', 'packing'], ['Preparar presupuesto', 'budget']], links: [['Explorar catálogo →', 'catalog']] },
     weekend: { text: 'Para un fin de semana, organiza primero transporte y alojamiento. Después elige una actividad principal por día y deja tiempo libre. Confirma horarios, precio total del hospedaje y condiciones de cancelación directamente con el prestador.', choices: [['Preparar presupuesto', 'budget'], ['Ver qué llevar', 'packing']], links: [['Explorar catálogo →', 'catalog']] },
@@ -58,10 +58,18 @@
     });
     if (focus) options.firstElementChild?.focus({ preventScroll: true });
   }
+  // Axo saluda con la mano; la clase se quita para poder repetir la animación.
+  function saludar(figura) {
+    figura.classList.remove('is-saludando');
+    void figura.offsetWidth;
+    figura.classList.add('is-saludando');
+    setTimeout(() => figura.classList.remove('is-saludando'), 2000);
+  }
   function setOpen(open) {
     panel.hidden = !open;
     toggle.setAttribute('aria-expanded', String(open));
     if (open) {
+      saludar(document.getElementById('trip-chat-avatar'));
       if (!log.children.length) show('home');
       close.focus({ preventScroll: true });
       log.scrollTop = log.scrollHeight;
