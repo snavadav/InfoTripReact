@@ -87,7 +87,7 @@ class RutasCompartidasView(APIView):
         rutas = RutaCompartida.objects.filter(autor=request.user)
         return Response({'rutas': [resumen_ruta(r) for r in rutas]})
 
-    @extend_schema(responses={201: OpenApiTypes.OBJECT})
+    @extend_schema(request=PeticionRutaSerializer, responses={201: OpenApiTypes.OBJECT})
     def post(self, request):
         # La ruta se vuelve a calcular aquí: nadie puede publicar con nuestro nombre un plan inventado.
         peticion = PeticionRutaSerializer(data=request.data)
@@ -108,6 +108,7 @@ class RutaCompartidaView(APIView):
     """DELETE: quien la guardó con su cuenta la borra y el enlace deja de funcionar."""
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(request=None, responses={204: None})
     def delete(self, request, enlace):
         ruta = get_object_or_404(RutaCompartida, enlace=enlace, autor=request.user)
         ruta.delete()
