@@ -65,7 +65,38 @@
     figura.classList.add('is-saludando');
     setTimeout(() => figura.classList.remove('is-saludando'), 2000);
   }
+  // Burbuja de bienvenida: una vez al día, se cierra sola y nunca roba el foco.
+  const saludo = document.getElementById('trip-chat-saludo');
+  const CLAVE_SALUDO = 'infotrip_axo_saludo';
+  let temporizador = null;
+  function hoy() { return new Date().toLocaleDateString('en-CA'); }
+  function yaSaludo() {
+    try { return localStorage.getItem(CLAVE_SALUDO) === hoy(); } catch { return true; }
+  }
+  function ocultarSaludo() {
+    clearTimeout(temporizador);
+    saludo.hidden = true;
+  }
+  function mostrarSaludo() {
+    if (!panel.hidden || yaSaludo()) return;
+    // Sin almacenamiento no se puede limitar a una vez al día: mejor no insistir en cada página.
+    try { localStorage.setItem(CLAVE_SALUDO, hoy()); } catch { return; }
+    saludo.hidden = false;
+    toggle.classList.add('is-asomando');
+    saludar(toggle);
+    temporizador = setTimeout(ocultarSaludo, 9000);
+  }
+  // Mientras el puntero o el foco están en la burbuja, no se cierra sola.
+  saludo.addEventListener('pointerenter', () => clearTimeout(temporizador));
+  saludo.addEventListener('focusin', () => clearTimeout(temporizador));
+  saludo.addEventListener('pointerleave', () => { temporizador = setTimeout(ocultarSaludo, 4000); });
+  document.getElementById('trip-chat-saludo-abrir').addEventListener('click', () => setOpen(true));
+  document.getElementById('trip-chat-saludo-cerrar').addEventListener('click', () => {
+    ocultarSaludo();
+    toggle.focus({ preventScroll: true });
+  });
   function setOpen(open) {
+    ocultarSaludo();
     panel.hidden = !open;
     toggle.setAttribute('aria-expanded', String(open));
     if (open) {
@@ -80,9 +111,14 @@
   root.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && !panel.hidden) { event.preventDefault(); setOpen(false); }
   });
+  // La burbuja no toma el foco, así que Escape se escucha en toda la página mientras está visible.
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !saludo.hidden) ocultarSaludo();
+  });
   document.getElementById('trip-chat-reset').addEventListener('click', () => {
     log.replaceChildren();
     show('home', true);
   });
   root.hidden = false;
+  setTimeout(mostrarSaludo, 1500);
 })();

@@ -10,6 +10,10 @@
     <div id="trip-chat-options" class="trip-chat-options" role="group" aria-label="Elige una opción"></div>
     <footer class="trip-chat-footer"><span>Selecciona una opción para continuar</span><button id="trip-chat-reset" type="button">Volver al inicio</button></footer>
   </section>
+  <div id="trip-chat-saludo" class="trip-chat-saludo" role="status" hidden>
+    <button id="trip-chat-saludo-abrir" class="trip-chat-saludo-texto" type="button">¡Hola! Soy Axo. ¿Te ayudo a planear tu escapada?</button>
+    <button id="trip-chat-saludo-cerrar" class="trip-chat-saludo-cerrar" type="button" aria-label="Cerrar saludo de Axo">×</button>
+  </div>
   <button id="trip-chat-toggle" class="trip-chat-toggle" type="button" aria-controls="trip-chat-panel" aria-expanded="false">{% include 'partials/axo.svg' %}<span class="sr-only">Hablar con Axo, tu asistente de viaje</span></button>
   <div id="trip-chat-links" hidden data-trips="{% url 'mis-viajes' %}" data-catalog="{% url 'destinos-listado' %}" data-register="{% url 'registro' %}" data-profile="{% url 'perfil' %}"></div>
 </aside>

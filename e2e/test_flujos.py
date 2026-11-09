@@ -21,6 +21,7 @@ from apps.metricas.models import Evento
 from apps.usuarios.models import Usuario
 
 CLAVE = 'Prueba-segura-493!'
+SIN_SALUDO = "try { localStorage.setItem('infotrip_axo_saludo', new Date().toLocaleDateString('en-CA')); } catch {}"
 
 
 @skipUnless(os.environ.get('E2E'), 'Pruebas de navegador: definir E2E=1')
@@ -49,11 +50,18 @@ class FlujosTests(StaticLiveServerTestCase):
                                               descripcion='Lugar de prueba', latitud=19.9, longitud=-103.7)
         self.usuario = Usuario.objects.create_user('ana@example.com', 'Ana', 'Prueba', CLAVE, es_verificado=True)
         self.problemas = []
-        self.contexto = self.navegador.new_context()
+        self.contexto = self.nuevo_contexto()
         self.pagina = self.contexto.new_page()
         self.pagina.on('pageerror', lambda error: self.problemas.append(f'Error de página: {error}'))
         self.pagina.on('console', self.revisar_consola)
         self.pagina.on('response', self.revisar_respuesta)
+
+    def nuevo_contexto(self, saludo=False, **opciones):
+        contexto = self.navegador.new_context(**opciones)
+        if not saludo:
+            # La burbuja de bienvenida de Axo ya salió hoy: así no tapa botones en las demás pruebas.
+            contexto.add_init_script(SIN_SALUDO)
+        return contexto
 
     def tearDown(self):
         # Espera a las peticiones en curso: si la prueba termina antes, la base se vacía bajo ellas.
@@ -99,7 +107,8 @@ class FlujosTests(StaticLiveServerTestCase):
     def test_sesion_en_cookie_y_no_en_localstorage(self):
         self.iniciar_sesion()
         visibles = self.pagina.evaluate('[Object.keys(localStorage), document.cookie]')
-        self.assertEqual(visibles[0], ['usuario'])
+        # Fuera de la sesión solo queda la fecha del saludo de Axo, que no identifica a nadie.
+        self.assertEqual([clave for clave in visibles[0] if clave != 'infotrip_axo_saludo'], ['usuario'])
         self.assertNotIn('infotrip_refresh', visibles[1])
         cookie = next(c for c in self.contexto.cookies() if c['name'] == 'infotrip_refresh')
         self.assertTrue(cookie['httpOnly'])
@@ -162,7 +171,7 @@ class FlujosTests(StaticLiveServerTestCase):
         enlace = self.pagina.evaluate('navigator.clipboard.readText()')
         viaje.refresh_from_db()
         self.assertIn(str(viaje.enlace_publico), enlace)
-        anonimo = self.navegador.new_context()
+        anonimo = self.nuevo_contexto()
         pagina = anonimo.new_page()
         pagina.goto(enlace)
         self.assertIn('Con amigos', pagina.inner_text('main'))
@@ -261,7 +270,7 @@ class FlujosTests(StaticLiveServerTestCase):
         viaje.refresh_from_db()
 
         ana, contexto_ana = self.pagina, self.contexto
-        self.contexto = self.navegador.new_context()
+        self.contexto = self.nuevo_contexto()
         self.pagina = self.contexto.new_page()
         self.pagina.on('pageerror', lambda error: self.problemas.append(f'Error de página: {error}'))
         self.usuario = Usuario.objects.create_user('leo@example.com', 'Leo', 'Prueba', CLAVE, es_verificado=True)
@@ -367,7 +376,7 @@ class FlujosTests(StaticLiveServerTestCase):
 
     def test_el_tema_se_cambia_y_se_recuerda(self):
         self.contexto.close()
-        self.contexto = self.navegador.new_context(color_scheme='light')
+        self.contexto = self.nuevo_contexto(color_scheme='light')
         self.pagina = self.contexto.new_page()
         self.abrir('/destinos/')
         self.assertEqual(self.pagina.evaluate('document.documentElement.dataset.theme'), 'light')
@@ -548,3 +557,35 @@ class FlujosTests(StaticLiveServerTestCase):
         self.pagina.wait_for_url(self.live_server_url + '/')
         self.abrir('/perfil/')
         self.pagina.wait_for_selector('#profile-login:not([hidden])')
+
+    def abrir_con_saludo(self, ancho=1280, alto=800):
+        self.contexto.close()
+        self.contexto = self.nuevo_contexto(saludo=True, viewport={'width': ancho, 'height': alto})
+        self.pagina = self.contexto.new_page()
+        self.pagina.on('pageerror', lambda error: self.problemas.append(f'Error de página: {error}'))
+        self.pagina.on('console', self.revisar_consola)
+        self.abrir('/')
+        self.pagina.locator('#trip-chat-saludo').wait_for(state='visible')
+
+    def test_axo_saluda_una_vez_al_dia_y_la_burbuja_abre_el_chat(self):
+        self.abrir_con_saludo()
+        # La burbuja avisa sin robar el foco.
+        self.assertFalse(self.pagina.evaluate("!!document.activeElement.closest('#trip-chat')"))
+        self.pagina.click('#trip-chat-saludo-abrir')
+        self.pagina.wait_for_selector('#trip-chat-panel:not([hidden])')
+        self.assertTrue(self.pagina.locator('#trip-chat-saludo').is_hidden())
+        self.assertIn('Axo', self.pagina.inner_text('#trip-chat-log'))
+        # Ese mismo día ya no vuelve a aparecer.
+        self.abrir('/destinos/')
+        self.pagina.wait_for_timeout(2500)
+        self.assertTrue(self.pagina.locator('#trip-chat-saludo').is_hidden())
+
+    def test_la_burbuja_se_cierra_con_escape_y_no_desborda_en_movil(self):
+        self.abrir_con_saludo(375, 812)
+        caja = self.pagina.locator('#trip-chat-saludo').bounding_box()
+        self.assertGreaterEqual(caja['x'], 0)
+        self.assertLessEqual(caja['x'] + caja['width'], 375)
+        self.assertLess(caja['width'], 300)
+        self.assertEqual(self.pagina.evaluate('document.documentElement.scrollWidth'), 375)
+        self.pagina.keyboard.press('Escape')
+        self.assertTrue(self.pagina.locator('#trip-chat-saludo').is_hidden())
