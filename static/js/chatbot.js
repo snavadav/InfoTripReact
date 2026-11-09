@@ -144,7 +144,7 @@
       resultados(bubble, lista.slice(0, MAXIMO_RESULTADOS).map(destino => ({
         href: `${links.catalog}${encodeURIComponent(destino.slug)}/${costos ? 'costos/' : ''}`,
         titulo: destino.nombre,
-        detalle: [destino.municipio?.nombre, destino.atribucion ? 'Fuente: OpenStreetMap' : ''].filter(Boolean).join(' · ')
+        detalle: [destino.municipio?.nombre, fuente(destino.atribucion)].filter(Boolean).join(' · ')
       })));
       const extra = [];
       if (total > MAXIMO_RESULTADOS) extra.push([`Ver los ${total} resultados →`, `${links.catalog}?${new URLSearchParams({ q: texto })}`]);
@@ -160,6 +160,13 @@
   function distancia(km) {
     if (km === null || km === undefined) return '';
     return km < 1 ? `a ${Math.round(km * 1000)} m` : `a ${km.toLocaleString('es-MX', { maximumFractionDigits: 1 })} km`;
+  }
+  // Versión corta de la atribución que da la API, para que quepa en una línea.
+  function fuente(atribucion) {
+    if (!atribucion) return '';
+    if (atribucion.includes('DENUE')) return 'Fuente: INEGI (DENUE)';
+    if (atribucion.includes('OpenStreetMap')) return 'Fuente: OpenStreetMap';
+    return atribucion.startsWith('Fuente') ? atribucion : `Fuente: ${atribucion}`;
   }
   async function pedirCercanos(latitud, longitud, radio) {
     const respuesta = await fetch('/api/v1/lugares/cerca/', {
@@ -191,7 +198,7 @@
             href: lugar.url,
             titulo: lugar.nombre,
             detalle: [lugar.subtipo_nombre || lugar.tipo_nombre, distancia(lugar.distancia_km),
-              lugar.atribucion ? `Fuente: ${lugar.atribucion}` : ''].filter(Boolean).join(' · ')
+              fuente(lugar.atribucion)].filter(Boolean).join(' · ')
           })));
         }
         setChoices([['Planear mi escapada', 'plan'], ['Buscar un destino', 'search']], [['Ver todo en el mapa →', 'nearby']]);

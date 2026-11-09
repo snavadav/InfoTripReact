@@ -99,7 +99,8 @@
 
 @media (max-width: 520px) {
   .trip-chat { right: .5rem; bottom: .5rem; }
-  .trip-chat-panel { width: calc(100vw - 1rem); max-height: calc(100dvh - 5.5rem); }
+  /* Cabe entre la barra de navegación y el botón de Axo. */
+  .trip-chat-panel { width: calc(100vw - 1rem); max-height: calc(100dvh - var(--nav-alto) - 56px - 1.6rem); }
 }
 
 /* Burbuja de bienvenida: pequeña, junto a Axo, para no tapar contenido en móvil. */

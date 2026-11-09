@@ -627,7 +627,8 @@ class FlujosTests(StaticLiveServerTestCase):
         self.pagina.click('#trip-chat-options button:has-text("Buscar con mi ubicación")')
         self.pagina.wait_for_selector('#trip-chat-log a:has-text("Fonda Doña Ana")')
         fila = self.pagina.locator('.trip-chat-results li').first.inner_text()
-        self.assertIn('OpenStreetMap', fila)
+        self.assertIn('Fuente: OpenStreetMap', fila)
+        self.assertNotIn('Fuente: Fuente', fila)
         self.assertIn('m', fila)
 
     def test_axo_se_usa_con_teclado_y_es_comodo_de_tocar(self):
@@ -651,6 +652,16 @@ class FlujosTests(StaticLiveServerTestCase):
         self.pagina.keyboard.press('Escape')
         self.assertTrue(self.pagina.locator('#trip-chat-panel').is_hidden())
         self.assertEqual(self.pagina.evaluate('document.activeElement.id'), 'trip-chat-toggle')
+
+    def test_en_movil_el_panel_de_axo_cabe_bajo_la_barra(self):
+        self.pagina.set_viewport_size({'width': 375, 'height': 812})
+        self.abrir('/destinos/')
+        self.pagina.click('#trip-chat-toggle')
+        panel = self.pagina.locator('#trip-chat-panel').bounding_box()
+        barra = self.pagina.locator('#navbar').bounding_box()
+        self.assertGreaterEqual(panel['y'], barra['y'] + barra['height'])
+        self.assertLessEqual(panel['x'] + panel['width'], 375)
+        self.assertEqual(self.pagina.evaluate('document.documentElement.scrollWidth'), 375)
 
     def test_axo_no_se_mueve_con_movimiento_reducido(self):
         self.contexto.close()
