@@ -7,14 +7,19 @@ miles) se buscan en la base: en PostgreSQL con unaccent y trigramas apoyados en 
 """
 import re
 import unicodedata
+from urllib.parse import urlencode
 from dataclasses import dataclass, field
 from difflib import SequenceMatcher
 from functools import lru_cache
 
-from django.db.models import Case, IntegerField, Value, When
+from django.contrib.postgres.search import TrigramSimilarity, TrigramWordSimilarity
+from django.contrib.postgres.lookups import Unaccent
+from django.db import connection
+from django.db.models import Case, IntegerField, Q, Value, When
+from django.urls import reverse
 
 from apps.comunidad.selectors import PUEBLOS_MAGICOS
-from .models import Municipio
+from .models import Categoria, Destino, Lugar, Municipio
 
 # Versión de las listas de abajo: súbela al cambiarlas para saber con cuál se comportó una búsqueda.
 VERSION_SINONIMOS = 1
@@ -271,3 +276,92 @@ def buscar_destinos(queryset, texto):
     relevancia = Case(*[When(pk=pk, then=Value(valor)) for pk, valor in resultado.puntajes.items()],
                       default=Value(0), output_field=IntegerField())
     return queryset.filter(pk__in=list(resultado.puntajes)).annotate(relevancia=relevancia), resultado
+
+
+# ─── Autocompletado ───────────────────────────────────────────
+MAXIMO_DESTINOS = 5
+MAXIMO_MUNICIPIOS = 3
+MAXIMO_LUGARES = 3
+LARGO_MINIMO_AUTOCOMPLETAR = 2
+LARGO_MINIMO_LUGARES = 3
+CANDIDATOS_SQLITE = 200
+
+
+def _coincide_nombre(consulta, palabras):
+    """Todas las palabras escritas están en el nombre (completas, por inicio o, con errores, parecidas)."""
+    return all(
+        _nivel_exacto(clave, palabras)
+        or (len(clave) >= LARGO_MINIMO_APROXIMADO and _nivel_aproximado(clave, palabras)[0])
+        for clave, _ in consulta.palabras
+    )
+
+
+def municipios_para(consulta, limite=MAXIMO_MUNICIPIOS):
+    filas = (Municipio.objects.filter(destinos__es_activo=True).distinct()
+             .values_list('nombre', 'slug', 'region__nombre'))
+    encontrados = []
+    for nombre, slug, region in filas:
+        palabras = _palabras(nombre)
+        if consulta.palabras and _coincide_nombre(consulta, palabras):
+            encontrados.append((-_cercania(palabras, consulta.clave), nombre, slug, region))
+    return sorted(encontrados)[:limite]
+
+
+def lugares_por_nombre(texto, limite=MAXIMO_LUGARES):
+    """Comer, dormir, etc. por nombre. Son decenas de miles: en PostgreSQL usa trigramas con índice GIN."""
+    normal = sin_acentos(texto)
+    if len(normal) < LARGO_MINIMO_LUGARES:
+        return []
+    lugares = Lugar.objects.filter(es_activo=True).select_related('municipio')
+    escritos = {' '.join(texto.split()), normal}
+    if connection.vendor == 'postgresql':
+        # Ojo: icontains se traduce a UPPER(nombre) LIKE … y no usa el índice (leía 45 mil filas, ~0.5 s).
+        # `~*` y `%>` sobre la columna tal cual sí usan lugar_nombre_trgm_idx (unos pocos ms). La similitud
+        # sin acentos solo se calcula para las filas que ya pasaron el filtro.
+        patron = '|'.join(re.escape(escrito) for escrito in sorted(escritos))
+        lugares = lugares.filter(Q(nombre__iregex=patron) | Q(nombre__trigram_word_similar=normal)).annotate(
+            parecido=TrigramWordSimilarity(Value(normal), Unaccent('nombre')),
+            # Desempate: «Birriería» antes que «Auxiliar Birriería en la Aurora».
+            parecido_total=TrigramSimilarity(Unaccent('nombre'), Value(normal)),
+        ).order_by('-parecido', '-parecido_total', 'nombre', 'pk')
+    else:
+        # SQLite no tiene unaccent: las vocales y la n pueden llevar acento, así que en el patrón valen
+        # cualquier letra (.) y el filtro exacto sin acentos se hace en Python.
+        patron = ''.join('.' if letra in 'aeioun' else re.escape(letra) for letra in normal)
+        candidatos = lugares.filter(nombre__iregex=patron).order_by('nombre', 'pk')[:CANDIDATOS_SQLITE]
+        return [lugar for lugar in candidatos if normal in sin_acentos(lugar.nombre)][:limite]
+    return list(lugares[:limite])
+
+
+def autocompletar(texto):
+    """Lo que el campo de búsqueda propone mientras se escribe: destinos, municipios, colecciones y lugares."""
+    consulta = interpretar(texto)
+    if len(consulta.clave) < LARGO_MINIMO_AUTOCOMPLETAR:
+        return {'resultados': [], 'sugerencia': ''}
+    resultados = []
+    for frase_claves, regla in consulta.sinonimos:
+        if 'slugs' in regla:
+            resultados.append({'tipo': 'coleccion', 'nombre': regla['nombre'], 'detalle': 'Colección',
+                               'url': f"{reverse('destinos-listado')}?{urlencode({'q': regla['nombre']})}"})
+    nombres_categoria = {
+        slug: nombre for slug, nombre in
+        Categoria.objects.filter(destinos__es_activo=True).distinct().values_list('slug', 'nombre')
+    }
+    por_sinonimo = {regla['categoria'] for _, regla in consulta.sinonimos if 'categoria' in regla}
+    for slug, nombre in nombres_categoria.items():
+        if slug in por_sinonimo or _coincide_nombre(consulta, _palabras(nombre)):
+            resultados.append({'tipo': 'categoria', 'nombre': nombre, 'detalle': 'Categoría',
+                               'url': f"{reverse('destinos-listado')}?{urlencode({'categoria': slug})}"})
+    for _, nombre, slug, region in municipios_para(consulta):
+        resultados.append({'tipo': 'municipio', 'nombre': nombre, 'detalle': f'Municipio · {region}',
+                           'url': f"{reverse('destinos-listado')}?{urlencode({'municipio': slug})}"})
+    publicos = Destino.objects.filter(es_activo=True)
+    destinos, busqueda = buscar_destinos(publicos, texto)
+    for destino in destinos.select_related('municipio').order_by('-relevancia', 'nombre', 'pk')[:MAXIMO_DESTINOS]:
+        resultados.append({'tipo': 'destino', 'nombre': destino.nombre, 'detalle': destino.municipio.nombre,
+                           'url': reverse('destino-detalle', kwargs={'slug': destino.slug})})
+    for lugar in lugares_por_nombre(texto):
+        detalle = ' · '.join(filter(None, [lugar.get_subtipo_display(), getattr(lugar.municipio, 'nombre', '')]))
+        resultados.append({'tipo': 'lugar', 'nombre': lugar.nombre, 'detalle': detalle,
+                           'url': reverse('lugar-detalle', kwargs={'pk': lugar.pk})})
+    return {'resultados': resultados, 'sugerencia': busqueda.sugerencia}

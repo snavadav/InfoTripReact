@@ -1,8 +1,12 @@
 """Búsqueda tolerante: errores de escritura, acentos, sinónimos, sugerencias y que los filtros sigan igual."""
+from unittest import skipUnless
+
+from django.db import connection
 from django.test import SimpleTestCase, TestCase
+from django.test.utils import CaptureQueriesContext
 
 from .busqueda import fonetica, interpretar, sin_acentos
-from .models import Categoria, Destino, Municipio, Region, Servicio
+from .models import Categoria, Destino, Lugar, Municipio, Region, Servicio
 
 
 class NormalizacionTests(SimpleTestCase):
@@ -152,3 +156,80 @@ class BusquedaTests(TestCase):
     def test_explorar_sin_texto_conserva_orden_curado(self):
         respuesta = self.client.get('/destinos/')
         self.assertEqual(respuesta.context['pagina'].paginator.count, 12)
+
+
+class SugerenciasTests(TestCase):
+    """Autocompletado: GET /api/v1/sugerencias/?q=…"""
+
+    @classmethod
+    def setUpTestData(cls):
+        BusquedaTests.setUpTestData.__func__(cls)
+        municipio = Municipio.objects.get(slug='mazamitla')
+        for nombre, tipo, subtipo in [('Birriería Don Chuy', 'comer', 'restaurant'),
+                                      ('Hotel Mazamitla Centro', 'dormir', 'hotel'),
+                                      ('Farmacia del Bosque', 'farmacia', 'pharmacy')]:
+            Lugar.objects.create(nombre=nombre, tipo=tipo, subtipo=subtipo, municipio=municipio,
+                                 latitud=19.9, longitud=-103.0)
+        Lugar.objects.create(nombre='Hotel cerrado', tipo='dormir', subtipo='hotel', latitud=19.9,
+                             longitud=-103.0, es_activo=False)
+
+    def sugerencias(self, q):
+        respuesta = self.client.get('/api/v1/sugerencias/', {'q': q})
+        self.assertEqual(respuesta.status_code, 200)
+        return respuesta.json()
+
+    def test_propone_destinos_municipios_y_lugares(self):
+        datos = self.sugerencias('mazamitla')
+        por_tipo = {}
+        for resultado in datos['resultados']:
+            por_tipo.setdefault(resultado['tipo'], []).append(resultado)
+        self.assertEqual(por_tipo['municipio'][0]['url'], '/destinos/?municipio=mazamitla')
+        self.assertEqual(por_tipo['destino'][0]['url'], '/destinos/mazamitla/')
+        self.assertEqual([lugar['nombre'] for lugar in por_tipo['lugar']], ['Hotel Mazamitla Centro'])
+        self.assertTrue(por_tipo['lugar'][0]['url'].startswith('/lugares/'))
+        self.assertEqual(datos['sugerencia'], '')
+
+    def test_errores_y_sinonimos(self):
+        nombres = [resultado['nombre'] for resultado in self.sugerencias('tlakepake')['resultados']]
+        self.assertIn('Tlaquepaque', nombres)
+        tipos = {resultado['tipo']: resultado for resultado in self.sugerencias('pueblos magicos')['resultados']}
+        self.assertEqual(tipos['coleccion']['nombre'], 'Pueblos Mágicos')
+        self.assertEqual(self.sugerencias('playa')['resultados'][0]['url'], '/destinos/?categoria=costa')
+
+    def test_lugares_sin_acentos_y_solo_activos(self):
+        nombres = [r['nombre'] for r in self.sugerencias('birrieria')['resultados'] if r['tipo'] == 'lugar']
+        self.assertEqual(nombres, ['Birriería Don Chuy'])
+        nombres = [r['nombre'] for r in self.sugerencias('hotel')['resultados'] if r['tipo'] == 'lugar']
+        self.assertEqual(nombres, ['Hotel Mazamitla Centro'])
+
+    def test_texto_corto_o_vacio(self):
+        for q in ['', 'a', '  ', '¿?']:
+            with self.subTest(q=q):
+                self.assertEqual(self.sugerencias(q), {'resultados': [], 'sugerencia': ''})
+
+    def test_texto_largo_se_recorta(self):
+        self.assertEqual(self.client.get('/api/v1/sugerencias/', {'q': 'x' * 5000}).status_code, 200)
+
+    def test_tiene_limite_de_peticiones(self):
+        from .views import SugerenciasThrottle
+        self.assertEqual(SugerenciasThrottle.rate, '120/min')
+
+
+@skipUnless(connection.vendor == 'postgresql', 'Solo en PostgreSQL')
+class PostgresBusquedaTests(TestCase):
+    def test_extensiones_e_indice_de_trigramas(self):
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT extname FROM pg_extension WHERE extname IN ('unaccent', 'pg_trgm')")
+            self.assertEqual({fila[0] for fila in cursor.fetchall()}, {'unaccent', 'pg_trgm'})
+            cursor.execute("SELECT indexdef FROM pg_indexes WHERE indexname = 'lugar_nombre_trgm_idx'")
+            self.assertIn('gin_trgm_ops', cursor.fetchone()[0])
+
+    def test_la_busqueda_de_lugares_puede_usar_el_indice(self):
+        from .busqueda import lugares_por_nombre
+        with CaptureQueriesContext(connection) as consultas:
+            lugares_por_nombre('birrieria')
+        sql = consultas[-1]['sql']
+        # UPPER(nombre) LIKE impediría usar el índice GIN: deben ser ~* y %> sobre la columna.
+        self.assertIn('~*', sql)
+        self.assertIn('%>', sql)
+        self.assertNotIn('UPPER("destinos_lugar"."nombre")', sql)
