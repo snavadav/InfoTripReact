@@ -415,3 +415,7 @@ summary { cursor: pointer; font-size: .9375rem; font-weight: 550; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; scroll-behavior: auto !important; }
 }
+
+/* En fecha y hora, el último Tab enfoca el botón del calendario o reloj: el campo deja de coincidir con :focus
+   y perdía el contorno. :focus-within sí lo detecta (WCAG 2.4.7). */
+input[type="date"]:focus-within, input[type="time"]:focus-within { outline: 3px solid var(--foco); outline-offset: 0; }

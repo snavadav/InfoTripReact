@@ -19,7 +19,7 @@ from apps.comunidad.selectors import (
     costos_por_destino, cronistas, estado_de_lugar, ficha_practica, misiones_por_destino, preguntas_publicas,
     gasto_de_lugar, resenas_publicas_de_lugar, resumen, TIPOS_CON_GASTO,
 )
-from .filtros import filtrar_destinos
+from .filtros import buscar_y_filtrar
 from .lugares import activos as lugares_activos, cercanos_de_destino
 from .management.commands.sembrar_contenido import TEXTO_AUTOMATICO
 from .fotos import FOTOS_CATALOGO
@@ -86,8 +86,14 @@ def presentar(destino):
 def completar(lugar):
     lugar = dict(lugar)
     lugar['url'] = reverse('destino-detalle', kwargs={'slug': lugar['slug']})
+    del_catalogo = bool(lugar['imagen']) and not lugar.get('foto_url')
     lugar['foto_url'] = lugar.get('foto_url') or (static(lugar['imagen']) if lugar['imagen'] else '')
     lugar['miniatura_url'] = lugar.get('miniatura_url') or lugar['foto_url']
+    # Versiones WebP de scripts/imagenes_webp.py: icono de 160 px para las tarjetas (56-76 px) y foto de
+    # 828 px para la ficha, que en móvil evita descargar el JPEG de 1280 px.
+    base = lugar['imagen'].rsplit('.', 1)[0] if del_catalogo else ''
+    lugar['icono_url'] = static(base + '-i.webp') if base else lugar['miniatura_url']
+    lugar['foto_ficha_url'] = static(base + '-828.webp') if base else ''
     if lugar['editorial']:
         # En inspiración se busca el nombre del lugar; no se inventa un punto GPS.
         destino_maps = f"{lugar['nombre']}, Jalisco, México"
@@ -99,11 +105,15 @@ def completar(lugar):
 
 
 def primero_lo_curado(destinos):
-    """Primero lo que tiene fotografía; después, lo registrado por el equipo antes que lo importado."""
+    """Primero lo que tiene fotografía; después, lo registrado por el equipo antes que lo importado.
+
+    Si hubo búsqueda por texto, la relevancia va antes y esto solo desempata.
+    """
     con_foto = Case(When(slug__in=list(FOTOS_CATALOGO), then=Value(True)), default=Value(False),
                     output_field=BooleanField())
+    relevancia = ['-relevancia'] if 'relevancia' in destinos.query.annotations else []
     return destinos.annotate(con_foto_de_catalogo=con_foto).order_by(
-        '-con_foto_de_catalogo', F('osm_id').asc(nulls_first=True), 'nombre', 'pk'
+        *relevancia, '-con_foto_de_catalogo', F('osm_id').asc(nulls_first=True), 'nombre', 'pk'
     )
 
 
@@ -190,6 +200,8 @@ class ExploracionForm(forms.Form):
 
     def __init__(self, *args, editorial=False, **kwargs):
         super().__init__(*args, **kwargs)
+        if not editorial:
+            self.fields['q'].widget.attrs['data-autocompletar'] = reverse('destinos:sugerencias')
         # Solo lo que tiene destinos publicados: un filtro sin resultados no le sirve a nadie.
         for campo, modelo, relacion in [
             ('categoria', Categoria, 'destinos__es_activo'),
@@ -209,6 +221,7 @@ def listado(request):
     valido = formulario.is_valid()
     datos = formulario.cleaned_data if valido else {}
     texto = datos.get('q', '')
+    sugerencia = ''
     if editorial:
         resultados = (
             [
@@ -231,7 +244,7 @@ def listado(request):
         )
     else:
         queryset = con_info_reciente(destinos_publicos(con_fotos=True))
-        resultados = filtrar_destinos(queryset, datos) if valido else queryset.none()
+        resultados, sugerencia = buscar_y_filtrar(queryset, datos) if valido else (queryset.none(), '')
         if not datos.get('orden'):
             resultados = primero_lo_curado(resultados)
     pagina = Paginator(resultados, 8).get_page(request.GET.get('page'))
@@ -242,6 +255,10 @@ def listado(request):
         lugares.append(lugar)
     # El mapa muestra todos los resultados, no solo los de esta página de la lista.
     puntos = [] if editorial else [punto_de_mapa(destino) for destino in resultados]
+    # Sin búsqueda ni filtros, el navegador ordena por cercanía los puntos del mapa y muestra los más cercanos
+    # arriba de la primera página. La ubicación nunca llega al servidor: aquí solo se decide si ofrecerlo.
+    sin_busqueda = valido and not any(v not in (None, '', False) for v in datos.values())
+    cerca_de_ti = sin_busqueda and pagina.number == 1 and bool(puntos)
     return render(
         request,
         'destinos/listado.html',
@@ -253,8 +270,12 @@ def listado(request):
             'categoria': datos.get('categoria', ''),
             'filtros': urlencode({k: v for k, v in datos.items() if v not in (None, '', False)}),
             'filtros_activos': any(v not in (None, '', False) for k, v in datos.items() if k != 'q'),
+            'sugerencia': sugerencia,
+            'filtros_sugerencia': urlencode({**{k: v for k, v in datos.items() if v not in (None, '', False)},
+                                             'q': sugerencia}) if sugerencia else '',
             'puntos_mapa': puntos,
             'editorial': editorial,
+            'cerca_de_ti': cerca_de_ti,
         },
     )
 

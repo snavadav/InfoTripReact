@@ -6,6 +6,7 @@ Ejecución:            E2E=1 python manage.py test e2e --settings=infotrip.setti
 import os
 import re
 from datetime import date
+from urllib.parse import quote
 from unittest import skipUnless
 
 from io import BytesIO
@@ -19,10 +20,13 @@ from apps.comunidad.models import Aporte, Colaboracion, Comentario, InteresNegoc
 from apps.comunidad.moderacion import moderar
 from apps.destinos.models import Categoria, Destino, Lugar, Municipio, Region
 from apps.metricas.models import Evento
+from apps.rutas.models import RutaCompartida
 from apps.usuarios.models import Usuario
 
 CLAVE = 'Prueba-segura-493!'
 SIN_SALUDO = "try { localStorage.setItem('infotrip_axo_saludo', new Date().toLocaleDateString('en-CA')); } catch {}"
+# El botón "Instalar app" (iPhone o Chrome instalable) no debe tapar nada en las demás pruebas.
+SIN_INSTALAR = "try { localStorage.setItem('infotrip_instalar_cerrado', '1'); } catch {}"
 
 
 @skipUnless(os.environ.get('E2E'), 'Pruebas de navegador: definir E2E=1')
@@ -58,7 +62,10 @@ class FlujosTests(StaticLiveServerTestCase):
         self.pagina.on('response', self.revisar_respuesta)
 
     def nuevo_contexto(self, saludo=False, **opciones):
+        # Playwright no ve ni intercepta lo que pide un service worker: solo la prueba de la app lo activa.
+        opciones.setdefault('service_workers', 'block')
         contexto = self.navegador.new_context(**opciones)
+        contexto.add_init_script(SIN_INSTALAR)
         if not saludo:
             # La burbuja de bienvenida de Axo ya salió hoy: así no tapa botones en las demás pruebas.
             contexto.add_init_script(SIN_SALUDO)
@@ -95,10 +102,44 @@ class FlujosTests(StaticLiveServerTestCase):
         self.pagina.wait_for_url(lambda url: '/login/' not in url)
 
     def test_paginas_publicas_sin_violaciones_de_csp(self):
-        for ruta in ['/', '/destinos/', '/destinos/mirador/', '/destinos/mirador/costos/', '/costos/', '/misiones/', '/pasaporte/', '/negocios/', '/planeador/', '/lugares/proponer/', '/login/', '/registro/', '/api/v1/docs/', '/no-existe/']:
+        for ruta in ['/', '/destinos/', '/destinos/mirador/', '/destinos/mirador/costos/', '/costos/', '/misiones/', '/pasaporte/', '/negocios/', '/planeador/', '/lugares/proponer/', '/login/', '/registro/', '/api/v1/docs/', '/no-existe/',
+                     '/sin-conexion/']:
             with self.subTest(ruta=ruta):
                 self.abrir(ruta)
                 self.pagina.wait_for_load_state('load')
+
+    def test_sin_senal_se_ve_lo_guardado_o_la_pagina_sin_conexion(self):
+        self.contexto.close()
+        self.contexto = self.nuevo_contexto(service_workers='allow')
+        self.pagina = self.contexto.new_page()
+        self.pagina.on('console', self.revisar_consola)
+        self.pagina.on('response', self.revisar_respuesta)
+        self.abrir('/destinos/')
+        # Con clients.claim() el service worker controla la página en cuanto se activa.
+        # (evaluate y no wait_for_function: este evalúa texto en la página y la CSP lo bloquea).
+        self.pagina.evaluate("navigator.serviceWorker.controller || new Promise(listo =>"
+                             " navigator.serviceWorker.addEventListener('controllerchange', listo))")
+        self.abrir('/destinos/mirador/')
+        self.pagina.wait_for_load_state('load')
+        self.assertTrue(self.pagina.evaluate("caches.keys().then(n => n.some(c => c.startsWith('infotrip-paginas-')))"))
+
+        self.contexto.set_offline(True)
+        self.pagina.reload()
+        self.pagina.get_by_role('heading', name='Mirador', level=1).wait_for()
+
+        # Una página que no se visitó: la de sin conexión, con lo que sí está guardado.
+        self.abrir('/misiones/')
+        self.pagina.get_by_role('heading', name='Estás sin conexión').wait_for()
+        guardadas = self.pagina.locator('#paginasGuardadas a')
+        guardadas.first.wait_for()
+        rutas = guardadas.evaluate_all('enlaces => enlaces.map(a => a.getAttribute("href"))')
+        self.assertIn('/destinos/mirador/', rutas)
+        # La API nunca se guarda: sin red falla aunque se haya pedido antes.
+        self.assertFalse(self.pagina.evaluate(
+            "caches.keys().then(async nombres => { for (const n of nombres) {"
+            " for (const p of await (await caches.open(n)).keys()) if (new URL(p.url).pathname.startsWith('/api/'))"
+            " return true; } return false; })"))
+        self.contexto.set_offline(False)
 
     def test_el_mapa_de_la_portada_se_puede_abrir(self):
         self.abrir('/')
@@ -108,8 +149,10 @@ class FlujosTests(StaticLiveServerTestCase):
     def test_sesion_en_cookie_y_no_en_localstorage(self):
         self.iniciar_sesion()
         visibles = self.pagina.evaluate('[Object.keys(localStorage), document.cookie]')
-        # Fuera de la sesión solo queda la fecha del saludo de Axo, que no identifica a nadie.
-        self.assertEqual([clave for clave in visibles[0] if clave != 'infotrip_axo_saludo'], ['usuario'])
+        # Fuera de la sesión solo quedan la fecha del saludo de Axo y la marca de "Instalar app" cerrado,
+        # que no identifican a nadie (las pone el init script de las pruebas).
+        preferencias = {'infotrip_axo_saludo', 'infotrip_instalar_cerrado'}
+        self.assertEqual([clave for clave in visibles[0] if clave not in preferencias], ['usuario'])
         self.assertNotIn('infotrip_refresh', visibles[1])
         cookie = next(c for c in self.contexto.cookies() if c['name'] == 'infotrip_refresh')
         self.assertTrue(cookie['httpOnly'])
@@ -441,6 +484,72 @@ class FlujosTests(StaticLiveServerTestCase):
         self.pagina.wait_for_selector('.lugar-popup:has-text("Fonda Doña Ana")')
         self.assertEqual(self.pagina.get_attribute('.lugar-popup a[href^="tel:"]', 'href'), 'tel:331234')
 
+    def crear_destinos_para_cercania(self):
+        municipio = Municipio.objects.create(nombre='Zapopan', slug='zapopan', region=self.destino.municipio.region)
+        Destino.objects.create(nombre='Bosque cercano', slug='bosque-cercano', municipio=municipio, descripcion='-',
+                               latitud=20.70, longitud=-103.40)
+        Destino.objects.create(nombre='Lago lejano', slug='lago-lejano', municipio=municipio, descripcion='-',
+                               latitud=21.50, longitud=-104.90)
+
+    def test_explorar_sin_busqueda_muestra_primero_lo_cercano(self):
+        self.crear_destinos_para_cercania()
+        self.contexto.grant_permissions(['geolocation'], origin=self.live_server_url)
+        self.contexto.set_geolocation({'latitude': 20.6597, 'longitude': -103.3496})
+        peticiones = []
+        self.pagina.on('request', lambda p: peticiones.append(p.url + (p.post_data or '')))
+        self.abrir('/destinos/')
+        # Con el permiso ya concedido se ordena sola, sin preguntar.
+        self.pagina.wait_for_selector('#cerca-destinos-lista .trip-card')
+        self.assertTrue(self.pagina.is_hidden('#cerca-destinos-pedir'))
+        tarjetas = self.pagina.locator('#cerca-destinos-lista .trip-card')
+        self.assertEqual(tarjetas.count(), 3)
+        self.assertEqual(tarjetas.first.get_attribute('data-slug'), 'bosque-cercano')
+        self.assertIn('Zapopan · 6.9 km', tarjetas.first.inner_text())
+        self.assertIn('Tapalpa · 92 km', tarjetas.nth(1).inner_text())
+        self.assertIn('3 destinos más cercanos', self.pagina.inner_text('#cerca-destinos-estado'))
+        # La lista normal sigue debajo y el mapa se centra en la persona.
+        self.assertEqual(self.pagina.locator('.trip-grid:not(#cerca-destinos-lista) .trip-card').count(), 3)
+        self.pagina.wait_for_selector('path.mi-ubicacion', state='attached')
+        self.assertGreater(self.pagina.evaluate('InfoTripExplorador.map.getCenter().lat'), 20.2)
+        # Una tarjeta cercana abre el destino en el mapa, igual que las de la lista.
+        tarjetas.first.click()
+        self.pagina.wait_for_selector('#place-name:has-text("Bosque cercano")')
+        # La ubicación no sale del navegador ni se guarda.
+        self.pagina.wait_for_load_state('networkidle')
+        self.assertFalse([url for url in peticiones if '20.659' in url or '103.349' in url])
+        self.assertNotIn('20.659', self.pagina.url + self.pagina.evaluate('JSON.stringify(localStorage)'))
+        # Si después busca o filtra, manda su búsqueda.
+        self.pagina.fill('#id_q', 'Lago')
+        self.pagina.press('#id_q', 'Enter')
+        self.pagina.wait_for_url(lambda url: 'q=Lago' in url)
+        self.assertEqual(self.pagina.locator('#cerca-destinos').count(), 0)
+        self.assertEqual(self.pagina.locator('.trip-card').count(), 1)
+
+    def test_sin_permiso_se_pide_con_un_toque_y_un_rechazo_deja_la_lista(self):
+        self.crear_destinos_para_cercania()
+        self.pagina.set_viewport_size({'width': 375, 'height': 812})
+        self.abrir('/destinos/')
+        # Sin permiso no se pide la ubicación al cargar: se ofrece una tarjeta grande.
+        boton = self.pagina.get_by_role('button', name=re.compile('Ver qué hay cerca de ti'))
+        boton.wait_for()
+        self.assertGreaterEqual(boton.bounding_box()['height'], 44)
+        self.assertEqual(self.pagina.evaluate('document.documentElement.scrollWidth'), 375)
+        self.assertEqual(self.pagina.locator('#cerca-destinos-lista .trip-card').count(), 0)
+        # Chromium sin permiso responde como un rechazo: mensaje amable y la lista de siempre.
+        boton.focus()
+        self.pagina.keyboard.press('Enter')
+        self.pagina.wait_for_selector('#cerca-destinos-estado:has-text("No diste permiso")')
+        self.assertEqual(self.pagina.evaluate('document.activeElement.id'), 'cerca-destinos-titulo')
+        self.assertEqual(self.pagina.locator('.explorer-list .trip-card').count(), 3)
+        # Con el permiso concedido, al volver ya no pregunta: se ordena sola.
+        self.contexto.grant_permissions(['geolocation'], origin=self.live_server_url)
+        self.contexto.set_geolocation({'latitude': 21.49, 'longitude': -104.89})
+        self.abrir('/destinos/')
+        self.pagina.wait_for_selector('#cerca-destinos-lista .trip-card')
+        self.assertEqual(self.pagina.locator('#cerca-destinos-lista .trip-card').first.get_attribute('data-slug'),
+                         'lago-lejano')
+        self.assertEqual(self.pagina.evaluate('document.documentElement.scrollWidth'), 375)
+
     def test_mover_el_mapa_no_cierra_el_lugar_abierto(self):
         Lugar.objects.create(nombre='Fonda Doña Ana', tipo='comer', subtipo='restaurant', latitud=19.9, longitud=-103.7)
         self.abrir('/destinos/')
@@ -547,6 +656,50 @@ class FlujosTests(StaticLiveServerTestCase):
         self.assertEqual(list(viaje.lugares.all()), [self.destino])
         self.assertEqual(viaje.actividades[0]['titulo'], 'Mirador')
         self.assertIn('Dormir: Cabañas del Bosque', [a['titulo'] for a in viaje.actividades])
+
+    def test_compartir_una_ruta_por_enlace(self):
+        self.armar_ruta_de_dos_dias()
+        self.assertIn('google.com/maps/dir/', self.pagina.get_attribute('#ruta-detalle .planeador-dia-mapa a', 'href'))
+        self.pagina.click('#ruta-compartir')
+        self.pagina.wait_for_selector('#ruta-compartir-panel:not([hidden])')
+        ruta = RutaCompartida.objects.get()
+        enlace = self.pagina.input_value('#ruta-enlace')
+        self.assertEqual(enlace, f'{self.live_server_url}/planeador/r/{ruta.enlace}/')
+        # El foco queda en el enlace, listo para copiarlo; WhatsApp lleva el texto y el enlace, nada más.
+        self.assertEqual(self.pagina.evaluate('document.activeElement.id'), 'ruta-enlace')
+        whatsapp = self.pagina.get_attribute('#ruta-compartir-panel [data-whatsapp]', 'href')
+        self.assertTrue(whatsapp.startswith('https://wa.me/?text='))
+        self.assertIn(quote(enlace, safe=''), whatsapp)
+        self.assertIn('hasta el', self.pagina.inner_text('#ruta-compartir-panel'))
+
+        with self.pagina.expect_download() as descarga:
+            self.pagina.click('#ruta-ics')
+        self.assertIn('BEGIN:VEVENT', open(descarga.value.path(), encoding='utf-8').read())
+
+        # Quien recibe el enlace ve la ruta sin cuenta, con su mapa, y puede armar la suya.
+        self.abrir(f'/planeador/r/{ruta.enlace}/')
+        self.assertIn('Ruta de 2 días desde Tapalpa', self.pagina.inner_text('h1'))
+        self.assertIn('Mirador', self.pagina.inner_text('main'))
+        self.pagina.wait_for_selector('#ruta-mapa .pin-ruta')
+        self.assertEqual(self.pagina.get_attribute('meta[name="robots"]', 'content'), 'noindex')
+        self.pagina.focus('.planeador-compartir [data-copiar]')
+        self.pagina.keyboard.press('Enter')
+        self.pagina.wait_for_selector('.planeador-compartir [data-compartir-estado]:not(:empty)')
+        self.pagina.click('text=Armar mi propia ruta')
+        self.pagina.wait_for_url('**/planeador/')
+
+    def test_ruta_compartida_con_cuenta_se_borra_desde_el_perfil(self):
+        self.iniciar_sesion()
+        self.armar_ruta_de_dos_dias()
+        self.pagina.click('#ruta-compartir')
+        self.pagina.wait_for_selector('#ruta-compartir-panel:not([hidden])')
+        self.assertIn('Queda en tu perfil', self.pagina.inner_text('#ruta-compartir-panel'))
+        self.abrir('/perfil/')
+        self.pagina.wait_for_selector('#my-shared-routes h3 a')
+        self.pagina.on('dialog', lambda dialogo: dialogo.accept())
+        self.pagina.click('#my-shared-routes button:has-text("Borrar")')
+        self.pagina.wait_for_selector('#shared-routes-status:has-text("Ruta borrada")')
+        self.assertFalse(RutaCompartida.objects.exists())
 
     def armar_ruta_de_dos_dias(self):
         self.destino.categorias.add(Categoria.objects.create(nombre='Miradores', slug='miradores'))
@@ -754,3 +907,34 @@ class FlujosTests(StaticLiveServerTestCase):
         self.abrir('/')
         animacion = self.pagina.evaluate("getComputedStyle(document.querySelector('#trip-chat-toggle .pj-cuerpo')).animationName")
         self.assertEqual(animacion, 'none')
+
+    def test_autocompletar_con_errores_y_solo_teclado(self):
+        Destino.objects.create(nombre='Tlaquepaque', slug='tlaquepaque', municipio=self.destino.municipio,
+                               descripcion='Pueblo de artesanos', latitud=20.6, longitud=-103.3)
+        self.abrir('/')
+        campo = self.pagina.locator('#destination-query')
+        campo.press_sequentially('tlakepake')
+        lista = self.pagina.locator('#' + campo.get_attribute('aria-controls'))
+        opcion = lista.get_by_role('option', name=re.compile('Tlaquepaque'))
+        opcion.first.wait_for()
+        self.assertEqual(campo.get_attribute('aria-expanded'), 'true')
+        campo.press('ArrowDown')
+        primera = lista.get_by_role('option').first
+        self.assertEqual(campo.get_attribute('aria-activedescendant'), primera.get_attribute('id'))
+        campo.press('Escape')
+        self.assertEqual(campo.get_attribute('aria-expanded'), 'false')
+        campo.press('ArrowDown')
+        campo.press('ArrowDown')
+        campo.press('Enter')
+        self.pagina.wait_for_url(re.compile('/destinos/tlaquepaque/'))
+
+    def test_explorar_sugiere_cuando_hay_errores_y_conserva_filtros(self):
+        self.abrir('/destinos/?q=tapqlpa')
+        self.assertIn('¿Quisiste decir', self.pagina.locator('.search-suggestion').inner_text())
+        self.pagina.locator('.search-suggestion a').click()
+        self.pagina.wait_for_url(re.compile(r'q=Tapalpa'))
+        campo = self.pagina.locator('#id_q')
+        self.assertEqual(campo.get_attribute('role'), 'combobox')
+        campo.fill('')
+        campo.press_sequentially('mira')
+        self.pagina.locator('[role="option"]', has_text='Mirador').first.wait_for()

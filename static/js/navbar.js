@@ -36,6 +36,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const main = document.querySelector('main');
   if (main && !main.id) main.id = 'contenido';
   if (main && !main.hasAttribute('tabindex')) main.setAttribute('tabindex', '-1');
+  // Algunas páginas ya nombran su <main> (p. ej. #pasaporte): el enlace apunta a ese id y no a uno inexistente.
+  const salto = document.querySelector('.skip-link');
+  if (main && salto) salto.setAttribute('href', `#${main.id}`);
 });
 
 // ── Sesión ──
@@ -87,3 +90,12 @@ function getCookie(name) {
   const parts = value.split(`; ${name}=`);
   if (parts.length === 2) return parts.pop().split(';').shift();
 }
+
+// ── Foco completo en barras que se desplazan de lado ──
+// En las barras de botones con desplazamiento horizontal (filtros, lugares del mapa), Chromium solo desplaza
+// lo justo y el botón enfocado con Tab puede quedar recortado. Se lleva entero a la vista (WCAG 2.4.11).
+document.addEventListener('focusin', event => {
+  const barra = event.target.parentElement;
+  if (!barra || !/auto|scroll/.test(getComputedStyle(barra).overflowX)) return;
+  event.target.scrollIntoView({block: 'nearest', inline: 'nearest'});
+});

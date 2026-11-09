@@ -132,14 +132,22 @@
       const datos = await respuesta.json();
       const lista = datos.results || [];
       const total = datos.count ?? lista.length;
+      // La API corrige errores de escritura; sin resultados, propone el nombre más parecido.
+      const sugerencia = datos.sugerencia || '';
+      if (!lista.length && sugerencia) {
+        message(`No encontré «${texto}» en el catálogo. ¿Quisiste decir «${sugerencia}»?`);
+        setChoices([['Buscar otro destino', 'search']], [[`Ver «${sugerencia}» →`, `${links.catalog}?${new URLSearchParams({ q: sugerencia })}`]]);
+        return;
+      }
       if (!lista.length) {
         message(`No encontré «${texto}» en el catálogo. No invento lugares: puede que todavía no lo tengamos.\n\nPrueba con el nombre del municipio o explora el mapa.`);
         setChoices([['Buscar otro destino', 'search'], ['¿Qué hay cerca de mí?', 'nearby']], [['Explorar el catálogo →', 'catalog']]);
         return;
       }
+      const buscado = sugerencia || texto;
       const intro = costos
-        ? `Esto encontré para «${texto}». En cada enlace ves los costos reportados (cifra con ${MINIMO_REPORTES} reportes o más):`
-        : `Encontré ${total === 1 ? '1 destino' : `${total} destinos`} para «${texto}»:`;
+        ? `Esto encontré para «${buscado}». En cada enlace ves los costos reportados (cifra con ${MINIMO_REPORTES} reportes o más):`
+        : `Encontré ${total === 1 ? '1 destino' : `${total} destinos`} para «${buscado}»:`;
       const bubble = message(intro);
       resultados(bubble, lista.slice(0, MAXIMO_RESULTADOS).map(destino => ({
         href: `${links.catalog}${encodeURIComponent(destino.slug)}/${costos ? 'costos/' : ''}`,

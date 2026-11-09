@@ -8,6 +8,7 @@
 	encode zstd gzip
 	# Caddy reemplaza X-Forwarded-For con la IP real del visitante (no confía en la que mande él)
 	# y añade X-Forwarded-Proto: https. nginx los pasa tal cual a Django.
+	# Las cabeceras de Django (incluido "Cache-Control: no-cache" de /sw.js) pasan sin cambios.
 	reverse_proxy nginx:80
 }
 

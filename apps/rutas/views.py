@@ -11,6 +11,7 @@ from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from rest_framework.views import APIView
 
 from apps.metricas.models import registrar
+from .exportar import con_enlaces
 from .servicio import RITMOS, RADIO_KM, intereses_disponibles, municipios_de_salida, planear
 
 HORA = r'^([01][0-9]|2[0-3]):[0-5][0-9]$'
@@ -89,15 +90,21 @@ class PlanearRutaView(APIView):
         peticion = PeticionRutaSerializer(data=request.data)
         peticion.is_valid(raise_exception=True)
         datos = peticion.validated_data
-        plan = planear(
-            datos['origen'], datos['fecha'], datos['dias'], _minutos(datos['hora_inicio']),
-            _minutos(datos['hora_fin']), datos['intereses'], datos['ritmo'], datos['personas'],
-            datos.get('presupuesto'), datos['regresar'],
-        )
-        plan['origen'] = {'nombre': datos['origen_nombre'], 'latitud': datos['origen'][0],
-                          'longitud': datos['origen'][1]}
+        plan = con_enlaces(armar_plan(datos), datos['regresar'], origen_publico='municipio' in datos)
         registrar('ruta_planeada', usuario=request.user if request.user.is_authenticated else None)
         return Response(plan)
+
+
+def armar_plan(datos):
+    """El plan para una petición ya validada, con su punto de salida."""
+    plan = planear(
+        datos['origen'], datos['fecha'], datos['dias'], _minutos(datos['hora_inicio']),
+        _minutos(datos['hora_fin']), datos['intereses'], datos['ritmo'], datos['personas'],
+        datos.get('presupuesto'), datos['regresar'],
+    )
+    plan['origen'] = {'nombre': datos['origen_nombre'], 'latitud': datos['origen'][0],
+                      'longitud': datos['origen'][1]}
+    return plan
 
 
 def pagina_planeador(request):

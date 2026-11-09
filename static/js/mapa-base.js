@@ -87,7 +87,10 @@ window.InfoTripMapa = (() => {
   }
 
   function crear(contenedor, {rueda = true, alFallarFondo = null} = {}) {
-    const mapa = L.map(contenedor, {scrollWheelZoom: rueda, zoomControl: false});
+    // Con movimiento reducido, el mapa salta al nuevo zoom o posición sin animar (WCAG 2.3.3).
+    const quieto = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const mapa = L.map(contenedor, {scrollWheelZoom: rueda, zoomControl: false, zoomAnimation: !quieto,
+                                    fadeAnimation: !quieto, markerZoomAnimation: !quieto, inertia: !quieto});
     L.control.zoom({position: 'topright', zoomInTitle: 'Acercar', zoomOutTitle: 'Alejar'}).addTo(mapa);
     mapa.attributionControl.setPrefix(false);
     const fondo = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
