@@ -139,6 +139,22 @@ jobs:
           docker compose --env-file .env.docker exec -T respaldos sh -c 'PGPASSWORD="$POSTGRES_PASSWORD" pg_dump -h db -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Fc -f /respaldos/ci.dump'
           docker compose --env-file .env.docker exec -T respaldos sh -c 'PGPASSWORD="$POSTGRES_PASSWORD" pg_restore -h db -U "$POSTGRES_USER" -d "$POSTGRES_DB" --clean --if-exists --no-owner /respaldos/ci.dump'
           curl --fail --silent --show-error http://localhost:8080/health/
+      - name: Script de respaldo sin S3 configurado (y con S3 inalcanzable)
+        run: |
+          set -o pipefail
+          dc="docker compose --env-file .env.docker"
+          # El servicio respalda al arrancar: se espera a que termine para no escribir los mismos archivos a la vez.
+          timeout 120 sh -c "until $dc logs respaldos | grep -q 'Respaldo completo'; do sleep 2; done"
+          $dc exec -T respaldos aws --version
+          # RESPALDO_S3_BUCKET viene vacío de la plantilla: solo copia local, sin tocar AWS.
+          $dc exec -T respaldos sh /respaldo.sh --una-vez | tee salida.txt
+          if grep -q S3 salida.txt; then exit 1; fi
+          $dc exec -T respaldos sh -c 'pg_restore --list "$(ls -t /respaldos/db-*.dump | head -1)" > /dev/null'
+          $dc exec -T respaldos sh -c 'tar -tzf "$(ls -t /respaldos/media-*.tar.gz | head -1)" | grep -q prueba-ci.txt'
+          # Con un bucket pero sin credenciales: falla avisando, y la copia local sí queda.
+          if $dc exec -T -e RESPALDO_S3_BUCKET=infotrip-ci-inexistente -e AWS_EC2_METADATA_DISABLED=true \
+              respaldos sh /respaldo.sh --una-vez 2>&1 | tee salida.txt; then exit 1; fi
+          grep -q 'la copia local sí quedó' salida.txt
       - name: Comprobar la protección CSRF de la sesión a través de nginx
         run: |
           token=csrfprueba0123456789abcdef012345
