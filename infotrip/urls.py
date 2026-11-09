@@ -25,6 +25,7 @@ from apps.destinos.frontend import (
 )
 from apps.curador.views import etiquetar as etiquetar_lugares
 from apps.metricas.views import EventosView, panel as panel_metricas
+from apps.rutas.compartir import calendario_ruta, pagina_ruta_compartida
 from apps.rutas.views import pagina_planeador
 
 
@@ -81,6 +82,8 @@ urlpatterns = [
     path('costos/', costos_indice, name='costos-indice'),
     path('misiones/', misiones, name='misiones'),
     path('planeador/', pagina_planeador, name='planeador'),
+    path('planeador/r/<uuid:enlace>/', pagina_ruta_compartida, name='ruta-compartida'),
+    path('planeador/r/<uuid:enlace>/calendario.ics', calendario_ruta, name='ruta-compartida-ics'),
     path('lugares/proponer/', proponer_lugar, name='proponer-lugar'),
     path('lugares/<int:pk>/', lugar_detalle, name='lugar-detalle'),
     path('',          inicio,         name='index'),

@@ -1,0 +1,13 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}Este enlace caducó — InfoTrip{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/comunidad.css' %}"><link rel="stylesheet" href="{% static 'css/planeador.css' %}">{% endblock %}
+{% block content %}{% include 'partials/navBar.html' %}
+<main class="explore-shell legal-page planeador">
+  <span class="eyebrow">Ruta compartida</span>
+  <h1>Este enlace caducó</h1>
+  <p>Las rutas que se comparten sin cuenta duran 90 días. Puedes armar una nueva en un momento; si inicias sesión antes de compartirla, se queda en tu perfil hasta que la borres.</p>
+  <p><a class="planeador-boton-principal" href="{% url 'planeador' %}">Armar mi propia ruta</a></p>
+  {% include 'destinos/footer.html' %}
+</main>
+{% endblock %}
