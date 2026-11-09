@@ -226,7 +226,7 @@ alias dc='docker compose -f docker-compose.yml -f docker-compose.aws.yml --env-f
 
 - Abre `https://infotrip.online`. El candado debe aparecer: Caddy pide el certificado solo, en menos de un minuto.
 - `https://www.infotrip.online` debe llevarte a `https://infotrip.online`.
-- `https://…/health/` debe responder `{"status": "ok"}` o similar.
+- `https://infotrip.online/health/` debe responder `{"estado": "ok", "base_de_datos": "ok", "cache": "ok"}`.
 - Recorre en el celular: registro (el código llega por correo), mapa, **Cerca de mí** (pide permiso de ubicación),
   ficha, reseña, costos, Mis viajes, planeador y comentarios.
 - Si algo falla, revisa los registros:
@@ -249,6 +249,242 @@ Para dar acceso de moderación a una persona del equipo, después de que se regi
 dc exec web python manage.py crear_moderacion --agregar correo@ejemplo.com
 ```
 
+## Paso 10. Respaldos en S3
+
+Sin este paso, los respaldos diarios quedan en el mismo servidor y se pierden con él. Aquí se crea un bucket donde el
+servidor sube cada copia usando un rol de IAM, sin guardar llaves en el servidor. Quedan **7 copias diarias y 4
+semanales**. Toma unos 15 minutos.
+
+**Costo.** Cada copia es la base más las fotos. Mide su tamaño con `dc exec respaldos du -sh /respaldos` y divídelo
+entre las copias que haya. Con copias de 200 MB, las 11 suman ≈ 2.2 GB, unos **US$0.05 al mes** de los créditos. Subir
+datos a S3 no se cobra. La alerta de presupuesto del paso 1 avisa si el gasto crece.
+
+Haz todo en la **misma región que la instancia** (`us-east-2`, Ohio).
+
+### 10.1 Crear el bucket
+
+*S3 → Create bucket*:
+
+| Campo | Valor |
+|---|---|
+| Bucket type | General purpose |
+| Bucket name | `infotrip-respaldos-` más algo único, por ejemplo la fecha: `infotrip-respaldos-20261109`. El nombre es global en todo AWS. |
+| Object Ownership | ACLs disabled |
+| Block Public Access | **Block all public access** marcado |
+| Bucket Versioning | Disable: con versiones, las copias borradas seguirían ocupando y cobrándose |
+| Default encryption | SSE-S3 |
+
+Pulsa *Create bucket* y **anota el nombre**.
+
+### 10.2 Reglas de borrado automático
+
+En el bucket, *Management → Create lifecycle rule*. Crea dos reglas:
+
+| Campo | Regla 1 | Regla 2 |
+|---|---|---|
+| Lifecycle rule name | `diarias-7-dias` | `semanales-28-dias` |
+| Rule scope | *Limit the scope… using filters*, prefijo `infotrip/diarias/` | prefijo `infotrip/semanales/` |
+| Actions | *Expire current versions of objects* y *Delete expired object delete markers or incomplete multipart uploads* | igual |
+| Days after object creation | **7** | **28** |
+| Delete incomplete multipart uploads | 1 día | 1 día |
+
+Las subidas incompletas son restos de una subida cortada: también ocupan espacio y se cobran.
+
+### 10.3 Permiso mínimo
+
+*IAM → Policies → Create policy → JSON*. Pega esto, cambia las dos veces `NOMBRE-DEL-BUCKET` y llama a la política
+`infotrip-respaldos-s3`:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "SubirYLeerRespaldos",
+      "Effect": "Allow",
+      "Action": ["s3:PutObject", "s3:GetObject"],
+      "Resource": "arn:aws:s3:::NOMBRE-DEL-BUCKET/infotrip/*"
+    },
+    {
+      "Sid": "ListarRespaldos",
+      "Effect": "Allow",
+      "Action": "s3:ListBucket",
+      "Resource": "arn:aws:s3:::NOMBRE-DEL-BUCKET",
+      "Condition": {"StringLike": {"s3:prefix": ["infotrip/*"]}}
+    }
+  ]
+}
+```
+
+La política deja subir, leer y listar copias solo dentro de `infotrip/`. **No deja borrar**: de eso se encargan las
+reglas del paso 10.2.
+
+### 10.4 Rol para la instancia
+
+1. En *IAM → Roles → Create role*, elige *AWS service* y luego *EC2*.
+2. Marca la política `infotrip-respaldos-s3`.
+3. Llama al rol `infotrip-ec2-respaldos` y créalo.
+4. En *EC2 → Instances → infotrip → Actions → Security → Modify IAM role*, elige `infotrip-ec2-respaldos` y pulsa
+   *Update IAM role*.
+
+### 10.5 Dejar que los contenedores lleguen al rol
+
+En *EC2 → Instances → infotrip → Actions → Instance settings → Modify instance metadata options*:
+
+| Campo | Valor |
+|---|---|
+| Instance metadata service | Enable |
+| IMDSv2 | **Required** |
+| Metadata response hop limit | **2** |
+
+Las credenciales del rol se piden a una dirección interna de la instancia. Desde un contenedor de Docker hay un salto
+de red más, y con el límite de 1, que suele venir por defecto, la petición nunca llega.
+
+### 10.6 Encender la subida en el servidor
+
+```bash
+cd ~/infotrip && git pull
+```
+
+```bash
+nano .env.docker
+```
+
+Pon el nombre del bucket en `RESPALDO_S3_BUCKET` y la región en `RESPALDO_S3_REGION=us-east-2`. Si tu `.env.docker`
+es anterior a este paso y no tiene esas líneas, cópialas del final de `.env.docker.aws.example`.
+
+La primera vez se construye la imagen de respaldos con el cliente de AWS, lo que tarda 1 o 2 minutos:
+
+```bash
+dc up -d --build
+```
+
+Comprueba que el contenedor ve el rol. Debe aparecer `assumed-role/infotrip-ec2-respaldos`:
+
+```bash
+dc exec respaldos aws sts get-caller-identity
+```
+
+Haz un respaldo de prueba y míralo en el bucket:
+
+```bash
+dc exec respaldos sh /respaldo.sh --una-vez
+```
+
+```bash
+dc exec respaldos aws s3 ls --recursive --human-readable s3://NOMBRE-DEL-BUCKET/infotrip/diarias/
+```
+
+Desde ese momento, cada respaldo diario se sube solo. Cómo restaurar desde S3:
+[operacion.md](operacion.md#restaurar-desde-s3).
+
+## Paso 11. Avisos de errores con Sentry
+
+Cuando una página falla con un error 500, Sentry manda un correo con la línea de código que falló. InfoTrip ya trae
+la integración: solo falta la dirección del proyecto, el **DSN**. No se envían datos personales; el detalle está en
+[operacion.md](operacion.md#monitoreo-de-errores).
+
+1. Crea una cuenta en https://sentry.io/signup/ con el correo del equipo. El plan **Developer** es gratis: 1 usuario
+   y 5,000 errores al mes. Si te ofrece una prueba de Business, al terminar vuelve sola al plan gratuito.
+2. Elige la región de datos **United States** y crea una organización, por ejemplo `infotrip`.
+3. *Projects → Create Project*: plataforma **Django**, nombre `infotrip`, alertas *Alert me on high priority issues*.
+4. Copia el DSN que muestra. Tiene la forma `https://<clave>@o<número>.ingest.us.sentry.io/<número>`. También está en
+   *Settings → Projects → infotrip → Client Keys (DSN)*. Ignora el resto de las instrucciones de instalación: el
+   código ya está hecho.
+5. En el servidor, ponlo en `.env.docker`:
+
+   ```bash
+   nano .env.docker
+   ```
+
+   ```
+   SENTRY_DSN=https://<clave>@o<número>.ingest.us.sentry.io/<número>
+   ```
+
+   El DSN no es una contraseña, pero tampoco lo subas a git: con él, cualquiera podría llenar tu cuota con
+   errores falsos.
+6. Aplica el cambio. `up -d` recrea los contenedores que usan `.env.docker`:
+
+   ```bash
+   dc up -d
+   ```
+
+7. Manda un error de prueba. Debe aparecer en *Issues* en menos de un minuto y llegarte por correo:
+
+   ```bash
+   dc exec web python manage.py shell -c "import sentry_sdk; sentry_sdk.capture_message('Prueba de InfoTrip'); sentry_sdk.flush()"
+   ```
+
+El plan gratuito admite un solo usuario, así que los avisos llegan al correo con el que crearon la cuenta. Usen el
+correo del proyecto y reenvíenlo al equipo con una regla de Gmail.
+
+## Paso 12. Avisos si el sitio se cae
+
+Dos vigilantes que no cuestan nada y avisan por correo:
+
+| Vigilante | Qué detecta | Desde dónde |
+|---|---|---|
+| Monitor externo en `/health/` | El sitio no responde, da error o falla la base de datos o la caché. | Fuera de AWS: sigue avisando aunque la cuenta o la región tengan problemas. |
+| Alarmas de CloudWatch | Falla el hardware de AWS o el sistema de la instancia, o el CPU se queda al tope. | Dentro de AWS: además del aviso, puede reiniciar o recuperar la instancia sola. |
+
+`/health/` responde 200 con `{"estado": "ok", …}` si la base de datos y la caché funcionan, y 503 si alguna falla.
+
+### 12.1 Monitor externo (UptimeRobot)
+
+1. Crea una cuenta en https://uptimerobot.com con el correo del proyecto. El plan **Free** da 50 monitores revisados
+   cada 5 minutos, con avisos por correo, y es para uso no comercial, como este proyecto escolar.
+2. Pulsa *+ New monitor* y llena:
+
+   | Campo | Valor |
+   |---|---|
+   | Monitor type | **HTTP / website monitoring** |
+   | URL to monitor | `https://infotrip.online/health/` |
+   | Monitor interval | 5 minutes |
+   | How will we notify you? | **E-mail**, al correo del proyecto |
+
+3. Pulsa *Create monitor*. En un par de minutos debe verse **Up** en verde.
+4. Opcional: en *Integrations & API → Alert contacts* agrega el correo de cada persona del equipo y márcalos en el
+   monitor.
+
+Cualquier respuesta distinta de 2xx cuenta como caída, incluido el 503 de `/health/`. El aviso llega cuando el sitio
+se cae y cuando vuelve. Si prefieren otra opción, [Better Stack](https://betterstack.com/uptime) tiene un plan
+gratuito equivalente: 10 monitores cada 3 minutos.
+
+### 12.2 Alarmas de CloudWatch
+
+El nivel gratuito permanente de CloudWatch incluye 10 alarmas y las métricas básicas de EC2, y el de SNS, 1,000
+correos al mes. Con estas tres alarmas no se gasta nada.
+
+En la región de la instancia (`us-east-2`), entra a *EC2 → Instances → infotrip → Actions → Monitor and
+troubleshoot → Manage CloudWatch alarms* y crea cada alarma de esta tabla con *Create an alarm*:
+
+| Campo | Alarma 1: hardware de AWS | Alarma 2: sistema de la instancia | Alarma 3: CPU al tope |
+|---|---|---|---|
+| Alarm notification | Activada. La primera vez, *Create topic* `infotrip-avisos` con el correo del proyecto. | Tema `infotrip-avisos` | Tema `infotrip-avisos` |
+| Alarm action | Activada: **Recover** | Activada: **Reboot** | Desactivada |
+| Group samples by | Maximum | Maximum | Average |
+| Type of data to sample | **Status check failed: system** | **Status check failed: instance** | **CPU utilization** |
+| Alarm when | >= 1 | >= 1 | >= **80** % |
+| Consecutive periods | 2 | 3 | 3 |
+| Period | 1 minute | 1 minute | 5 minutes |
+| Alarm name | `infotrip-hardware` | `infotrip-sistema` | `infotrip-cpu` |
+
+- **Recover** mueve la instancia a otro equipo físico de AWS. Conserva la IP, el disco y los datos.
+- **Reboot** reinicia el servidor. Los contenedores vuelven solos porque tienen `restart: unless-stopped`.
+- **CPU al 80 % por 15 minutos** suele ser tráfico anormal o un proceso atorado. `t3.small` puede pasar un rato de
+  su nivel base (20 %) con créditos de CPU, pero si se mantiene alto en modo *unlimited* cobra un extra. Revísalo con
+  `dc stats` y `dc logs --tail 100 web`.
+
+Al crear el tema llega un correo de AWS Notifications: **pulsa *Confirm subscription***, o no llegará ningún aviso.
+Para agregar a otra persona: *SNS → Topics → infotrip-avisos → Create subscription*, protocolo *Email*.
+
+Comprueba que el aviso llega. Abre **CloudShell**, el ícono `>_` de la barra superior de la consola, y fuerza la alarma
+de CPU, que no tiene acción. En un par de minutos vuelve sola a *OK*:
+
+```bash
+aws cloudwatch set-alarm-state --region us-east-2 --alarm-name infotrip-cpu --state-value ALARM --state-reason "Prueba de aviso"
+```
+
 ## Mantenimiento
 
 **Actualizar a la última versión de `master`.** Las migraciones se aplican solas al arrancar.
@@ -258,9 +494,11 @@ cd ~/infotrip && git pull && dc up -d --build
 ```
 
 **Respaldos.** El servicio `respaldos` guarda cada día la base y las fotos en el mismo servidor, y conserva 14 días.
-Bájalos a tu computadora al menos una vez por semana: si el servidor se pierde, se pierden con él.
+Con el [paso 10](#paso-10-respaldos-en-s3) hecho, también se suben a S3. Sin él, bájalos a tu computadora al menos
+una vez por semana: si el servidor se pierde, se pierden con él. Aun con S3, bajar una copia de vez en cuando no
+está de más.
 
-Primero, en el **servidor**, copia los respaldos a tu carpeta. El volumen de Docker solo lo puede leer root:
+Para bajarlos, primero, en el **servidor**, copia los respaldos a tu carpeta. El volumen de Docker solo lo puede leer root:
 
 ```bash
 rm -rf ~/respaldos && sudo cp -r /var/lib/docker/volumes/infotrip_respaldos/_data ~/respaldos && sudo chown -R ubuntu ~/respaldos
