@@ -89,9 +89,11 @@ def completar(lugar):
     del_catalogo = bool(lugar['imagen']) and not lugar.get('foto_url')
     lugar['foto_url'] = lugar.get('foto_url') or (static(lugar['imagen']) if lugar['imagen'] else '')
     lugar['miniatura_url'] = lugar.get('miniatura_url') or lugar['foto_url']
-    # Las tarjetas pintan la foto en 56-76 px: el icono WebP de 160 px pesa ~6 KB (scripts/imagenes_webp.py).
-    lugar['icono_url'] = (static(lugar['imagen'].rsplit('.', 1)[0] + '-i.webp') if del_catalogo
-                          else lugar['miniatura_url'])
+    # Versiones WebP de scripts/imagenes_webp.py: icono de 160 px para las tarjetas (56-76 px) y foto de
+    # 828 px para la ficha, que en móvil evita descargar el JPEG de 1280 px.
+    base = lugar['imagen'].rsplit('.', 1)[0] if del_catalogo else ''
+    lugar['icono_url'] = static(base + '-i.webp') if base else lugar['miniatura_url']
+    lugar['foto_ficha_url'] = static(base + '-828.webp') if base else ''
     if lugar['editorial']:
         # En inspiración se busca el nombre del lugar; no se inventa un punto GPS.
         destino_maps = f"{lugar['nombre']}, Jalisco, México"

@@ -232,11 +232,16 @@ class CatalogoInicialTests(TestCase):
         for imagen in [foto['imagen'] for foto in FOTOS_CATALOGO.values()] + [lugar['imagen'] for lugar in INSPIRACION]:
             with self.subTest(imagen=imagen):
                 self.assertIsNotNone(finders.find(imagen.rsplit('.', 1)[0] + '-i.webp'))
+                self.assertIsNotNone(finders.find(imagen.rsplit('.', 1)[0] + '-828.webp'))
         call_command('cargar_destinos_iniciales', stdout=StringIO())
         listado = self.client.get('/destinos/')
         self.assertContains(listado, 'images/destinos/guachimontones-i.webp')
         self.assertContains(listado, 'width="160" height="160" loading="lazy"')
         self.assertNotContains(listado, 'guachimontones-m.jpg" alt')
+        # La ficha ofrece la foto de 828 px en WebP; el JPEG original queda para pantallas grandes.
+        ficha = self.client.get('/destinos/guachimontones/')
+        self.assertContains(ficha, 'srcset="/static/images/destinos/guachimontones-828.webp 828w, '
+                                   '/static/images/destinos/guachimontones.jpg 1280w"')
 
     def test_la_foto_de_la_comunidad_reemplaza_a_la_del_catalogo_sin_su_credito(self):
         call_command('cargar_destinos_iniciales', stdout=StringIO())
@@ -248,6 +253,7 @@ class CatalogoInicialTests(TestCase):
         self.assertEqual(ficha.context['lugar']['alt'], 'Mi foto')
         # El icono también es el de la comunidad, no el del catálogo.
         self.assertNotIn('-i.webp', ficha.context['lugar']['icono_url'])
+        self.assertNotContains(ficha, 'srcset=')
         self.assertNotContains(ficha, 'Esteban Tucci')
 
 
