@@ -1,65 +1,172 @@
-/* Asistente guiado: un botón discreto que abre un panel, sin competir con el mapa. */
+/* Asistente Axo: un ajolote que abre un panel guiado, sin competir con el mapa. */
 .trip-chat { position: fixed; right: 1rem; bottom: 1rem; z-index: 900; display: flex; flex-direction: column; align-items: flex-end; gap: .6rem; }
 .trip-chat [hidden], .trip-chat[hidden] { display: none !important; }
 .trip-chat-toggle {
-  width: 48px;
-  min-height: 48px;
-  height: 48px;
-  padding: 0;
+  width: 56px;
+  min-height: 56px;
+  height: 56px;
+  padding: 4px;
+  border: 1px solid var(--linea-fuerte);
   border-radius: 50%;
-  border-color: var(--linea-fuerte);
   background: var(--panel);
   box-shadow: var(--sombra);
-  color: var(--acento);
-  font-size: 1.1rem;
 }
-.trip-chat-toggle .trip-chat-label {
-  position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap;
-}
+.trip-chat-toggle:hover { background: var(--panel-2); }
+.trip-chat-toggle[aria-expanded="true"] { border-color: var(--acento); }
 .trip-chat-panel {
   display: flex;
   flex-direction: column;
-  width: min(380px, calc(100vw - 2rem));
-  max-height: min(70dvh, 620px);
+  width: min(400px, calc(100vw - 2rem));
+  max-height: min(72dvh, 640px);
   overflow: hidden;
   border: 1px solid var(--linea);
   border-radius: var(--radio-l);
   background: var(--panel);
   box-shadow: var(--sombra-flotante);
 }
-.trip-chat-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; padding: .9rem 1rem .6rem; }
-.trip-chat-eyebrow { color: var(--texto-3); font-variant-numeric: tabular-nums; font-size: .8125rem; letter-spacing: .04em; }
-.trip-chat-header h2 { font-size: 1rem; }
-.trip-chat-header button { width: 36px; min-height: 36px; padding: 0; border-color: transparent; background: transparent; font-size: 1.25rem; }
-.trip-chat-notice { padding: 0 1rem .6rem; border-bottom: 1px solid var(--linea); color: var(--texto-3); font-size: .8125rem; }
+.trip-chat-header { display: flex; align-items: center; gap: .75rem; padding: .75rem .75rem .6rem 1rem; }
+.trip-chat-avatar { flex: none; width: 48px; height: 48px; padding: 2px; border-radius: 50%; background: var(--panel-2); }
+.trip-chat-titulo { flex: 1; min-width: 0; }
+.trip-chat-header h2 { font-size: 1.125rem; }
+.trip-chat-titulo p { margin: 0; color: var(--texto-2); font-size: 1rem; }
+.trip-chat-header button { flex: none; width: 44px; min-height: 44px; padding: 0; border-color: transparent; background: transparent; font-size: 1.5rem; }
+.trip-chat-notice { padding: 0 1rem .6rem; border-bottom: 1px solid var(--linea); color: var(--texto-2); font-size: 1rem; line-height: 1.4; margin: 0; }
 .trip-chat-log { flex: 1; display: flex; flex-direction: column; gap: .5rem; min-height: 100px; padding: .75rem 1rem; overflow-y: auto; }
 .trip-chat-message {
   align-self: flex-start;
   max-width: 92%;
-  padding: .5rem .7rem;
+  margin: 0;
+  padding: .55rem .75rem;
   border-radius: var(--radio);
   background: var(--panel-2);
-  font-size: .9375rem;
+  color: var(--texto);
+  font-size: 1rem;
+  line-height: 1.45;
   white-space: pre-line;
 }
-.trip-chat-message-user { align-self: flex-end; background: var(--acento-suave); color: var(--texto); }
-.trip-chat-options { display: flex; flex-wrap: wrap; gap: .35rem; padding: .25rem 1rem .75rem; }
+.trip-chat-message-user { align-self: flex-end; background: var(--acento-suave); }
+.trip-chat-message p { margin: 0; }
+.trip-chat-results { display: grid; gap: .35rem; margin: .5rem 0 0; padding: 0; list-style: none; }
+.trip-chat-results li { display: grid; }
+.trip-chat-results a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 600; }
+.trip-chat-result-detail { margin-top: -.5rem; padding-bottom: .25rem; color: var(--texto-2); font-size: 1rem; line-height: 1.35; }
+.trip-chat-log[aria-busy="true"]::after { content: 'Axo está buscando…'; align-self: flex-start; color: var(--texto-2); font-size: 1rem; }
+.trip-chat-options { display: flex; flex-wrap: wrap; gap: .4rem; max-height: 9.75rem; padding: .25rem 1rem .6rem; overflow-y: auto; }
+.trip-chat-options:empty { display: none; }
+.trip-chat-form { display: flex; gap: .5rem; padding: .6rem 1rem; border-top: 1px solid var(--linea); }
+.trip-chat-form input {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: .5rem .75rem;
+  border: 1px solid var(--linea-fuerte);
+  border-radius: var(--radio-s);
+  background: var(--panel-2);
+  color: var(--texto);
+  font: inherit;
+  font-size: 1rem;
+}
+.trip-chat-form input::placeholder { color: var(--texto-3); }
+.trip-chat-form button {
+  flex: none;
+  min-height: 44px;
+  padding: .4rem .9rem;
+  border: 0;
+  border-radius: var(--radio-s);
+  background: var(--acento);
+  color: var(--sobre-acento);
+  font-size: 1rem;
+  font-weight: 600;
+}
+.trip-chat-form button:hover { background: var(--acento-fuerte); }
 .trip-chat-options button, .trip-chat-options a {
   display: inline-flex;
   align-items: center;
-  min-height: 36px;
-  padding: .3rem .65rem;
+  min-height: 44px;
+  padding: .4rem .8rem;
   border: 1px solid var(--linea-fuerte);
   border-radius: var(--radio-s);
   background: var(--panel);
   color: var(--texto);
-  font-size: .875rem;
+  font-size: 1rem;
   font-weight: 500;
   text-decoration: none;
 }
+.trip-chat-options a { color: var(--acento); }
 .trip-chat-options button:hover, .trip-chat-options a:hover { background: var(--panel-3); }
-.trip-chat-footer { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .5rem 1rem; border-top: 1px solid var(--linea); color: var(--texto-3); font-size: .8125rem; }
-.trip-chat-footer button { min-height: 32px; padding: .2rem .5rem; border-color: transparent; background: transparent; color: var(--acento); font-size: .8125rem; }
-@media (max-width: 860px) {
-  .trip-chat-options button, .trip-chat-options a, .trip-chat-footer button, .trip-chat-header button { min-height: 44px; }
+.trip-chat-footer { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .25rem .5rem .25rem 1rem; border-top: 1px solid var(--linea); color: var(--texto-2); font-size: 1rem; }
+.trip-chat-footer button { min-height: 44px; padding: .2rem .6rem; border-color: transparent; background: transparent; color: var(--acento); font-size: 1rem; }
+
+@media (max-width: 520px) {
+  .trip-chat { right: .5rem; bottom: .5rem; }
+  /* Cabe entre la barra de navegación y el botón de Axo. */
+  .trip-chat-panel { width: calc(100vw - 1rem); max-height: calc(100dvh - var(--nav-alto) - 56px - 1.6rem); }
+}
+
+/* Burbuja de bienvenida: pequeña, junto a Axo, para no tapar contenido en móvil. */
+.trip-chat-saludo {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  max-width: min(280px, calc(100vw - 2rem));
+  margin-right: .25rem;
+  border: 1px solid var(--linea-fuerte);
+  border-radius: var(--radio-l) var(--radio-l) 4px var(--radio-l);
+  background: var(--panel);
+  box-shadow: var(--sombra-flotante);
+  animation: trip-chat-aparece .35s ease-out;
+}
+.trip-chat-saludo::after {
+  content: '';
+  position: absolute;
+  right: 18px;
+  bottom: -7px;
+  width: 12px;
+  height: 12px;
+  border-right: 1px solid var(--linea-fuerte);
+  border-bottom: 1px solid var(--linea-fuerte);
+  background: var(--panel);
+  transform: rotate(45deg);
+}
+.trip-chat-saludo-texto {
+  flex: 1;
+  justify-content: flex-start;
+  min-height: 44px;
+  padding: .7rem .25rem .7rem .9rem;
+  border: 0;
+  background: transparent;
+  color: var(--texto);
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.35;
+  text-align: left;
+}
+.trip-chat-saludo-cerrar { flex: none; width: 44px; min-height: 44px; padding: 0; border: 0; background: transparent; color: var(--texto-2); font-size: 1.25rem; }
+.trip-chat-toggle.is-asomando { animation: trip-chat-asoma .6s cubic-bezier(.3, 1.4, .5, 1); }
+@keyframes trip-chat-aparece { from { opacity: 0; transform: translateY(8px) scale(.96); } to { opacity: 1; transform: none; } }
+@keyframes trip-chat-asoma { from { transform: translateY(70%) scale(.6); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* Personaje: animado solo con CSS y quieto con prefers-reduced-motion. */
+.pj { display: block; width: 100%; height: 100%; overflow: visible; color: var(--texto-3); }
+.pj-cuerpo { transform-box: view-box; transform-origin: 50% 90%; animation: pj-respira 4s ease-in-out infinite; }
+.pj-ojos { transform-box: fill-box; transform-origin: center; animation: pj-parpadeo 5s infinite; }
+.pj-brazo { transform-box: fill-box; transform-origin: 90% 80%; }
+.pj-sombrero { transform-box: fill-box; transform-origin: 50% 100%; }
+.pj-pensando { opacity: 0; }
+.pj-pensando circle { transform-box: fill-box; transform-origin: center; }
+.is-saludando .pj-brazo { animation: pj-saludo .45s ease-in-out 4 alternate; }
+.is-saludando .pj-sombrero { animation: pj-sombrero 1.6s ease-in-out; }
+.is-pensando .pj-pensando { opacity: 1; }
+.is-pensando .pj-pensando circle { animation: pj-punto 1s ease-in-out infinite; }
+.is-pensando .pj-pensando circle:nth-child(2) { animation-delay: .15s; }
+.is-pensando .pj-pensando circle:nth-child(3) { animation-delay: .3s; }
+.is-pensando .pj-ojos, .is-pensando .pj-brillo { animation: none; transform: translate(1.5px, -1.5px); }
+@keyframes pj-respira { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-1.5px) scale(1.01); } }
+@keyframes pj-parpadeo { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
+@keyframes pj-saludo { from { transform: rotate(0); } to { transform: rotate(28deg); } }
+@keyframes pj-sombrero { 0%, 100% { transform: translateY(0) rotate(0); } 40% { transform: translateY(-4px) rotate(-8deg); } }
+@keyframes pj-punto { 0%, 100% { transform: translateY(0); opacity: .4; } 50% { transform: translateY(-3px); opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .trip-chat *, .trip-chat *::before, .trip-chat *::after { animation: none !important; transition: none !important; }
 }

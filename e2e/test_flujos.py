@@ -22,6 +22,7 @@ from apps.metricas.models import Evento
 from apps.usuarios.models import Usuario
 
 CLAVE = 'Prueba-segura-493!'
+SIN_SALUDO = "try { localStorage.setItem('infotrip_axo_saludo', new Date().toLocaleDateString('en-CA')); } catch {}"
 
 
 @skipUnless(os.environ.get('E2E'), 'Pruebas de navegador: definir E2E=1')
@@ -50,11 +51,18 @@ class FlujosTests(StaticLiveServerTestCase):
                                               descripcion='Lugar de prueba', latitud=19.9, longitud=-103.7)
         self.usuario = Usuario.objects.create_user('ana@example.com', 'Ana', 'Prueba', CLAVE, es_verificado=True)
         self.problemas = []
-        self.contexto = self.navegador.new_context()
+        self.contexto = self.nuevo_contexto()
         self.pagina = self.contexto.new_page()
         self.pagina.on('pageerror', lambda error: self.problemas.append(f'Error de página: {error}'))
         self.pagina.on('console', self.revisar_consola)
         self.pagina.on('response', self.revisar_respuesta)
+
+    def nuevo_contexto(self, saludo=False, **opciones):
+        contexto = self.navegador.new_context(**opciones)
+        if not saludo:
+            # La burbuja de bienvenida de Axo ya salió hoy: así no tapa botones en las demás pruebas.
+            contexto.add_init_script(SIN_SALUDO)
+        return contexto
 
     def tearDown(self):
         # Espera a las peticiones en curso: si la prueba termina antes, la base se vacía bajo ellas.
@@ -100,7 +108,8 @@ class FlujosTests(StaticLiveServerTestCase):
     def test_sesion_en_cookie_y_no_en_localstorage(self):
         self.iniciar_sesion()
         visibles = self.pagina.evaluate('[Object.keys(localStorage), document.cookie]')
-        self.assertEqual(visibles[0], ['usuario'])
+        # Fuera de la sesión solo queda la fecha del saludo de Axo, que no identifica a nadie.
+        self.assertEqual([clave for clave in visibles[0] if clave != 'infotrip_axo_saludo'], ['usuario'])
         self.assertNotIn('infotrip_refresh', visibles[1])
         cookie = next(c for c in self.contexto.cookies() if c['name'] == 'infotrip_refresh')
         self.assertTrue(cookie['httpOnly'])
@@ -164,7 +173,7 @@ class FlujosTests(StaticLiveServerTestCase):
         enlace = self.pagina.evaluate('navigator.clipboard.readText()')
         viaje.refresh_from_db()
         self.assertIn(str(viaje.enlace_publico), enlace)
-        anonimo = self.navegador.new_context()
+        anonimo = self.nuevo_contexto()
         pagina = anonimo.new_page()
         pagina.goto(enlace)
         self.assertIn('Con amigos', pagina.inner_text('main'))
@@ -240,7 +249,7 @@ class FlujosTests(StaticLiveServerTestCase):
         self.assertEqual(pequenos, 0)
         chat = self.pagina.locator('#trip-chat-toggle').bounding_box()
         self.assertLessEqual(chat['width'], 56)
-        self.assertEqual(self.pagina.get_by_role('button', name='¿Planeamos tu viaje?').count(), 1)
+        self.assertEqual(self.pagina.get_by_role('button', name='Hablar con Axo, tu asistente de viaje').count(), 1)
 
     def test_el_teclado_muestra_el_foco(self):
         self.abrir('/login/')
@@ -263,7 +272,7 @@ class FlujosTests(StaticLiveServerTestCase):
         viaje.refresh_from_db()
 
         ana, contexto_ana = self.pagina, self.contexto
-        self.contexto = self.navegador.new_context()
+        self.contexto = self.nuevo_contexto()
         self.pagina = self.contexto.new_page()
         self.pagina.on('pageerror', lambda error: self.problemas.append(f'Error de página: {error}'))
         self.usuario = Usuario.objects.create_user('leo@example.com', 'Leo', 'Prueba', CLAVE, es_verificado=True)
@@ -369,7 +378,7 @@ class FlujosTests(StaticLiveServerTestCase):
 
     def test_el_tema_se_cambia_y_se_recuerda(self):
         self.contexto.close()
-        self.contexto = self.navegador.new_context(color_scheme='light')
+        self.contexto = self.nuevo_contexto(color_scheme='light')
         self.pagina = self.contexto.new_page()
         self.abrir('/destinos/')
         self.assertEqual(self.pagina.evaluate('document.documentElement.dataset.theme'), 'light')
@@ -632,3 +641,116 @@ class FlujosTests(StaticLiveServerTestCase):
         self.pagina.wait_for_url(self.live_server_url + '/')
         self.abrir('/perfil/')
         self.pagina.wait_for_selector('#profile-login:not([hidden])')
+
+    def abrir_con_saludo(self, ancho=1280, alto=800):
+        self.contexto.close()
+        self.contexto = self.nuevo_contexto(saludo=True, viewport={'width': ancho, 'height': alto})
+        self.pagina = self.contexto.new_page()
+        self.pagina.on('pageerror', lambda error: self.problemas.append(f'Error de página: {error}'))
+        self.pagina.on('console', self.revisar_consola)
+        self.abrir('/')
+        self.pagina.locator('#trip-chat-saludo').wait_for(state='visible')
+
+    def test_axo_saluda_una_vez_al_dia_y_la_burbuja_abre_el_chat(self):
+        self.abrir_con_saludo()
+        # La burbuja avisa sin robar el foco.
+        self.assertFalse(self.pagina.evaluate("!!document.activeElement.closest('#trip-chat')"))
+        self.pagina.click('#trip-chat-saludo-abrir')
+        self.pagina.wait_for_selector('#trip-chat-panel:not([hidden])')
+        self.assertTrue(self.pagina.locator('#trip-chat-saludo').is_hidden())
+        self.assertIn('Axo', self.pagina.inner_text('#trip-chat-log'))
+        # Ese mismo día ya no vuelve a aparecer.
+        self.abrir('/destinos/')
+        self.pagina.wait_for_timeout(2500)
+        self.assertTrue(self.pagina.locator('#trip-chat-saludo').is_hidden())
+
+    def test_la_burbuja_se_cierra_con_escape_y_no_desborda_en_movil(self):
+        self.abrir_con_saludo(375, 812)
+        caja = self.pagina.locator('#trip-chat-saludo').bounding_box()
+        self.assertGreaterEqual(caja['x'], 0)
+        self.assertLessEqual(caja['x'] + caja['width'], 375)
+        self.assertLess(caja['width'], 300)
+        self.assertEqual(self.pagina.evaluate('document.documentElement.scrollWidth'), 375)
+        self.pagina.keyboard.press('Escape')
+        self.assertTrue(self.pagina.locator('#trip-chat-saludo').is_hidden())
+
+    def preguntar_a_axo(self, texto, espera):
+        self.pagina.fill('#trip-chat-input', texto)
+        self.pagina.press('#trip-chat-input', 'Enter')
+        self.pagina.wait_for_selector(f'#trip-chat-log .trip-chat-message:not(.trip-chat-message-user):has-text("{espera}")')
+        return self.pagina.locator('#trip-chat-log .trip-chat-message:not(.trip-chat-message-user)').last
+
+    def test_axo_entiende_texto_libre_y_solo_muestra_destinos_reales(self):
+        self.abrir('/')
+        self.pagina.click('#trip-chat-toggle')
+        respuesta = self.preguntar_a_axo('Quiero ir a Tapalpa', 'Encontré 1 destino')
+        self.assertEqual(respuesta.locator('a').get_attribute('href'), '/destinos/mirador/')
+        self.assertIn('Tapalpa', respuesta.inner_text())
+        self.preguntar_a_axo('Narnia', 'No encontré «Narnia»')
+        respuesta = self.preguntar_a_axo('¿Cuánto cuesta ir a Mirador?', 'costos reportados')
+        self.assertEqual(respuesta.locator('a').get_attribute('href'), '/destinos/mirador/costos/')
+        self.assertIn('INEGI', self.preguntar_a_axo('¿De dónde salen los datos?', 'OpenStreetMap').inner_text())
+        self.preguntar_a_axo('costos', 'al menos 3 reportes')
+        self.assertEqual(self.pagina.get_attribute('#trip-chat-options a', 'href'), '/costos/')
+        self.preguntar_a_axo('olvidé mi contraseña', 'Recuperar contraseña')
+        self.assertEqual(self.pagina.locator('#trip-chat-options a[href="/recuperar/"]').count(), 1)
+        self.preguntar_a_axo('¿eres una IA?', 'No soy una inteligencia artificial')
+        self.pagina.click('#trip-chat-reset')
+        self.pagina.click('#trip-chat-options button:has-text("Planear mi escapada")')
+        self.pagina.click('#trip-chat-options a:has-text("Abrir el planeador")')
+        self.pagina.wait_for_url('**/planeador/')
+
+    def test_axo_busca_lugares_cerca_con_la_ubicacion(self):
+        Lugar.objects.create(nombre='Fonda Doña Ana', tipo='comer', subtipo='restaurant', latitud=19.901, longitud=-103.701,
+                             osm_id='node/1')
+        self.contexto.grant_permissions(['geolocation'], origin=self.live_server_url)
+        self.contexto.set_geolocation({'latitude': 19.9, 'longitude': -103.7})
+        self.abrir('/destinos/')
+        self.pagina.click('#trip-chat-toggle')
+        self.pagina.click('#trip-chat-options button:has-text("¿Qué hay cerca de mí?")')
+        self.pagina.click('#trip-chat-options button:has-text("Buscar con mi ubicación")')
+        self.pagina.wait_for_selector('#trip-chat-log a:has-text("Fonda Doña Ana")')
+        fila = self.pagina.locator('.trip-chat-results li').first.inner_text()
+        self.assertIn('Fuente: OpenStreetMap', fila)
+        self.assertNotIn('Fuente: Fuente', fila)
+        self.assertIn('m', fila)
+
+    def test_axo_se_usa_con_teclado_y_es_comodo_de_tocar(self):
+        self.abrir('/')
+        self.pagina.focus('#trip-chat-toggle')
+        self.pagina.keyboard.press('Enter')
+        self.pagina.wait_for_selector('#trip-chat-panel:not([hidden])')
+        self.assertEqual(self.pagina.evaluate('document.activeElement.id'), 'trip-chat-input')
+        self.assertEqual(self.pagina.get_attribute('#trip-chat-log', 'aria-live'), 'polite')
+        self.assertEqual(self.pagina.get_attribute('#trip-chat-toggle', 'aria-expanded'), 'true')
+        pequenos = self.pagina.evaluate("""[...document.querySelectorAll('#trip-chat button, #trip-chat a, #trip-chat input')]
+            .filter(e => { const r = e.getBoundingClientRect(); return r.height > 0 && r.height < 44; })
+            .map(e => e.textContent || e.id)""")
+        self.assertEqual(pequenos, [])
+        letra = self.pagina.evaluate("""[...document.querySelectorAll('#trip-chat-panel *')]
+            .filter(e => e.offsetHeight > 1 && e.childNodes.length && [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()))
+            .filter(e => parseFloat(getComputedStyle(e).fontSize) < 16).map(e => e.textContent)""")
+        self.assertEqual(letra, [])
+        self.pagina.keyboard.press('Shift+Tab')
+        self.assertEqual(self.pagina.evaluate('getComputedStyle(document.activeElement).outlineStyle'), 'solid')
+        self.pagina.keyboard.press('Escape')
+        self.assertTrue(self.pagina.locator('#trip-chat-panel').is_hidden())
+        self.assertEqual(self.pagina.evaluate('document.activeElement.id'), 'trip-chat-toggle')
+
+    def test_en_movil_el_panel_de_axo_cabe_bajo_la_barra(self):
+        self.pagina.set_viewport_size({'width': 375, 'height': 812})
+        self.abrir('/destinos/')
+        self.pagina.click('#trip-chat-toggle')
+        panel = self.pagina.locator('#trip-chat-panel').bounding_box()
+        barra = self.pagina.locator('#navbar').bounding_box()
+        self.assertGreaterEqual(panel['y'], barra['y'] + barra['height'])
+        self.assertLessEqual(panel['x'] + panel['width'], 375)
+        self.assertEqual(self.pagina.evaluate('document.documentElement.scrollWidth'), 375)
+
+    def test_axo_no_se_mueve_con_movimiento_reducido(self):
+        self.contexto.close()
+        self.contexto = self.nuevo_contexto(reduced_motion='reduce')
+        self.pagina = self.contexto.new_page()
+        self.abrir('/')
+        animacion = self.pagina.evaluate("getComputedStyle(document.querySelector('#trip-chat-toggle .pj-cuerpo')).animationName")
+        self.assertEqual(animacion, 'none')
