@@ -3,7 +3,6 @@
   'use strict';
   const CLAVE = 'infotrip_tema';
   const raiz = document.documentElement;
-  const sistema = window.matchMedia('(prefers-color-scheme: dark)');
 
   function guardado() {
     try { return localStorage.getItem(CLAVE); } catch { return null; }
@@ -11,16 +10,16 @@
   function aplicar(tema) {
     raiz.dataset.theme = tema;
     document.querySelectorAll('[data-theme-toggle]').forEach(boton => {
-      boton.setAttribute('aria-label', tema === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro');
+      // Etiqueta fija y estado en aria-pressed: el lector de pantalla anuncia "Tema oscuro, activado/desactivado".
+      boton.setAttribute('aria-label', 'Tema oscuro');
+      boton.title = tema === 'dark' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro';
       boton.setAttribute('aria-pressed', String(tema === 'dark'));
     });
   }
 
-  // Sin preferencia guardada se sigue la del sistema, también si cambia con la página abierta.
-  aplicar(guardado() || (sistema.matches ? 'dark' : 'light'));
-  sistema.addEventListener('change', evento => {
-    if (!guardado()) aplicar(evento.matches ? 'dark' : 'light');
-  });
+  // El tema claro es el predeterminado: es el de mejor lectura a pleno sol y en pantallas modestas.
+  // El oscuro queda a un toque y se recuerda en este navegador.
+  aplicar(guardado() === 'dark' ? 'dark' : 'light');
 
   document.addEventListener('DOMContentLoaded', () => {
     aplicar(raiz.dataset.theme);

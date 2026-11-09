@@ -1,21 +1,41 @@
-// ── Scroll shadow ──
-const navbar = document.getElementById('navbar');
-window.addEventListener('scroll', () => {
-  navbar.classList.toggle('scrolled', window.scrollY > 10);
-});
-
-// ── Hamburger ──
+// ── Menú móvil ──
 const hamburger = document.getElementById('hamburger');
 const mobileMenu = document.getElementById('mobileMenu');
-hamburger.addEventListener('click', () => {
-  hamburger.classList.toggle('open');
-  mobileMenu.classList.toggle('open');
+function setMobileMenu(open) {
+  mobileMenu.classList.toggle('open', open);
+  hamburger.setAttribute('aria-expanded', String(open));
+  hamburger.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú');
+}
+hamburger.addEventListener('click', () => setMobileMenu(!mobileMenu.classList.contains('open')));
+mobileMenu.querySelectorAll('a').forEach(link => link.addEventListener('click', () => setMobileMenu(false)));
+
+// ── Menú de cuenta ──
+const accountToggle = document.getElementById('account-toggle');
+const accountMenu = document.getElementById('account-menu');
+function setAccountMenu(open) {
+  accountMenu.hidden = !open;
+  accountToggle.setAttribute('aria-expanded', String(open));
+}
+accountToggle.addEventListener('click', () => setAccountMenu(accountMenu.hidden));
+document.addEventListener('click', event => {
+  if (!accountMenu.hidden && !document.getElementById('nav-user').contains(event.target)) setAccountMenu(false);
 });
-mobileMenu.querySelectorAll('a').forEach(link => {
-  link.addEventListener('click', () => {
-    hamburger.classList.remove('open');
-    mobileMenu.classList.remove('open');
+document.addEventListener('keydown', event => {
+  if (event.key !== 'Escape') return;
+  if (!accountMenu.hidden) { setAccountMenu(false); accountToggle.focus(); }
+  if (mobileMenu.classList.contains('open')) { setMobileMenu(false); hamburger.focus(); }
+});
+
+// ── Página actual y destino del enlace "Saltar al contenido" ──
+document.addEventListener('DOMContentLoaded', () => {
+  const path = location.pathname;
+  document.querySelectorAll('.nav-links a, .mobile-menu > a').forEach(link => {
+    const target = link.getAttribute('href');
+    if (target !== '/' && path.startsWith(target)) link.setAttribute('aria-current', 'page');
   });
+  const main = document.querySelector('main');
+  if (main && !main.id) main.id = 'contenido';
+  if (main && !main.hasAttribute('tabindex')) main.setAttribute('tabindex', '-1');
 });
 
 // ── Sesión ──
@@ -30,28 +50,24 @@ if (usuario) {
   const inicial = usuario.nombre.charAt(0).toUpperCase();
   const nombreCompleto = usuario.nombre + ' ' + usuario.apellido;
 
-  // Desktop
+  // Escritorio
   document.getElementById('nav-guest').style.display = 'none';
-  const navUser = document.getElementById('nav-user');
-  navUser.style.display = 'flex';
+  document.getElementById('nav-user').style.display = 'block';
   document.getElementById('userAvatar').textContent = inicial;
-  document.getElementById('userName').textContent   = nombreCompleto;
+  document.getElementById('userName').textContent = usuario.nombre;
+  accountToggle.setAttribute('aria-label', `Cuenta de ${nombreCompleto}`);
 
   // Móvil
-  const mobileUserInfo = document.getElementById('mobileUserInfo');
-  mobileUserInfo.style.display = 'flex';
+  document.getElementById('mobileUserInfo').style.display = 'flex';
   document.getElementById('mobileUserAvatar').textContent = inicial;
-  document.getElementById('mobileUserName').textContent   = nombreCompleto;
-  document.getElementById('mobile-guest').style.display   = 'none';
-  document.getElementById('mobile-auth').style.display    = 'block';
+  document.getElementById('mobileUserName').textContent = nombreCompleto;
+  document.getElementById('mobile-guest').hidden = true;
+  document.getElementById('mobile-auth').hidden = false;
 }
 
-const profileLink = document.createElement('a');
-profileLink.href = '/perfil/'; profileLink.textContent = 'Mi perfil';
-document.getElementById('nav-user').prepend(profileLink);
-
 // ── Logout ──
-function doLogout() {
+function doLogout(event) {
+  event?.preventDefault();
   fetch('/api/v1/auth/logout/', {
     method: 'POST',
     headers: { 'X-CSRFToken': getCookie('csrftoken') },
