@@ -19,7 +19,12 @@
   {% block datos_estructurados %}{% endblock %}
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="manifest" href="{% url 'manifiesto' %}">
+  <meta name="theme-color" content="#FFFFFF">
+  <link rel="icon" href="{% static 'images/app/icono.svg' %}" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="{% static 'images/app/apple-touch-icon.png' %}">
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <link rel="stylesheet" href="{% static 'css/pwa.css' %}">
   <script src="{% static 'js/tema.js' %}"></script>
   {% block extra_css %}{% endblock %}
   <link rel="stylesheet" href="{% static 'css/chatbot.css' %}">
@@ -30,5 +35,6 @@
 {% block extra_js %}{% endblock %}
 <script src="{% static 'js/chatbot.js' %}" defer></script>
 <script src="{% static 'js/medicion.js' %}" defer></script>
+<script src="{% static 'js/pwa.js' %}" defer></script>
 </body>
 </html>

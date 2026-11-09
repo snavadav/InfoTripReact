@@ -17,6 +17,7 @@ from apps.comunidad.comentarios import pagina_comentarios
 from apps.comunidad.negocios import pagina_negocios
 from apps.comunidad.pasaporte import foto_publica, pasaporte, pasaporte_publico
 from apps.comunidad.viajes import viaje_publico
+from apps.core.pwa import manifiesto, service_worker, sin_conexion
 from apps.core.views import robots, salud
 from apps.destinos.sitemaps import CostosSitemap, DestinosSitemap, PaginasSitemap
 from apps.usuarios.views_frontend import baja_avisos, login_view, registro_view
@@ -38,6 +39,10 @@ def vista_legal(plantilla):
 urlpatterns = [
     path('health/', salud, name='salud'),
     path('robots.txt', robots, name='robots'),
+    # App instalable (apps/core/pwa.py). El service worker va en la raíz para que su alcance sea todo el sitio.
+    path('manifest.webmanifest', manifiesto, name='manifiesto'),
+    path('sw.js', service_worker, name='service-worker'),
+    path('sin-conexion/', sin_conexion, name='sin-conexion'),
     path('sitemap.xml', sitemap,
          {'sitemaps': {'paginas': PaginasSitemap, 'destinos': DestinosSitemap, 'costos': CostosSitemap}},
          name='django.contrib.sitemaps.views.sitemap'),

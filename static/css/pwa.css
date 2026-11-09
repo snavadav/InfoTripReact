@@ -1,0 +1,84 @@
+/* App instalable: botón "Instalar app" (static/js/pwa.js) y página sin conexión (templates/sin_conexion.html). */
+
+/* Abajo a la izquierda, lejos de Axo (abajo a la derecha) y por debajo de él. */
+.instalar-app {
+  position: fixed;
+  left: 1rem;
+  bottom: 1rem;
+  z-index: 850;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .25rem;
+  max-width: min(22rem, calc(100vw - 6.5rem));
+}
+.instalar-app[hidden] { display: none; }
+.instalar-app__boton,
+.instalar-app__cerrar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  border: 1px solid var(--linea-fuerte);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--texto);
+  box-shadow: var(--sombra);
+  font: inherit;
+  font-size: .875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.instalar-app__boton { gap: .4rem; padding: 0 .9rem; }
+.instalar-app__cerrar { width: 44px; padding: 0; color: var(--texto-2); }
+.instalar-app__boton:hover,
+.instalar-app__cerrar:hover { background: var(--panel-3); }
+.instalar-app__boton svg { color: var(--marca); }
+.instalar-app__ios {
+  flex-basis: 100%;
+  margin: .25rem 0 0;
+  padding: .75rem .9rem;
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+  background: var(--panel);
+  color: var(--texto);
+  box-shadow: var(--sombra-flotante);
+  font-size: .875rem;
+  line-height: 1.45;
+}
+.instalar-app__ios svg { vertical-align: -3px; color: var(--foco); }
+@media print { .instalar-app { display: none; } }
+
+.sin-conexion { max-width: 44rem; }
+.sin-conexion__aviso { padding: 2rem 0 1rem; }
+.sin-conexion__aviso svg { color: var(--marca); }
+.sin-conexion__aviso h1 { margin: .5rem 0; }
+.sin-conexion__estado:empty { display: none; }
+.sin-conexion__reintentar {
+  min-height: 44px;
+  padding: 0 1.1rem;
+  border: 0;
+  border-radius: var(--radio-s);
+  background: var(--acento);
+  color: var(--sobre-acento);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.sin-conexion__reintentar:hover { background: var(--acento-fuerte); }
+.sin-conexion__guardadas { padding: 1rem 0 2rem; }
+.sin-conexion__lista { display: grid; gap: .5rem; margin: 1rem 0; padding: 0; list-style: none; }
+.sin-conexion__lista li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: .25rem 1rem;
+  padding: .75rem 1rem;
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-s);
+  background: var(--panel);
+}
+.sin-conexion__lista a { font-weight: 600; }
+.sin-conexion__lista small,
+.sin-conexion__nota { color: var(--texto-2); }
