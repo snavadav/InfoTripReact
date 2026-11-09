@@ -9,9 +9,12 @@ from io import StringIO
 from django.core.exceptions import ValidationError
 from django.core.management import CommandError, call_command
 from django.db import IntegrityError, transaction
-from django.test import SimpleTestCase, TestCase
+from django.test import SimpleTestCase, TestCase, override_settings
 from django.utils import timezone
 
+from apps.comunidad.models import Aporte
+from apps.comunidad.selectors import MINIMO_REPORTES, costos_de_destino
+from apps.usuarios.models import Usuario
 from .management.commands.cargar_referencias_costo import ARCHIVO, COLUMNAS
 from .models import Destino, Municipio, ReferenciaCosto, Region
 
@@ -140,3 +143,61 @@ class ArchivoVersionadoTests(SimpleTestCase):
     def test_sin_citas_repetidas(self):
         citas = [(f['destino'], f['concepto'], f['descripcion'], f['fuente_url']) for f in self.filas]
         self.assertEqual(len(citas), len(set(citas)))
+
+
+@override_settings(PUBLIC_BASE_URL='https://infotrip.example')
+class PaginasTests(ReferenciasBase):
+    URL = '/destinos/guachimontones/costos/'
+
+    def gastos(self, concepto, montos):
+        autor = Usuario.objects.create_user(f'{concepto}@example.com', 'Ana', 'P', 'Prueba-segura-493!')
+        for monto in montos:
+            Aporte.objects.create(autor=autor, destino=self.destino, tipo='gasto', texto='Gasto', concepto=concepto,
+                                  monto=monto, fecha_visita=timezone.localdate() - timedelta(days=5),
+                                  estado='publicado')
+
+    def test_la_ficha_muestra_la_referencia_con_fuente_y_fechas(self):
+        self.referencia()
+        self.referencia(monto=Decimal(0), descripcion='Museo vecino, entrada libre', fecha_fuente=None)
+        respuesta = self.client.get(self.URL)
+        self.assertContains(respuesta, '<h2 id="referencia-oficial">Referencia oficial</h2>', html=False)
+        self.assertContains(respuesta, 'Precio oficial publicado; puede haber cambiado.')
+        self.assertContains(respuesta, '$30 MXN')
+        self.assertContains(respuesta, 'Sin costo')
+        self.assertContains(respuesta, 'href="https://sic.cultura.gob.mx/ficha.php?table=museo&amp;table_id=1841"')
+        self.assertContains(respuesta, 'fecha de la fuente: 29/09/2026 · consultada el 09/11/2026')
+        self.assertContains(respuesta, 'consultada el 09/11/2026', count=2)
+
+    def test_sin_referencias_no_aparece_la_seccion(self):
+        self.assertNotContains(self.client.get(self.URL), 'Referencia oficial')
+
+    def test_no_cuenta_para_el_minimo_de_reportes_ni_para_la_mediana(self):
+        self.gastos('entrada', [100] * (MINIMO_REPORTES - 1))
+        for monto in (30, 35, 40):
+            self.referencia(monto=Decimal(monto), descripcion=f'Tarifa {monto}')
+        fila = next(f for f in costos_de_destino(self.destino)['conceptos'] if f['clave'] == 'entrada')
+        self.assertEqual((fila['cantidad'], fila['suficiente']), (MINIMO_REPORTES - 1, False))
+        respuesta = self.client.get(self.URL)
+        self.assertContains(respuesta, 'Todavía no hay suficientes reportes')
+        self.assertContains(respuesta, f'{MINIMO_REPORTES - 1} de {MINIMO_REPORTES} reportes necesarios')
+
+        self.gastos('comida', [200, 200, 200])
+        self.referencia(concepto='comida', monto=Decimal(5000), descripcion='Menú')
+        fila = next(f for f in costos_de_destino(self.destino)['conceptos'] if f['clave'] == 'comida')
+        self.assertEqual((fila['mediana'], fila['maximo'], fila['cantidad']), (Decimal(200), Decimal(200), 3))
+
+    def test_el_indice_agrupa_por_destino_y_omite_destinos_ocultos(self):
+        self.referencia()
+        oculto = Destino.objects.create(nombre='Oculto', slug='oculto', municipio=self.destino.municipio,
+                                        descripcion='-', latitud=20, longitud=-103, es_activo=False)
+        self.referencia(destino=oculto, descripcion='No debe verse')
+        respuesta = self.client.get('/costos/')
+        self.assertContains(respuesta, 'Precio oficial publicado; puede haber cambiado.')
+        self.assertContains(respuesta, f'<a href="{self.URL}">Guachimontones</a>')
+        self.assertNotContains(respuesta, 'No debe verse')
+        # Las referencias no crean filas en la comparación de viajeros.
+        self.assertEqual(respuesta.context['filas'], [])
+        self.assertContains(respuesta, 'Todavía no hay destinos con suficientes reportes')
+
+    def test_el_indice_sin_referencias_no_muestra_la_seccion(self):
+        self.assertNotContains(self.client.get('/costos/'), 'Referencia oficial')

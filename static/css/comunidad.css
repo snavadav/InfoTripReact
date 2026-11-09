@@ -68,6 +68,14 @@ details > form, details > p { margin-top: .6rem; }
 .costos-tabla thead th { color: var(--texto-3); font-size: .75rem; font-weight: 500; white-space: nowrap; }
 .costos-tabla td { font-family: var(--fuente-mono); font-size: .8125rem; white-space: nowrap; }
 .costos-tabla tr:last-child th, .costos-tabla tr:last-child td { border-bottom: 0; }
+/* Referencia oficial: aparte de los gastos de viajeros, con su fuente a la vista. */
+.referencias-oficiales { margin-top: 2rem; padding-top: 1.25rem; border-top: 1px solid var(--linea-fuerte); }
+.referencias-oficiales h3 { margin-top: 1rem; }
+.referencias-oficiales ul { display: grid; gap: .6rem; margin: .75rem 0 0; padding: 0; list-style: none; }
+.referencia-oficial { padding: .9rem 1rem; border: 1px dashed var(--linea-fuerte); border-radius: var(--radio); background: var(--panel-2); }
+.referencia-oficial > p { color: var(--texto-2); font-size: .9375rem; overflow-wrap: anywhere; }
+.referencia-oficial > p + p { margin-top: .3rem; }
+.referencia-concepto { margin-right: .4rem; color: var(--texto-3); font-family: var(--fuente-mono); font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; }
 
 /* Pasaporte */
 .passport-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: .6rem; margin: 1rem 0; }

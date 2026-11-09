@@ -24,6 +24,18 @@
   <div class="community-box"><p>Todavía no hay destinos con suficientes reportes. <a href="{% url 'destinos-listado' %}">Elige uno que conozcas</a> y reporta lo que gastaste.</p></div>
   {% endif %}
   <p class="community-note">No son cotizaciones ni precios oficiales. Confirma con cada lugar antes de viajar.</p>
+
+  {% if referencias %}
+  <section class="referencias-oficiales" aria-labelledby="referencia-oficial">
+    <h2 id="referencia-oficial">Referencia oficial</h2>
+    <p class="community-note">Precio oficial publicado; puede haber cambiado. Va aparte de lo que reportan los viajeros y no cuenta para sus cifras.</p>
+    {% regroup referencias by destino as por_destino %}
+    {% for grupo in por_destino %}
+    <h3><a href="{% url 'destino-costos' grupo.grouper.slug %}">{{ grupo.grouper.nombre }}</a></h3>
+    <ul>{% for referencia in grupo.list %}{% include 'destinos/referencia_costo.html' %}{% endfor %}</ul>
+    {% endfor %}
+  </section>
+  {% endif %}
   {% include 'destinos/footer.html' %}
 </main>
 {% endblock %}
