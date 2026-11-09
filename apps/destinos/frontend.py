@@ -255,6 +255,10 @@ def listado(request):
         lugares.append(lugar)
     # El mapa muestra todos los resultados, no solo los de esta página de la lista.
     puntos = [] if editorial else [punto_de_mapa(destino) for destino in resultados]
+    # Sin búsqueda ni filtros, el navegador ordena por cercanía los puntos del mapa y muestra los más cercanos
+    # arriba de la primera página. La ubicación nunca llega al servidor: aquí solo se decide si ofrecerlo.
+    sin_busqueda = valido and not any(v not in (None, '', False) for v in datos.values())
+    cerca_de_ti = sin_busqueda and pagina.number == 1 and bool(puntos)
     return render(
         request,
         'destinos/listado.html',
@@ -271,6 +275,7 @@ def listado(request):
                                              'q': sugerencia}) if sugerencia else '',
             'puntos_mapa': puntos,
             'editorial': editorial,
+            'cerca_de_ti': cerca_de_ti,
         },
     )
 

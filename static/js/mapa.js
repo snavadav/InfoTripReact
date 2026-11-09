@@ -70,7 +70,7 @@
     byId('place-status').textContent = '';
     placePanel.hidden = false;
     document.querySelectorAll('.trip-card[aria-current]').forEach(card => card.removeAttribute('aria-current'));
-    document.querySelector(`.trip-card[data-slug="${CSS.escape(place.slug)}"]`)?.setAttribute('aria-current', 'true');
+    document.querySelectorAll(`.trip-card[data-slug="${CSS.escape(place.slug)}"]`).forEach(card => card.setAttribute('aria-current', 'true'));
     status.textContent = `Seleccionaste ${place.nombre}.`;
     showRouteButton();
     loadDescription(place);
@@ -189,8 +189,11 @@
   window.InfoTripExplorador = {map};
 
   // Una tarjeta ubica el lugar en el mapa; con Ctrl, Cmd o sin mapa sigue siendo un enlace a la ficha.
+  // Se escucha en la lista entera: así también sirven las tarjetas de "Destinos cerca de ti", que llegan después.
   const bySlug = new Map(places.map(place => [place.slug, place]));
-  document.querySelectorAll('.trip-card[data-slug]').forEach(card => card.addEventListener('click', event => {
+  document.querySelector('.explorer-list').addEventListener('click', event => {
+    const card = event.target.closest('.trip-card[data-slug]');
+    if (!card) return;
     const place = bySlug.get(card.dataset.slug), marker = markers.get(card.dataset.slug);
     if (!place || !marker || event.ctrlKey || event.metaKey || event.shiftKey) return;
     event.preventDefault();
@@ -198,7 +201,7 @@
     if (panel.classList.contains('mapa-oculto')) toggle.click();
     // En móvil la lista queda debajo del mapa: se vuelve a él para ver el lugar elegido.
     if (window.matchMedia('(max-width:860px)').matches) panel.scrollIntoView({block: 'start', behavior: 'instant'});
-  }));
+  });
 
   byId('fit-results').addEventListener('click', fit);
   const locate = byId('locate-me');

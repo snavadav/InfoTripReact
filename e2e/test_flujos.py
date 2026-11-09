@@ -482,6 +482,72 @@ class FlujosTests(StaticLiveServerTestCase):
         self.pagina.wait_for_selector('.lugar-popup:has-text("Fonda Doña Ana")')
         self.assertEqual(self.pagina.get_attribute('.lugar-popup a[href^="tel:"]', 'href'), 'tel:331234')
 
+    def crear_destinos_para_cercania(self):
+        municipio = Municipio.objects.create(nombre='Zapopan', slug='zapopan', region=self.destino.municipio.region)
+        Destino.objects.create(nombre='Bosque cercano', slug='bosque-cercano', municipio=municipio, descripcion='-',
+                               latitud=20.70, longitud=-103.40)
+        Destino.objects.create(nombre='Lago lejano', slug='lago-lejano', municipio=municipio, descripcion='-',
+                               latitud=21.50, longitud=-104.90)
+
+    def test_explorar_sin_busqueda_muestra_primero_lo_cercano(self):
+        self.crear_destinos_para_cercania()
+        self.contexto.grant_permissions(['geolocation'], origin=self.live_server_url)
+        self.contexto.set_geolocation({'latitude': 20.6597, 'longitude': -103.3496})
+        peticiones = []
+        self.pagina.on('request', lambda p: peticiones.append(p.url + (p.post_data or '')))
+        self.abrir('/destinos/')
+        # Con el permiso ya concedido se ordena sola, sin preguntar.
+        self.pagina.wait_for_selector('#cerca-destinos-lista .trip-card')
+        self.assertTrue(self.pagina.is_hidden('#cerca-destinos-pedir'))
+        tarjetas = self.pagina.locator('#cerca-destinos-lista .trip-card')
+        self.assertEqual(tarjetas.count(), 3)
+        self.assertEqual(tarjetas.first.get_attribute('data-slug'), 'bosque-cercano')
+        self.assertIn('Zapopan · 6.9 km', tarjetas.first.inner_text())
+        self.assertIn('Tapalpa · 92 km', tarjetas.nth(1).inner_text())
+        self.assertIn('3 destinos más cercanos', self.pagina.inner_text('#cerca-destinos-estado'))
+        # La lista normal sigue debajo y el mapa se centra en la persona.
+        self.assertEqual(self.pagina.locator('.trip-grid:not(#cerca-destinos-lista) .trip-card').count(), 3)
+        self.pagina.wait_for_selector('path.mi-ubicacion', state='attached')
+        self.assertGreater(self.pagina.evaluate('InfoTripExplorador.map.getCenter().lat'), 20.2)
+        # Una tarjeta cercana abre el destino en el mapa, igual que las de la lista.
+        tarjetas.first.click()
+        self.pagina.wait_for_selector('#place-name:has-text("Bosque cercano")')
+        # La ubicación no sale del navegador ni se guarda.
+        self.pagina.wait_for_load_state('networkidle')
+        self.assertFalse([url for url in peticiones if '20.659' in url or '103.349' in url])
+        self.assertNotIn('20.659', self.pagina.url + self.pagina.evaluate('JSON.stringify(localStorage)'))
+        # Si después busca o filtra, manda su búsqueda.
+        self.pagina.fill('#id_q', 'Lago')
+        self.pagina.press('#id_q', 'Enter')
+        self.pagina.wait_for_url(lambda url: 'q=Lago' in url)
+        self.assertEqual(self.pagina.locator('#cerca-destinos').count(), 0)
+        self.assertEqual(self.pagina.locator('.trip-card').count(), 1)
+
+    def test_sin_permiso_se_pide_con_un_toque_y_un_rechazo_deja_la_lista(self):
+        self.crear_destinos_para_cercania()
+        self.pagina.set_viewport_size({'width': 375, 'height': 812})
+        self.abrir('/destinos/')
+        # Sin permiso no se pide la ubicación al cargar: se ofrece una tarjeta grande.
+        boton = self.pagina.get_by_role('button', name=re.compile('Ver qué hay cerca de ti'))
+        boton.wait_for()
+        self.assertGreaterEqual(boton.bounding_box()['height'], 44)
+        self.assertEqual(self.pagina.evaluate('document.documentElement.scrollWidth'), 375)
+        self.assertEqual(self.pagina.locator('#cerca-destinos-lista .trip-card').count(), 0)
+        # Chromium sin permiso responde como un rechazo: mensaje amable y la lista de siempre.
+        boton.focus()
+        self.pagina.keyboard.press('Enter')
+        self.pagina.wait_for_selector('#cerca-destinos-estado:has-text("No diste permiso")')
+        self.assertEqual(self.pagina.evaluate('document.activeElement.id'), 'cerca-destinos-titulo')
+        self.assertEqual(self.pagina.locator('.explorer-list .trip-card').count(), 3)
+        # Con el permiso concedido, al volver ya no pregunta: se ordena sola.
+        self.contexto.grant_permissions(['geolocation'], origin=self.live_server_url)
+        self.contexto.set_geolocation({'latitude': 21.49, 'longitude': -104.89})
+        self.abrir('/destinos/')
+        self.pagina.wait_for_selector('#cerca-destinos-lista .trip-card')
+        self.assertEqual(self.pagina.locator('#cerca-destinos-lista .trip-card').first.get_attribute('data-slug'),
+                         'lago-lejano')
+        self.assertEqual(self.pagina.evaluate('document.documentElement.scrollWidth'), 375)
+
     def test_mover_el_mapa_no_cierra_el_lugar_abierto(self):
         Lugar.objects.create(nombre='Fonda Doña Ana', tipo='comer', subtipo='restaurant', latitud=19.9, longitud=-103.7)
         self.abrir('/destinos/')

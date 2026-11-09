@@ -47,6 +47,18 @@
     <div class="explorer-list">
       <noscript><p class="editorial-note">Activa JavaScript para ver el mapa. Puedes buscar y abrir los destinos con los enlaces siguientes.</p></noscript>
       {% if editorial %}<p class="editorial-note">Las fichas de inspiración aún no tienen coordenadas registradas. Puedes consultar su ubicación desde el detalle.</p>{% endif %}
+      {% if cerca_de_ti %}
+      <section id="cerca-destinos" class="cerca-destinos" aria-labelledby="cerca-destinos-titulo" hidden>
+        <h2 id="cerca-destinos-titulo" tabindex="-1">Destinos cerca de ti</h2>
+        <button type="button" id="cerca-destinos-pedir" class="cerca-pedir" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="6.5"/><circle cx="12" cy="12" r="2"/></svg>
+          <span><strong>Ver qué hay cerca de ti</strong><small>Ordenamos los destinos por distancia. Tu ubicación no sale de este navegador.</small></span>
+        </button>
+        <p id="cerca-destinos-estado" class="cerca-estado" role="status"></p>
+        <div id="cerca-destinos-lista" class="trip-grid"></div>
+        <p id="cerca-destinos-nota" class="editorial-note" hidden>Distancia en línea recta, calculada en tu navegador con tu ubicación aproximada: no se envía ni se guarda.</p>
+      </section>
+      {% endif %}
       <section id="nearby-panel" class="nearby-panel" aria-labelledby="nearby-title" hidden>
         <div class="route-heading"><h2 id="nearby-title">Cerca de ti</h2><button type="button" id="nearby-close">Cerrar</button></div>
         <p id="nearby-status" class="editorial-note" role="status"></p>
@@ -110,4 +122,5 @@
 <script src="{% static 'js/buscador.js' %}" defer></script>
 <script src="{% static 'js/mapa.js' %}" defer></script>
 <script src="{% static 'js/lugares-mapa.js' %}" defer></script>
+{% if cerca_de_ti %}<script src="{% static 'js/destinos-cerca.js' %}" defer></script>{% endif %}
 {% endblock %}

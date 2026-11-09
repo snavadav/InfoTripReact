@@ -104,6 +104,28 @@ class ExploracionMapaTests(TestCase):
         self.assertContains(respuesta, 'servicio=banos')
         self.assertContains(respuesta, 'municipio=municipio-prueba')
 
+    def test_destinos_cerca_de_ti_solo_al_explorar_sin_busqueda(self):
+        categoria = Categoria.objects.create(nombre='Naturaleza', slug='naturaleza')
+        for numero in range(9):
+            self.crear_destino(nombre=f'Bosque {numero}', slug=f'bosque-{numero}').categorias.add(categoria)
+        respuesta = self.client.get('/destinos/')
+        self.assertTrue(respuesta.context['cerca_de_ti'])
+        self.assertContains(respuesta, 'id="cerca-destinos"')
+        self.assertContains(respuesta, 'js/destinos-cerca.js')
+        # Lo que busca o filtra la persona manda; en otras páginas de la lista tampoco se repite.
+        for parametros in [{'q': 'bosque'}, {'categoria': 'naturaleza'}, {'orden': 'recientes'}, {'page': 2},
+                           {'municipio': 'desconocido'}]:
+            with self.subTest(parametros=parametros):
+                respuesta = self.client.get('/destinos/', parametros)
+                self.assertFalse(respuesta.context['cerca_de_ti'])
+                self.assertNotContains(respuesta, 'id="cerca-destinos"')
+
+    def test_sin_destinos_no_ofrece_cercania(self):
+        # Sin destinos registrados se muestra la selección editorial, que no tiene coordenadas.
+        respuesta = self.client.get('/destinos/')
+        self.assertFalse(respuesta.context['cerca_de_ti'])
+        self.assertNotContains(respuesta, 'id="cerca-destinos"')
+
     def test_lo_curado_aparece_antes_que_lo_importado(self):
         self.crear_destino(nombre='Antes por nombre', slug='importado', osm_id='node/1')
         self.crear_destino(nombre='Zapotlán', slug='propio')
