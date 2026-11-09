@@ -155,3 +155,40 @@ class Lugar(models.Model):
     @property
     def telefono_marcable(self):
         return ''.join(caracter for caracter in self.telefono if caracter.isdigit() or caracter == '+')
+
+
+class ReferenciaCosto(models.Model):
+    """Precio publicado por una fuente oficial, con su cita.
+
+    Va aparte de los gastos de viajeros: no entra en la mediana ni cuenta para el mínimo de reportes.
+    Solo se registra lo que una fuente publica; nunca se estima un precio.
+    """
+    CONCEPTOS = [
+        ('entrada', 'Entrada'),
+        ('comida', 'Comida'),
+        ('transporte', 'Transporte'),
+        ('alojamiento', 'Alojamiento'),
+    ]
+    destino = models.ForeignKey(Destino, on_delete=models.CASCADE, related_name='referencias_costo')
+    concepto = models.CharField(max_length=15, choices=CONCEPTOS)
+    monto = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0'))],
+                                help_text='En pesos mexicanos. 0 cuando la fuente indica entrada libre.')
+    descripcion = models.CharField(max_length=300, help_text='A qué corresponde el precio, como lo publica la fuente.')
+    fuente_nombre = models.CharField(max_length=200)
+    fuente_url = models.URLField(max_length=500)
+    fecha_consulta = models.DateField(help_text='Día en que se consultó la fuente.')
+    fecha_fuente = models.DateField(null=True, blank=True,
+                                    help_text='Última modificación o entrada en vigor que indica la fuente, si la da.')
+
+    class Meta:
+        ordering = ['destino', 'concepto', 'monto', 'pk']
+        verbose_name = 'Referencia oficial de costo'
+        verbose_name_plural = 'Referencias oficiales de costo'
+        constraints = [
+            models.CheckConstraint(condition=models.Q(monto__gte=0), name='referencia_costo_monto_no_negativo'),
+            models.UniqueConstraint(fields=['destino', 'concepto', 'descripcion', 'fuente_url'],
+                                    name='referencia_costo_unica'),
+        ]
+
+    def __str__(self):
+        return f'{self.destino} · {self.get_concepto_display()} · ${self.monto}'
