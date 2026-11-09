@@ -147,8 +147,10 @@ class FlujosTests(StaticLiveServerTestCase):
     def test_sesion_en_cookie_y_no_en_localstorage(self):
         self.iniciar_sesion()
         visibles = self.pagina.evaluate('[Object.keys(localStorage), document.cookie]')
-        # Fuera de la sesión solo queda la fecha del saludo de Axo, que no identifica a nadie.
-        self.assertEqual([clave for clave in visibles[0] if clave != 'infotrip_axo_saludo'], ['usuario'])
+        # Fuera de la sesión solo quedan la fecha del saludo de Axo y la marca de "Instalar app" cerrado,
+        # que no identifican a nadie (las pone el init script de las pruebas).
+        preferencias = {'infotrip_axo_saludo', 'infotrip_instalar_cerrado'}
+        self.assertEqual([clave for clave in visibles[0] if clave not in preferencias], ['usuario'])
         self.assertNotIn('infotrip_refresh', visibles[1])
         cookie = next(c for c in self.contexto.cookies() if c['name'] == 'infotrip_refresh')
         self.assertTrue(cookie['httpOnly'])

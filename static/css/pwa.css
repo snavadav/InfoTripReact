@@ -54,8 +54,10 @@
 .sin-conexion__aviso svg { color: var(--marca); }
 .sin-conexion__aviso h1 { margin: .5rem 0; }
 .sin-conexion__estado:empty { display: none; }
+.sin-conexion__aviso p { max-width: 38rem; }
 .sin-conexion__reintentar {
   min-height: 44px;
+  margin-top: .5rem;
   padding: 0 1.1rem;
   border: 0;
   border-radius: var(--radio-s);
