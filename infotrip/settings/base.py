@@ -49,6 +49,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sitemaps',
+    # Búsquedas con unaccent y trigramas en PostgreSQL; en SQLite no hace nada.
+    'django.contrib.postgres',
 
     # Terceros
     'rest_framework',

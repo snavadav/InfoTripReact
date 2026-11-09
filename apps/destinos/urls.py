@@ -6,6 +6,7 @@ app_name = 'destinos'
 
 urlpatterns = [
     path('destinos/', views.DestinoListView.as_view(), name='lista'),
+    path('sugerencias/', views.SugerenciasView.as_view(), name='sugerencias'),
     path('destinos/<slug:slug>/', views.DestinoDetailView.as_view(), name='detalle'),
     path('lugares/', lugares.LugaresZonaView.as_view(), name='lugares'),
     path('lugares/cerca/', lugares.LugaresCercaView.as_view(), name='lugares-cerca'),

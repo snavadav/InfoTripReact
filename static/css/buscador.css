@@ -1,0 +1,41 @@
+/* Autocompletado del campo de búsqueda (static/js/buscador.js). */
+.buscador-ancla { position: relative; }
+.buscador-opciones {
+  position: absolute;
+  z-index: 1200;
+  top: calc(100% + .35rem);
+  left: 0;
+  right: 0;
+  max-height: min(60vh, 26rem);
+  overflow-y: auto;
+  margin: 0;
+  padding: .35rem;
+  list-style: none;
+  border: 1px solid var(--linea-fuerte);
+  border-radius: var(--radio);
+  background: var(--panel);
+  box-shadow: var(--sombra-flotante);
+  text-align: left;
+}
+.buscador-opciones[hidden] { display: none; }
+.buscador-opciones [role="option"] {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 44px;
+  padding: .4rem .75rem;
+  border-radius: var(--radio-s);
+  color: var(--texto);
+  cursor: pointer;
+}
+.buscador-opciones [role="option"]:hover { background: var(--panel-3); }
+.buscador-opciones [role="option"][aria-selected="true"] {
+  background: var(--acento-suave);
+  outline: 2px solid var(--acento);
+  outline-offset: -2px;
+}
+.buscador-nombre { font-weight: 600; font-size: 1rem; }
+.buscador-detalle { color: var(--texto-3); font-size: .8125rem; }
+@media (forced-colors: active) {
+  .buscador-opciones [role="option"][aria-selected="true"] { outline: 2px solid Highlight; }
+}

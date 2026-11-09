@@ -795,3 +795,34 @@ class FlujosTests(StaticLiveServerTestCase):
         self.abrir('/')
         animacion = self.pagina.evaluate("getComputedStyle(document.querySelector('#trip-chat-toggle .pj-cuerpo')).animationName")
         self.assertEqual(animacion, 'none')
+
+    def test_autocompletar_con_errores_y_solo_teclado(self):
+        Destino.objects.create(nombre='Tlaquepaque', slug='tlaquepaque', municipio=self.destino.municipio,
+                               descripcion='Pueblo de artesanos', latitud=20.6, longitud=-103.3)
+        self.abrir('/')
+        campo = self.pagina.locator('#destination-query')
+        campo.press_sequentially('tlakepake')
+        lista = self.pagina.locator('#' + campo.get_attribute('aria-controls'))
+        opcion = lista.get_by_role('option', name=re.compile('Tlaquepaque'))
+        opcion.first.wait_for()
+        self.assertEqual(campo.get_attribute('aria-expanded'), 'true')
+        campo.press('ArrowDown')
+        primera = lista.get_by_role('option').first
+        self.assertEqual(campo.get_attribute('aria-activedescendant'), primera.get_attribute('id'))
+        campo.press('Escape')
+        self.assertEqual(campo.get_attribute('aria-expanded'), 'false')
+        campo.press('ArrowDown')
+        campo.press('ArrowDown')
+        campo.press('Enter')
+        self.pagina.wait_for_url(re.compile('/destinos/tlaquepaque/'))
+
+    def test_explorar_sugiere_cuando_hay_errores_y_conserva_filtros(self):
+        self.abrir('/destinos/?q=tapqlpa')
+        self.assertIn('¿Quisiste decir', self.pagina.locator('.search-suggestion').inner_text())
+        self.pagina.locator('.search-suggestion a').click()
+        self.pagina.wait_for_url(re.compile(r'q=Tapalpa'))
+        campo = self.pagina.locator('#id_q')
+        self.assertEqual(campo.get_attribute('role'), 'combobox')
+        campo.fill('')
+        campo.press_sequentially('mira')
+        self.pagina.locator('[role="option"]', has_text='Mirador').first.wait_for()

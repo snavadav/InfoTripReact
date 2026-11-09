@@ -3,6 +3,7 @@
 {% block title %}InfoTrip — Encuentra tu próxima escapada{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/inicio-interactivo.css' %}">
+<link rel="stylesheet" href="{% static 'css/buscador.css' %}">
 {% endblock %}
 {% block content %}
 {% include 'partials/navBar.html' %}
@@ -15,7 +16,7 @@
       <label class="sr-only" for="destination-query">Destino o municipio</label>
       <div>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input id="destination-query" type="search" name="q" maxlength="200" placeholder="Ej. Tapalpa" autocomplete="off">
+        <input id="destination-query" type="search" name="q" maxlength="200" placeholder="Ej. Tapalpa" autocomplete="off" data-autocompletar="{% url 'destinos:sugerencias' %}">
         <button type="submit">Buscar</button>
       </div>
     </form>
@@ -99,4 +100,5 @@
 {% endblock %}
 {% block extra_js %}
 <script src="{% static 'js/inicio-interactivo.js' %}" defer></script>
+<script src="{% static 'js/buscador.js' %}" defer></script>
 {% endblock %}
