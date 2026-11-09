@@ -91,9 +91,25 @@
         <div id="ruta-mapa" class="ficha-mapa planeador-mapa" aria-label="Mapa de la ruta"></div>
         <section id="ruta-detalle" class="planeador-detalle"></section>
         <div class="planeador-acciones">
+          <button type="button" id="ruta-compartir" class="planeador-boton-principal">Compartir ruta</button>
           <button type="button" id="ruta-guardar">Guardar en Mis viajes</button>
           <span id="ruta-guardar-estado" class="planeador-ayuda" role="status"></span>
         </div>
+        <p id="ruta-compartir-estado" class="planeador-ayuda" role="status"></p>
+        <section id="ruta-compartir-panel" class="planeador-compartir" aria-labelledby="ruta-compartir-titulo" hidden>
+          <h3 id="ruta-compartir-titulo">Tu ruta tiene enlace</h3>
+          <label class="planeador-campo" for="ruta-enlace">Enlace para compartir</label>
+          <input type="url" id="ruta-enlace" readonly data-enlace>
+          <div class="planeador-compartir-botones">
+            <a class="boton-whatsapp" href="https://wa.me/" target="_blank" rel="noopener noreferrer" data-whatsapp>Enviar por WhatsApp<span class="sr-only"> (se abre en otra pestaña)</span></a>
+            <button type="button" data-compartir hidden>Compartir…</button>
+            <button type="button" data-copiar>Copiar enlace</button>
+            <a id="ruta-ics" href="#" download>Agregar al calendario (.ics)</a>
+            <a id="ruta-ver" href="#">Ver la página de la ruta</a>
+          </div>
+          <p class="planeador-ayuda" data-compartir-nota></p>
+          <p class="planeador-ayuda" role="status" data-compartir-estado></p>
+        </section>
         <details class="planeador-metodo">
           <summary>¿Cómo se eligió?</summary>
           <p id="ruta-metodo"></p>
@@ -104,4 +120,4 @@
   {% include 'destinos/footer.html' %}
 </main>
 {% endblock %}
-{% block extra_js %}<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script><script src="{% static 'js/mapa-base.js' %}" defer></script><script src="{% static 'js/cuenta-api.js' %}"></script><script src="{% static 'js/planeador.js' %}" defer></script>{% endblock %}
+{% block extra_js %}<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script><script src="{% static 'js/mapa-base.js' %}" defer></script><script src="{% static 'js/cuenta-api.js' %}"></script><script src="{% static 'js/compartir-ruta.js' %}" defer></script><script src="{% static 'js/planeador.js' %}" defer></script>{% endblock %}

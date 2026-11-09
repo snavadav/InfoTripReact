@@ -14,6 +14,9 @@
   const campoPersonas = form.elements.personas;
   const botonGuardar = document.getElementById('ruta-guardar');
   const estadoGuardar = document.getElementById('ruta-guardar-estado');
+  const botonCompartir = document.getElementById('ruta-compartir');
+  const estadoCompartir = document.getElementById('ruta-compartir-estado');
+  const panelCompartir = document.getElementById('ruta-compartir-panel');
   const DIAS_SEMANA = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
   const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
   const COLORES = 3;
@@ -309,6 +312,9 @@
       `Revisamos ${m.candidatos} sitios cercanos y afines a tus intereses. Un algoritmo genético probó miles de órdenes de visita durante ${m.generaciones} generaciones (${m.segundos} s) y se quedó con el que suma más de lo que te interesa sin pasarse de horarios, del día ni del presupuesto.${comparacion}`;
     botonGuardar.hidden = !t.sitios;
     estadoGuardar.textContent = '';
+    botonCompartir.hidden = !t.sitios;
+    estadoCompartir.textContent = '';
+    panelCompartir.hidden = true;
     elegirDia(0);
     cargarExtras(plan);
   }
@@ -373,7 +379,18 @@
       if (parada.comida_despues) lista.append(lugarUtil('Hora de comer:', parada.comida));
     });
     if (dia.dormir !== null) lista.append(lugarUtil('Dormir:', dia.dormir));
-    detalle.replaceChildren(titulo, elemento('p', 'Horas estimadas. Toca el nombre de un lugar para ver su ficha completa.'), lista);
+    detalle.replaceChildren(titulo, elemento('p', 'Horas estimadas. Toca el nombre de un lugar para ver su ficha completa.'),
+      enlaceDelDia(dia, numero), lista);
+  }
+
+  // Todo el día en Google Maps, con sus paradas en orden.
+  function enlaceDelDia(dia, numero) {
+    const caja = elemento('p', '', 'parada-acciones planeador-dia-mapa');
+    if (!dia.google_maps) return caja;
+    caja.append(externo(`Abrir el día ${numero + 1} en Google Maps`, dia.google_maps.url, '', ' (se abre en otra pestaña)'));
+    const {incluidas, total} = dia.google_maps;
+    if (incluidas < total) caja.append(elemento('span', `Incluye las primeras ${incluidas} de ${total} paradas.`, 'planeador-ayuda'));
+    return caja;
   }
 
   function hora(etiqueta, valor) {
@@ -556,6 +573,37 @@
     caja.append(todas);
     return caja;
   }
+
+  // ── Compartir por enlace ────────────────────────────────
+  botonCompartir.addEventListener('click', async () => {
+    if (botonCompartir.disabled || !ultimaPeticion) return;
+    const plan = ultimoPlan;
+    botonCompartir.disabled = true;
+    estadoCompartir.textContent = 'Creando el enlace…';
+    try {
+      const ruta = await InfoTrip.api('/api/v1/rutas/compartidas/', {method: 'POST', body: ultimaPeticion, auth: InfoTrip.hasSession()});
+      if (plan !== ultimoPlan) return;
+      const url = location.origin + ruta.url;
+      InfoTripCompartirRuta.conectar(panelCompartir, ruta.titulo, url);
+      document.getElementById('ruta-ics').href = `${ruta.url}calendario.ics`;
+      document.getElementById('ruta-ver').href = ruta.url;
+      const notas = [];
+      if (ultimaPeticion.latitud !== undefined) notas.push(`No guardamos tu ubicación: la ruta dice «${ruta.titulo.split(' desde ').pop()}».`);
+      notas.push(InfoTrip.hasSession()
+        ? 'Queda en tu perfil, donde puedes borrarla cuando quieras.'
+        : `Cualquiera con el enlace puede verla hasta el ${new Date(ruta.caduca).toLocaleDateString('es-MX', {day: 'numeric', month: 'long', year: 'numeric'})}.`);
+      panelCompartir.querySelector('[data-compartir-nota]').textContent = notas.join(' ');
+      panelCompartir.hidden = false;
+      estadoCompartir.textContent = 'Listo: tu ruta ya tiene enlace.';
+      const campo = document.getElementById('ruta-enlace');
+      campo.focus();
+      campo.select();
+    } catch (error) {
+      estadoCompartir.textContent = `No pudimos crear el enlace. ${error.message}`;
+    } finally {
+      botonCompartir.disabled = false;
+    }
+  });
 
   // ── Guardar en Mis viajes ───────────────────────────────
   function comoViaje(plan, cuerpo) {
