@@ -1,35 +1,187 @@
-/* Planeador de rutas: formulario a la izquierda, mapa e itinerario a la derecha. */
-.planeador-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 1.25rem; align-items: start; margin-top: 1rem; }
-.planeador-form { margin-top: 0; max-width: none; position: sticky; top: calc(var(--nav-alto) + 1rem); }
-.planeador-form > button[type="button"] { justify-self: start; }
-.planeador-fila { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
-.planeador-intereses { border: 1px solid var(--linea); border-radius: var(--radio-s); padding: .5rem .75rem .75rem; display: grid; grid-template-columns: 1fr 1fr; gap: .35rem .75rem; }
-.planeador-intereses legend { padding: 0 .25rem; font-weight: 600; }
-.planeador-resultado { display: grid; gap: 1rem; min-width: 0; }
-.planeador-resumen { display: flex; flex-wrap: wrap; gap: .4rem 1rem; align-items: baseline; padding: .75rem 1rem; border: 1px solid var(--linea); border-radius: var(--radio); background: var(--panel); }
-.planeador-resumen strong { font-size: 1.125rem; }
-.planeador-resumen span { color: var(--texto-2); }
-.planeador-avisos { margin: 0; padding: .6rem 1rem .6rem 2rem; border-radius: var(--radio); background: var(--aviso-suave); color: var(--aviso); font-size: .875rem; display: grid; gap: .25rem; }
-.planeador-dia { margin-top: 0; }
-.planeador-dia + .planeador-dia { margin-top: 1rem; }
-.planeador-dia > h2 { display: flex; align-items: center; gap: .5rem; font-size: 1.0625rem; }
-.planeador-dia > h2::before { content: ''; width: .75rem; height: .75rem; border-radius: 50%; background: var(--color-dia); flex: none; }
-.planeador-paradas { list-style: none; margin: .5rem 0 0; padding: 0; display: grid; gap: .6rem; }
-.planeador-paradas > li { display: grid; gap: .1rem; padding-left: .75rem; border-left: 2px solid var(--linea); }
-.planeador-paradas small { color: var(--texto-2); }
-.planeador-parada { display: flex; gap: .6rem; align-items: baseline; flex-wrap: wrap; }
-.planeador-parada a { font-weight: 600; }
-.planeador-hora { font-family: var(--fuente-mono); font-size: .8125rem; color: var(--texto-2); white-space: nowrap; }
-.planeador-nota { color: var(--aviso) !important; }
-.planeador-util { display: block !important; border-left-style: dashed !important; font-size: .9rem; }
-.planeador-util > span:first-child { font-weight: 600; }
-.planeador-metodo { font-size: .875rem; color: var(--texto-2); }
-.planeador-metodo summary { cursor: pointer; font-weight: 600; color: var(--texto); }
-.planeador-metodo p { margin-top: .4rem; }
-/* Marcador numerado de cada parada, del color de su día. */
-.pin-ruta { display: grid; place-items: center; width: 26px; height: 26px; margin: 1px; border: 2px solid var(--panel); border-radius: 50%; background: var(--color-dia); color: #fff; font: 600 .75rem/1 var(--fuente); box-shadow: var(--sombra); }
-
-@media (max-width: 860px) {
-  .planeador-layout { grid-template-columns: minmax(0, 1fr); }
-  .planeador-form { position: static; }
+/* Planeador de rutas: formulario por pasos a la izquierda; días, mapa y paradas a la derecha.
+   Todo el texto de la página va a 16 px o más y cada control mide al menos 44 px. */
+.planeador {
+  /* Un color por día. Con texto blanco encima (marcadores) cumplen AA en ambos temas. */
+  --dia-0: #0A7564;
+  --dia-1: #B13A0B;
+  --dia-2: #4F4FC4;
+  --objetivo: 44px;
 }
+.planeador .dia-0 { --color-dia: var(--dia-0); }
+.planeador .dia-1 { --color-dia: var(--dia-1); }
+.planeador .dia-2 { --color-dia: var(--dia-2); }
+.planeador-intro { max-width: 62ch; margin-top: .4rem; color: var(--texto-2); font-size: 1.0625rem; }
+.planeador-layout { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 1.5rem; align-items: start; margin-top: 1.25rem; }
+.planeador :is(label, input, select, button, summary, legend, small, .form-status) { font-size: 1rem; }
+.planeador :is(input:not([type="checkbox"], [type="radio"]), select, button) { min-height: var(--objetivo); }
+
+/* ── Formulario ─────────────────────────────────────────── */
+.planeador-form { display: grid; gap: 1rem; }
+.planeador-paso { display: grid; gap: .6rem; margin: 0; padding: 1rem 1.1rem 1.15rem; border: 1px solid var(--linea); border-radius: var(--radio-l); background: var(--panel); min-width: 0; }
+.planeador-paso legend { display: flex; align-items: center; gap: .6rem; float: left; width: 100%; margin-bottom: .2rem; padding: 0; font-size: 1.125rem; font-weight: 650; letter-spacing: -.01em; }
+.planeador-paso legend + * { clear: left; }
+.planeador-num { display: inline-grid; place-items: center; width: 1.9rem; height: 1.9rem; border-radius: 50%; background: var(--acento); color: var(--sobre-acento); font-size: 1rem; font-weight: 700; flex: none; }
+.planeador-campo { display: grid; gap: .3rem; font-weight: 600; color: var(--texto); }
+.planeador-campo + .planeador-atajos, .planeador-campo + .planeador-chips { margin-top: -.15rem; }
+.planeador-ayuda { margin: 0; color: var(--texto-2); font-size: 1rem; }
+.planeador-ayuda:empty { display: none; }
+.planeador-fila { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+.planeador-secundario { justify-self: start; }
+.planeador-secundario[aria-pressed="true"] { border-color: var(--acento); background: var(--acento-suave); }
+
+/* Chips: casillas y opciones grandes; el control nativo cubre toda la chip para que se pueda tocar. */
+.planeador-chips, .planeador-atajos { display: flex; flex-wrap: wrap; gap: .5rem; }
+.planeador-chips--tres { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+label.planeador-chip { position: relative; display: grid; }
+label.planeador-chip input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.planeador-chip > span, button.planeador-chip {
+  display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+  min-height: var(--objetivo); padding: .5rem 1rem; border: 1px solid var(--linea-fuerte); border-radius: 999px;
+  background: var(--panel); color: var(--texto); font-size: 1rem; font-weight: 500; line-height: 1.2; text-align: center;
+  transition: background-color .12s, border-color .12s, color .12s;
+}
+label.planeador-chip:hover > span, button.planeador-chip:hover:not(:disabled) { border-color: var(--acento); background: var(--panel-2); }
+.planeador-chip input:checked + span, button.planeador-chip[aria-pressed="true"], button.planeador-chip[aria-pressed="true"]:hover:not(:disabled) {
+  border-color: var(--acento); background: var(--acento-suave); color: var(--texto); font-weight: 650;
+}
+/* La marca no depende solo del color. */
+.planeador-chip input:checked + span::before, button.planeador-chip[aria-pressed="true"]::before { content: '✓'; font-weight: 700; color: var(--acento-fuerte); }
+.planeador-chip input:focus-visible + span { outline: 3px solid var(--acento); outline-offset: 2px; }
+.planeador-chip input[type="radio"]:checked + span::before { content: '●'; font-size: .75em; }
+
+.planeador-check { position: relative; display: flex; align-items: center; gap: .6rem; min-height: var(--objetivo); font-weight: 500; cursor: pointer; }
+.planeador-check input { width: 1.35rem; height: 1.35rem; }
+
+.planeador-contador { display: grid; grid-template-columns: var(--objetivo) minmax(0, 6rem) var(--objetivo); gap: .5rem; align-items: center; }
+.planeador-contador button { padding: 0; font-size: 1.375rem; font-weight: 600; line-height: 1; }
+.planeador-contador input { text-align: center; font-weight: 600; }
+
+.planeador-mas { border-top: 1px solid var(--linea); padding-top: .6rem; display: grid; gap: .6rem; }
+.planeador-mas[open] { gap: .6rem; }
+.planeador-mas summary { display: flex; align-items: center; min-height: var(--objetivo); font-weight: 600; color: var(--acento); }
+.planeador-mas[open] summary { margin-bottom: .2rem; }
+
+.planeador-error { margin: 0; padding: .55rem .75rem; border-left: 4px solid var(--peligro); border-radius: var(--radio-s); background: var(--peligro-suave); color: var(--texto); font-size: 1rem; font-weight: 500; }
+.planeador-paso[aria-invalid="true"] { border-color: var(--peligro); }
+.planeador-paso input[aria-invalid="true"] { border-color: var(--peligro); }
+
+.planeador button.planeador-enviar { width: 100%; min-height: 52px; font-size: 1.0625rem; font-weight: 650; }
+.planeador-estado { margin: 0; font-size: 1rem; }
+.planeador-estado.es-error { padding: .55rem .75rem; border-left: 4px solid var(--peligro); border-radius: var(--radio-s); background: var(--peligro-suave); color: var(--texto); white-space: pre-line; }
+
+/* ── Resultado ──────────────────────────────────────────── */
+.planeador-resultado { display: grid; gap: 1rem; min-width: 0; position: sticky; top: calc(var(--nav-alto) + 1rem); }
+.planeador-resultado:has(#ruta-resultado:not([hidden])) { position: static; }
+#ruta-resultado { display: grid; gap: 1rem; min-width: 0; }
+.planeador-vacio { padding: 1.25rem; border: 1px dashed var(--linea-fuerte); border-radius: var(--radio-l); color: var(--texto-2); font-size: 1rem; }
+.planeador-vacio strong { color: var(--texto); }
+.planeador-mapa { aspect-ratio: 16 / 10; min-height: 260px; }
+.planeador-resumen { display: flex; flex-wrap: wrap; gap: .4rem 1.25rem; align-items: baseline; padding: .85rem 1.1rem; border: 1px solid var(--linea); border-radius: var(--radio-l); background: var(--panel); font-size: 1rem; }
+.planeador-resumen strong { font-size: 1.25rem; }
+.planeador-resumen span { color: var(--texto-2); }
+.planeador-avisos { margin: 0; padding: .7rem 1rem .7rem 2rem; border-radius: var(--radio); background: var(--aviso-suave); color: var(--texto); font-size: 1rem; display: grid; gap: .3rem; }
+.planeador-avisos:empty { display: none; }
+
+/* Tarjetas de día: botones con aria-pressed. */
+.planeador-dias { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: .75rem; }
+button.planeador-dia-tarjeta {
+  display: grid; justify-content: stretch; justify-items: start; align-content: start; gap: .3rem; width: 100%;
+  min-height: 7rem; padding: .9rem 1rem 1rem;
+  border: 2px solid var(--linea); border-top: 6px solid var(--color-dia); border-radius: var(--radio-l);
+  background: var(--panel); color: var(--texto); font-weight: 400; text-align: left;
+}
+button.planeador-dia-tarjeta:hover:not(:disabled) { border-color: var(--linea-fuerte); border-top-color: var(--color-dia); background: var(--panel-2); }
+button.planeador-dia-tarjeta[aria-pressed="true"], button.planeador-dia-tarjeta[aria-pressed="true"]:hover:not(:disabled) { border-color: var(--acento); border-top-color: var(--color-dia); background: var(--acento-suave); box-shadow: var(--sombra); }
+button.planeador-dia-tarjeta:focus-visible { outline: 3px solid var(--acento); outline-offset: 3px; }
+.dia-titulo { font-size: 1.125rem; font-weight: 700; letter-spacing: -.01em; }
+.dia-fecha { color: var(--texto-2); font-size: 1rem; }
+.dia-datos { display: flex; flex-wrap: wrap; gap: .1rem .75rem; color: var(--texto); font-size: 1rem; }
+.dia-estado { margin-top: .2rem; color: var(--acento-fuerte); font-size: 1rem; font-weight: 650; }
+.planeador-dia-tarjeta[aria-pressed="false"] .dia-estado { color: var(--texto-2); font-weight: 500; }
+
+/* Detalle del día elegido. */
+.planeador-detalle { display: grid; gap: .9rem; min-width: 0; }
+.planeador-detalle:focus { outline: none; }
+.planeador-detalle:focus-visible { outline: 3px solid var(--acento); outline-offset: 4px; border-radius: var(--radio); }
+.planeador-detalle > h3 { display: flex; align-items: center; gap: .6rem; font-size: 1.25rem; }
+.planeador-detalle > h3::before { content: ''; width: .9rem; height: .9rem; border-radius: 50%; background: var(--color-dia); flex: none; }
+.planeador-detalle > p { margin: 0; color: var(--texto-2); font-size: 1rem; }
+.planeador-paradas { list-style: none; margin: 0; padding: 0; display: grid; gap: .9rem; }
+.parada { display: grid; grid-template-columns: 2.4rem minmax(0, 1fr); gap: .5rem .8rem; padding: 1rem 1.1rem; border: 1px solid var(--linea); border-radius: var(--radio-l); background: var(--panel); font-size: 1rem; }
+.parada-num { display: grid; place-items: center; width: 2.4rem; height: 2.4rem; border-radius: 50%; background: var(--color-dia); color: #fff; font-size: 1.0625rem; font-weight: 700; }
+.parada-cuerpo { display: grid; gap: .85rem; min-width: 0; }
+.parada h4 { font-size: 1.1875rem; line-height: 1.3; letter-spacing: -.01em; }
+.parada-municipio { color: var(--texto-2); }
+.parada-horas { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .4rem; margin: 0; padding: .6rem .75rem; border-radius: var(--radio); background: var(--panel-2); }
+.parada-horas div { display: grid; gap: .05rem; }
+.parada-horas dt { color: var(--texto-2); font-size: 1rem; }
+.parada-horas dd { margin: 0; font-family: var(--fuente-mono); font-size: 1.0625rem; font-weight: 600; }
+.parada-meta { display: flex; flex-wrap: wrap; gap: .2rem 1rem; color: var(--texto-2); }
+.parada-nota { margin: 0; padding: .45rem .7rem; border-left: 4px solid var(--aviso); border-radius: var(--radio-s); background: var(--aviso-suave); color: var(--texto); }
+.parada-bloque { display: grid; gap: .35rem; }
+.parada-bloque > h5 { font-size: 1rem; font-weight: 700; color: var(--texto); }
+.parada-bloque > p { margin: 0; color: var(--texto); line-height: 1.55; }
+.parada-texto-corto { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.parada-dato { display: grid; gap: .15rem; padding: .55rem .75rem; border: 1px solid var(--linea); border-radius: var(--radio); }
+.parada-dato strong { font-weight: 650; }
+.parada-fuente { color: var(--texto-2); overflow-wrap: anywhere; }
+.parada-cargando { color: var(--texto-2); }
+.parada-resenas { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+.parada-resena { display: grid; gap: .2rem; padding: .6rem .75rem; border-radius: var(--radio); background: var(--panel-2); }
+.parada-resena p { margin: 0; line-height: 1.5; }
+.resena-estrellas { color: var(--marca); letter-spacing: .08em; }
+.resena-autor { color: var(--texto-2); }
+.parada-sin-resenas { margin: 0; padding: .65rem .8rem; border: 1px dashed var(--linea-fuerte); border-radius: var(--radio); }
+.parada-acciones { display: flex; flex-wrap: wrap; gap: .5rem; }
+.parada-acciones a { display: inline-flex; align-items: center; min-height: var(--objetivo); padding: .45rem 1rem; border: 1px solid var(--linea-fuerte); border-radius: var(--radio-s); color: var(--texto); font-weight: 600; text-decoration: none; }
+.parada-acciones a:hover { border-color: var(--acento); background: var(--panel-2); color: var(--texto); }
+.parada-acciones a.principal { border-color: var(--acento); background: var(--acento); color: var(--sobre-acento); }
+.parada-acciones a.principal:hover { background: var(--acento-fuerte); color: var(--sobre-acento); }
+.planeador :is(.parada, .planeador-util) a:focus-visible { outline: 3px solid var(--acento); outline-offset: 2px; }
+
+.planeador-util { display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem .5rem; padding: .7rem 1rem; border: 1px dashed var(--linea-fuerte); border-radius: var(--radio-l); color: var(--texto-2); font-size: 1rem; }
+.planeador-util strong { color: var(--texto); }
+.planeador-util a { font-weight: 600; }
+
+.planeador-acciones { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; }
+.planeador-metodo { font-size: 1rem; color: var(--texto-2); }
+.planeador-metodo summary { display: flex; align-items: center; min-height: var(--objetivo); font-weight: 600; color: var(--texto); }
+.planeador-metodo p { margin-top: .4rem; }
+
+/* Marcador numerado de cada parada, del color de su día. */
+.pin-ruta { display: grid; place-items: center; width: 30px; height: 30px; margin: 1px; border: 2px solid #fff; border-radius: 50%; background: var(--color-dia); color: #fff; font: 700 1rem/1 var(--fuente); box-shadow: var(--sombra); }
+.pin-ruta.dia-0 { --color-dia: #0A7564; }
+.pin-ruta.dia-1 { --color-dia: #B13A0B; }
+.pin-ruta.dia-2 { --color-dia: #4F4FC4; }
+
+/* En oscuro, el filete de color de cada tarjeta se aclara para destacar sobre el panel. */
+:root[data-theme="dark"] .planeador {
+  --dia-0: #2FB89A;
+  --dia-1: #F07A45;
+  --dia-2: #8F8FF0;
+}
+:root[data-theme="dark"] .parada-num { color: #0D0F11; }
+
+@media (max-width: 900px) {
+  .planeador-layout { grid-template-columns: minmax(0, 1fr); }
+  .planeador-resultado { position: static; }
+}
+@media (max-width: 480px) {
+  .planeador-paso { padding: .9rem .9rem 1rem; }
+
+  .parada { grid-template-columns: minmax(0, 1fr); padding: .9rem; }
+  .parada-num { width: 2.2rem; height: 2.2rem; }
+  .parada-horas { grid-template-columns: repeat(3, minmax(0, 1fr)); padding: .5rem .6rem; }
+  .planeador-dias { grid-template-columns: minmax(0, 1fr); }
+  button.planeador-dia-tarjeta { min-height: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .planeador *, .planeador *::before { transition: none !important; scroll-behavior: auto !important; }
+}
+.parada-bloque > button { justify-self: start; }
+@media (max-width: 340px) {
+  .planeador-fila { grid-template-columns: 1fr; }
+}
+/* Al desplazarse hasta el resultado o el detalle, que no queden bajo la barra fija. */
+#ruta-resultado, #ruta-detalle { scroll-margin-top: calc(var(--nav-alto) + 1rem); }
+.planeador .eyebrow { font-size: 1rem; }
