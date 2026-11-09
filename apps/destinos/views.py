@@ -3,7 +3,7 @@ from rest_framework import generics
 from rest_framework.permissions import AllowAny
 
 from apps.comunidad.selectors import con_foto_publica
-from .filtros import filtrar_destinos
+from .filtros import buscar_y_filtrar
 from .models import Categoria, Destino, Municipio, Region, Servicio
 from .serializers import (
     CategoriaSerializer, DestinoSerializer, FiltrosDestinoSerializer,
@@ -23,10 +23,19 @@ class DestinoListView(generics.ListAPIView):
     permission_classes = [AllowAny]
     serializer_class = DestinoSerializer
 
+    sugerencia = ''
+
     def get_queryset(self):
         filtros = FiltrosDestinoSerializer(data=self.request.query_params)
         filtros.is_valid(raise_exception=True)
-        return filtrar_destinos(destinos_publicos(), filtros.validated_data)
+        queryset, self.sugerencia = buscar_y_filtrar(destinos_publicos(), filtros.validated_data)
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        respuesta = super().list(request, *args, **kwargs)
+        # «¿Quisiste decir…?»: el nombre más parecido cuando lo escrito tenía errores o no dio resultados.
+        respuesta.data['sugerencia'] = self.sugerencia
+        return respuesta
 
 
 class DestinoDetailView(generics.RetrieveAPIView):

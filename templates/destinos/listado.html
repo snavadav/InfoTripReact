@@ -35,6 +35,7 @@
       </form>
       <div class="map-toolbar">
         <p class="result-count">{{ pagina.paginator.count }} resultado{{ pagina.paginator.count|pluralize }}{% if q %} para «{{ q }}»{% endif %}</p>
+        {% if sugerencia %}<p class="search-suggestion">¿Quisiste decir <a href="?{{ filtros_sugerencia }}">{{ sugerencia }}</a>?</p>{% endif %}
         <div class="map-tools">
           <button type="button" id="locate-me">Mi ubicación</button>
           <button type="button" id="fit-results">Ver todos</button>
