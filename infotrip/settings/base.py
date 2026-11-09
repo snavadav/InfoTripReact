@@ -34,6 +34,9 @@ SECURE_CSP = {
     'base-uri': [CSP.SELF],
     'form-action': [CSP.SELF],
     'frame-ancestors': [CSP.NONE],
+    # App instalable: el service worker (/sw.js) y el manifiesto son del propio sitio.
+    'worker-src': [CSP.SELF],
+    'manifest-src': [CSP.SELF],
 }
 
 # ─── APLICACIONES ─────────────────────────────────────────────
