@@ -2,18 +2,23 @@
   <section id="trip-chat-panel" class="trip-chat-panel" aria-labelledby="trip-chat-title" hidden>
     <header class="trip-chat-header">
       <div id="trip-chat-avatar" class="trip-chat-avatar">{% include 'partials/axo.svg' %}</div>
-      <div class="trip-chat-titulo"><span class="trip-chat-eyebrow">TU GUÍA POR JALISCO</span><h2 id="trip-chat-title">Axo, asistente de InfoTrip</h2></div>
+      <div class="trip-chat-titulo"><h2 id="trip-chat-title">Axo</h2><p>Tu guía por Jalisco</p></div>
       <button id="trip-chat-close" type="button" aria-label="Cerrar asistente">×</button>
     </header>
-    <p class="trip-chat-notice">Guía con respuestas básicas. El catálogo está creciendo.</p>
-    <div id="trip-chat-log" class="trip-chat-log" role="log" aria-label="Conversación" aria-live="polite" aria-relevant="additions" tabindex="0"></div>
-    <div id="trip-chat-options" class="trip-chat-options" role="group" aria-label="Elige una opción"></div>
-    <footer class="trip-chat-footer"><span>Selecciona una opción para continuar</span><button id="trip-chat-reset" type="button">Volver al inicio</button></footer>
+    <p class="trip-chat-notice">Sin inteligencia artificial: respondo con reglas y datos reales. Si no sé algo, te lo digo.</p>
+    <div id="trip-chat-log" class="trip-chat-log" role="log" aria-label="Conversación con Axo" aria-live="polite" aria-relevant="additions" tabindex="0"></div>
+    <div id="trip-chat-options" class="trip-chat-options" role="group" aria-label="Respuestas sugeridas"></div>
+    <form id="trip-chat-form" class="trip-chat-form" autocomplete="off">
+      <label for="trip-chat-input" class="sr-only">Escribe un destino o una pregunta</label>
+      <input id="trip-chat-input" type="text" maxlength="120" placeholder="Escribe un destino o una pregunta" enterkeyhint="send">
+      <button type="submit">Enviar</button>
+    </form>
+    <footer class="trip-chat-footer"><span>No escribas contraseñas.</span><button id="trip-chat-reset" type="button">Volver al inicio</button></footer>
   </section>
   <div id="trip-chat-saludo" class="trip-chat-saludo" role="status" hidden>
     <button id="trip-chat-saludo-abrir" class="trip-chat-saludo-texto" type="button">¡Hola! Soy Axo. ¿Te ayudo a planear tu escapada?</button>
     <button id="trip-chat-saludo-cerrar" class="trip-chat-saludo-cerrar" type="button" aria-label="Cerrar saludo de Axo">×</button>
   </div>
   <button id="trip-chat-toggle" class="trip-chat-toggle" type="button" aria-controls="trip-chat-panel" aria-expanded="false">{% include 'partials/axo.svg' %}<span class="sr-only">Hablar con Axo, tu asistente de viaje</span></button>
-  <div id="trip-chat-links" hidden data-trips="{% url 'mis-viajes' %}" data-catalog="{% url 'destinos-listado' %}" data-register="{% url 'registro' %}" data-profile="{% url 'perfil' %}"></div>
+  <div id="trip-chat-links" hidden data-catalog="{% url 'destinos-listado' %}" data-nearby="{% url 'destinos-listado' %}#cerca" data-planner="{% url 'planeador' %}" data-costs="{% url 'costos-indice' %}" data-trips="{% url 'mis-viajes' %}" data-credits="{% url 'creditos' %}" data-login="{% url 'login' %}" data-register="{% url 'registro' %}" data-recover="{% url 'recuperar' %}" data-profile="{% url 'perfil' %}"></div>
 </aside>

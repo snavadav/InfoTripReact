@@ -589,3 +589,73 @@ class FlujosTests(StaticLiveServerTestCase):
         self.assertEqual(self.pagina.evaluate('document.documentElement.scrollWidth'), 375)
         self.pagina.keyboard.press('Escape')
         self.assertTrue(self.pagina.locator('#trip-chat-saludo').is_hidden())
+
+    def preguntar_a_axo(self, texto, espera):
+        self.pagina.fill('#trip-chat-input', texto)
+        self.pagina.press('#trip-chat-input', 'Enter')
+        self.pagina.wait_for_selector(f'#trip-chat-log .trip-chat-message:not(.trip-chat-message-user):has-text("{espera}")')
+        return self.pagina.locator('#trip-chat-log .trip-chat-message:not(.trip-chat-message-user)').last
+
+    def test_axo_entiende_texto_libre_y_solo_muestra_destinos_reales(self):
+        self.abrir('/')
+        self.pagina.click('#trip-chat-toggle')
+        respuesta = self.preguntar_a_axo('Quiero ir a Tapalpa', 'Encontré 1 destino')
+        self.assertEqual(respuesta.locator('a').get_attribute('href'), '/destinos/mirador/')
+        self.assertIn('Tapalpa', respuesta.inner_text())
+        self.preguntar_a_axo('Narnia', 'No encontré «Narnia»')
+        respuesta = self.preguntar_a_axo('¿Cuánto cuesta ir a Mirador?', 'costos reportados')
+        self.assertEqual(respuesta.locator('a').get_attribute('href'), '/destinos/mirador/costos/')
+        self.assertIn('INEGI', self.preguntar_a_axo('¿De dónde salen los datos?', 'OpenStreetMap').inner_text())
+        self.preguntar_a_axo('costos', 'al menos 3 reportes')
+        self.assertEqual(self.pagina.get_attribute('#trip-chat-options a', 'href'), '/costos/')
+        self.preguntar_a_axo('olvidé mi contraseña', 'Recuperar contraseña')
+        self.assertEqual(self.pagina.locator('#trip-chat-options a[href="/recuperar/"]').count(), 1)
+        self.preguntar_a_axo('¿eres una IA?', 'No soy una inteligencia artificial')
+        self.pagina.click('#trip-chat-reset')
+        self.pagina.click('#trip-chat-options button:has-text("Planear mi escapada")')
+        self.pagina.click('#trip-chat-options a:has-text("Abrir el planeador")')
+        self.pagina.wait_for_url('**/planeador/')
+
+    def test_axo_busca_lugares_cerca_con_la_ubicacion(self):
+        Lugar.objects.create(nombre='Fonda Doña Ana', tipo='comer', subtipo='restaurant', latitud=19.901, longitud=-103.701,
+                             osm_id='node/1')
+        self.contexto.grant_permissions(['geolocation'], origin=self.live_server_url)
+        self.contexto.set_geolocation({'latitude': 19.9, 'longitude': -103.7})
+        self.abrir('/destinos/')
+        self.pagina.click('#trip-chat-toggle')
+        self.pagina.click('#trip-chat-options button:has-text("¿Qué hay cerca de mí?")')
+        self.pagina.click('#trip-chat-options button:has-text("Buscar con mi ubicación")')
+        self.pagina.wait_for_selector('#trip-chat-log a:has-text("Fonda Doña Ana")')
+        fila = self.pagina.locator('.trip-chat-results li').first.inner_text()
+        self.assertIn('OpenStreetMap', fila)
+        self.assertIn('m', fila)
+
+    def test_axo_se_usa_con_teclado_y_es_comodo_de_tocar(self):
+        self.abrir('/')
+        self.pagina.focus('#trip-chat-toggle')
+        self.pagina.keyboard.press('Enter')
+        self.pagina.wait_for_selector('#trip-chat-panel:not([hidden])')
+        self.assertEqual(self.pagina.evaluate('document.activeElement.id'), 'trip-chat-input')
+        self.assertEqual(self.pagina.get_attribute('#trip-chat-log', 'aria-live'), 'polite')
+        self.assertEqual(self.pagina.get_attribute('#trip-chat-toggle', 'aria-expanded'), 'true')
+        pequenos = self.pagina.evaluate("""[...document.querySelectorAll('#trip-chat button, #trip-chat a, #trip-chat input')]
+            .filter(e => { const r = e.getBoundingClientRect(); return r.height > 0 && r.height < 44; })
+            .map(e => e.textContent || e.id)""")
+        self.assertEqual(pequenos, [])
+        letra = self.pagina.evaluate("""[...document.querySelectorAll('#trip-chat-panel *')]
+            .filter(e => e.offsetHeight > 1 && e.childNodes.length && [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()))
+            .filter(e => parseFloat(getComputedStyle(e).fontSize) < 16).map(e => e.textContent)""")
+        self.assertEqual(letra, [])
+        self.pagina.keyboard.press('Shift+Tab')
+        self.assertEqual(self.pagina.evaluate('getComputedStyle(document.activeElement).outlineStyle'), 'solid')
+        self.pagina.keyboard.press('Escape')
+        self.assertTrue(self.pagina.locator('#trip-chat-panel').is_hidden())
+        self.assertEqual(self.pagina.evaluate('document.activeElement.id'), 'trip-chat-toggle')
+
+    def test_axo_no_se_mueve_con_movimiento_reducido(self):
+        self.contexto.close()
+        self.contexto = self.nuevo_contexto(reduced_motion='reduce')
+        self.pagina = self.contexto.new_page()
+        self.abrir('/')
+        animacion = self.pagina.evaluate("getComputedStyle(document.querySelector('#trip-chat-toggle .pj-cuerpo')).animationName")
+        self.assertEqual(animacion, 'none')

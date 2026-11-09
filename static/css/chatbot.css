@@ -27,10 +27,10 @@
 .trip-chat-header { display: flex; align-items: center; gap: .75rem; padding: .75rem .75rem .6rem 1rem; }
 .trip-chat-avatar { flex: none; width: 48px; height: 48px; padding: 2px; border-radius: 50%; background: var(--panel-2); }
 .trip-chat-titulo { flex: 1; min-width: 0; }
-.trip-chat-eyebrow { color: var(--texto-3); font-family: var(--fuente-mono); font-size: .75rem; letter-spacing: .04em; }
-.trip-chat-header h2 { font-size: 1.0625rem; }
+.trip-chat-header h2 { font-size: 1.125rem; }
+.trip-chat-titulo p { margin: 0; color: var(--texto-2); font-size: 1rem; }
 .trip-chat-header button { flex: none; width: 44px; min-height: 44px; padding: 0; border-color: transparent; background: transparent; font-size: 1.5rem; }
-.trip-chat-notice { padding: 0 1rem .6rem; border-bottom: 1px solid var(--linea); color: var(--texto-2); font-size: .875rem; }
+.trip-chat-notice { padding: 0 1rem .6rem; border-bottom: 1px solid var(--linea); color: var(--texto-2); font-size: 1rem; line-height: 1.4; margin: 0; }
 .trip-chat-log { flex: 1; display: flex; flex-direction: column; gap: .5rem; min-height: 100px; padding: .75rem 1rem; overflow-y: auto; }
 .trip-chat-message {
   align-self: flex-start;
@@ -45,7 +45,40 @@
   white-space: pre-line;
 }
 .trip-chat-message-user { align-self: flex-end; background: var(--acento-suave); }
-.trip-chat-options { display: flex; flex-wrap: wrap; gap: .4rem; padding: .25rem 1rem .75rem; }
+.trip-chat-message p { margin: 0; }
+.trip-chat-results { display: grid; gap: .35rem; margin: .5rem 0 0; padding: 0; list-style: none; }
+.trip-chat-results li { display: grid; }
+.trip-chat-results a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 600; }
+.trip-chat-result-detail { margin-top: -.5rem; padding-bottom: .25rem; color: var(--texto-2); font-size: 1rem; line-height: 1.35; }
+.trip-chat-log[aria-busy="true"]::after { content: 'Axo está buscando…'; align-self: flex-start; color: var(--texto-2); font-size: 1rem; }
+.trip-chat-options { display: flex; flex-wrap: wrap; gap: .4rem; max-height: 9.75rem; padding: .25rem 1rem .6rem; overflow-y: auto; }
+.trip-chat-options:empty { display: none; }
+.trip-chat-form { display: flex; gap: .5rem; padding: .6rem 1rem; border-top: 1px solid var(--linea); }
+.trip-chat-form input {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: .5rem .75rem;
+  border: 1px solid var(--linea-fuerte);
+  border-radius: var(--radio-s);
+  background: var(--panel-2);
+  color: var(--texto);
+  font: inherit;
+  font-size: 1rem;
+}
+.trip-chat-form input::placeholder { color: var(--texto-3); }
+.trip-chat-form button {
+  flex: none;
+  min-height: 44px;
+  padding: .4rem .9rem;
+  border: 0;
+  border-radius: var(--radio-s);
+  background: var(--acento);
+  color: var(--sobre-acento);
+  font-size: 1rem;
+  font-weight: 600;
+}
+.trip-chat-form button:hover { background: var(--acento-fuerte); }
 .trip-chat-options button, .trip-chat-options a {
   display: inline-flex;
   align-items: center;
@@ -61,8 +94,13 @@
 }
 .trip-chat-options a { color: var(--acento); }
 .trip-chat-options button:hover, .trip-chat-options a:hover { background: var(--panel-3); }
-.trip-chat-footer { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .25rem .5rem .25rem 1rem; border-top: 1px solid var(--linea); color: var(--texto-2); font-size: .875rem; }
+.trip-chat-footer { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .25rem .5rem .25rem 1rem; border-top: 1px solid var(--linea); color: var(--texto-2); font-size: 1rem; }
 .trip-chat-footer button { min-height: 44px; padding: .2rem .6rem; border-color: transparent; background: transparent; color: var(--acento); font-size: 1rem; }
+
+@media (max-width: 520px) {
+  .trip-chat { right: .5rem; bottom: .5rem; }
+  .trip-chat-panel { width: calc(100vw - 1rem); max-height: calc(100dvh - 5.5rem); }
+}
 
 /* Burbuja de bienvenida: pequeña, junto a Axo, para no tapar contenido en móvil. */
 .trip-chat-saludo {
