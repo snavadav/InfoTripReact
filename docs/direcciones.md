@@ -45,7 +45,7 @@ Si el proveedor falla, tarda más de 5 s o no hay turno, la respuesta es **503**
 - El navegador **nunca** llama a OpenStreetMap: todo pasa por nuestro dominio, así que la CSP no cambia y los servicios externos no reciben la IP ni la cuenta de nadie.
 - **No se guarda quién buscó qué.** Las claves de la caché son una huella (SHA-256) de la consulta, sin usuario ni IP; el valor es solo la lista de resultados.
 - Las coordenadas que llegan se **redondean a 5 decimales** (~1 m) antes de usarlas.
-- Las coordenadas y lo que se busca **no aparecen en los registros**: el módulo solo registra el código de error o el tipo de fallo; las respuestas 503 no se repiten como error de Django (ni llegan a Sentry, que además ya quita la cadena de consulta); `gunicorn.conf.py` y `docker/nginx*.conf` registran método, ruta y estado, sin la cadena de consulta. Caddy no lleva registro de accesos.
+- Las coordenadas y lo que se busca **no aparecen en los registros**: el módulo solo registra el código de error o el tipo de fallo; las respuestas 503 no se repiten como error de Django (ni llegan a Sentry, que además ya quita la cadena de consulta); `gunicorn.conf.py` y `docker/nginx*.conf` registran método, ruta y estado, sin la cadena de consulta, y en desarrollo `runserver` también la omite (`infotrip/registros.py`). Caddy no lleva registro de accesos.
 - El navegador guarda las respuestas solo en su caché privada (`Cache-Control: private`).
 
 ## Cambiar de proveedor

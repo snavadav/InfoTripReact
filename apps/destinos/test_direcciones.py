@@ -287,6 +287,20 @@ class DireccionesTests(TestCase):
             self.assertNotIn('$request ', nginx)
             self.assertNotIn('$args', nginx)
 
+    def test_runserver_registra_la_ruta_sin_la_consulta(self):
+        salida = io.StringIO()
+        acceso = logging.getLogger('django.server')
+        manejador = logging.StreamHandler(salida)
+        for filtro in acceso.handlers[0].filters:
+            manejador.addFilter(filtro)
+        acceso.addHandler(manejador)
+        try:
+            acceso.info('"%s" %s %s', 'GET /api/v1/direcciones/inversa/?lat=20.67613&lon=-103.35762 HTTP/1.1', '200', '166')
+        finally:
+            acceso.removeHandler(manejador)
+        self.assertIn('GET /api/v1/direcciones/inversa/ HTTP/1.1', salida.getvalue())
+        self.assertNotIn('20.67', salida.getvalue())
+
     def test_no_se_guarda_quien_busco(self):
         usuario = Usuario.objects.create_user('ana@example.com', 'Ana', 'P', 'Prueba-segura-493!')
         self.cliente.force_authenticate(usuario)

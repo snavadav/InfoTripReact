@@ -244,12 +244,22 @@ CONTACTO_GEOCODIFICACION = config('CONTACTO_GEOCODIFICACION', default=CONTACTO_P
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-    'formatters': {'simple': {'format': '{asctime} {levelname} {name}: {message}', 'style': '{'}},
-    'handlers': {'consola': {'class': 'logging.StreamHandler', 'formatter': 'simple'}},
+    'formatters': {
+        'simple': {'format': '{asctime} {levelname} {name}: {message}', 'style': '{'},
+        'accesos': {'()': 'django.utils.log.ServerFormatter', 'format': '[{server_time}] {message}', 'style': '{'},
+    },
+    'filters': {'sin_consulta': {'()': 'infotrip.registros.SinConsulta'}},
+    'handlers': {
+        'consola': {'class': 'logging.StreamHandler', 'formatter': 'simple'},
+        # Mismo formato que Django usa para runserver, sin la cadena de consulta.
+        'accesos': {'class': 'logging.StreamHandler', 'filters': ['sin_consulta'],
+                    'formatter': 'accesos'},
+    },
     'root': {'handlers': ['consola'], 'level': 'WARNING'},
     'loggers': {
         # infotrip.correo, infotrip.moderacion, infotrip.seguridad…
         'infotrip': {'handlers': ['consola'], 'level': config('LOG_LEVEL', default='INFO'), 'propagate': False},
+        'django.server': {'handlers': ['accesos'], 'level': 'INFO', 'propagate': False},
     },
 }
 
