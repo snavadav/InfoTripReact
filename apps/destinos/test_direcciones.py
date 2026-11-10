@@ -335,3 +335,17 @@ class LimitePorPersonaTests(TestCase):
                 conectado = APIClient()
                 conectado.force_authenticate(usuario)
                 self.assertEqual(conectado.get(vista, datos).status_code, 200)
+
+
+class PaginasTests(TestCase):
+    def test_creditos_y_proponer(self):
+        creditos = self.client.get('/creditos/').content.decode()
+        self.assertIn('Direcciones: <a href="https://www.openstreetmap.org/copyright"', creditos)
+        self.assertIn('vía <a href="https://nominatim.org/"', creditos)
+        self.assertIn('(ODbL)', creditos)
+        proponer = self.client.get('/lugares/proponer/').content.decode()
+        self.assertIn('js/direcciones.js', proponer)
+        self.assertIn('id="propuesta-direccion" name="direccion"', proponer)
+        # Todo sale de nuestro dominio: ni la página ni la CSP mencionan los servicios de OSM.
+        self.assertNotIn('nominatim', proponer.lower())
+        self.assertNotIn('photon', proponer.lower())
