@@ -176,10 +176,20 @@ jobs:
           set -o pipefail
           dc="docker compose --env-file .env.docker"
           $dc ps --status running --services | grep -qx tareas
+          # El servicio corre su primera ronda al arrancar.
           timeout 120 sh -c "until $dc logs tareas | grep -q 'denue: saltada'; do sleep 2; done"
-          $dc exec -T tareas python manage.py ejecutar_tareas --tarea fuentes_oficiales | tee salida.txt
-          grep -q 'fuentes_oficiales: saltada · Falta ANTHROPIC_API_KEY' salida.txt
-          $dc exec -T tareas python manage.py shell -c "from apps.datos.models import EjecucionTarea as E; assert E.objects.filter(resultado='saltada').count() == 2, list(E.objects.values())"
+          # Los pasos de respaldo restauran la base (pg_restore --clean) y pueden borrar ese registro: aquí se corre
+          # cada tarea de forma síncrona y se comprueba su propio registro, sin depender de lo que hizo el servicio.
+          for tarea in denue fuentes_oficiales; do
+            $dc exec -T tareas python manage.py ejecutar_tareas --tarea $tarea | tee salida.txt
+            grep -q "$tarea: saltada · Falta" salida.txt
+          done
+          $dc exec -T tareas python manage.py shell -c "
+          from apps.datos.models import EjecucionTarea as E
+          ultimas = {t: E.objects.filter(tarea=t).first() for t in ('denue', 'fuentes_oficiales')}
+          assert all(r and r.resultado == 'saltada' and r.fin for r in ultimas.values()), list(E.objects.values())
+          assert not E.objects.filter(resultado='error').exists(), list(E.objects.values())
+          "
           if $dc logs tareas | grep -q Traceback; then exit 1; fi
           $dc ps --status running --services | grep -qx tareas
       - name: Comprobar la protección CSRF de la sesión a través de nginx
