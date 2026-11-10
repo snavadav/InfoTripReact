@@ -345,6 +345,12 @@
   });
 
   if (location.hash === '#cuentas') elegirPestana(document.getElementById('pestana-cuentas'));
+  // Un aviso que enlaza a #cuentas con el bote ya abierto: cambia de pestaña y trae lo más reciente.
+  window.addEventListener('hashchange', () => {
+    if (location.hash !== '#cuentas') return;
+    elegirPestana(document.getElementById('pestana-cuentas'));
+    if (bote) cargar();
+  });
   if (!InfoTrip.hasSession()) {
     document.getElementById('bote-nombre').textContent = 'Bote de la escapada';
     document.getElementById('bote-login').hidden = false;
