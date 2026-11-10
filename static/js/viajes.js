@@ -109,10 +109,12 @@
       catch(error){status.textContent=error.message;}
     });
     stopSharing.hidden=!item.enlace_publico;
-    actions.append(shareTrip,stopSharing,button('Bote del grupo',async()=>{
-      try{await InfoTrip.api(`/api/v1/mis-viajes/${item.id}/bote/`,{method:'POST'});location.href=`/mis-viajes/${item.id}/bote/`;}
+    // Abre el bote (si aún no existe) y lleva a la sección pedida: cualquier escapada guardada lo tiene.
+    const openPot=hash=>async()=>{
+      try{await InfoTrip.api(`/api/v1/mis-viajes/${item.id}/bote/`,{method:'POST'});location.href=`/mis-viajes/${item.id}/bote/${hash}`;}
       catch(error){status.textContent=error.message;}
-    }));
+    };
+    actions.append(shareTrip,stopSharing,button('Bote del grupo',openPot('')),button('Invitar amigos',openPot('#bote-amigos')));
     const remove=button('Eliminar',async()=>{
       if(saving)return;
       if(!confirm(`¿Eliminar la escapada «${item.nombre}»?`))return;

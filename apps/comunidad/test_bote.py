@@ -2,8 +2,6 @@
 from datetime import timedelta
 from decimal import Decimal
 
-from unittest import expectedFailure
-
 from django.test import SimpleTestCase
 from django.utils import timezone
 from rest_framework.test import APITestCase
@@ -149,7 +147,7 @@ class GastosTests(BoteBase):
         estado = self.client.get(self.url).data
         self.assertEqual(estado['total'], '400.00')
         self.assertEqual(estado['transferencias'], [{'de': 'Leo', 'a': 'Ana', 'de_id': ids['Leo'], 'a_id': ids['Ana'],
-                                                    'monto': '100.00'}])
+                                                    'monto': '100.00', 'pendiente': None}])
         self.assertEqual({p['nombre']: p['saldo'] for p in estado['participantes']}, {'Ana': '100.00', 'Leo': '-100.00'})
         self.assertIsNone(estado['enlace_invitacion'])
 
@@ -278,7 +276,7 @@ class BajaDeCuentaTests(BoteBase):
         self.assertEqual({p['nombre'] for p in estado['participantes']}, {'Ana', 'Cuenta eliminada'})
         self.assertNotIn('Leo', estado['gastos'][0]['descripcion'])
         self.assertEqual(estado['transferencias'], [{'de': 'Ana', 'a': 'Cuenta eliminada', 'de_id': ids['Ana'],
-                                                    'a_id': ids['Leo'], 'monto': '50.00'}])
+                                                    'a_id': ids['Leo'], 'monto': '50.00', 'pendiente': None}])
 
     def test_quien_organiza_se_lleva_su_bote(self):
         self.grupo()
@@ -325,7 +323,6 @@ class DiagnosticoBoteTests(BoteBase):
         personas = {p['id']: p for p in self.client.get(self.url).data['participantes']}
         self.assertFalse(personas[ids['Leo']]['puede_salir'])
 
-    @expectedFailure
     def test_registrar_un_pago_entre_personas_deja_las_cuentas_a_mano(self):
         # Antes no había forma de anotar "ya le pagué": el bote nunca llegaba a "a mano".
         ids = self.grupo()

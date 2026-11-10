@@ -16,7 +16,8 @@ class Evento(models.Model):
                     'bote_creado', 'bote_unido', 'gasto_real_publicado', 'visita_comprobada',
                     'sello_obtenido', 'interes_negocio', 'resena_lugar_enviada', 'resena_lugar_publicada',
                     'lugar_confirmado', 'lugar_propuesto', 'lugar_aprobado',
-                    'comentario_enviado', 'ruta_planeada', 'ruta_compartida']
+                    'comentario_enviado', 'ruta_planeada', 'ruta_compartida', 'pago_bote_registrado', 'bote_a_mano',
+                    'bote_amigos_invitados']
 
     nombre = models.CharField(max_length=40)
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
