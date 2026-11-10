@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     'apps.usuarios',
     'apps.destinos',
     'apps.comunidad',
+    'apps.amigos',
     'apps.metricas',
     'apps.curador',
     'apps.rutas',

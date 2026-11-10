@@ -1,0 +1,59 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}Amigos — InfoTrip{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/comunidad.css' %}"><link rel="stylesheet" href="{% static 'css/amigos.css' %}">{% endblock %}
+{% block content %}{% include 'partials/navBar.html' %}
+<main class="explore-shell" id="amigos">
+  <a class="back-link" href="/perfil/">← Mi perfil</a>
+  <span class="eyebrow">Tu cuenta</span>
+  <h1>Amigos</h1>
+  <p>Agrega a quienes viajan contigo para invitarlos a tus escapadas y dividir los gastos. Te encuentran por tu nombre de usuario, nunca por tu correo.</p>
+  <p id="amigos-estado" role="status"></p>
+  <p id="amigos-login" hidden><a href="{% url 'login' %}">Inicia sesión</a> para ver a tus amigos.</p>
+  <p id="amigos-sin-usuario" class="community-box" hidden>Para buscar y agregar amigos, primero <a href="/elegir-usuario/?next=/amigos/">elige tu nombre de usuario</a>.</p>
+  <div id="amigos-contenido" hidden>
+    <section class="community-box" aria-labelledby="buscar-titulo">
+      <h2 id="buscar-titulo">Buscar personas</h2>
+      <form id="buscar-form" class="community-form" role="search">
+        <label for="buscar-q">Nombre de usuario</label>
+        <div class="arroba-campo"><span aria-hidden="true">@</span><input id="buscar-q" name="q" type="search" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="31" placeholder="ana.perez" aria-describedby="buscar-ayuda"></div>
+        <p id="buscar-ayuda" class="community-note">Escribe al menos 2 caracteres del @nombre exacto o su inicio. No se busca por correo.</p>
+        <p class="form-status" role="status"></p>
+      </form>
+      <ul class="amigos-lista" id="buscar-resultados" aria-label="Resultados de la búsqueda"></ul>
+    </section>
+    <section class="community-section" aria-labelledby="recibidas-titulo">
+      <h2 id="recibidas-titulo">Solicitudes recibidas</h2>
+      <ul class="amigos-lista" id="lista-recibidas"></ul>
+    </section>
+    <section class="community-section" aria-labelledby="mis-amigos-titulo">
+      <h2 id="mis-amigos-titulo">Mis amigos</h2>
+      <ul class="amigos-lista" id="lista-amigos"></ul>
+    </section>
+    <section class="community-section" aria-labelledby="enviadas-titulo">
+      <h2 id="enviadas-titulo">Solicitudes enviadas</h2>
+      <ul class="amigos-lista" id="lista-enviadas"></ul>
+    </section>
+    <section class="community-box" aria-labelledby="privacidad-titulo">
+      <h2 id="privacidad-titulo">Quién ve tu perfil</h2>
+      <p>Tu nombre y tu @usuario siempre se ven. Esto decide quién ve tus sellos del pasaporte y los lugares que visitaste, siempre <strong>sin fechas</strong>. <a id="ver-mi-perfil" href="/perfil/">Ver cómo se ve mi perfil</a></p>
+      <form id="privacidad-form" class="community-form">
+        <fieldset><legend>Mis sellos y lugares visitados los ve</legend>
+          <label class="check-label"><input type="radio" name="visibilidad" value="amigos"> Solo mis amigos</label>
+          <label class="check-label"><input type="radio" name="visibilidad" value="publico"> Cualquier persona con el enlace</label>
+          <label class="check-label"><input type="radio" name="visibilidad" value="privado"> Solo yo (además, no apareces en búsquedas de quien no es tu amigo)</label>
+        </fieldset>
+        <label class="check-label"><input type="checkbox" name="mostrar_amigos"> Mostrar mi lista de amigos en mi perfil</label>
+        <button type="submit">Guardar</button>
+        <p class="form-status" role="status"></p>
+      </form>
+    </section>
+    <section class="community-section" aria-labelledby="bloqueados-titulo">
+      <h2 id="bloqueados-titulo">Personas bloqueadas</h2>
+      <p class="community-note">No pueden enviarte solicitudes, no te encuentran al buscar y no ven tu perfil. No se les avisa.</p>
+      <ul class="amigos-lista" id="lista-bloqueados"></ul>
+    </section>
+  </div>
+  {% include 'destinos/footer.html' %}
+</main>{% endblock %}
+{% block extra_js %}<script src="{% static 'js/cuenta-api.js' %}"></script><script src="{% static 'js/amigos-comun.js' %}" defer></script><script src="{% static 'js/amigos.js' %}" defer></script>{% endblock %}

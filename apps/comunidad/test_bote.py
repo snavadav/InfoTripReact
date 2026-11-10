@@ -146,7 +146,8 @@ class GastosTests(BoteBase):
         self.assertEqual(self.gasto(ids, monto='100.00', pagado_por=ids['Leo']).status_code, 201)
         estado = self.client.get(self.url).data
         self.assertEqual(estado['total'], '400.00')
-        self.assertEqual(estado['transferencias'], [{'de': 'Leo', 'a': 'Ana', 'monto': '100.00'}])
+        self.assertEqual(estado['transferencias'], [{'de': 'Leo', 'a': 'Ana', 'de_id': ids['Leo'], 'a_id': ids['Ana'],
+                                                    'monto': '100.00', 'pendiente': None}])
         self.assertEqual({p['nombre']: p['saldo'] for p in estado['participantes']}, {'Ana': '100.00', 'Leo': '-100.00'})
         self.assertIsNone(estado['enlace_invitacion'])
 
@@ -274,7 +275,8 @@ class BajaDeCuentaTests(BoteBase):
         estado = self.client.get(self.url).data
         self.assertEqual({p['nombre'] for p in estado['participantes']}, {'Ana', 'Cuenta eliminada'})
         self.assertNotIn('Leo', estado['gastos'][0]['descripcion'])
-        self.assertEqual(estado['transferencias'], [{'de': 'Ana', 'a': 'Cuenta eliminada', 'monto': '50.00'}])
+        self.assertEqual(estado['transferencias'], [{'de': 'Ana', 'a': 'Cuenta eliminada', 'de_id': ids['Ana'],
+                                                    'a_id': ids['Leo'], 'monto': '50.00', 'pendiente': None}])
 
     def test_quien_organiza_se_lleva_su_bote(self):
         self.grupo()
@@ -289,3 +291,46 @@ class PaginasTests(BoteBase):
         self.assertContains(pagina, 'js/bote.js')
         self.assertContains(pagina, f'data-viaje="{self.viaje.pk}"')
         self.assertContains(pagina, 'noindex')
+
+
+class DiagnosticoBoteTests(BoteBase):
+    """Paso 0: fallos encontrados al reproducir el flujo con tres personas. Cada prueba falla con el bote anterior."""
+
+    def test_los_centavos_sobrantes_no_los_paga_siempre_la_misma_persona(self):
+        # Tres gastos de $1.00 entre tres: antes, Ana (el primer id) pagaba 34 centavos en cada uno.
+        saldos = calcular_saldos([1, 2, 3], [(2, Decimal('1.00'), [1, 2, 3], gasto) for gasto in (10, 11, 12)])
+        self.assertEqual(saldos, {1: -100, 2: 200, 3: -100})
+
+    def test_las_transferencias_distinguen_a_personas_con_el_mismo_nombre(self):
+        otra_ana = Usuario.objects.create_user('ana2@example.com', 'Ana', 'Q', 'Prueba-segura-493!', es_verificado=True)
+        enlace = self.abrir()['enlace_invitacion']
+        self.unir(otra_ana, enlace)
+        self.como(self.ana)
+        ids = [p['id'] for p in self.client.get(self.url).data['participantes']]
+        self.gasto({'Ana': ids[0], 'Otra': ids[1]}, monto='100.00')
+        estado = self.client.get(self.url).data
+        pago = estado['transferencias'][0]
+        self.assertEqual((pago['de_id'], pago['a_id']), (ids[1], ids[0]))
+        self.assertEqual(len({p['nombre'] for p in estado['participantes']}), 2)
+
+    def test_solo_se_ofrece_quitar_a_quien_se_puede_quitar(self):
+        ids = self.grupo()
+        self.gasto(ids, entre=[ids['Ana']])
+        personas = {p['id']: p for p in self.client.get(self.url).data['participantes']}
+        self.assertTrue(personas[ids['Leo']]['puede_salir'])
+        self.assertFalse(personas[ids['Ana']]['puede_salir'])
+        self.gasto(ids)
+        personas = {p['id']: p for p in self.client.get(self.url).data['participantes']}
+        self.assertFalse(personas[ids['Leo']]['puede_salir'])
+
+    def test_registrar_un_pago_entre_personas_deja_las_cuentas_a_mano(self):
+        # Antes no había forma de anotar "ya le pagué": el bote nunca llegaba a "a mano".
+        ids = self.grupo()
+        self.gasto(ids, monto='300.00')
+        self.como(self.leo)
+        pago = self.client.post(self.url + 'pagos/', {'para': ids['Ana'], 'monto': '150.00'}, format='json')
+        self.assertEqual(pago.status_code, 201)
+        self.como(self.ana)
+        confirmado = self.client.post(f"{self.url}pagos/{pago.data['pagos'][0]['id']}/confirmar/")
+        self.assertEqual(confirmado.status_code, 200)
+        self.assertTrue(self.client.get(self.url).data['a_mano'])

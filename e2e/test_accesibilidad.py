@@ -199,6 +199,14 @@ class AccesibilidadTests(StaticLiveServerTestCase):
     def test_privacidad(self):
         self.revisar('/privacidad/')
 
+    def test_perfil_publico(self):
+        Usuario.objects.filter(email='ana@example.com').update(username='ana', visibilidad='publico')
+        self.revisar('/u/ana/', lambda pagina: pagina.wait_for_selector('#perfil-pasaporte:not([hidden])'))
+
+    def test_amigos_y_elegir_usuario_sin_sesion(self):
+        self.revisar('/amigos/')
+        self.revisar('/elegir-usuario/')
+
     def test_chatbot_abierto(self):
         self.revisar('/', abrir_chat)
 
@@ -215,6 +223,7 @@ class RevisionManualTests(AccesibilidadTests):
     test_portada = test_explorar_destinos = test_ficha_de_destino = test_costos_de_un_destino = None
     test_costos = test_planeador_vacio = test_planeador_con_ruta = test_pasaporte = None
     test_login = test_registro = test_privacidad = test_chatbot_abierto = None
+    test_perfil_publico = test_amigos_y_elegir_usuario_sin_sesion = None
 
     def test_con_tab_todo_se_alcanza_y_el_foco_se_ve(self):
         casos = [(ruta, None) for ruta in PAGINAS] + [('/planeador/', armar_ruta), ('/', abrir_chat)]

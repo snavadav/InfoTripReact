@@ -69,8 +69,12 @@ urlpatterns = [
     # API v1
     path('api/v1/eventos/', EventosView.as_view(), name='eventos'),
     path('api/v1/', include('apps.comunidad.urls')),
+    path('api/v1/', include('apps.amigos.urls')),
     path('api/v1/', include('apps.rutas.urls')),
     path('perfil/', TemplateView.as_view(template_name='comunidad/perfil.html'), name='perfil'),
+    path('amigos/', TemplateView.as_view(template_name='amigos/amigos.html'), name='amigos'),
+    path('u/<str:username>/', TemplateView.as_view(template_name='amigos/perfil.html'), name='perfil-publico'),
+    path('elegir-usuario/', TemplateView.as_view(template_name='amigos/elegir_usuario.html'), name='elegir-usuario'),
     path('recuperar/', TemplateView.as_view(template_name='comunidad/recuperar.html'), name='recuperar'),
     path('privacidad/', vista_legal('legal/privacidad.html'), name='privacidad'),
     path('terminos/', vista_legal('legal/terminos.html'), name='terminos'),

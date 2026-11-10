@@ -53,7 +53,8 @@ class FlujosTests(StaticLiveServerTestCase):
         municipio = Municipio.objects.create(nombre='Tapalpa', slug='tapalpa', region=region)
         self.destino = Destino.objects.create(nombre='Mirador', slug='mirador', municipio=municipio,
                                               descripcion='Lugar de prueba', latitud=19.9, longitud=-103.7)
-        self.usuario = Usuario.objects.create_user('ana@example.com', 'Ana', 'Prueba', CLAVE, es_verificado=True)
+        self.usuario = Usuario.objects.create_user('ana@example.com', 'Ana', 'Prueba', CLAVE, es_verificado=True,
+                                                    username='ana')
         self.problemas = []
         self.contexto = self.nuevo_contexto()
         self.pagina = self.contexto.new_page()
@@ -173,8 +174,15 @@ class FlujosTests(StaticLiveServerTestCase):
         self.pagina.wait_for_selector('#codeForm:not([hidden])')
         self.pagina.fill('#loginCode', re.search(r'[0-9]{6}', mail.outbox[-1].body).group())
         self.pagina.click('#verifyBtn')
+        # Cuenta nueva: primero elige su nombre de usuario, con una sugerencia que aún no se guarda.
+        self.pagina.wait_for_url('**/elegir-usuario/**')
+        self.pagina.wait_for_selector('#usuario-disponible:has-text("@nueva está disponible")')
+        self.assertIsNone(Usuario.objects.get(email='nueva@example.com').username)
+        self.pagina.click('#usuario-form button[type="submit"]')
         self.pagina.wait_for_url(self.live_server_url + '/destinos/mirador/')
-        self.assertTrue(Usuario.objects.get(email='nueva@example.com').es_verificado)
+        nueva = Usuario.objects.get(email='nueva@example.com')
+        self.assertTrue(nueva.es_verificado)
+        self.assertEqual(nueva.username, 'nueva')
 
     def test_dispositivo_recordado_entra_solo_con_contrasena(self):
         self.abrir('/login/')
@@ -318,7 +326,8 @@ class FlujosTests(StaticLiveServerTestCase):
         self.contexto = self.nuevo_contexto()
         self.pagina = self.contexto.new_page()
         self.pagina.on('pageerror', lambda error: self.problemas.append(f'Error de página: {error}'))
-        self.usuario = Usuario.objects.create_user('leo@example.com', 'Leo', 'Prueba', CLAVE, es_verificado=True)
+        self.usuario = Usuario.objects.create_user('leo@example.com', 'Leo', 'Prueba', CLAVE, es_verificado=True,
+                                                    username='leo')
         self.abrir(f'/botes/{viaje.enlace_bote}/')
         self.pagina.click('#bote-unirse')
         self.pagina.wait_for_url('**/login/**')
@@ -326,7 +335,8 @@ class FlujosTests(StaticLiveServerTestCase):
         self.pagina.wait_for_url(f'**/botes/{viaje.enlace_bote}/')
         self.pagina.click('#bote-unirse')
         self.pagina.wait_for_selector('#bote-contenido:not([hidden])')
-        self.pagina.wait_for_selector('#bote-personas:has-text("Leo (tú)")')
+        self.pagina.click('#pestana-cuentas')
+        self.pagina.wait_for_selector('#bote-personas:has-text("Leo (@leo) (tú)")')
         self.assertTrue(self.pagina.is_hidden('#bote-publicar'))
         self.pagina.wait_for_load_state('networkidle')
         self.contexto.close()
@@ -334,16 +344,120 @@ class FlujosTests(StaticLiveServerTestCase):
 
         # Leo no estaba en el reparto de la cena; Ana la incluye y aparece la deuda.
         self.pagina.reload()
-        self.pagina.wait_for_selector('#bote-personas:has-text("Leo")')
+        self.pagina.wait_for_selector('#bote-contenido:not([hidden])')
         self.pagina.click('.bote-gasto button:has-text("Editar")')
         self.pagina.wait_for_selector('#bote-form-titulo:has-text("Editar")')
         self.pagina.check('#bote-entre label:has-text("Leo") input')
         self.pagina.click('#bote-form button[type="submit"]')
+        self.pagina.wait_for_selector('.bote-gasto:has-text("entre todos")')
+        self.pagina.click('#pestana-cuentas')
         self.pagina.wait_for_selector('#bote-transferencias:has-text("Leo le paga")')
         self.assertIn('150', self.pagina.inner_text('#bote-transferencias'))
+        self.pagina.click('#pestana-gastos')
         self.pagina.click('#bote-publicar-boton')
         self.pagina.wait_for_selector('#bote-publicar-estado:has-text("1 gasto enviado")')
         self.assertTrue(Aporte.objects.get().anonimo)
+
+    def como(self, usuario, ruta='/'):
+        """Abre una sesión de `usuario` en su propio navegador y la deja como la página actual."""
+        self.usuario = usuario
+        self.contexto = self.nuevo_contexto()
+        self.pagina = self.contexto.new_page()
+        self.pagina.on('pageerror', lambda error: self.problemas.append(f'Error de página: {error}'))
+        self.pagina.on('console', self.revisar_consola)
+        self.pagina.on('response', self.revisar_respuesta)
+        # "Ya pagué" y "Eliminar" piden confirmación con confirm().
+        self.pagina.on('dialog', lambda dialogo: dialogo.accept())
+        self.abrir(f'/login/?next={quote(ruta)}')
+        self.completar_login()
+        self.pagina.wait_for_url(f'**{ruta}')
+        return self.contexto, self.pagina
+
+    def test_tres_amigos_se_invitan_dividen_gastos_y_quedan_a_mano(self):
+        crear = Usuario.objects.create_user
+        ana = self.usuario
+        leo = crear('leo@example.com', 'Leo', 'Prueba', CLAVE, es_verificado=True, username='leo')
+        eva = crear('eva@example.com', 'Eva', 'Prueba', CLAVE, es_verificado=True, username='eva')
+        Lugar.objects.create(nombre='Fonda Doña Lupe', tipo='comer', subtipo='restaurant', latitud='19.91',
+                             longitud='-103.71', municipio=self.destino.municipio)
+        Lugar.objects.create(nombre='Gasolinera del Bosque', tipo='gasolina', subtipo='fuel', latitud='19.92',
+                             longitud='-103.72', municipio=self.destino.municipio)
+        viaje = Viaje.objects.create(autor=ana, nombre='Tapalpa en grupo', destino='Tapalpa', personas=3,
+                                     fecha_inicio='2026-01-01', fecha_fin='2026-01-02', presupuesto='0')
+        viaje.lugares.add(self.destino)
+        self.contexto.close()
+        sesiones = {}
+
+        # Ana busca a Leo y a Eva por su @usuario y les envía solicitudes.
+        sesiones['ana'] = self.como(ana, '/amigos/')
+        for nombre in ('leo', 'eva'):
+            self.pagina.fill('#buscar-q', f'@{nombre}')
+            self.pagina.click(f'#buscar-resultados button[aria-label="Enviar solicitud de amistad a @{nombre}"]')
+            self.pagina.wait_for_selector(f'#lista-enviadas:has-text("@{nombre}")')
+        self.assertNotIn('@example.com', self.pagina.inner_text('main'))
+
+        # Leo y Eva aceptan.
+        for usuario in (leo, eva):
+            sesiones[usuario.username] = self.como(usuario, '/amigos/')
+            self.pagina.click('#lista-recibidas button:has-text("Aceptar")')
+            self.pagina.wait_for_selector('#lista-amigos:has-text("@ana")')
+
+        # Ana invita a sus amigos a la escapada desde Mis viajes.
+        self.contexto, self.pagina = sesiones['ana']
+        self.abrir('/mis-viajes/')
+        self.pagina.click('.trip-card button:has-text("Invitar amigos")')
+        self.pagina.wait_for_selector('#bote-amigos-lista input')
+        self.pagina.check('#bote-amigos-lista label:has-text("@leo") input')
+        self.pagina.check('#bote-amigos-lista label:has-text("@eva") input')
+        self.pagina.click('#bote-amigos-form button[type="submit"]')
+        self.pagina.wait_for_selector('#bote-amigos-form .form-status:has-text("Agregaste a 2 amigos")')
+
+        def yo_pague(monto, donde):
+            self.pagina.click('#pestana-gastos')
+            self.pagina.fill('#bote-form [name="monto"]', monto)
+            self.pagina.fill('#bote-donde', donde)
+            self.pagina.click(f'#bote-donde-resultados button[aria-label^="Elegir {donde}"]')
+            self.pagina.wait_for_selector(f'#bote-donde-elegido:has-text("{donde}")')
+            self.pagina.click('#bote-form button[type="submit"]')
+            self.pagina.wait_for_selector(f'.bote-gasto:has-text("{donde}")')
+
+        # Cada quien anota lo que pagó en un establecimiento, dividido entre los tres.
+        yo_pague('300', 'Fonda Doña Lupe')
+        self.contexto, self.pagina = sesiones['leo']
+        self.abrir(f'/mis-viajes/{viaje.pk}/bote/')
+        self.pagina.wait_for_selector('#bote-contenido:not([hidden])')
+        yo_pague('90', 'Gasolinera del Bosque')
+
+        # 390 entre tres: Leo debe 40 y Eva 130, ambos a Ana. Cada quien marca "Ya pagué".
+        for nombre, monto in (('leo', '40.00'), ('eva', '130.00')):
+            self.contexto, self.pagina = sesiones[nombre]
+            self.abrir(f'/mis-viajes/{viaje.pk}/bote/#cuentas')
+            self.pagina.reload()  # Con la misma página abierta, cambiar solo el ancla no la recarga.
+            self.pagina.wait_for_selector(f'#bote-transferencias:has-text("le paga ${monto} a Ana")')
+            self.pagina.click('#bote-transferencias button:has-text("Ya pagué")')
+            self.pagina.wait_for_selector('#bote-transferencias:has-text("Falta que Ana confirme")')
+
+        # Ana confirma lo recibido y quedan a mano.
+        self.contexto, self.pagina = sesiones['ana']
+        self.abrir(f'/mis-viajes/{viaje.pk}/bote/#cuentas')
+        self.pagina.reload()
+        for _ in range(2):
+            self.pagina.click('#bote-transferencias button:has-text("Confirmar recibido") >> nth=0')
+            self.pagina.wait_for_load_state('networkidle')
+        self.pagina.wait_for_selector('#bote-a-mano:not([hidden]):has-text("Quedaron a mano")')
+        self.assertIn('No falta ningún pago', self.pagina.inner_text('#bote-transferencias'))
+        self.assertEqual(self.pagina.locator('#bote-historial li:has-text("Confirmado")').count(), 2)
+
+        # La pestaña se maneja con el teclado.
+        self.pagina.focus('#pestana-cuentas')
+        self.pagina.keyboard.press('ArrowLeft')
+        self.assertEqual(self.pagina.evaluate('document.activeElement.id'), 'pestana-gastos')
+        self.assertTrue(self.pagina.is_visible('#panel-gastos'))
+
+        for nombre in ('leo', 'eva'):
+            contexto, pagina = sesiones[nombre]
+            pagina.wait_for_load_state('networkidle')
+            contexto.close()
 
     def test_comprobar_una_visita_con_la_ubicacion(self):
         self.contexto.grant_permissions(['geolocation'])
