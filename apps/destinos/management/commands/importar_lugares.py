@@ -7,13 +7,16 @@ import json
 
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
+from django.utils import timezone
 
+from apps.destinos.ausentes import marcar_ausentes as marcar_ausentes_de
 from apps.destinos.models import Lugar
 from apps.destinos.osm import CONSULTA_LUGARES, ErrorOverpass, descargar, interpretar_lugares
 from .importar_osm import municipio_de
 
 CAMPOS = ['nombre', 'tipo', 'subtipo', 'latitud', 'longitud', 'direccion', 'telefono', 'sitio_web', 'horario',
-          'municipio']
+          'municipio',
+          'posiblemente_cerrado', 'ausente_desde']
 TANDA = 500
 
 
@@ -26,8 +29,11 @@ class Command(BaseCommand):
         parser.add_argument('--simular', action='store_true', help='Muestra qué haría sin guardar nada.')
         parser.add_argument('--retirar-ausentes', action='store_true',
                             help='Oculta lo importado antes que ya no aparece en OpenStreetMap.')
+        parser.add_argument('--marcar-ausentes', action='store_true',
+                            help='Marca como posiblemente cerrado lo que ya no aparece en OpenStreetMap, sin '
+                                 'borrarlo ni ocultarlo: una persona decide en la cola de moderación.')
 
-    def handle(self, *args, archivo, guardar, simular, retirar_ausentes, **opciones):
+    def handle(self, *args, archivo, guardar, simular, retirar_ausentes, marcar_ausentes=False, **opciones):
         try:
             datos = self.leer(archivo) if archivo else descargar(CONSULTA_LUGARES)
             if guardar:
@@ -41,7 +47,7 @@ class Command(BaseCommand):
             raise CommandError('La respuesta no trae ningún lugar: no se cambió nada.')
 
         existentes = {lugar.osm_id: lugar for lugar in Lugar.objects.exclude(osm_id=None)}
-        municipios, nuevos, cambiados, protegidos = {}, [], [], 0
+        municipios, nuevos, cambiados, protegidos, reaparecidos = {}, [], [], 0, 0
         # atomic: un fallo a mitad no deja una importación parcial; al simular siempre se revierte.
         with transaction.atomic():
             for lugar in lugares:
@@ -55,6 +61,10 @@ class Command(BaseCommand):
                 elif registro.protegido:
                     protegidos += 1
                 else:
+                    reaparecidos += registro.posiblemente_cerrado
+                    lugar.update(posiblemente_cerrado=False, ausente_desde=None)
+                    if registro.horario_fuente_url:
+                        lugar['horario'] = registro.horario  # Aprobado de una fuente oficial: no se pisa.
                     for campo in CAMPOS:
                         setattr(registro, campo, lugar[campo])
                     cambiados.append(registro)
@@ -66,13 +76,22 @@ class Command(BaseCommand):
                 ausentes = [lugar.pk for clave, lugar in existentes.items()
                             if clave not in vigentes and lugar.es_activo]
                 retirados = Lugar.objects.filter(pk__in=ausentes).update(es_activo=False)
+            marcados = 0
+            if marcar_ausentes:
+                vigentes = {lugar['osm_id'] for lugar in lugares}
+                marcados = marcar_ausentes_de(existentes, vigentes, timezone.localdate())
             if simular:
                 transaction.set_rollback(True)
 
+        self.conteos = {'creados': len(nuevos), 'actualizados': len(cambiados), 'protegidos': protegidos,
+                        'retirados': retirados, 'posiblemente_cerrados': marcados, 'reaparecidos': reaparecidos,
+                        'omitidos': omitidos}
         accion = 'Se crearían' if simular else 'Creados'
         self.stdout.write(self.style.SUCCESS(
-            f'{accion} {len(nuevos)} lugares. Actualizados: {len(cambiados)}. Editados en el admin, sin tocar: '
-            f'{protegidos}. Retirados: {retirados}. Omitidos por falta de datos: {omitidos}.'))
+            f'{accion} {len(nuevos)} lugares. Actualizados: {len(cambiados)}. '
+            f'Editados en el admin, sin tocar: {protegidos}. Retirados: {retirados}. '
+            f'Posiblemente cerrados (a revisión): {marcados}. Reaparecidos: {reaparecidos}. '
+            f'Omitidos por falta de datos: {omitidos}.'))
 
     def leer(self, ruta):
         try:

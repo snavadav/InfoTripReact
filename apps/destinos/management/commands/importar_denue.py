@@ -7,14 +7,17 @@ import json
 
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
+from django.utils import timezone
 
 from apps.core.geo import distancia_km
 from apps.core.texto import se_parecen
 from apps.destinos.denue import ErrorDenue, descargar, interpretar
+from apps.destinos.ausentes import marcar_ausentes as marcar_ausentes_de
 from apps.destinos.models import Lugar, TIPO_DE_SUBTIPO
 from .importar_osm import municipio_de
 
-CAMPOS = ['nombre', 'tipo', 'subtipo', 'latitud', 'longitud', 'direccion', 'telefono', 'sitio_web', 'municipio']
+CAMPOS = ['nombre', 'tipo', 'subtipo', 'latitud', 'longitud', 'direccion', 'telefono', 'sitio_web', 'municipio',
+          'posiblemente_cerrado', 'ausente_desde']
 TANDA = 1000
 METROS_DE_DUPLICADO = 100
 # Celdas de unos 110 m: basta comparar con la propia y sus vecinas, no con decenas de miles de lugares.
@@ -52,8 +55,11 @@ class Command(BaseCommand):
         parser.add_argument('--simular', action='store_true', help='Muestra qué haría sin guardar nada.')
         parser.add_argument('--retirar-ausentes', action='store_true',
                             help='Oculta lo importado antes que ya no aparece en el DENUE.')
+        parser.add_argument('--marcar-ausentes', action='store_true',
+                            help='Marca como posiblemente cerrado lo que ya no aparece en el DENUE, sin '
+                                 'borrarlo ni ocultarlo: una persona decide en la cola de moderación.')
 
-    def handle(self, *args, archivo, guardar, simular, retirar_ausentes, **opciones):
+    def handle(self, *args, archivo, guardar, simular, retirar_ausentes, marcar_ausentes=False, **opciones):
         try:
             registros = self.leer(archivo) if archivo else descargar()
         except ErrorDenue as error:
@@ -70,7 +76,7 @@ class Command(BaseCommand):
         # Incluye lo ya importado del DENUE: si no, al repetir se crearía lo que antes se descartó por parecido.
         for fila in Lugar.objects.values_list('nombre', 'latitud', 'longitud'):
             rejilla.agregar(*fila)
-        municipios, nuevos, cambiados, protegidos, duplicados = {}, [], [], 0, 0
+        municipios, nuevos, cambiados, protegidos, reaparecidos, duplicados = {}, [], [], 0, 0, 0
         # atomic: un fallo a mitad no deja una importación parcial; al simular siempre se revierte.
         with transaction.atomic():
             for lugar in lugares:
@@ -88,6 +94,8 @@ class Command(BaseCommand):
                 elif registro.protegido:
                     protegidos += 1
                 else:
+                    reaparecidos += registro.posiblemente_cerrado
+                    lugar.update(posiblemente_cerrado=False, ausente_desde=None)
                     for campo in CAMPOS:
                         setattr(registro, campo, lugar[campo])
                     cambiados.append(registro)
@@ -99,13 +107,21 @@ class Command(BaseCommand):
                 ausentes = [lugar.pk for clave, lugar in existentes.items()
                             if clave not in vigentes and lugar.es_activo and not lugar.protegido]
                 retirados = Lugar.objects.filter(pk__in=ausentes).update(es_activo=False)
+            marcados = 0
+            if marcar_ausentes:
+                vigentes = {lugar['denue_id'] for lugar in lugares}
+                marcados = marcar_ausentes_de(existentes, vigentes, timezone.localdate())
             if simular:
                 transaction.set_rollback(True)
 
+        self.conteos = {'creados': len(nuevos), 'actualizados': len(cambiados), 'ya_existian': duplicados,
+                        'protegidos': protegidos, 'retirados': retirados, 'posiblemente_cerrados': marcados,
+                        'reaparecidos': reaparecidos, 'omitidos': omitidos}
         accion = 'Se crearían' if simular else 'Creados'
         self.stdout.write(self.style.SUCCESS(
             f'{accion} {len(nuevos)} lugares. Actualizados: {len(cambiados)}. Ya existían: {duplicados}. '
-            f'Editados en el admin, sin tocar: {protegidos}. Retirados: {retirados}. Omitidos: {omitidos}.'))
+            f'Editados en el admin, sin tocar: {protegidos}. Retirados: {retirados}. '
+            f'Posiblemente cerrados (a revisión): {marcados}. Reaparecidos: {reaparecidos}. Omitidos: {omitidos}.'))
 
     def leer(self, ruta):
         try:

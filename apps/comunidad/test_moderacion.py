@@ -172,6 +172,8 @@ class ColaModeracionTests(DatosModeracion):
                                    'Reseñas de lugares pendientes': 0,
                                    'Reportes de reseñas de lugares abiertos': 0,
                                    'Lugares que alguien dice que cerraron (últimos 90 días)': 0,
+                                   'Actualizaciones de fuentes oficiales': 0,
+                                   'Lugares que ya no aparecen en su fuente (OpenStreetMap o DENUE)': 0,
                                    'Fotos de pasaporte por revisar': 0,
                                    'Comentarios del sitio sin atender': 0})
         primero = respuesta.context['secciones'][0]['elementos'][0]

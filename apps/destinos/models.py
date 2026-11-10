@@ -57,6 +57,10 @@ class Destino(models.Model):
     es_activo = models.BooleanField(default=True)
     # Procedencia de OpenStreetMap (por ejemplo, node/123). Su licencia exige dar crédito e identificar estos datos.
     osm_id = models.CharField(max_length=30, null=True, blank=True, unique=True, editable=False)
+    # Horario publicado por una fuente oficial. Solo se llena al aprobar una propuesta: siempre con su cita.
+    horario = models.CharField(max_length=200, blank=True)
+    horario_fuente_url = models.URLField(max_length=500, blank=True, editable=False)
+    horario_fecha_consulta = models.DateField(null=True, blank=True, editable=False)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_actualizacion = models.DateTimeField(auto_now=True)
 
@@ -130,6 +134,12 @@ class Lugar(models.Model):
     denue_id = models.CharField(max_length=20, null=True, blank=True, unique=True, editable=False)
     # Editado por el equipo: la siguiente importación no debe pisar la corrección.
     protegido = models.BooleanField(default=False, editable=False)
+    # Ya no aparece en su fuente (OSM o DENUE). No se borra ni se oculta solo: una persona decide en la cola.
+    posiblemente_cerrado = models.BooleanField(default=False, editable=False)
+    ausente_desde = models.DateField(null=True, blank=True, editable=False)
+    # Si el horario viene de una fuente oficial aprobada, la importación de OSM no lo pisa.
+    horario_fuente_url = models.URLField(max_length=500, blank=True, editable=False)
+    horario_fecha_consulta = models.DateField(null=True, blank=True, editable=False)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_actualizacion = models.DateTimeField(auto_now=True)
 
