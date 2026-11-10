@@ -17,3 +17,5 @@ EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
 LOGGING['loggers']['infotrip']['level'] = 'CRITICAL'  # noqa: F405
 # El límite global no debe interferir entre pruebas; se prueba por separado en apps/core/tests.py.
 REST_FRAMEWORK = {**REST_FRAMEWORK, 'DEFAULT_THROTTLE_CLASSES': ()}  # noqa: F405
+# Nunca se sale a la red: las pruebas de direcciones simulan Photon y Nominatim (apps/destinos/test_direcciones.py).
+GEOCODIFICACION_PROVEEDOR = 'apps.destinos.direcciones.Desactivado'

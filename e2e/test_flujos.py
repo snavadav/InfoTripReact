@@ -624,6 +624,88 @@ class FlujosTests(StaticLiveServerTestCase):
         self.abrir(f'/lugares/{propuesta.lugar_id}/')
         self.pagina.wait_for_selector('text=Agregado por la comunidad')
 
+    def preparar_direcciones(self, sugerir, inversa):
+        """Intercepta nuestra API de direcciones; el navegador nunca debe llamar a OpenStreetMap directamente."""
+        self.pagina.route('**/api/v1/direcciones/sugerir/**', sugerir)
+        self.pagina.route('**/api/v1/direcciones/buscar/**', sugerir)
+        self.pagina.route('**/api/v1/direcciones/inversa/**', inversa)
+
+        def prohibida(ruta):
+            self.problemas.append(f'Llamada directa a OpenStreetMap: {ruta.request.url}')
+            ruta.abort()
+        self.pagina.route(re.compile(r'https://(nominatim\.openstreetmap\.org|photon\.komoot\.io)/'), prohibida)
+
+    def test_proponer_un_lugar_por_direccion(self):
+        juarez = {'etiqueta': 'Avenida Juárez 976, Centro, Guadalajara, Jalisco', 'calle': 'Avenida Juárez 976',
+                  'colonia': 'Centro', 'municipio': 'Guadalajara', 'estado': 'Jalisco', 'lat': 20.67412, 'lon': -103.34877}
+        moreno = {**juarez, 'etiqueta': 'Pedro Moreno 1200, Americana, Guadalajara, Jalisco', 'calle': 'Pedro Moreno 1200'}
+        consultas = []
+
+        def sugerir(ruta):
+            consultas.append(ruta.request.url)
+            ruta.fulfill(json=[juarez])
+        self.preparar_direcciones(sugerir, lambda ruta: ruta.fulfill(json=[moreno]))
+        self.iniciar_sesion()
+        self.abrir('/lugares/proponer/')
+        self.pagina.fill('#propuesta-form [name="nombre"]', 'Tortas Ahogadas El Güero')
+        self.pagina.select_option('#propuesta-form [name="subtipo"]', 'restaurant')
+        # Escribir la dirección: sugerencias con espera y elegir con el teclado.
+        campo = self.pagina.locator('#propuesta-direccion')
+        campo.press_sequentially('juarez 976')
+        self.pagina.get_by_role('option', name=re.compile('Avenida Juárez 976')).wait_for()
+        self.assertLessEqual(len(consultas), 3)  # con la espera, no una petición por tecla
+        self.assertNotIn('q=ju&', ' '.join(consultas) + '&')
+        campo.press('ArrowDown')
+        campo.press('Enter')
+        # El punto cae en el mapa en la dirección elegida.
+        self.pagina.wait_for_selector('#propuesta-punto:has-text("20.6741° N, 103.3488° O")')
+        self.assertEqual(campo.input_value(), juarez['etiqueta'])
+        self.assertEqual(campo.get_attribute('aria-expanded'), 'false')
+        # Moverlo: busca la dirección del nuevo punto y, como la anterior la pusimos nosotros, la reemplaza.
+        marcador = self.pagina.locator('.leaflet-marker-icon').first.bounding_box()
+        x, y = marcador['x'] + marcador['width'] / 2, marcador['y'] + marcador['height'] / 2
+        self.pagina.mouse.move(x, y)
+        self.pagina.mouse.down()
+        self.pagina.mouse.move(x + 40, y + 30, steps=8)
+        self.pagina.mouse.up()
+        self.pagina.wait_for_selector('#propuesta-direccion-estado:has-text("Dirección completada: Pedro Moreno")')
+        self.assertEqual(campo.input_value(), moreno['etiqueta'])
+        self.assertNotIn('20.6741° N, 103.3488° O', self.pagina.inner_text('#propuesta-punto'))
+        # Lo que escribe la persona no se sobrescribe sin preguntar.
+        campo.fill('Pedro Moreno 1200, local 3')
+        mapa = self.pagina.locator('#propuesta-mapa').bounding_box()
+        self.pagina.mouse.click(mapa['x'] + mapa['width'] / 2 - 60, mapa['y'] + mapa['height'] / 2 - 50)
+        self.pagina.wait_for_selector('#propuesta-direccion-sugerida:not([hidden])')
+        self.assertEqual(campo.input_value(), 'Pedro Moreno 1200, local 3')
+        self.pagina.click('#propuesta-direccion-mantener')
+        self.assertEqual(campo.input_value(), 'Pedro Moreno 1200, local 3')
+        punto = self.pagina.inner_text('#propuesta-punto')
+        self.pagina.click('#propuesta-form button[type="submit"]')
+        self.pagina.wait_for_selector('#propuesta-form .form-status:has-text("Recibimos")')
+        propuesta = PropuestaLugar.objects.get()
+        self.assertEqual(propuesta.direccion, 'Pedro Moreno 1200, local 3')
+        self.assertIn(f'{abs(float(propuesta.longitud)):.4f}° O', punto)
+        self.assertNotAlmostEqual(float(propuesta.latitud), juarez['lat'], places=4)
+        self.assertAlmostEqual(float(propuesta.latitud), juarez['lat'], places=1)
+
+    def test_sin_servicio_de_direcciones_el_mapa_sigue_funcionando(self):
+        caido = {'detail': 'El buscador de direcciones no responde ahora. Puedes marcar el punto directamente en el mapa.'}
+        self.preparar_direcciones(lambda ruta: ruta.fulfill(status=503, json=caido),
+                                  lambda ruta: ruta.fulfill(status=503, json=caido))
+        self.abrir('/lugares/proponer/')
+        campo = self.pagina.locator('#propuesta-direccion')
+        campo.press_sequentially('juarez 976')
+        self.pagina.wait_for_selector('#propuesta-direccion-estado:has-text("no responde ahora")')
+        campo.press('Enter')  # Intro busca la dirección completa y no envía el formulario
+        self.pagina.wait_for_selector('#propuesta-direccion-estado:has-text("no responde ahora")')
+        self.pagina.locator('#propuesta-mapa').click()
+        self.pagina.wait_for_selector('#propuesta-punto:has-text("Arrastra")')
+        self.pagina.wait_for_selector('#propuesta-direccion-estado:has-text("puedes escribirla")')
+        self.assertEqual(campo.input_value(), 'juarez 976')
+        self.pagina.wait_for_load_state('networkidle')
+        # Los 503 simulados son parte de la prueba.
+        self.problemas = [p for p in self.problemas if '/api/v1/direcciones/' not in p]
+
     def test_enviar_un_comentario_desde_cualquier_pagina(self):
         self.abrir('/destinos/mirador/')
         self.pagina.click('footer a:has-text("Enviar comentarios")')

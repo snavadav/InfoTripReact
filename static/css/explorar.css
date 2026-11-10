@@ -257,3 +257,14 @@ a.trip-card img, .photo-placeholder { width: 76px; height: 76px; border-radius: 
 #propuesta-punto { font-size: .8125rem; }
 .propuesta-parecidos { padding: .75rem; border: 1px solid var(--aviso); border-radius: var(--radio-s); background: var(--aviso-suave); font-size: .9375rem; }
 .propuesta-parecidos ul { margin: .35rem 0 .6rem; }
+/* Dirección con sugerencias de OpenStreetMap (static/js/direcciones.js). */
+.direccion-campo { display: grid; gap: .25rem; }
+.direccion-fila { display: flex; flex-wrap: wrap; gap: .5rem; align-items: stretch; }
+.direccion-entrada { flex: 1 1 14rem; min-width: 0; }
+.direccion-entrada input { width: 100%; }
+.direccion-ayuda { margin: 0; color: var(--texto-3); font-size: .8125rem; }
+.direccion-estado { margin: 0; color: var(--texto-2); font-size: .875rem; }
+.direccion-estado:empty { display: none; }
+.direccion-sugerida { padding: .6rem .75rem; border: 1px solid var(--linea-fuerte); border-radius: var(--radio-s); background: var(--panel-3); font-size: .9375rem; }
+.direccion-sugerida p { margin: 0; }
+.direccion-sugerida .contribution-actions { margin-bottom: 0; }
