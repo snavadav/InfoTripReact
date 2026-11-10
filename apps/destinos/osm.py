@@ -39,9 +39,21 @@ CONSULTA_LUGARES = """
 [out:json][timeout:300];
 area["ISO3166-2"="MX-JAL"][admin_level=4]->.jalisco;
 (
-  nwr["amenity"~"^(restaurant|fast_food|cafe|bar|pub|fuel|pharmacy|atm|bank)$"]["name"](area.jalisco);
+  nwr["amenity"~"^(restaurant|fast_food|cafe|bar|pub|fuel|pharmacy|atm|bank|marketplace)$"]["name"](area.jalisco);
   nwr["tourism"~"^(hotel|motel|hostel|guest_house|apartment)$"]["name"](area.jalisco);
   nwr["shop"~"^(convenience|supermarket|variety_store|department_store|mall|bakery|pastry|confectionery|alcohol|wine|beverages|gift|craft|art)$"]["name"](area.jalisco);
+);
+out center tags;
+rel(area.jalisco)["boundary"="administrative"]["admin_level"="6"];
+out geom;
+"""
+
+# Solo mercados (amenity=marketplace), para traerlos sin repetir toda la descarga: importar_lugares --solo-mercados.
+CONSULTA_MERCADOS = """
+[out:json][timeout:300];
+area["ISO3166-2"="MX-JAL"][admin_level=4]->.jalisco;
+(
+  nwr["amenity"="marketplace"]["name"](area.jalisco);
 );
 out center tags;
 rel(area.jalisco)["boundary"="administrative"]["admin_level"="6"];

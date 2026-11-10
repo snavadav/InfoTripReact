@@ -7,6 +7,7 @@ from django.urls import reverse
 from apps.comunidad.selectors import textos_practicos
 from apps.destinos.lugares import cerca_de
 from apps.destinos.models import Categoria, Destino, Municipio
+from .comida import opciones_comida
 from .horarios import Horario, leer_horario, leer_precio
 from .optimizador import (
     FACTOR_CARRETERA, Dia, Problema, Sitio, distancia_km, genetico, km_por_carretera, minutos_de_manejo, voraz,
@@ -244,7 +245,10 @@ def planear(origen, fecha, dias, inicio, fin, intereses, ritmo='normal', persona
                 sin_precio.add(visto.pk)
             if not visto.horario_confirmado:
                 supuestos.add(visto.pk)
+            # Dos o tres opciones; la primera es la sugerida y la persona puede elegir otra con un toque.
+            comidas = opciones_comida(sitio.punto) if parada.comida_despues else []
             filas.append({
+                'comida': comidas[0] if comidas else None, 'comidas': comidas,
                 'destino': {'id': visto.pk, 'nombre': visto.nombre, 'url': reverse('destino-detalle',
                             args=[visto.slug]), 'municipio': visto.municipio.nombre,
                             'latitud': sitio.punto[0], 'longitud': sitio.punto[1]},
@@ -252,7 +256,6 @@ def planear(origen, fecha, dias, inicio, fin, intereses, ritmo='normal', persona
                 'km': round(parada.km, 1), 'manejo_min': parada.manejo, 'visita_min': sitio.duracion,
                 'precio': None if precio is None else str(precio), 'horario_confirmado': visto.horario_confirmado,
                 'guiado': visto.guiado,
-                'comida': _lugar(_mas_cercano(sitio.punto, 'comer', 3)) if parada.comida_despues else None,
                 'comida_despues': parada.comida_despues,
             })
         ultimo = numero == dias - 1

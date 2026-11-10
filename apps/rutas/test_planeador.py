@@ -103,6 +103,21 @@ class PlaneadorTests(APITestCase):
         # Regresa al origen el último día: no se sugiere dónde dormir.
         self.assertIsNone(dias[-1]['dormir'])
 
+    def test_comida_con_opciones_y_lo_local_primero(self):
+        Lugar.objects.create(nombre='Mercado San Juan de Dios', tipo='comer', subtipo='marketplace', latitud=20.6769,
+                             longitud=-103.3390)
+        Lugar.objects.create(nombre='Starbucks Cabañas', tipo='comer', subtipo='cafe', latitud=20.6769,
+                             longitud=-103.3391)
+        dias = self.peticion(dias=2, hora_inicio='11:00', ritmo='tranquilo').json()['dias']
+        paradas = [p for dia in dias for p in dia['paradas'] if p['comida_despues']]
+        self.assertTrue(paradas)
+        opciones = paradas[0]['comidas']
+        # Mercado y fonda (por su nombre) van primero; la cadena, al final pero visible.
+        self.assertEqual({o['clase'] for o in opciones[:2]}, {'marketplace', 'fonda'})
+        self.assertEqual(opciones[-1]['nombre'], 'Starbucks Cabañas')
+        self.assertTrue(opciones[-1]['cadena'])
+        self.assertEqual(paradas[0]['comida'], opciones[0])
+
     def test_desde_mi_ubicacion_sin_guardarla(self):
         datos = {'latitud': 20.6770, 'longitud': -103.3450, 'fecha': proximo(5).isoformat(), 'dias': 1,
                  'hora_inicio': '09:00', 'hora_fin': '19:00', 'intereses': ['ciudad-y-cultura']}

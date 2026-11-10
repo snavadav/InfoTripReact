@@ -481,11 +481,57 @@
     const lista = elemento('ol', '', 'planeador-paradas');
     dia.paradas.forEach((parada, indice) => {
       lista.append(dibujarParada(parada, indice));
-      if (parada.comida_despues) lista.append(lugarUtil('Hora de comer:', parada.comida));
+      if (parada.comida_despues) lista.append(bloqueComida(parada, numero));
     });
     if (dia.dormir !== null) lista.append(lugarUtil('Dormir:', dia.dormir));
     detalle.replaceChildren(titulo, elemento('p', 'Horas estimadas. Toca el nombre de un lugar para ver su ficha completa.'),
       enlaceDelDia(dia, numero), lista);
+  }
+
+  // Dónde comer: dos o tres opciones, lo local primero. Se elige con un toque; precio y calificación solo si
+  // vienen de reseñas publicadas.
+  function bloqueComida(parada, numero) {
+    const fila = elemento('li', '', 'planeador-util planeador-comida');
+    const titulo = elemento('strong', 'Hora de comer');
+    titulo.id = `comida-titulo-${numero}-${parada.destino.id}`;
+    fila.append(titulo);
+    if (!parada.comidas || !parada.comidas.length) {
+      fila.append(elemento('span', 'no tenemos un lugar registrado cerca.'));
+      return fila;
+    }
+    const grupo = elemento('div', '', 'comida-opciones');
+    grupo.setAttribute('role', 'radiogroup');
+    grupo.setAttribute('aria-labelledby', titulo.id);
+    parada.comidas.forEach(opcion => {
+      const caja = elemento('div', '', 'comida-opcion');
+      const tarjeta = elemento('label', '', 'comida-tarjeta');
+      const radio = elemento('input');
+      radio.type = 'radio';
+      radio.name = `comida-${numero}-${parada.destino.id}`;
+      radio.value = opcion.id;
+      radio.checked = parada.comida?.id === opcion.id;
+      radio.addEventListener('change', () => {
+        parada.comida = opcion;
+        dibujarMapa(ultimoPlan);
+        resaltarEnMapa(diaElegido);
+      });
+      const cuerpo = elemento('span', '', 'comida-cuerpo');
+      cuerpo.append(elemento('span', opcion.nombre, 'comida-nombre'), elemento('span', `${opcion.tipo} · a ${opcion.distancia}`, 'comida-meta'));
+      if (opcion.calificacion !== null) {
+        cuerpo.append(elemento('span', `Calificación ${opcion.calificacion} de 5 (${plural(opcion.num_resenas, 'reseña', 'reseñas')})`, 'comida-meta'));
+      }
+      if (opcion.precio) {
+        cuerpo.append(elemento('span', `${pesos.format(+opcion.precio.minimo)} a ${pesos.format(+opcion.precio.maximo)} por persona, según ${plural(opcion.precio.reportes, 'reseña', 'reseñas')}`, 'comida-meta'));
+      }
+      if (opcion.recomendado_equipo) cuerpo.append(elemento('span', 'Recomendado por el equipo', 'comida-distintivo'));
+      tarjeta.append(radio, cuerpo);
+      const ficha = enlace('Ficha', opcion.url, 'comida-ficha');
+      ficha.setAttribute('aria-label', `Ficha de ${opcion.nombre}`);
+      caja.append(tarjeta, ficha);
+      grupo.append(caja);
+    });
+    fila.append(grupo);
+    return fila;
   }
 
   // Todo el día en Google Maps, con sus paradas en orden.
