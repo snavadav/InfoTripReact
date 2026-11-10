@@ -4,6 +4,7 @@ Solo lo ven las personas que se unieron con la invitación. Al terminar, quien o
 gastos como aportes sin nombre, que alimentan "¿Cuánto cuesta ir a…?" tras pasar por moderación.
 """
 import uuid
+from collections import Counter
 from decimal import Decimal, ROUND_HALF_UP
 
 from django.db import transaction
@@ -42,19 +43,24 @@ def a_pesos(centavos):
     return pesos(Decimal(centavos) / 100)
 
 
-def repartir(centavos, personas):
-    """Partes iguales que suman exacto: los centavos que sobran van a los primeros."""
+def repartir(centavos, personas, inicio=0):
+    """Partes iguales que suman exacto. Los centavos que sobran van a los primeros a partir de `inicio`."""
     base, sobrante = divmod(centavos, personas)
-    return [base + (1 if indice < sobrante else 0) for indice in range(personas)]
+    return [base + (1 if (indice - inicio) % personas < sobrante else 0) for indice in range(personas)]
 
 
 def calcular_saldos(participantes, gastos):
-    """{participante: centavos}. Positivo: le deben; negativo: debe. Siempre suman cero."""
+    """{participante: centavos}. Positivo: le deben; negativo: debe. Siempre suman cero.
+
+    `gastos`: (pagado_por, monto, entre[, id del gasto]). Con el id, el centavo que sobra rota entre las personas
+    de un gasto a otro; sin rotar, lo pagaba siempre quien tiene el primer id, casi siempre quien organiza.
+    """
     saldos = dict.fromkeys(participantes, 0)
-    for pagado_por, monto, entre in gastos:
+    for pagado_por, monto, entre, *gasto in gastos:
         centavos = a_centavos(monto)
         saldos[pagado_por] += centavos
-        for participante, parte in zip(sorted(entre), repartir(centavos, len(entre))):
+        inicio = gasto[0] % len(entre) if gasto else 0
+        for participante, parte in zip(sorted(entre), repartir(centavos, len(entre), inicio)):
             saldos[participante] -= parte
     return saldos
 
@@ -127,22 +133,40 @@ class EstadoBoteSerializer(serializers.Serializer):
     participantes = inline_serializer('ParticipanteDeBote', fields={
         'id': serializers.IntegerField(), 'nombre': serializers.CharField(), 'es_yo': serializers.BooleanField(),
         'es_organizador': serializers.BooleanField(), 'saldo': serializers.CharField(),
+        'puede_salir': serializers.BooleanField(),
     }, many=True)
     gastos = GastoRealSerializer(many=True)
     transferencias = inline_serializer('TransferenciaDeBote', fields={
-        'de': serializers.CharField(), 'a': serializers.CharField(), 'monto': serializers.CharField(),
+        'de': serializers.CharField(), 'a': serializers.CharField(), 'de_id': serializers.IntegerField(),
+        'a_id': serializers.IntegerField(), 'monto': serializers.CharField(),
     }, many=True)
     lugares = inline_serializer('LugarDeBote', fields={
         'id': serializers.IntegerField(), 'nombre': serializers.CharField(),
     }, many=True)
 
 
+def nombres_visibles(participantes):
+    """{id: nombre} sin repetidos: dos "Ana" se distinguen por la inicial del apellido y, si no basta, por número."""
+    repetidos = Counter(p.nombre for p in participantes)
+    nombres = {p.pk: f'{p.nombre} {p.usuario.apellido[:1]}.' if repetidos[p.nombre] > 1 and p.usuario
+               and p.usuario.apellido else p.nombre for p in participantes}
+    repetidos, vistos = Counter(nombres.values()), Counter()
+    for p in participantes:
+        nombre = nombres[p.pk]
+        if repetidos[nombre] > 1:
+            vistos[nombre] += 1
+            nombres[p.pk] = f'{nombre} ({vistos[nombre]})'
+    return nombres
+
+
 def estado_del_bote(viaje, request):
-    participantes = list(viaje.participantes.select_related('usuario'))
+    participantes = list(viaje.participantes.select_related('usuario')
+                         .annotate(gastos_pagados=Count('pagados', distinct=True),
+                                   gastos_compartidos=Count('compartidos', distinct=True)))
     gastos = list(viaje.gastos_reales.prefetch_related('entre').order_by('-fecha', '-pk'))
     saldos = calcular_saldos([p.pk for p in participantes],
-                             [(g.pagado_por_id, g.monto, [p.pk for p in g.entre.all()]) for g in gastos])
-    nombres = {p.pk: p.nombre for p in participantes}
+                             [(g.pagado_por_id, g.monto, [p.pk for p in g.entre.all()], g.pk) for g in gastos])
+    nombres = nombres_visibles(participantes)
     contexto = {'request': request, 'viaje': viaje}
     es_organizador = viaje.autor_id == request.user.pk
     return {
@@ -150,11 +174,14 @@ def estado_del_bote(viaje, request):
         'enlace_invitacion': viaje.enlace_bote if es_organizador else None,
         'total': pesos(sum((g.monto for g in gastos), Decimal('0'))),
         'participantes': [{
-            'id': p.pk, 'nombre': p.nombre, 'es_yo': p.usuario_id == request.user.pk,
+            'id': p.pk, 'nombre': nombres[p.pk], 'es_yo': p.usuario_id == request.user.pk,
             'es_organizador': p.usuario_id == viaje.autor_id, 'saldo': a_pesos(saldos[p.pk]),
+            # Con gastos no puede salir: las cuentas dejarían de cuadrar.
+            'puede_salir': (p.usuario_id != viaje.autor_id and not p.gastos_pagados and not p.gastos_compartidos
+                            and request.user.pk in (p.usuario_id, viaje.autor_id)),
         } for p in participantes],
         'gastos': GastoRealSerializer(gastos, many=True, context=contexto).data,
-        'transferencias': [{'de': nombres[de], 'a': nombres[a], 'monto': a_pesos(monto)}
+        'transferencias': [{'de': nombres[de], 'a': nombres[a], 'de_id': de, 'a_id': a, 'monto': a_pesos(monto)}
                            for de, a, monto in calcular_transferencias(saldos)],
         'lugares': [{'id': lugar.pk, 'nombre': lugar.nombre} for lugar in viaje.lugares.all() if lugar.es_activo],
     }

@@ -38,7 +38,7 @@
       const saldo = Number(persona.saldo);
       const texto = saldo > 0 ? `le deben ${dinero(saldo)}` : saldo < 0 ? `debe ${dinero(-saldo)}` : 'a mano';
       fila.append(nodo('span', `${persona.nombre}${persona.es_yo ? ' (tú)' : ''}${persona.es_organizador ? ' · organiza' : ''}: ${texto}`));
-      if (!persona.es_organizador && (bote.es_organizador || persona.es_yo)) {
+      if (persona.puede_salir) {
         fila.append(boton(persona.es_yo ? 'Salir del bote' : 'Quitar', async () => {
           if (!confirm(persona.es_yo ? '¿Salir de este bote?' : `¿Quitar a ${persona.nombre} del bote?`)) return;
           try {
