@@ -14,7 +14,9 @@ class PropuestaNoAplicable(Exception):
 @transaction.atomic
 def aprobar(propuesta, usuario):
     """Publica el dato con su fuente y fecha de consulta. Solo propuestas pendientes."""
-    propuesta = PropuestaActualizacion.objects.select_for_update().select_related(
+    # Solo se bloquea la propuesta: PostgreSQL no admite FOR UPDATE sobre el lado nulo de un LEFT JOIN
+    # (referencia, destino y lugar son opcionales). Basta para que dos personas no la aprueben a la vez.
+    propuesta = PropuestaActualizacion.objects.select_for_update(of=('self',)).select_related(
         'fuente__referencia', 'fuente__destino', 'fuente__lugar').get(pk=propuesta.pk)
     if propuesta.estado != 'pendiente':
         return False
