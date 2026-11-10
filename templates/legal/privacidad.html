@@ -4,7 +4,7 @@
 {% block content %}{% include 'partials/navBar.html' %}
 <main class="explore-shell legal-page">
   <h1>Aviso de privacidad</h1>
-  <p class="community-note">Versión preliminar de un proyecto académico de la Universidad de Guadalajara, pendiente de revisión legal. Última actualización: 8 de noviembre de 2026.</p>
+  <p class="community-note">Versión preliminar de un proyecto académico de la Universidad de Guadalajara, pendiente de revisión legal. Última actualización: 10 de noviembre de 2026.</p>
 
   <h2>Quién es responsable</h2>
   <p>El equipo de estudiantes que desarrolla InfoTrip, proyecto académico del Centro Universitario de Ciencias Exactas e Ingenierías (CUCEI) de la Universidad de Guadalajara, es responsable de tus datos personales conforme a la Ley Federal de Protección de Datos Personales en Posesión de los Particulares.{% if contacto %} Puedes escribirnos a <a href="mailto:{{ contacto }}">{{ contacto }}</a> para cualquier asunto relacionado con tus datos.{% endif %}</p>
@@ -12,11 +12,12 @@
   <h2>Qué datos tratamos</h2>
   <p>No pedimos datos sensibles (salud, religión, origen étnico, opiniones políticas o similares). Solo tratamos:</p>
   <ul>
-    <li><strong>Cuenta:</strong> nombre, apellido, correo electrónico y contraseña cifrada.</li>
+    <li><strong>Cuenta:</strong> nombre, apellido, correo electrónico, contraseña cifrada y, si lo eliges, tu nombre de usuario (@usuario). Tu nombre y tu @usuario son visibles para otras personas; tu correo nunca se muestra a nadie ni sirve para buscarte. El @usuario se puede cambiar una vez cada 30 días.</li>
+    <li><strong>Amigos, si los agregas:</strong> a quién enviaste o de quién recibiste una solicitud, a quién aceptaste y a quién bloqueaste. Solo te encuentran por tu @usuario. No hay muro, publicaciones ni mensajes entre personas.</li>
     <li><strong>Perfil, si decides agregarlo:</strong> ciudad de origen, descripción y fotografía.</li>
     <li><strong>Lo que aportas:</strong> reseñas, fotografías, gastos, datos prácticos, preguntas, respuestas, reportes, reseñas de lugares con su foto y gasto, tus respuestas a "¿Sigue abierto?" y los lugares que propones. Tu nombre no aparece junto a un lugar propuesto, y el punto marcado se guarda porque es la ubicación del lugar.</li>
     <li><strong>Lo que planeas:</strong> escapadas, presupuestos, notas y lugares guardados.</li>
-    <li><strong>El bote de una escapada, si te unes:</strong> tu nombre y los gastos que anotes o que te incluyan, visibles para las demás personas de ese bote.</li>
+    <li><strong>El bote de una escapada, si te unes o un amigo te agrega:</strong> tu nombre, tu @usuario, los gastos que anotes o que te incluyan (con el establecimiento donde se pagó, si lo eliges) y los pagos que registres o confirmes entre ustedes. Solo los ven las personas de ese bote; quien no participa, aunque sea tu amigo, no los ve. Si un amigo te agrega y no vas, puedes salirte mientras no tengas gastos ni pagos en el bote.</li>
     <li><strong>Ubicación, solo si usas "Cerca de mí", ves los destinos cerca de ti en Explorar, compruebas una visita, la confirmas en una reseña o sales desde tu ubicación en el planeador de rutas:</strong> se usa una vez para calcular distancias, armar el itinerario o compararla con la del lugar, y no se guarda. Para ordenar los destinos de Explorar por cercanía, la distancia se calcula en tu navegador y tu ubicación ni siquiera se envía. Conservamos solo el resultado, el lugar y la fecha, nunca tus coordenadas. Si compartes tu pasaporte, quien tenga el enlace ve tu nombre y tus sellos, sin fechas.</li>
     <li><strong>Búsqueda de direcciones, al proponer un lugar:</strong> lo que escribes y el punto que marcas pasan por nuestro servidor, que consulta a OpenStreetMap (Photon y Nominatim) sin enviar tu IP ni tu cuenta. Las coordenadas se redondean a unos metros. No guardamos quién buscó qué ni lo escribimos en los registros; solo conservamos 30 días la respuesta de cada búsqueda, sin datos de quién la hizo, para no repetirla.</li>
     <li><strong>Fotos de tu pasaporte, si subes alguna:</strong> son privadas. Al recibirlas quitamos sus datos de cámara y de ubicación. Solo aparecen en tu pasaporte compartido si marcas «Mostrar en mi pasaporte compartido» y el equipo las aprueba; puedes quitarlas cuando quieras y se borran al eliminar tu cuenta.</li>
@@ -26,12 +27,23 @@
     <li><strong>Registros de seguridad:</strong> el servidor registra la dirección IP, la fecha y la página de cada visita, y los intentos de inicio de sesión, para detectar abusos y errores. Solo se conservan los registros más recientes: los anteriores se borran automáticamente.</li>
   </ul>
 
+  <h2>Tu perfil y lo que ven tus amigos</h2>
+  <p>Tu perfil en InfoTrip (/u/tu-usuario) siempre muestra tu nombre y tu @usuario. Lo demás depende de lo que elijas en Amigos → «Quién ve tu perfil»:</p>
+  <ul>
+    <li><strong>Solo mis amigos</strong> (así viene de inicio): tus amigos ven tus sellos del pasaporte y los lugares donde comprobaste una visita, <strong>siempre sin fechas</strong>, igual que en el pasaporte compartido.</li>
+    <li><strong>Cualquier persona con el enlace:</strong> lo mismo, también para quien no es tu amigo.</li>
+    <li><strong>Solo yo:</strong> nadie más ve tus sellos ni tus lugares, y no apareces en las búsquedas de quien no es tu amigo.</li>
+    <li>Tu lista de amigos se muestra en tu perfil a quien puede verlo, salvo que desactives «Mostrar mi lista de amigos». En las listas de otras personas no aparecen las cuentas que eligieron «Solo yo».</li>
+  </ul>
+  <p><strong>Bloquear y eliminar:</strong> desde Amigos o desde el perfil de una persona puedes eliminar una amistad, rechazar o cancelar una solicitud y bloquear a alguien. Al bloquear se elimina la amistad o solicitud que hubiera; esa persona ya no puede enviarte solicitudes, no te encuentra al buscar y no ve tu perfil. A nadie se le avisa que lo eliminaste, rechazaste o bloqueaste. Al eliminar tu cuenta se borran tus amistades, solicitudes y bloqueos, y tu @usuario queda libre.</p>
+
   <h2>Para qué los usamos</h2>
   <p><strong>Finalidades necesarias</strong>, sin las cuales no podemos darte el servicio:</p>
   <ul>
     <li>Crear tu cuenta, confirmar que controlas tu correo y mantener tu sesión segura.</li>
     <li>Publicar y moderar lo que compartes. Tu nombre aparece junto a tus aportes publicados, salvo en los gastos enviados desde un bote, que se publican sin nombre.</li>
     <li>Guardar tus escapadas, favoritos, bote, visitas y pasaporte.</li>
+    <li>Mostrar tu perfil a quien corresponda según tu configuración, permitir que tus amigos te encuentren y te inviten a sus escapadas, y avisarte dentro del sitio de solicitudes de amistad, invitaciones a un bote y pagos por confirmar.</li>
     <li>Atender tus comentarios, reportes y solicitudes sobre tus datos.</li>
     <li>Proteger el sitio contra abusos y corregir errores.</li>
   </ul>
