@@ -226,6 +226,18 @@ PASSWORD_RESET_TIMEOUT = 3600
 # Correo que aparece en el aviso de privacidad para solicitudes sobre datos personales.
 CONTACTO_PRIVACIDAD = config('CONTACTO_PRIVACIDAD', default='')
 
+# ─── DIRECCIONES (geocodificación con OpenStreetMap) ──────────
+# Detalle, límites y cómo cambiar de proveedor en docs/direcciones.md.
+GEOCODIFICACION_PROVEEDOR = config('GEOCODIFICACION_PROVEEDOR', default='apps.destinos.direcciones.OSMPublico')
+GEOCODIFICACION_NOMINATIM_URL = config('GEOCODIFICACION_NOMINATIM_URL', default='https://nominatim.openstreetmap.org')
+GEOCODIFICACION_PHOTON_URL = config('GEOCODIFICACION_PHOTON_URL', default='https://photon.komoot.io/api/')
+# Solo para proveedores con clave (LocationIQ…). Nunca va al navegador.
+GEOCODIFICACION_CLAVE = config('GEOCODIFICACION_CLAVE', default='')
+# Nominatim público: como máximo 1 por segundo. Con un servidor propio puede ser 0 (sin límite).
+GEOCODIFICACION_SEGUNDOS_ENTRE_PETICIONES = config('GEOCODIFICACION_SEGUNDOS_ENTRE_PETICIONES', default=1, cast=int)
+# Contacto que se envía a OpenStreetMap en el User-Agent y en `email` (su política lo pide).
+CONTACTO_GEOCODIFICACION = config('CONTACTO_GEOCODIFICACION', default=CONTACTO_PRIVACIDAD)
+
 # ─── REGISTRO (LOGGING) ───────────────────────────────────────
 # Todo va a la salida estándar (12-factor): Docker, systemd o la plataforma lo recogen.
 # Los registros de InfoTrip nunca incluyen correos ni contraseñas: solo ids o huellas.
