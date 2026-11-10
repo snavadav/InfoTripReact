@@ -60,12 +60,13 @@ for modelo in [Region, Municipio, Categoria, Servicio]:
 @admin.register(Lugar)
 class LugarAdmin(admin.ModelAdmin):
     """Editar un lugar lo protege de la siguiente importación. Para retirarlo, se oculta."""
-    list_display = ['nombre', 'subtipo', 'municipio', 'es_activo', 'protegido']
-    list_filter = ['tipo', 'es_activo', 'protegido', 'municipio__region']
+    list_display = ['nombre', 'subtipo', 'municipio', 'es_activo', 'protegido', 'posiblemente_cerrado']
+    list_filter = ['tipo', 'es_activo', 'protegido', 'posiblemente_cerrado', 'municipio__region']
     search_fields = ['nombre', 'municipio__nombre', 'osm_id', 'denue_id']
-    readonly_fields = ['fecha_creacion', 'fecha_actualizacion', 'osm_id', 'denue_id', 'protegido']
+    readonly_fields = ['fecha_creacion', 'fecha_actualizacion', 'osm_id', 'denue_id', 'protegido',
+                       'posiblemente_cerrado', 'ausente_desde', 'horario_fuente_url', 'horario_fecha_consulta']
     list_select_related = ['municipio']
-    actions = ['ocultar', 'publicar']
+    actions = ['ocultar', 'publicar', 'sigue_abierto']
     def has_delete_permission(self, request, obj=None): return False
 
     def save_model(self, request, obj, form, change):
@@ -74,11 +75,16 @@ class LugarAdmin(admin.ModelAdmin):
 
     @admin.action(description='Ocultar lugares seleccionados', permissions=['change'])
     def ocultar(self, request, queryset):
-        queryset.update(es_activo=False, protegido=True)
+        queryset.update(es_activo=False, protegido=True, posiblemente_cerrado=False)
 
     @admin.action(description='Publicar lugares seleccionados', permissions=['change'])
     def publicar(self, request, queryset):
         queryset.update(es_activo=True, protegido=True)
+
+    @admin.action(description='Sigue abierto: ya no aparece en su fuente, pero lo verificamos', permissions=['change'])
+    def sigue_abierto(self, request, queryset):
+        # Protegido: la siguiente importación no lo vuelve a marcar ni pisa la verificación.
+        queryset.update(posiblemente_cerrado=False, ausente_desde=None, protegido=True)
 
 
 @admin.register(ReferenciaCosto)

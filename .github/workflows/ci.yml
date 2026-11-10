@@ -121,6 +121,8 @@ jobs:
           sed -e "s|^SECRET_KEY=.*|SECRET_KEY=$clave|" \
               -e "s|^POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=$contrasena|" \
               -e "s|^DB_PASSWORD=.*|DB_PASSWORD=$contrasena|" .env.docker.example > .env.docker
+          # Solo la tarea del DENUE, que sin clave se salta: CI no debe descargar OpenStreetMap.
+          echo "TAREAS_PROGRAMADAS=denue" >> .env.docker
       - name: Construir y levantar
         run: docker compose --env-file .env.docker up --build --detach --wait --wait-timeout 180
       - name: Comprobar a través de nginx
@@ -169,6 +171,17 @@ jobs:
           if $dc exec -T -e RESPALDO_S3_BUCKET=infotrip-ci-inexistente -e AWS_EC2_METADATA_DISABLED=true \
               respaldos sh /respaldo.sh --una-vez 2>&1 | tee salida.txt; then exit 1; fi
           grep -q 'la copia local sí quedó' salida.txt
+      - name: Servicio de tareas sin claves (cada tarea se salta limpiamente y queda registrada)
+        run: |
+          set -o pipefail
+          dc="docker compose --env-file .env.docker"
+          $dc ps --status running --services | grep -qx tareas
+          timeout 120 sh -c "until $dc logs tareas | grep -q 'denue: saltada'; do sleep 2; done"
+          $dc exec -T tareas python manage.py ejecutar_tareas --tarea fuentes_oficiales | tee salida.txt
+          grep -q 'fuentes_oficiales: saltada · Falta ANTHROPIC_API_KEY' salida.txt
+          $dc exec -T tareas python manage.py shell -c "from apps.datos.models import EjecucionTarea as E; assert E.objects.filter(resultado='saltada').count() == 2, list(E.objects.values())"
+          if $dc logs tareas | grep -q Traceback; then exit 1; fi
+          $dc ps --status running --services | grep -qx tareas
       - name: Comprobar la protección CSRF de la sesión a través de nginx
         run: |
           token=csrfprueba0123456789abcdef012345
@@ -202,6 +215,7 @@ jobs:
               -e "s|^DB_PASSWORD=.*|DB_PASSWORD=$contrasena|" \
               -e "s|^EMAIL_BACKEND=.*|EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend|" \
               .env.docker.aws.example > .env.docker
+          echo "TAREAS_PROGRAMADAS=denue" >> .env.docker
       - name: Construir y levantar con Caddy
         run: $DC up --build --detach --wait --wait-timeout 180
       - name: HTTPS, redirección y cabeceras
