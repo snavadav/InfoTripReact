@@ -494,8 +494,11 @@ class ConfirmarPagoView(APIView):
     def post(self, request, pk, pago):
         viaje = bote_de(request, pk)
         with transaction.atomic():
-            registro = get_object_or_404(viaje.pagos_entre.select_for_update().select_related('de__usuario'),
-                                         pk=pago, para__usuario=request.user)
+            # of=('self',): en PostgreSQL no se puede bloquear el lado nulo del LEFT JOIN a de__usuario
+            # (las cuentas eliminadas dejan usuario=None); basta con bloquear el pago.
+            registro = get_object_or_404(
+                viaje.pagos_entre.select_for_update(of=('self',)).select_related('de__usuario'),
+                pk=pago, para__usuario=request.user)
             if not registro.confirmado:
                 registro.confirmado = True
                 registro.save(update_fields=['confirmado'])

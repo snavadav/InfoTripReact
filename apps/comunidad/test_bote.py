@@ -331,5 +331,6 @@ class DiagnosticoBoteTests(BoteBase):
         pago = self.client.post(self.url + 'pagos/', {'para': ids['Ana'], 'monto': '150.00'}, format='json')
         self.assertEqual(pago.status_code, 201)
         self.como(self.ana)
-        self.client.post(f"{self.url}pagos/{pago.data['id']}/confirmar/")
+        confirmado = self.client.post(f"{self.url}pagos/{pago.data['pagos'][0]['id']}/confirmar/")
+        self.assertEqual(confirmado.status_code, 200)
         self.assertTrue(self.client.get(self.url).data['a_mano'])
