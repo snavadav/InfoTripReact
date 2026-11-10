@@ -1,0 +1,21 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}Elige tu nombre de usuario — InfoTrip{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/comunidad.css' %}"><link rel="stylesheet" href="{% static 'css/amigos.css' %}">{% endblock %}
+{% block content %}{% include 'partials/navBar.html' %}
+<main class="explore-shell legal-page" id="elegir-usuario">
+  <span class="eyebrow">Tu cuenta</span>
+  <h1 id="usuario-titulo">Elige tu nombre de usuario</h1>
+  <p id="usuario-intro">Así te encontrarán tus amigos y así aparecerás en los botes de tus escapadas. Tu correo nunca se muestra a nadie.</p>
+  <p id="usuario-login" hidden><a href="{% url 'login' %}">Inicia sesión</a> para elegir tu nombre de usuario.</p>
+  <form id="usuario-form" class="community-box community-form" hidden novalidate>
+    <label for="usuario-nombre">Nombre de usuario</label>
+    <div class="arroba-campo"><span aria-hidden="true">@</span><input id="usuario-nombre" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" minlength="3" maxlength="30" required aria-describedby="usuario-reglas usuario-disponible"></div>
+    <p id="usuario-reglas" class="community-note">De 3 a 30 caracteres: minúsculas sin acentos, números, punto y guion bajo. Solo podrás cambiarlo una vez cada 30 días.</p>
+    <p id="usuario-disponible" class="arroba-aviso" aria-live="polite"></p>
+    <div class="trip-actions"><button type="submit">Usar este nombre</button><a id="usuario-despues" class="btn-ghost" href="/">Ahora no</a></div>
+    <p class="form-status" role="status"></p>
+  </form>
+  {% include 'destinos/footer.html' %}
+</main>{% endblock %}
+{% block extra_js %}<script src="{% static 'js/cuenta-api.js' %}"></script><script src="{% static 'js/elegir-usuario.js' %}" defer></script>{% endblock %}

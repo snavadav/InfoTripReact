@@ -10,14 +10,14 @@ from .models import Usuario
 
 @admin.register(Usuario)
 class UsuarioAdmin(UserAdmin):
-    list_display  = ['email', 'nombre', 'apellido', 'es_verificado', 'es_staff', 'fecha_registro']
+    list_display  = ['email', 'username', 'nombre', 'apellido', 'es_verificado', 'es_staff', 'fecha_registro']
     list_filter   = ['es_staff', 'es_verificado', 'es_activo']
-    search_fields = ['email', 'nombre', 'apellido']
+    search_fields = ['email', 'username', 'nombre', 'apellido']
     ordering      = ['-fecha_registro']
 
     fieldsets = (
         ('Credenciales', {'fields': ('email', 'password')}),
-        ('Información', {'fields': ('nombre', 'apellido', 'foto_perfil', 'ciudad_origen', 'bio')}),
+        ('Información', {'fields': ('nombre', 'apellido', 'username', 'foto_perfil', 'ciudad_origen', 'bio')}),
         (
             'Permisos',
             {'fields': ('es_activo', 'es_staff', 'es_verificado', 'is_superuser', 'groups', 'user_permissions')},

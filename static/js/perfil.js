@@ -128,6 +128,9 @@
       for(const name of ['nombre','apellido','ciudad_origen','bio'])form.elements[name].value=user[name]||'';
       form.elements.avisos_correo.checked=user.avisos_correo;
       document.getElementById('profile-email').textContent=`${user.email} · ${user.es_verificado?'Correo confirmado':'Correo pendiente'}`;
+      const handle=document.getElementById('profile-username');
+      handle.replaceChildren(user.username?`Tu nombre de usuario: @${user.username} · `:'Aún no eliges tu nombre de usuario · ');
+      const handleLink=document.createElement('a');handleLink.href='/elegir-usuario/?next=/perfil/';handleLink.textContent=user.username?'Cambiar':'Elegirlo';handle.append(handleLink);
       if(user.foto_perfil){const image=document.getElementById('profile-photo');image.src=user.foto_perfil;image.hidden=false;}
       document.getElementById('profile-content').hidden=false;status.textContent='';await Promise.all([loadNotices(),load(),loadPlaceReviews(),loadPlaceProposals()]);
     }catch(error){status.textContent=error.message;document.getElementById('profile-login').hidden=false;}

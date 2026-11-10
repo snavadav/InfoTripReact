@@ -8,12 +8,14 @@ from rest_framework              import serializers, status, generics
 from rest_framework.views        import APIView
 from rest_framework.response     import Response
 from rest_framework.permissions  import IsAuthenticated, AllowAny
-from rest_framework.throttling   import AnonRateThrottle
+from rest_framework.throttling   import AnonRateThrottle, UserRateThrottle
 from rest_framework_simplejwt.exceptions    import TokenError
 from rest_framework_simplejwt.tokens        import RefreshToken
 from django.db                   import IntegrityError, transaction
+from django.utils                import timezone
 
 from apps.metricas.models import registrar
+from . import nombres
 from .models      import Usuario
 from .sesion      import COOKIE_REFRESH, borrar_cookie_refresh, exigir_csrf
 from .verificacion import enviar_codigo, responder_a_correo_existente
@@ -117,3 +119,92 @@ class CambiarPasswordView(APIView):
         respuesta = Response({'mensaje': 'Contraseña actualizada correctamente.'})
         borrar_cookie_refresh(respuesta)
         return respuesta
+
+
+# ─── NOMBRE DE USUARIO ────────────────────────────────────────
+class DisponibleThrottle(UserRateThrottle):
+    """Se consulta mientras la persona escribe: suficiente para eso, poco para recorrer la lista de cuentas."""
+    rate = '60/min'
+    scope = 'username_disponible'
+
+
+class CambioUsuarioThrottle(UserRateThrottle):
+    rate = '20/hour'
+    scope = 'username_cambio'
+
+
+class NombreUsuarioSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=40)
+
+    def validate_username(self, valor):
+        nombre = nombres.normalizar(valor)
+        motivo = nombres.problema(nombre)
+        if motivo:
+            raise serializers.ValidationError(motivo)
+        if nombres.ocupado(nombre, self.context['request'].user):
+            raise serializers.ValidationError('Ese nombre ya lo usa otra persona.')
+        return nombre
+
+
+def estado_nombre(usuario):
+    desde = nombres.puede_cambiar_desde(usuario)
+    return {'username': usuario.username, 'sugerencia': '' if usuario.username else nombres.sugerir(usuario),
+            'puede_cambiar': desde is None, 'cambiar_desde': desde}
+
+
+ESTADO_NOMBRE = inline_serializer('EstadoNombreUsuario', fields={
+    'username': serializers.CharField(allow_null=True), 'sugerencia': serializers.CharField(),
+    'puede_cambiar': serializers.BooleanField(), 'cambiar_desde': serializers.DateTimeField(allow_null=True),
+})
+
+
+class NombreUsuarioView(APIView):
+    """GET: tu nombre y, si aún no tienes, una sugerencia que no se guarda. POST: elegirlo o cambiarlo."""
+    permission_classes = [IsAuthenticated]
+
+    def get_throttles(self):
+        return [CambioUsuarioThrottle()] if self.request.method == 'POST' else super().get_throttles()
+
+    @extend_schema(responses={200: ESTADO_NOMBRE})
+    def get(self, request):
+        return Response(estado_nombre(request.user))
+
+    @extend_schema(request=NombreUsuarioSerializer, responses={200: ESTADO_NOMBRE})
+    def post(self, request):
+        datos = NombreUsuarioSerializer(data=request.data, context={'request': request})
+        datos.is_valid(raise_exception=True)
+        nuevo = datos.validated_data['username']
+        with transaction.atomic():
+            usuario = Usuario.objects.select_for_update().get(pk=request.user.pk)
+            if usuario.username == nuevo:
+                return Response(estado_nombre(usuario))
+            desde = nombres.puede_cambiar_desde(usuario)
+            if desde:
+                raise serializers.ValidationError({'username': (
+                    f'Solo puedes cambiarlo una vez cada {nombres.DIAS_ENTRE_CAMBIOS} días. '
+                    f'Podrás hacerlo a partir del {timezone.localtime(desde):%d/%m/%Y}.')})
+            usuario.username = nuevo
+            usuario.username_cambiado = timezone.now()
+            try:
+                with transaction.atomic():
+                    usuario.save(update_fields=['username', 'username_cambiado'])
+            except IntegrityError:
+                raise serializers.ValidationError({'username': 'Ese nombre ya lo usa otra persona.'})
+        return Response(estado_nombre(usuario))
+
+
+class DisponibleView(APIView):
+    """GET ?username=: si se puede usar, para avisar mientras se escribe. No dice nada más de nadie."""
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [DisponibleThrottle]
+
+    @extend_schema(responses={200: inline_serializer('NombreDisponible', fields={
+        'username': serializers.CharField(), 'disponible': serializers.BooleanField(),
+        'motivo': serializers.CharField(),
+    })})
+    def get(self, request):
+        nombre = nombres.normalizar(request.query_params.get('username', ''))[:40]
+        motivo = nombres.problema(nombre)
+        if not motivo and nombres.ocupado(nombre, request.user):
+            motivo = 'Ese nombre ya lo usa otra persona.'
+        return Response({'username': nombre, 'disponible': not motivo, 'motivo': motivo})

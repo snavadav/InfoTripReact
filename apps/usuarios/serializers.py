@@ -52,11 +52,11 @@ class UsuarioPerfilSerializer(serializers.ModelSerializer):
     class Meta:
         model  = Usuario
         fields = [
-            'uuid', 'nombre', 'apellido', 'nombre_completo',
+            'uuid', 'nombre', 'apellido', 'nombre_completo', 'username',
             'email', 'foto_perfil', 'ciudad_origen', 'bio',
             'es_verificado', 'fecha_registro', 'avisos_correo',
         ]
-        read_only_fields = ['uuid', 'email', 'es_verificado', 'fecha_registro']
+        read_only_fields = ['uuid', 'email', 'username', 'es_verificado', 'fecha_registro']
 
 
 class CambiarPasswordSerializer(serializers.Serializer):

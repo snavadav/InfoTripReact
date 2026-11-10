@@ -21,6 +21,8 @@
     return url.origin === location.origin && !/^\/(login|registro)\//.test(url.pathname)
       ? url.pathname + url.search + url.hash : '/';
   })();
+  // Sin nombre de usuario todavía: primero se elige (o se pospone) y luego se sigue a donde iba.
+  const destination = usuario => usuario?.username ? nextPath : `/elegir-usuario/?next=${encodeURIComponent(nextPath)}`;
   const signup = document.querySelector('a[href="/registro/"]');
   if (signup && nextPath !== '/') signup.href = `/registro/?next=${encodeURIComponent(nextPath)}`;
   if (params.has('registro')) {
@@ -81,7 +83,7 @@
       if (data.access) {
         // Dispositivo recordado: la contraseña basta y no hace falta código.
         localStorage.setItem('usuario', JSON.stringify(data.usuario));
-        window.location.assign(nextPath);
+        window.location.assign(destination(data.usuario));
         return;
       }
       challenge = data.desafio;
@@ -128,7 +130,7 @@
       localStorage.setItem('usuario', JSON.stringify(data.usuario));
       credentials = null;
       document.getElementById('password').value = '';
-      window.location.assign(nextPath);
+      window.location.assign(destination(data.usuario));
     } catch (err) { showError(err.message || 'No pudimos conectar. Intenta de nuevo.'); }
     finally { setBusy(false); }
   });

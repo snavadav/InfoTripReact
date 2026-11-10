@@ -64,6 +64,7 @@ def anonimizar_cuenta(usuario):
     usuario.nombre = 'Cuenta'
     usuario.apellido = 'eliminada'
     usuario.email = f'eliminada-{uuid.uuid4().hex}@infotrip.invalid'
+    usuario.username = None
     usuario.foto_perfil = None
     usuario.ciudad_origen = ''
     usuario.bio = ''

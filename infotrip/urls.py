@@ -71,6 +71,7 @@ urlpatterns = [
     path('api/v1/', include('apps.comunidad.urls')),
     path('api/v1/', include('apps.rutas.urls')),
     path('perfil/', TemplateView.as_view(template_name='comunidad/perfil.html'), name='perfil'),
+    path('elegir-usuario/', TemplateView.as_view(template_name='amigos/elegir_usuario.html'), name='elegir-usuario'),
     path('recuperar/', TemplateView.as_view(template_name='comunidad/recuperar.html'), name='recuperar'),
     path('privacidad/', vista_legal('legal/privacidad.html'), name='privacidad'),
     path('terminos/', vista_legal('legal/terminos.html'), name='terminos'),
