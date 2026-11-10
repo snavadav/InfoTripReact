@@ -12,7 +12,9 @@ from rest_framework.views import APIView
 
 from apps.metricas.models import registrar
 from .exportar import con_enlaces
-from .servicio import RITMOS, RADIO_KM, intereses_disponibles, municipios_de_salida, planear
+from .servicio import (
+    MODOS, RITMOS, RADIO_KM, intereses_disponibles, municipios_de_salida, planear, regresa, resolver_destino,
+)
 
 HORA = r'^([01][0-9]|2[0-3]):[0-5][0-9]$'
 HORAS_MINIMAS = 3
@@ -52,6 +54,11 @@ class PeticionRutaSerializer(serializers.Serializer):
     presupuesto = serializers.DecimalField(max_digits=9, decimal_places=2, min_value=0, required=False,
                                            allow_null=True)
     regresar = serializers.BooleanField(default=True)
+    # A dónde va (opcional): 'destino:<slug>' o 'municipio:<slug>', como los propone el buscador.
+    destino = serializers.RegexField(r'^(destino|municipio):[-a-z0-9]{1,200}$', required=False, allow_blank=True,
+                                     error_messages={'invalid': 'Elige el destino de la lista de sugerencias.'})
+    # Sin destino es 'circulo'; con destino y sin modo, ida y vuelta.
+    modo = serializers.ChoiceField(choices=list(MODOS), required=False)
 
     def validate_fecha(self, fecha):
         hoy = timezone.localdate()
@@ -77,7 +84,27 @@ class PeticionRutaSerializer(serializers.Serializer):
             raise serializers.ValidationError({'municipio': 'Elige desde dónde sales.'})
         if _minutos(datos['hora_fin']) - _minutos(datos['hora_inicio']) < HORAS_MINIMAS * 60:
             raise serializers.ValidationError({'hora_fin': f'Deja al menos {HORAS_MINIMAS} horas para recorrer.'})
+        self._validar_destino(datos)
         return datos
+
+    @staticmethod
+    def _validar_destino(datos):
+        """Resuelve el destino y deja `regresar` como lo pide el tipo de viaje."""
+        if not datos.get('destino'):
+            datos.pop('destino', None)
+            if datos.setdefault('modo', 'circulo') != 'circulo':
+                raise serializers.ValidationError({'destino': 'Elige a dónde vas o marca «Sin destino».'})
+            datos['destino_info'] = None
+            return
+        if datos.setdefault('modo', 'ida_vuelta') == 'circulo':
+            raise serializers.ValidationError({'modo': 'Elige el tipo de viaje: ida y vuelta, solo ida o quedarte.'})
+        info = resolver_destino(datos['destino'])
+        if info is None:
+            raise serializers.ValidationError({'destino': 'No encontramos ese destino. Elígelo de la lista.'})
+        if datos['modo'] == 'base' and datos['dias'] < 2:
+            raise serializers.ValidationError({'modo': 'Para quedarte en el destino elige al menos 2 días.'})
+        datos['destino_info'] = info
+        datos['regresar'] = regresa(datos['modo'], datos['regresar'])
 
 
 class PlanearRutaView(APIView):
@@ -100,7 +127,7 @@ def armar_plan(datos):
     plan = planear(
         datos['origen'], datos['fecha'], datos['dias'], _minutos(datos['hora_inicio']),
         _minutos(datos['hora_fin']), datos['intereses'], datos['ritmo'], datos['personas'],
-        datos.get('presupuesto'), datos['regresar'],
+        datos.get('presupuesto'), datos['regresar'], datos['modo'], datos['destino_info'], datos['origen_nombre'],
     )
     plan['origen'] = {'nombre': datos['origen_nombre'], 'latitud': datos['origen'][0],
                       'longitud': datos['origen'][1]}
@@ -119,6 +146,7 @@ def pagina_planeador(request):
         'sabado': manana + timedelta(days=(5 - manana.weekday()) % 7),
         'limite': hoy + timedelta(days=DIAS_HACIA_ADELANTE),
         'dias_opciones': sorted(RADIO_KM),
+        'modos': [(clave, nombre) for clave, nombre in MODOS.items() if clave != 'circulo'],
         'seo': {'titulo': 'Armar una ruta por Jalisco — InfoTrip',
                 'descripcion': 'Dinos cuántos días tienes y qué te gusta: armamos un itinerario por Jalisco que '
                                'respeta horarios, distancias y tu presupuesto.'},

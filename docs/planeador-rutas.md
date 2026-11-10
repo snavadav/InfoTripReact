@@ -77,6 +77,52 @@ Por escenario, el híbrido mejora al voraz entre +0.2 % y +39 %. Las mayores mej
 - **El genético puro no basta.** Con 45 candidatos, empezar solo con órdenes al azar no supera de forma significativa al voraz (p = 0.25), y en promedio queda por debajo.
 - **El híbrido nunca queda por debajo del voraz.** Lo mejora en 388 de 420 corridas, con 8 km menos de recorrido en promedio y menos de 1.3 s por plan.
 
+## Origen y destino (Planeador 2.0)
+
+El paso opcional «¿A dónde vas?» usa el buscador tolerante (destinos y municipios). Con un destino, la persona elige el tipo de viaje; sin destino todo funciona como antes («círculo»).
+
+| Tipo (`modo`) | Qué hace |
+|---|---|
+| `circulo` | Sin destino. Sitios dentro de `RADIO_KM` de la salida; el regreso lo decide la persona. |
+| `ida_vuelta` | Sitios en el corredor hasta el destino; el último día se vuelve a la salida. |
+| `ida` | Sitios en el corredor; el viaje termina en el destino (punto final del optimizador). |
+| `base` | Día 1 por el corredor hasta el destino, donde se duerme; desde el día 2, paseos de ida y vuelta alrededor de él. Pide al menos 2 días. |
+
+Constantes (`apps/rutas/servicio.py`):
+
+- **Corredor.** Un sitio entra si el desvío `d(salida, sitio) + d(sitio, destino) − d(salida, destino)`, en línea recta, cabe en `MARGEN_CORREDOR_KM` = 30, 60 y 90 km para 1, 2 y 3 días. Es una elipse con la salida y el destino como focos. 30 km es salir una hora de la carretera, ida y vuelta.
+- **Base.** Desde el día 2, sitios a menos de `RADIO_BASE_KM` = 50 km del destino (alrededor de una hora de manejo). Lo que solo queda en el corredor se visita únicamente el día 1.
+- **Cerca del destino.** Los sitios a menos de `RADIO_ZONA_DESTINO_KM` = 20 km suman `BONO_DESTINO` = 0.3: la ruta llega y recorre, no solo pasa.
+- **Destino concreto.** Si el destino es un sitio del catálogo (no un municipio), es obligatorio: la aptitud suma `BONO_OBLIGATORIO` = 100 si entra. Si no cabe, la página lo avisa.
+
+**Punto final en el optimizador.** `Problema.final` agrega un nodo al final de la matriz. El último día hay que llegar ahí antes de la hora de fin; los días anteriores, ninguna parada puede quedar tan lejos que las horas de los días que faltan no alcancen para manejar hasta él. `Dia.desde` y `Dia.hasta` fijan dónde empieza y termina un día (en `base`, en el destino). Sin destino, el optimizador hace exactamente lo de antes: el experimento da los mismos números en los 12 escenarios de siempre.
+
+**Aviso de tiempo.** Antes de calcular, la página (y la API, en `avisos`) compara el manejo directo de la salida al destino con las horas del horario: ida y vuelta contra todos los días, solo ida contra todos los días, base contra el primer día. Si no cabe, sugiere más días o un horario más amplio. No impide calcular.
+
+### Experimento con destino
+
+Se agregaron 6 escenarios (2 de solo ida, 1 de solo ida con destino concreto, 3 de base) a los 12 de siempre: 18 escenarios y 1,278 ejecuciones. El resultado del 10 de noviembre de 2026, con 354 destinos públicos, está en [experimentos/rutas-2026-11-10.csv](experimentos/rutas-2026-11-10.csv).
+
+| Tipo | Método | n | Aptitud media | Sitios | km | Segundos |
+|---|---|---|---|---|---|---|
+| Círculo | Voraz | 12 | 11.702 | 10.50 | 152.2 | 0.001 |
+| Círculo | Genético híbrido | 420 | 12.173 | 10.84 | 143.6 | 0.747 |
+| Solo ida | Voraz | 3 | 43.596 | 8.67 | 250.3 | 0.001 |
+| Solo ida | Genético híbrido | 105 | 44.230 | 9.10 | 217.9 | 0.639 |
+| Base | Voraz | 3 | 46.499 | 11.33 | 342.4 | 0.001 |
+| Base | Genético híbrido | 105 | 49.245 | 13.56 | 286.9 | 0.878 |
+
+Las aptitudes de solo ida y base incluyen el bono de 100 del destino obligatorio en un escenario de cada tipo (Tequila y Tapalpa); por eso son altas. Sin ese bono, el híbrido mejora al voraz un +6.9 % en Tequila y un +55.7 % en Tapalpa como base.
+
+| Tipo | Mejora | Empata | Empeora | Diferencia media | p |
+|---|---|---|---|---|---|
+| Círculo | 388 | 32 | 0 | +0.472 | 3.2 × 10⁻¹¹⁷ |
+| Solo ida | 105 | 0 | 0 | +0.634 | 4.9 × 10⁻³² |
+| Base | 99 | 6 | 0 | +2.746 | 3.2 × 10⁻³⁰ |
+| Todos | 592 | 38 | 0 | +0.878 | 1.2 × 10⁻¹⁷⁸ |
+
+**El híbrido nunca queda por debajo del voraz** en ningún tipo de viaje. Por escenario nuevo: Tapalpa solo ida +15.2 %, Puerto Vallarta solo ida +0.1 %, Mazamitla base +3.8 %, Chapala base +7.7 %. El tiempo medio por plan es de 0.75 s; en 76 de 630 corridas pasó de 1.3 s (máximo 2.7 s), igual que antes en los escenarios sin destino (59 de 420), con la máquina ocupada en otras tareas.
+
 ## Limitaciones
 
 - Solo considera viajes en auto. No toma en cuenta transporte público ni tráfico.

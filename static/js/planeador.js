@@ -17,6 +17,10 @@
   const botonCompartir = document.getElementById('ruta-compartir');
   const estadoCompartir = document.getElementById('ruta-compartir-estado');
   const panelCompartir = document.getElementById('ruta-compartir-panel');
+  const campoDestino = document.getElementById('ruta-destino');
+  const valorDestino = document.getElementById('ruta-destino-valor');
+  const explicaModo = document.getElementById('ruta-modo-explica');
+  const advertencia = document.getElementById('ruta-advertencia');
   const DIAS_SEMANA = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
   const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
   const COLORES = 3;
@@ -25,7 +29,25 @@
   const pesos = new Intl.NumberFormat('es-MX', {style: 'currency', currency: 'MXN', maximumFractionDigits: 0});
   const sinMovimiento = window.matchMedia('(prefers-reduced-motion: reduce)');
   let ubicacion = null, ultimoPlan = null, ultimaPeticion = null, mapa = null, capa = null;
-  let diaElegido = 0, capasDia = [], extras = {}, origenMapa = null;
+  let diaElegido = 0, capasDia = [], extras = {}, origenMapa = null, destinoElegido = null;
+  const EXPLICA_MODO = {
+    circulo: 'Recorremos alrededor de donde sales y vuelves ahí.',
+    ida_vuelta: 'Vas al destino con paradas en el camino y alrededor, y regresas a donde saliste.',
+    ida: 'Vas al destino con paradas en el camino; el viaje termina ahí.',
+    base: 'El día 1 llegas con paradas en el camino; desde el día 2 sales a pasear y vuelves a dormir al destino.',
+  };
+  // Igual que el servidor (apps/rutas/optimizador.py): línea recta × 1.35, 30 km/h en ciudad y 70 en carretera.
+  const FACTOR_CARRETERA = 1.35;
+  function minutosDeManejo(km) {
+    if (km < 0.3) return 0;
+    return Math.round(km / (km < 15 ? 30 : 70) * 60) + 10;
+  }
+  function kmEnLinea(a, b) {
+    const rad = Math.PI / 180;
+    const h = Math.sin((b.lat - a.lat) * rad / 2) ** 2 +
+      Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin((b.lng - a.lng) * rad / 2) ** 2;
+    return 2 * 6371 * Math.asin(Math.sqrt(h));
+  }
 
   // ── Utilidades de DOM ───────────────────────────────────
   function elemento(etiqueta, texto, clase) {
@@ -106,6 +128,7 @@
       botonUbicacion.textContent = 'Salir desde mi ubicación';
       botonUbicacion.setAttribute('aria-pressed', 'false');
       estadoUbicacion.textContent = '';
+      revisarTiempo();
       return;
     }
     if (!navigator.geolocation) { estadoUbicacion.textContent = 'Tu navegador no ofrece ubicación. Elige un municipio.'; return; }
@@ -117,9 +140,71 @@
       botonUbicacion.setAttribute('aria-pressed', 'true');
       // Solo se usa para calcular esta ruta; no se guarda.
       estadoUbicacion.textContent = 'Saldremos desde donde estás. No guardamos tu ubicación.';
+      revisarTiempo();
     }, () => { estadoUbicacion.textContent = 'No pudimos obtener tu ubicación. Elige un municipio de la lista.'; },
     {timeout: 15000, maximumAge: 60000});
   });
+
+  // ── A dónde vas y tipo de viaje ─────────────────────────
+  const modoElegido = () => form.querySelector('[name="modo"]:checked').value;
+  function puntoDeSalida() {
+    if (ubicacion) return {lat: ubicacion.latitud, lng: ubicacion.longitud, nombre: 'tu ubicación'};
+    const opcion = selectMunicipio.selectedOptions[0];
+    return opcion ? {lat: +opcion.dataset.lat, lng: +opcion.dataset.lng, nombre: opcion.textContent} : null;
+  }
+  // Aviso antes de calcular: si el puro trayecto no cabe en el horario, sugerimos más días. No impide armarla.
+  function revisarTiempo() {
+    const modo = modoElegido(), salida = puntoDeSalida();
+    const inicio = minutos(form.elements.hora_inicio.value), fin = minutos(form.elements.hora_fin.value);
+    const dias = +new FormData(form).get('dias');
+    advertencia.textContent = '';
+    if (modo === 'circulo' || !destinoElegido || !salida || !(fin > inicio)) return;
+    const directo = minutosDeManejo(kmEnLinea(salida, destinoElegido) * FACTOR_CARRETERA);
+    const porDia = fin - inicio;
+    const [necesario, disponible, como] = modo === 'ida_vuelta' ? [2 * directo, porDia * dias, 'ida y vuelta']
+      : modo === 'base' ? [directo, porDia, 'el primer día'] : [directo, porDia * dias, 'de ida'];
+    if (necesario <= disponible) return;
+    const sugerencia = modo === 'base' ? 'Empieza más temprano el primer día o termina más tarde.'
+      : dias < 3 ? 'Prueba con más días o con un horario más amplio.' : 'Prueba con un horario más amplio o con un destino más cercano.';
+    advertencia.textContent = `Solo manejar de ${salida.nombre} a ${destinoElegido.nombre} ${como} toma unas ${duracion(necesario)} (estimado, sin paradas) y tu horario da ${duracion(disponible)}. ${sugerencia}`;
+  }
+  function cambiarModo() {
+    const modo = modoElegido();
+    explicaModo.textContent = EXPLICA_MODO[modo];
+    form.elements.regresar.disabled = modo !== 'circulo';
+    document.getElementById('ruta-regresar-nota').hidden = modo === 'circulo';
+    limpiarError('destino');
+    revisarTiempo();
+  }
+  function marcarModo(valor) {
+    form.querySelector(`[name="modo"][value="${valor}"]`).checked = true;
+    cambiarModo();
+  }
+  campoDestino.addEventListener('buscador:elegido', evento => {
+    const elegido = evento.detail;
+    destinoElegido = {nombre: elegido.nombre, lat: elegido.latitud, lng: elegido.longitud};
+    valorDestino.value = `${elegido.tipo}:${elegido.slug}`;
+    if (modoElegido() === 'circulo') marcarModo('ida_vuelta');
+    else { limpiarError('destino'); revisarTiempo(); }
+  });
+  campoDestino.addEventListener('input', () => {
+    // Lo escrito ya no es lo que se eligió: hay que elegir de nuevo.
+    if (destinoElegido && campoDestino.value.trim() !== destinoElegido.nombre) {
+      destinoElegido = null;
+      valorDestino.value = '';
+      revisarTiempo();
+    }
+    if (!campoDestino.value.trim() && modoElegido() !== 'circulo') marcarModo('circulo');
+  });
+  // Intro en el buscador elige una sugerencia (buscador.js); sin elegir, no debe enviar el formulario a medias.
+  campoDestino.addEventListener('keydown', evento => {
+    if (evento.key === 'Enter') evento.preventDefault();
+  });
+  form.querySelectorAll('[name="modo"]').forEach(radio => radio.addEventListener('change', cambiarModo));
+  [selectMunicipio, form.elements.hora_inicio, form.elements.hora_fin, ...form.querySelectorAll('[name="dias"]')]
+    .forEach(campo => campo.addEventListener('change', revisarTiempo));
+  form.querySelectorAll('[data-inicio]').forEach(boton => boton.addEventListener('click', revisarTiempo));
+  cambiarModo();
 
   // ── Validación con mensajes junto a cada paso ───────────
   function limpiarError(paso) {
@@ -142,6 +227,11 @@
     } else if (fin - inicio < MINIMO_MINUTOS) {
       agregar('cuando', 'Deja al menos 3 horas entre que empiezas y terminas, para que dé tiempo de visitar algo.', form.elements.hora_fin);
     }
+    if (cuerpo.modo !== 'circulo' && !cuerpo.destino) {
+      agregar('destino', campoDestino.value.trim() ? 'Elige el destino de la lista de sugerencias.' : 'Escribe a dónde vas o elige «Sin destino».', campoDestino);
+    } else if (cuerpo.modo === 'base' && cuerpo.dias < 2) {
+      agregar('destino', 'Para quedarte en el destino elige al menos 2 días.', form.querySelector('[name="modo"]:checked'));
+    }
     if (!cuerpo.intereses.length) {
       agregar('intereses', 'Elige al menos una cosa que te guste.', form.querySelector('[name="intereses"]'));
     }
@@ -154,7 +244,7 @@
     return errores;
   }
   function mostrarErrores(errores) {
-    ['cuando', 'intereses', 'personas'].forEach(limpiarError);
+    ['destino', 'cuando', 'intereses', 'personas'].forEach(limpiarError);
     errores.forEach(({paso, texto, campo}) => {
       const caja = document.getElementById(`ruta-error-${paso}`);
       caja.textContent = caja.textContent ? `${caja.textContent} ${texto}` : texto;
@@ -178,8 +268,13 @@
       fecha: datos.get('fecha'), dias: +datos.get('dias'), hora_inicio: datos.get('hora_inicio'),
       hora_fin: datos.get('hora_fin'), intereses: datos.getAll('intereses'), ritmo: datos.get('ritmo') || 'normal',
       personas: Number(datos.get('personas')), presupuesto: datos.get('presupuesto') || null,
-      regresar: datos.get('regresar') === 'on',
+      regresar: datos.get('regresar') === 'on', modo: datos.get('modo') || 'circulo',
     };
+    // Sin destino se envía lo mismo de siempre, más el modo.
+    if (cuerpo.modo !== 'circulo') {
+      cuerpo.destino = datos.get('destino') || '';
+      cuerpo.regresar = cuerpo.modo === 'ida_vuelta';
+    }
     return ubicacion ? {...cuerpo, ...ubicacion} : {...cuerpo, municipio: datos.get('municipio')};
   }
 
@@ -239,8 +334,16 @@
     origenMapa = [plan.origen.latitud, plan.origen.longitud];
     L.marker(origenMapa, {icon: InfoTripMapa.icono({}, true), title: plan.origen.nombre, alt: plan.origen.nombre})
       .bindPopup(elemento('strong', `Salida: ${plan.origen.nombre}`)).addTo(capa);
+    const viaje = plan.viaje || {modo: 'circulo'};
+    const puntoDestino = viaje.destino ? [viaje.destino.latitud, viaje.destino.longitud] : null;
+    const final = puntoDestino && ['ida', 'base'].includes(viaje.modo) ? puntoDestino : null;
+    if (puntoDestino) {
+      L.marker(puntoDestino, {icon: InfoTripMapa.icono({}, true), title: viaje.destino.nombre, alt: `Destino: ${viaje.destino.nombre}`})
+        .bindPopup(popup(`Destino: ${viaje.destino.nombre}`, viaje.destino.url)).addTo(capa);
+    }
     let anterior = origenMapa;
     plan.dias.forEach((dia, numero) => {
+      if (viaje.modo === 'base' && numero) anterior = final;
       const grupo = {marcadores: [], linea: null, puntos: [anterior]};
       dia.paradas.forEach((parada, indice) => {
         const punto = [parada.destino.latitud, parada.destino.longitud];
@@ -258,7 +361,9 @@
           title: dia.dormir.nombre, alt: dia.dormir.nombre}).bindPopup(popup(dia.dormir.nombre, dia.dormir.url)).addTo(capa));
       }
       const trazo = [...grupo.puntos];
-      if (numero === plan.dias.length - 1 && ultimaPeticion.regresar && dia.paradas.length) trazo.push(origenMapa);
+      const ultimo = numero === plan.dias.length - 1;
+      if (final && (viaje.modo === 'base' || ultimo)) trazo.push(final);
+      else if (ultimo && ultimaPeticion.regresar && dia.paradas.length) trazo.push(origenMapa);
       // Líneas rectas entre paradas: indican el orden, no el camino por carretera.
       if (trazo.length > 1) {
         grupo.linea = L.polyline(trazo, {className: `ruta-linea dia-${numero % COLORES}`, color: colorDia(numero),

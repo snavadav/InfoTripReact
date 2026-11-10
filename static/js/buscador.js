@@ -1,6 +1,8 @@
 // Autocompletado del campo de búsqueda (patrón combobox de ARIA 1.2, lista emergente).
 // Mejora progresiva: sin JavaScript el formulario sigue buscando igual. Se activa en cualquier
 // <input data-autocompletar="URL">. Elegir una opción abre su página; Intro sin opción activa envía la búsqueda.
+// Con data-elegir, elegir no navega: escribe el nombre en el campo y avisa con el evento «buscador:elegido»
+// (detail = la sugerencia). data-tipos="destino,municipio" deja solo esos tipos.
 (() => {
   const ESPERA_MS = 250;
   const MINIMO = 2;
@@ -33,6 +35,9 @@
     input.setAttribute('autocomplete', 'off');
 
     const cache = new Map();
+    const elegir = 'elegir' in input.dataset;
+    const tipos = input.dataset.tipos ? input.dataset.tipos.split(',') : null;
+    let resultadosVisibles = [];
     let opciones = [];
     let activa = -1;
     let temporizador;
@@ -57,11 +62,12 @@
       lista.replaceChildren();
       opciones = [];
       activa = -1;
-      const resultados = datos.resultados || [];
+      const resultados = (datos.resultados || []).filter(r => !tipos || tipos.includes(r.tipo));
       if (!resultados.length && datos.sugerencia) {
         resultados.push({ tipo: 'sugerencia', nombre: datos.sugerencia, detalle: '¿Quisiste decir…?',
           url: `${input.form.action}?${new URLSearchParams({ q: datos.sugerencia })}` });
       }
+      resultadosVisibles = resultados;
       resultados.forEach((resultado, i) => {
         const opcion = document.createElement('li');
         opcion.id = `${id}-${i}`;
@@ -128,7 +134,7 @@
         marcar(siguiente);
       } else if (event.key === 'Enter' && abierta && activa >= 0) {
         event.preventDefault();
-        window.location.assign(opciones[activa].dataset.url);
+        usar(activa);
       } else if (event.key === 'Escape' && abierta) {
         event.preventDefault();
         event.stopPropagation();
@@ -142,8 +148,19 @@
     lista.addEventListener('mousedown', event => event.preventDefault());
     lista.addEventListener('click', event => {
       const opcion = event.target.closest('[role="option"]');
-      if (opcion) window.location.assign(opcion.dataset.url);
+      if (opcion) usar(opciones.indexOf(opcion));
     });
+
+    function usar(indice) {
+      const resultado = resultadosVisibles[indice];
+      if (!elegir) { window.location.assign(opciones[indice].dataset.url); return; }
+      input.value = resultado.nombre;
+      cerrar();
+      // «¿Quisiste decir…?» solo corrige lo escrito: vuelve a proponer con el nombre bien escrito.
+      if (resultado.tipo === 'sugerencia') { consultar(resultado.nombre); return; }
+      estado.textContent = `Elegiste ${resultado.nombre}.`;
+      input.dispatchEvent(new CustomEvent('buscador:elegido', { detail: resultado, bubbles: true }));
+    }
     input.addEventListener('blur', cerrar);
     input.addEventListener('focus', () => {
       const texto = input.value.trim();

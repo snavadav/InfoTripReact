@@ -40,8 +40,16 @@
         .bindPopup(Object.assign(document.createElement('strong'), {textContent: `Salida: ${datos.origen.nombre}`}))
         .addTo(capa);
     }
+    // Solo ida o quedarse: el día termina en el destino (un destino o un municipio públicos).
+    const punto = datos.destino ? [datos.destino.latitud, datos.destino.longitud] : null;
+    const final = punto && ['ida', 'base'].includes(datos.modo) ? punto : null;
+    if (punto) {
+      L.marker(punto, {icon: InfoTripMapa.icono({}, true), title: datos.destino.nombre, alt: `Destino: ${datos.destino.nombre}`})
+        .bindPopup(popup(`Destino: ${datos.destino.nombre}`, datos.destino.url)).addTo(capa);
+    }
     let anterior = origen;
     datos.dias.forEach((paradas, numero) => {
+      if (datos.modo === 'base' && numero) anterior = final;
       const trazo = anterior ? [anterior] : [];
       paradas.forEach((parada, indice) => {
         const punto = [parada.latitud, parada.longitud];
@@ -50,7 +58,9 @@
           alt: `Día ${numero + 1}, parada ${indice + 1}: ${parada.nombre}`})
           .bindPopup(popup(`Día ${numero + 1} · ${indice + 1}. ${parada.nombre}`, parada.url)).addTo(capa);
       });
-      if (numero === datos.dias.length - 1 && datos.regresar && origen && paradas.length) trazo.push(origen);
+      const ultimo = numero === datos.dias.length - 1;
+      if (final && (datos.modo === 'base' || ultimo)) trazo.push(final);
+      else if (ultimo && datos.regresar && origen && paradas.length) trazo.push(origen);
       // Líneas rectas: indican el orden, no el camino por carretera.
       if (trazo.length > 1) {
         L.polyline(trazo, {className: `ruta-linea dia-${numero % COLORES}`, color: colorDia(numero), weight: 3,

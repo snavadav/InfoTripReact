@@ -141,7 +141,11 @@ class PlaneadorTests(APITestCase):
     def test_pagina_y_enlace_en_el_menu(self):
         pagina = self.client.get('/planeador/')
         self.assertContains(pagina, 'id="ruta-form"')
-        self.assertContains(pagina, '<option value="guadalajara" selected>Guadalajara</option>', html=True)
+        # El punto medio del municipio va en la opción: el aviso de tiempo se calcula antes de enviar.
+        self.assertRegex(pagina.content.decode(),
+                         r'<option value="guadalajara" data-lat="20\.\d+" data-lng="-103\.\d+" selected>')
+        self.assertContains(pagina, 'id="ruta-destino"')
+        self.assertContains(pagina, '<input type="radio" name="modo" value="circulo" checked>', html=True)
         self.assertContains(pagina, 'value="miradores"')
         # Días como opciones grandes, con dos marcado; atajos de fecha con la fecha de mañana.
         self.assertContains(pagina, '<input type="radio" name="dias" value="2" checked>', html=True)

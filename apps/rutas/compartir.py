@@ -22,7 +22,7 @@ from .servicio import municipios_de_salida
 from .views import PeticionRutaSerializer, armar_plan
 
 PARAMETROS_GUARDADOS = ('municipio', 'fecha', 'dias', 'hora_inicio', 'hora_fin', 'intereses', 'ritmo', 'personas',
-                        'presupuesto', 'regresar')
+                        'presupuesto', 'regresar', 'destino', 'modo')
 
 
 class CompartirAnonimoThrottle(AnonRateThrottle):
@@ -61,7 +61,11 @@ def para_guardar(plan, datos):
 
 def titulo_de(plan):
     dias = len(plan['dias'])
-    return f'Ruta de {dias} {"día" if dias == 1 else "días"} desde {plan["origen"]["nombre"]}'[:160]
+    titulo = f'Ruta de {dias} {"día" if dias == 1 else "días"} desde {plan["origen"]["nombre"]}'
+    destino = (plan.get('viaje') or {}).get('destino')
+    if destino:
+        titulo += f' a {destino["nombre"]}'
+    return titulo[:160]
 
 
 # ── API ───────────────────────────────────────────────────────
@@ -138,6 +142,7 @@ def pagina_ruta_compartida(request, enlace):
     if caducada:
         return caducada
     plan = con_enlaces(copy.deepcopy(ruta.plan), ruta.parametros.get('regresar', True))
+    viaje = plan.get('viaje') or {}
     for numero, dia in enumerate(plan['dias']):
         dia['numero'] = numero + 1
         dia['color'] = numero % 3
@@ -152,6 +157,7 @@ def pagina_ruta_compartida(request, enlace):
     return render(request, 'rutas/ruta_compartida.html', {
         'ruta': ruta, 'plan': plan,
         'mapa': {'origen': plan['origen'], 'regresar': ruta.parametros.get('regresar', True),
+                 'modo': viaje.get('modo', 'circulo'), 'destino': viaje.get('destino'),
                  'dias': [[{'nombre': p['destino']['nombre'], 'url': p['destino']['url'],
                             'latitud': p['destino']['latitud'], 'longitud': p['destino']['longitud']}
                            for p in d['paradas']] for d in plan['dias']]},
