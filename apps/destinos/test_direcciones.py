@@ -304,13 +304,20 @@ class DireccionesTests(TestCase):
     def test_no_se_guarda_quien_busco(self):
         usuario = Usuario.objects.create_user('ana@example.com', 'Ana', 'P', 'Prueba-segura-493!')
         self.cliente.force_authenticate(usuario)
-        respuesta = self.cliente.get(SUGERIR, {'q': 'Catedral Guadalajara'}, REMOTE_ADDR='10.1.2.3')
-        claves = [clave for clave in cache._cache if 'direcciones:sugerir' in clave]
-        self.assertEqual(len(claves), 1)
+        guardar = cache.set
+        guardados = []
+        with mock.patch('apps.destinos.direcciones.cache.set',
+                        side_effect=lambda clave, valor, *a, **kw: (guardados.append((clave, valor)), guardar(clave, valor, *a, **kw))):
+            respuesta = self.cliente.get(SUGERIR, {'q': 'Catedral Guadalajara'}, REMOTE_ADDR='10.1.2.3')
+        # El throttle también usa la caché; aquí solo importan las entradas de direcciones.
+        guardados = [(clave, valor) for clave, valor in guardados if clave.startswith('direcciones:')]
+        self.assertEqual(len(guardados), 1)
+        clave, valor = guardados[0]
         # Solo la huella de la consulta y los resultados: ni el texto, ni la cuenta, ni la IP.
-        self.assertRegex(claves[0], r'direcciones:sugerir:[0-9a-f]{32}$')
-        self.assertEqual(cache.get(claves[0].split(':', 2)[2]), respuesta.json())
-        self.assertNotIn('10.1.2.3', str(cache.get(claves[0].split(':', 2)[2])))
+        self.assertRegex(clave, r'^direcciones:sugerir:[0-9a-f]{32}$')
+        self.assertEqual(valor, respuesta.json())
+        self.assertNotIn('10.1.2.3', str(valor))
+        self.assertEqual(cache.get(clave), valor)
 
     # ─── Proveedor intercambiable ───
 
