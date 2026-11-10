@@ -14,6 +14,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.utils import timezone
 
+from apps.datos.models import PropuestaActualizacion
 from apps.destinos.models import Destino, ReferenciaCosto
 
 ARCHIVO = Path(__file__).resolve().parents[2] / 'datos' / 'referencias_costo.csv'
@@ -82,9 +83,18 @@ class Command(BaseCommand):
         if errores:
             raise CommandError('No se cargó nada. ' + ' | '.join(errores))
 
-        creadas = actualizadas = 0
+        creadas = actualizadas = conservadas = 0
         with transaction.atomic():
             for referencia in referencias:
+                # Un precio aprobado después desde su fuente oficial (apps.datos) es más reciente que el CSV.
+                if PropuestaActualizacion.objects.filter(
+                        estado='aprobada', fuente__referencia__destino=referencia.destino,
+                        fuente__referencia__concepto=referencia.concepto,
+                        fuente__referencia__descripcion=referencia.descripcion,
+                        fuente__referencia__fuente_url=referencia.fuente_url,
+                        fecha_consulta__gt=referencia.fecha_consulta).exists():
+                    conservadas += 1
+                    continue
                 _, creada = ReferenciaCosto.objects.update_or_create(
                     destino=referencia.destino, concepto=referencia.concepto, descripcion=referencia.descripcion,
                     fuente_url=referencia.fuente_url,
@@ -96,4 +106,7 @@ class Command(BaseCommand):
         if sin_destino:
             self.stdout.write(self.style.WARNING(
                 f'Se omitieron destinos que no existen en esta base: {", ".join(sorted(sin_destino))}'))
-        self.stdout.write(self.style.SUCCESS(f'{creadas} referencias creadas y {actualizadas} actualizadas.'))
+        mensaje = f'{creadas} referencias creadas y {actualizadas} actualizadas.'
+        if conservadas:
+            mensaje += f' {conservadas} conservadas: se aprobó un precio más reciente desde su fuente oficial.'
+        self.stdout.write(self.style.SUCCESS(mensaje))
