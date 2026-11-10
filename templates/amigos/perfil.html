@@ -1,0 +1,31 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}Perfil de viajero — InfoTrip{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/comunidad.css' %}"><link rel="stylesheet" href="{% static 'css/amigos.css' %}">{% endblock %}
+{% block content %}{% include 'partials/navBar.html' %}
+<main class="explore-shell" id="perfil-publico" data-username="{{ view.kwargs.username }}">
+  <a class="back-link" href="/amigos/">← Amigos</a>
+  <div class="perfil-cabecera">
+    <span class="user-avatar" id="perfil-inicial" aria-hidden="true"></span>
+    <div><h1 id="perfil-nombre">Cargando…</h1><p class="perfil-arroba" id="perfil-arroba"></p></div>
+  </div>
+  <p id="perfil-estado" role="status"></p>
+  <div class="trip-actions" id="perfil-acciones"></div>
+  <p id="perfil-sin-permiso" class="community-note" hidden>Esta persona comparte sus sellos y lugares solo con sus amigos.</p>
+  <section class="community-box" id="perfil-pasaporte" aria-labelledby="perfil-pasaporte-titulo" hidden>
+    <h2 id="perfil-pasaporte-titulo">Pasaporte de Pueblos Mágicos</h2>
+    <p id="perfil-sellos-resumen"></p>
+    <ul class="perfil-sellos" id="perfil-sellos"></ul>
+  </section>
+  <section class="community-box" id="perfil-lugares" aria-labelledby="perfil-lugares-titulo" hidden>
+    <h2 id="perfil-lugares-titulo">Lugares visitados</h2>
+    <p class="community-note">Visitas comprobadas en el lugar. No se muestran fechas.</p>
+    <ul class="perfil-sellos" id="perfil-lugares-lista"></ul>
+  </section>
+  <section class="community-box" id="perfil-amigos" aria-labelledby="perfil-amigos-titulo" hidden>
+    <h2 id="perfil-amigos-titulo">Amigos</h2>
+    <ul class="amigos-lista" id="perfil-amigos-lista"></ul>
+  </section>
+  {% include 'destinos/footer.html' %}
+</main>{% endblock %}
+{% block extra_js %}<script src="{% static 'js/cuenta-api.js' %}"></script><script src="{% static 'js/amigos-comun.js' %}" defer></script><script src="{% static 'js/perfil-publico.js' %}" defer></script>{% endblock %}

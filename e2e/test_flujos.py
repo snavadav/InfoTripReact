@@ -53,7 +53,8 @@ class FlujosTests(StaticLiveServerTestCase):
         municipio = Municipio.objects.create(nombre='Tapalpa', slug='tapalpa', region=region)
         self.destino = Destino.objects.create(nombre='Mirador', slug='mirador', municipio=municipio,
                                               descripcion='Lugar de prueba', latitud=19.9, longitud=-103.7)
-        self.usuario = Usuario.objects.create_user('ana@example.com', 'Ana', 'Prueba', CLAVE, es_verificado=True)
+        self.usuario = Usuario.objects.create_user('ana@example.com', 'Ana', 'Prueba', CLAVE, es_verificado=True,
+                                                    username='ana')
         self.problemas = []
         self.contexto = self.nuevo_contexto()
         self.pagina = self.contexto.new_page()
@@ -318,7 +319,8 @@ class FlujosTests(StaticLiveServerTestCase):
         self.contexto = self.nuevo_contexto()
         self.pagina = self.contexto.new_page()
         self.pagina.on('pageerror', lambda error: self.problemas.append(f'Error de página: {error}'))
-        self.usuario = Usuario.objects.create_user('leo@example.com', 'Leo', 'Prueba', CLAVE, es_verificado=True)
+        self.usuario = Usuario.objects.create_user('leo@example.com', 'Leo', 'Prueba', CLAVE, es_verificado=True,
+                                                    username='leo')
         self.abrir(f'/botes/{viaje.enlace_bote}/')
         self.pagina.click('#bote-unirse')
         self.pagina.wait_for_url('**/login/**')

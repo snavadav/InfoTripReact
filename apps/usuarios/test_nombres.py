@@ -8,6 +8,7 @@ from django.test import SimpleTestCase, TestCase
 from django.utils import timezone
 from rest_framework.test import APITestCase
 
+from apps.comunidad.cuenta import anonimizar_cuenta
 from . import nombres
 from .models import Usuario
 
@@ -131,7 +132,6 @@ class ApiTests(APITestCase):
         self.assertFalse(self.get(self.url).data['puede_cambiar'])
 
     def test_al_eliminar_la_cuenta_se_libera(self):
-        from apps.comunidad.cuenta import anonimizar_cuenta
         self.post('ana.uno')
         anonimizar_cuenta(self.ana)
         self.assertFalse(Usuario.objects.filter(username='ana.uno').exists())

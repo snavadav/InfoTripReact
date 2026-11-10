@@ -60,6 +60,10 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     # Lo que ven los demás en vez del correo. Nulo hasta que la persona lo elige al entrar.
     username = models.CharField('nombre de usuario', max_length=30, null=True, blank=True)
     username_cambiado = models.DateTimeField(null=True, blank=True, editable=False)
+    # Quién ve el pasaporte, los lugares visitados y los amigos en /u/<username>/. El nombre siempre se ve.
+    VISIBILIDADES = [('amigos', 'Solo mis amigos'), ('publico', 'Cualquier persona'), ('privado', 'Solo yo')]
+    visibilidad = models.CharField(max_length=8, choices=VISIBILIDADES, default='amigos')
+    mostrar_amigos = models.BooleanField(default=True)
     # Correos de novedades. Los códigos de acceso y la recuperación de contraseña se envían siempre.
     avisos_correo = models.BooleanField(default=True)
     fecha_registro = models.DateTimeField(auto_now_add=True)

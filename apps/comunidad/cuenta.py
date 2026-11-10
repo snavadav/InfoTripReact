@@ -6,6 +6,7 @@ La cuenta no se elimina de la base: el historial de moderación y los reportes l
 import uuid
 
 from django.db import transaction
+from django.db.models import Q
 from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework import serializers
 from rest_framework.permissions import IsAuthenticated
@@ -13,6 +14,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 
+from apps.amigos.models import Amistad, Bloqueo
 from apps.metricas.models import Evento
 from apps.usuarios.models import CodigoAcceso
 from apps.usuarios.sesion import borrar_cookie_refresh
@@ -56,6 +58,8 @@ def anonimizar_cuenta(usuario):
         registrado_por=None, descripcion='Gasto de una cuenta eliminada'
     )
     Notificacion.objects.filter(usuario=usuario).delete()
+    Amistad.objects.filter(Q(de=usuario) | Q(para=usuario)).delete()
+    Bloqueo.objects.filter(Q(de=usuario) | Q(para=usuario)).delete()
     PasaporteCompartido.objects.filter(usuario=usuario).delete()
     CodigoAcceso.objects.filter(usuario=usuario).delete()
     Evento.objects.filter(usuario=usuario).update(usuario=None)

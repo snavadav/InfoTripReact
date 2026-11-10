@@ -10,6 +10,8 @@ from datetime import timedelta
 from django.utils import timezone
 from django.utils.text import slugify
 
+from .models import Usuario
+
 # Súbela al cambiar cualquiera de las dos listas: así queda registro de qué reglas tenía cada versión.
 VERSION_LISTAS = 1
 
@@ -26,8 +28,9 @@ NO_CONTENER = ('infotrip', 'admin', 'moderad', 'moderacion', 'soporte', 'oficial
 
 # Filtro básico, no exhaustivo: raíces que se buscan dentro del nombre y palabras que se buscan completas
 # (estas últimas son cortas y aparecen dentro de palabras inocentes, como "computadora").
-OFENSIVAS_RAIZ = ('pendej', 'chinga', 'culero', 'cabron', 'mamaver', 'verguer', 'putit', 'hitler', 'mierda', 'idiota', 'estupid', 'imbecil', 'pinche', 'malparid', 'fuck', 'bitch',
-                  'nigg', 'whore', 'retrasad', 'zorra', 'perra')
+OFENSIVAS_RAIZ = ('pendej', 'chinga', 'culero', 'cabron', 'mamaver', 'verguer', 'putit', 'hitler', 'mierda',
+                  'idiota', 'estupid', 'imbecil', 'pinche', 'malparid', 'fuck', 'bitch', 'nigg', 'whore',
+                  'retrasad', 'zorra', 'perra')
 OFENSIVAS_PALABRA = frozenset({'puto', 'puta', 'putos', 'putas', 'verga', 'joto', 'jotos', 'culo', 'naco', 'naca',
                                'sex', 'sexo', 'porno', 'xxx', 'shit', 'ass', 'kk', 'caca', 'mamon', 'mamona',
                                'marica', 'maricon', 'nazi', 'nazis'})
@@ -70,7 +73,6 @@ def problema(nombre):
 
 
 def ocupado(nombre, excepto=None):
-    from .models import Usuario
     return Usuario.objects.filter(username__iexact=nombre).exclude(pk=getattr(excepto, 'pk', None)).exists()
 
 

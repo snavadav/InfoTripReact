@@ -54,7 +54,7 @@ class UsuarioPerfilSerializer(serializers.ModelSerializer):
         fields = [
             'uuid', 'nombre', 'apellido', 'nombre_completo', 'username',
             'email', 'foto_perfil', 'ciudad_origen', 'bio',
-            'es_verificado', 'fecha_registro', 'avisos_correo',
+            'es_verificado', 'fecha_registro', 'avisos_correo', 'visibilidad', 'mostrar_amigos',
         ]
         read_only_fields = ['uuid', 'email', 'username', 'es_verificado', 'fecha_registro']
 
