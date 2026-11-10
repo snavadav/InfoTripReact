@@ -236,3 +236,31 @@ a.planeador-boton-principal:hover { background: var(--acento-fuerte); color: var
 .comida-meta { color: var(--texto-2); }
 .comida-distintivo { justify-self: start; margin-top: .2rem; padding: .1rem .55rem; border-radius: 999px; background: var(--acento); color: var(--sobre-acento); font-size: 1rem; font-weight: 600; }
 .planeador-util a.comida-ficha { display: inline-flex; align-items: center; min-height: var(--objetivo); padding: 0 .4rem; }
+
+/* ── Ruta editable: fijar, cambiar, descansar y quitar ──── */
+.planeador-resumen:focus { outline: none; }
+.planeador-resumen:focus-visible { outline: 3px solid var(--acento); outline-offset: 3px; }
+.planeador-edicion-estado:empty { display: none; }
+.parada.es-fija { border-color: var(--acento); box-shadow: inset 4px 0 0 var(--acento); }
+.parada-editar { display: flex; flex-wrap: wrap; gap: .4rem; padding-top: .6rem; border-top: 1px dashed var(--linea); }
+.editar-boton { display: inline-flex; align-items: center; gap: .35rem; min-height: var(--objetivo); padding: .3rem .75rem; border: 1px solid var(--linea-fuerte); border-radius: 999px; background: var(--panel); color: var(--texto); font: inherit; font-size: 1rem; cursor: pointer; }
+.editar-boton:hover:not(:disabled) { border-color: var(--acento); }
+.editar-boton:focus-visible { outline: 3px solid var(--acento); outline-offset: 2px; }
+.editar-boton[aria-pressed="true"], .editar-boton[aria-expanded="true"] { border-color: var(--acento); background: var(--acento-suave); font-weight: 600; }
+.editar-boton:disabled { opacity: .6; cursor: progress; }
+.parada-opciones { display: grid; gap: .5rem; }
+.alternativas-titulo { margin: 0; font-weight: 650; }
+.parada-alternativas { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+.parada-alternativa { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: .5rem; padding: .55rem .75rem; border: 1px solid var(--linea); border-radius: var(--radio); }
+.alternativa-texto { display: grid; gap: .1rem; min-width: 0; overflow-wrap: anywhere; }
+.alternativa-meta { color: var(--texto-2); }
+.alternativa-elegir { min-height: var(--objetivo); padding: .3rem 1rem; border: 0; border-radius: 999px; background: var(--acento); color: var(--sobre-acento); font: inherit; font-weight: 600; cursor: pointer; }
+.alternativa-elegir:focus-visible { outline: 3px solid var(--acento); outline-offset: 2px; }
+.planeador-descanso { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem 1rem; border-style: dashed; }
+@media (max-width: 480px) {
+  .parada-editar .editar-boton { flex: 1 1 calc(50% - .4rem); justify-content: center; }
+  .parada-alternativa { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .editar-boton, .alternativa-elegir { transition: none; }
+}

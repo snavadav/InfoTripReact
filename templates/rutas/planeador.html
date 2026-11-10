@@ -104,14 +104,15 @@
         <p><strong>Tu ruta aparecerá aquí.</strong> Verás una tarjeta por día; elige una para ver sus paradas, qué hacer en cada una, horarios, precios y reseñas.</p>
       </div>
       <div id="ruta-resultado" hidden>
-        <div class="planeador-resumen" id="ruta-resumen"></div>
+        <div class="planeador-resumen" id="ruta-resumen" role="status" tabindex="-1"></div>
+        <p class="planeador-ayuda planeador-edicion-estado" id="ruta-edicion-estado" role="status"></p>
         <ul class="planeador-avisos" id="ruta-avisos"></ul>
         <div class="planeador-dias" id="ruta-dias" role="group" aria-label="Días de tu ruta: elige uno para ver sus paradas"></div>
         <div id="ruta-mapa" class="ficha-mapa planeador-mapa" aria-label="Mapa de la ruta"></div>
         <section id="ruta-detalle" class="planeador-detalle"></section>
         <div class="planeador-acciones">
           <button type="button" id="ruta-compartir" class="planeador-boton-principal">Compartir ruta</button>
-          <button type="button" id="ruta-guardar">Guardar en Mis viajes</button>
+          <button type="button" id="ruta-guardar">Guardar como escapada</button>
           <span id="ruta-guardar-estado" class="planeador-ayuda" role="status"></span>
         </div>
         <p id="ruta-compartir-estado" class="planeador-ayuda" role="status"></p>

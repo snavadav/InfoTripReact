@@ -30,6 +30,12 @@
   const sinMovimiento = window.matchMedia('(prefers-reduced-motion: reduce)');
   let ubicacion = null, ultimoPlan = null, ultimaPeticion = null, mapa = null, capa = null;
   let diaElegido = 0, capasDia = [], extras = {}, origenMapa = null, destinoElegido = null;
+  // Ruta editada: lo que fijó la persona (por destino), lo que quitó y sus ratos libres. Se reinicia al armar
+  // una ruta nueva con el formulario.
+  let peticionBase = null, edicion = nuevaEdicion(), recalculando = false;
+  const resumen = document.getElementById('ruta-resumen');
+  const estadoEdicion = document.getElementById('ruta-edicion-estado');
+  function nuevaEdicion() { return {fijados: new Map(), excluidos: new Set(), descansos: []}; }
   const EXPLICA_MODO = {
     circulo: 'Recorremos alrededor de donde sales y vuelves ahí.',
     ida_vuelta: 'Vas al destino con paradas en el camino y alrededor, y regresas a donde saliste.',
@@ -292,17 +298,209 @@
     avisar('Armando tu ruta… puede tardar unos segundos.');
     try {
       const plan = await InfoTrip.api('/api/v1/rutas/planear/', {method: 'POST', body: cuerpo, auth: InfoTrip.hasSession()});
+      peticionBase = cuerpo;
+      edicion = nuevaEdicion();
       ultimaPeticion = cuerpo;
+      estadoEdicion.textContent = '';
       mostrar(plan);
       const sitios = plan.totales.sitios;
       avisar(sitios ? `Listo: ${plural(sitios, 'sitio', 'sitios')} en ${plural(plan.dias.length, 'día', 'días')}.` : 'No encontramos sitios que quepan. Mira las sugerencias.');
-      desplazar(resultado);
+      enfocarResultado();
     } catch (error) {
       avisar(`No pudimos armar la ruta. ${error.message}`, true);
     } finally {
       botonEnviar.disabled = false;
     }
   });
+
+  // Al terminar de calcular, el foco pasa al resumen (role=status lo anuncia) y no se queda en <body>.
+  function enfocarResultado() {
+    resumen.focus({preventScroll: true});
+    desplazar(resultado);
+  }
+
+  // ── Ruta editable: fijar, cambiar, descansar y quitar ───
+  function claveParada(parada) { return parada.destino.id; }
+  function paradasConDia(plan) {
+    return plan.dias.flatMap((dia, numero) => dia.paradas.map(parada => ({parada, numero})));
+  }
+  // Las paradas que no se tocan quedan fijas en su día y a su hora para que no cambie lo que la persona ya vio.
+  // `mismoDia`: también las del día de la parada editada (al cambiar o descansar); al quitar, ese día se reacomoda.
+  function fijadosPara(numeroEditado, claveEditada, mismoDia) {
+    const fijados = new Map(edicion.fijados);
+    paradasConDia(ultimoPlan).forEach(({parada, numero}) => {
+      const clave = claveParada(parada);
+      if (clave === claveEditada || fijados.has(clave) || edicion.excluidos.has(clave)) return;
+      if (numero !== numeroEditado || mismoDia) fijados.set(clave, {dia: numero, hora: parada.inicio});
+    });
+    fijados.delete(claveEditada);
+    return fijados;
+  }
+  function cuerpoEditado(fijados) {
+    return {...peticionBase,
+      fijados: [...fijados].map(([destino, f]) => ({destino, dia: f.dia, hora: f.hora})),
+      excluidos: [...edicion.excluidos], descansos: edicion.descansos};
+  }
+  async function recalcular(fijados, mensaje) {
+    if (recalculando) return;
+    recalculando = true;
+    detalle.querySelectorAll('.parada-editar button, .planeador-descanso button').forEach(boton => { boton.disabled = true; });
+    estadoEdicion.textContent = 'Reacomodando tu ruta…';
+    const cuerpo = cuerpoEditado(fijados);
+    try {
+      const plan = await InfoTrip.api('/api/v1/rutas/planear/', {method: 'POST', body: cuerpo, auth: InfoTrip.hasSession()});
+      ultimaPeticion = cuerpo;
+      estadoEdicion.textContent = mensaje;
+      mostrar(plan, diaElegido);
+      enfocarResultado();
+    } catch (error) {
+      estadoEdicion.textContent = `No pudimos reacomodar la ruta. ${error.message}`;
+      detalle.querySelectorAll('.parada-editar button, .planeador-descanso button').forEach(boton => { boton.disabled = false; });
+    } finally {
+      recalculando = false;
+    }
+  }
+  function fijar(parada, numero, boton) {
+    const clave = claveParada(parada);
+    if (edicion.fijados.has(clave)) edicion.fijados.delete(clave);
+    else edicion.fijados.set(clave, {dia: numero, hora: parada.inicio});
+    const fija = edicion.fijados.has(clave);
+    boton.setAttribute('aria-pressed', String(fija));
+    boton.querySelector('.editar-texto').textContent = fija ? 'Fijada' : 'Fijar';
+    boton.closest('.parada').classList.toggle('es-fija', fija);
+    estadoEdicion.textContent = fija ? `${parada.destino.nombre} queda fija en el día ${numero + 1}.` : `${parada.destino.nombre} ya no está fija.`;
+  }
+  function quitar(parada, numero) {
+    const clave = claveParada(parada);
+    edicion.fijados.delete(clave);
+    edicion.excluidos.add(clave);
+    recalcular(fijadosPara(numero, clave, false), `Quitamos ${parada.destino.nombre} y reacomodamos el día ${numero + 1}.`);
+  }
+  function descansar(parada, numero) {
+    const clave = claveParada(parada);
+    edicion.fijados.delete(clave);
+    edicion.excluidos.add(clave);
+    edicion.descansos = [...edicion.descansos, {dia: numero, inicio: parada.inicio,
+      duracion: Math.min(240, Math.max(15, parada.visita_min))}].slice(-6);
+    recalcular(fijadosPara(numero, clave, true), `En lugar de ${parada.destino.nombre} tienes tiempo libre.`);
+  }
+  function quitarDescanso(libre, numero) {
+    const delDia = edicion.descansos.filter(d => d.dia === numero);
+    if (!delDia.length) return;
+    const lejania = d => Math.abs(minutos(d.inicio) - minutos(libre.inicio));
+    const cercano = delDia.reduce((a, b) => (lejania(a) <= lejania(b) ? a : b));
+    edicion.descansos = edicion.descansos.filter(d => d !== cercano);
+    recalcular(fijadosPara(numero, null, true), `Quitamos el tiempo libre del día ${numero + 1}.`);
+  }
+  // Dónde está la persona al empezar ese día (como en el mapa).
+  function puntoInicial(plan, numero) {
+    const viaje = plan.viaje || {modo: 'circulo'};
+    if (viaje.modo === 'base' && numero && viaje.destino) return [viaje.destino.latitud, viaje.destino.longitud];
+    for (let i = numero - 1; i >= 0; i--) {
+      const paradas = plan.dias[i].paradas;
+      if (paradas.length) return [paradas[paradas.length - 1].destino.latitud, paradas[paradas.length - 1].destino.longitud];
+    }
+    return [plan.origen.latitud, plan.origen.longitud];
+  }
+  // A dónde hay que llegar al terminar el día, o null si el día acaba en la última parada.
+  function puntoFinal(plan, numero) {
+    const viaje = plan.viaje || {modo: 'circulo'};
+    const ultimo = numero === plan.dias.length - 1;
+    if (viaje.destino && (viaje.modo === 'base' || (viaje.modo === 'ida' && ultimo))) return [viaje.destino.latitud, viaje.destino.longitud];
+    if (ultimo && ultimaPeticion.regresar) return [plan.origen.latitud, plan.origen.longitud];
+    return null;
+  }
+  function hhmm(total) { return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`; }
+  const comoPunto = ([latitud, longitud]) => ({latitud, longitud});
+  async function cambiar(parada, numero, indice, caja, boton) {
+    if (!caja.hidden) { caja.hidden = true; boton.setAttribute('aria-expanded', 'false'); return; }
+    const dia = ultimoPlan.dias[numero];
+    const antes = dia.paradas[indice - 1], despues = dia.paradas[indice + 1];
+    const desde = antes ? minutos(antes.salida) + (antes.comida_despues ? 60 : 0) : minutos(ultimaPeticion.hora_inicio);
+    const siguiente = despues ? [despues.destino.latitud, despues.destino.longitud] : puntoFinal(ultimoPlan, numero);
+    const hasta = (despues ? minutos(despues.inicio) : minutos(ultimaPeticion.hora_fin)) - (parada.comida_despues ? 60 : 0);
+    const anterior = antes ? [antes.destino.latitud, antes.destino.longitud] : puntoInicial(ultimoPlan, numero);
+    const excluidos = [...new Set([...paradasConDia(ultimoPlan).map(({parada: p}) => claveParada(p)), ...edicion.excluidos])];
+    caja.hidden = false;
+    boton.setAttribute('aria-expanded', 'true');
+    caja.replaceChildren(elemento('p', 'Buscando opciones que quepan en ese horario…', 'planeador-ayuda'));
+    try {
+      const respuesta = await InfoTrip.api('/api/v1/rutas/alternativas/', {method: 'POST', auth: InfoTrip.hasSession(), body: {
+        fecha: dia.fecha, desde: hhmm(desde), hasta: hhmm(Math.min(Math.max(hasta, desde + 1), 23 * 60 + 59)),
+        anterior: comoPunto(anterior), siguiente: siguiente ? comoPunto(siguiente) : null,
+        intereses: ultimaPeticion.intereses, ritmo: ultimaPeticion.ritmo, excluidos: excluidos.slice(0, 100)}});
+      const opciones = respuesta.alternativas;
+      if (!opciones.length) {
+        caja.replaceChildren(elemento('p', 'No encontramos otro sitio que quepa en ese horario. Puedes quitarla o tomar un descanso.', 'planeador-ayuda'));
+        return;
+      }
+      const lista = elemento('ul', '', 'parada-alternativas');
+      opciones.forEach(opcion => {
+        const fila = elemento('li', '', 'parada-alternativa');
+        const texto = elemento('span', '', 'alternativa-texto');
+        texto.append(enlace(opcion.destino.nombre, opcion.destino.url),
+          elemento('span', `${opcion.destino.municipio} · ${opcion.inicio}–${opcion.salida} · ${precioTexto(opcion.precio)}`, 'alternativa-meta'));
+        if (opcion.desvio_min) texto.append(elemento('span', `${duracion(opcion.desvio_min)} más de camino`, 'alternativa-meta'));
+        if (!opcion.horario_confirmado) texto.append(elemento('span', 'Horario no confirmado', 'alternativa-meta'));
+        const elegir = elemento('button', 'Elegir', 'alternativa-elegir');
+        elegir.type = 'button';
+        elegir.setAttribute('aria-label', `Cambiar ${parada.destino.nombre} por ${opcion.destino.nombre}`);
+        elegir.addEventListener('click', () => {
+          const clave = claveParada(parada);
+          edicion.fijados.delete(clave);
+          edicion.excluidos.add(clave);
+          edicion.excluidos.delete(opcion.destino.id);
+          edicion.fijados.set(opcion.destino.id, {dia: numero, hora: opcion.inicio});
+          recalcular(fijadosPara(numero, clave, true), `Cambiamos ${parada.destino.nombre} por ${opcion.destino.nombre}.`);
+        });
+        fila.append(texto, elegir);
+        lista.append(fila);
+      });
+      caja.replaceChildren(elemento('p', 'Otras opciones que caben a esa hora:', 'alternativas-titulo'), lista);
+    } catch (error) {
+      caja.replaceChildren(elemento('p', `No pudimos buscar opciones. ${error.message}`, 'planeador-ayuda'));
+    }
+  }
+  function botonEditar(icono, texto, etiqueta, accion) {
+    const boton = elemento('button', '', 'editar-boton');
+    boton.type = 'button';
+    const marca = elemento('span', icono, 'editar-icono');
+    marca.setAttribute('aria-hidden', 'true');
+    boton.append(marca, elemento('span', texto, 'editar-texto'));
+    boton.setAttribute('aria-label', etiqueta);
+    boton.addEventListener('click', () => accion(boton));
+    return boton;
+  }
+  function accionesDeEdicion(parada, numero, indice) {
+    const nombre = parada.destino.nombre;
+    const caja = elemento('div', '', 'parada-editar');
+    caja.setAttribute('role', 'group');
+    caja.setAttribute('aria-label', `Cambiar la parada ${nombre}`);
+    const fija = edicion.fijados.has(claveParada(parada));
+    const pin = botonEditar('📌', fija ? 'Fijada' : 'Fijar', `Fijar ${nombre} en este día`, boton => fijar(parada, numero, boton));
+    pin.setAttribute('aria-pressed', String(fija));
+    const opciones = elemento('div', '', 'parada-opciones');
+    opciones.id = `alternativas-${numero}-${parada.destino.id}`;
+    opciones.hidden = true;
+    const otro = botonEditar('🔄', 'Cambiar por otro', `Cambiar ${nombre} por otro sitio`, boton => cambiar(parada, numero, indice, opciones, boton));
+    otro.setAttribute('aria-expanded', 'false');
+    otro.setAttribute('aria-controls', opciones.id);
+    caja.append(pin, otro,
+      botonEditar('☕', 'Quitar y descansar', `Quitar ${nombre} y dejar ese tiempo libre`, () => descansar(parada, numero)),
+      botonEditar('✕', 'Quitar', `Quitar ${nombre} y reacomodar el día`, () => quitar(parada, numero)));
+    return [caja, opciones];
+  }
+  function bloqueDescanso(libre, numero, indice) {
+    const fila = elemento('li', '', 'planeador-util planeador-descanso');
+    fila.append(elemento('strong', `Tiempo libre · ${duracion(libre.duracion_min)}`), elemento('span', `${libre.inicio}–${libre.fin}`));
+    const quitarlo = elemento('button', 'Quitar descanso', 'editar-boton');
+    quitarlo.type = 'button';
+    quitarlo.addEventListener('click', () => quitarDescanso(libre, numero));
+    fila.append(quitarlo);
+    const filas = [fila];
+    if (libre.comida_despues) filas.push(bloqueComida(libre, numero, `libre-${indice}`));
+    return filas;
+  }
 
   // ── Mapa ────────────────────────────────────────────────
   function prepararMapa() {
@@ -393,14 +591,14 @@
   }
 
   // ── Resumen y tarjetas de día ───────────────────────────
-  function mostrar(plan) {
+  function mostrar(plan, dia = 0) {
     ultimoPlan = plan;
     extras = {};
     vacio.hidden = true;
     resultado.hidden = false;
     prepararMapa();
     const t = plan.totales;
-    document.getElementById('ruta-resumen').replaceChildren(
+    resumen.replaceChildren(
       elemento('strong', `${plural(t.sitios, 'sitio', 'sitios')} en ${plural(plan.dias.length, 'día', 'días')}`),
       elemento('span', `${t.km} km de recorrido`),
       elemento('span', `${duracion(t.manejo_min)} al volante`),
@@ -420,7 +618,7 @@
     botonCompartir.hidden = !t.sitios;
     estadoCompartir.textContent = '';
     panelCompartir.hidden = true;
-    elegirDia(0);
+    elegirDia(Math.min(dia, plan.dias.length - 1));
     cargarExtras(plan);
   }
 
@@ -474,14 +672,20 @@
     const titulo = elemento('h3', `Día ${numero + 1} · ${fechaDia(dia)}`);
     detalle.className = `planeador-detalle dia-${numero % COLORES}`;
     detalle.setAttribute('aria-label', `Paradas del día ${numero + 1}`);
-    if (!dia.paradas.length) {
+    const libres = dia.descansos || [];
+    if (!dia.paradas.length && !libres.length) {
       detalle.replaceChildren(titulo, elemento('p', 'Este día no cabe ninguna visita con esos datos. Prueba con más horas o más intereses.'));
       return;
     }
     const lista = elemento('ol', '', 'planeador-paradas');
+    const descansosEn = posicion => libres.forEach((libre, i) => {
+      if (libre.despues_de === posicion) lista.append(...bloqueDescanso(libre, numero, i));
+    });
+    descansosEn(0);
     dia.paradas.forEach((parada, indice) => {
-      lista.append(dibujarParada(parada, indice));
-      if (parada.comida_despues) lista.append(bloqueComida(parada, numero));
+      lista.append(dibujarParada(parada, indice, numero));
+      if (parada.comida_despues) lista.append(bloqueComida(parada, numero, parada.destino.id));
+      descansosEn(indice + 1);
     });
     if (dia.dormir !== null) lista.append(lugarUtil('Dormir:', dia.dormir));
     detalle.replaceChildren(titulo, elemento('p', 'Horas estimadas. Toca el nombre de un lugar para ver su ficha completa.'),
@@ -490,10 +694,10 @@
 
   // Dónde comer: dos o tres opciones, lo local primero. Se elige con un toque; precio y calificación solo si
   // vienen de reseñas publicadas.
-  function bloqueComida(parada, numero) {
+  function bloqueComida(parada, numero, clave) {
     const fila = elemento('li', '', 'planeador-util planeador-comida');
     const titulo = elemento('strong', 'Hora de comer');
-    titulo.id = `comida-titulo-${numero}-${parada.destino.id}`;
+    titulo.id = `comida-titulo-${numero}-${clave}`;
     fila.append(titulo);
     if (!parada.comidas || !parada.comidas.length) {
       fila.append(elemento('span', 'no tenemos un lugar registrado cerca.'));
@@ -507,7 +711,7 @@
       const tarjeta = elemento('label', '', 'comida-tarjeta');
       const radio = elemento('input');
       radio.type = 'radio';
-      radio.name = `comida-${numero}-${parada.destino.id}`;
+      radio.name = `comida-${numero}-${clave}`;
       radio.value = opcion.id;
       radio.checked = parada.comida?.id === opcion.id;
       radio.addEventListener('change', () => {
@@ -550,10 +754,11 @@
     return fila;
   }
 
-  function dibujarParada(parada, indice) {
+  function dibujarParada(parada, indice, numero) {
     const d = parada.destino;
     const item = elemento('li', '', 'parada');
     item.dataset.destino = d.id;
+    item.classList.toggle('es-fija', edicion.fijados.has(d.id));
     const cuerpo = elemento('div', '', 'parada-cuerpo');
     const cabeza = elemento('div');
     const nombre = elemento('h4');
@@ -578,7 +783,7 @@
     acciones.append(enlace('Ver ficha', d.url, 'principal'),
       externo('Cómo llegar', `https://www.google.com/maps/dir/?api=1&destination=${d.latitud},${d.longitud}`, '',
         ' (abre Google Maps en otra pestaña)'));
-    cuerpo.append(extra, acciones);
+    cuerpo.append(extra, acciones, ...accionesDeEdicion(parada, numero, indice));
     item.append(elemento('span', String(indice + 1), 'parada-num'), cuerpo);
     item.firstChild.setAttribute('aria-hidden', 'true');
     return item;
@@ -756,30 +961,12 @@
     }
   });
 
-  // ── Guardar en Mis viajes ───────────────────────────────
-  function comoViaje(plan, cuerpo) {
-    const actividades = [];
-    plan.dias.forEach((dia, numero) => {
-      dia.paradas.forEach(parada => {
-        const precio = parada.precio === null ? 'precio desconocido' : `${pesos.format(+parada.precio)} por persona`;
-        actividades.push({dia: numero + 1, hora: parada.inicio, titulo: parada.destino.nombre.slice(0, 150),
-          notas: `Visita de ${duracion(parada.visita_min)} · ${precio}${parada.horario_confirmado ? '' : ' · horario no confirmado'}`});
-        if (parada.comida_despues) {
-          actividades.push({dia: numero + 1, hora: parada.salida,
-            titulo: parada.comida ? `Comer: ${parada.comida.nombre}`.slice(0, 150) : 'Comer', notas: ''});
-        }
-      });
-      if (dia.dormir) actividades.push({dia: numero + 1, hora: '', titulo: `Dormir: ${dia.dormir.nombre}`.slice(0, 150), notas: ''});
-    });
-    const municipios = [...new Set(plan.dias.flatMap(d => d.paradas.map(p => p.destino.municipio)))];
-    const ultimo = plan.dias[plan.dias.length - 1].fecha;
-    return {
-      nombre: `Ruta desde ${plan.origen.nombre}`.slice(0, 120), destino: municipios.join(', ').slice(0, 200),
-      fecha_inicio: plan.dias[0].fecha, fecha_fin: ultimo, personas: cuerpo.personas,
-      presupuesto: cuerpo.presupuesto || plan.totales.costo_entradas, gastos: [], actividades,
-      lugares: [...new Set(plan.dias.flatMap(d => d.paradas.map(p => p.destino.id)))],
-      notas: 'Armada con el planeador de InfoTrip. Horarios y tiempos de manejo son estimados: confírmalos antes de ir.',
-    };
+  // ── Guardar como escapada ───────────────────────────────
+  // El servidor vuelve a calcular la ruta con la misma petición y la guarda en Mis viajes; de aquí solo va qué
+  // opción de comida eligió la persona. Después se abre el editor de la escapada.
+  function comidasElegidas(plan) {
+    return plan.dias.flatMap(dia => [...dia.paradas, ...(dia.descansos || [])])
+      .filter(item => item.comida).map(item => item.comida.id).slice(0, 20);
   }
 
   botonGuardar.addEventListener('click', async () => {
@@ -789,13 +976,14 @@
       return;
     }
     botonGuardar.disabled = true;
-    estadoGuardar.textContent = 'Guardando…';
+    estadoGuardar.textContent = 'Guardando tu escapada…';
     try {
-      await InfoTrip.api('/api/v1/mis-viajes/', {method: 'POST', body: comoViaje(ultimoPlan, ultimaPeticion)});
-      estadoGuardar.replaceChildren(document.createTextNode('Guardada. '), enlace('Ver en Mis viajes', '/mis-viajes/'));
+      const viaje = await InfoTrip.api('/api/v1/rutas/guardar-escapada/', {method: 'POST',
+        body: {...ultimaPeticion, comidas: comidasElegidas(ultimoPlan)}});
+      estadoGuardar.replaceChildren(document.createTextNode('Guardada. '), enlace('Abrir la escapada', viaje.url));
+      location.assign(viaje.url);
     } catch (error) {
       estadoGuardar.textContent = error.message;
-    } finally {
       botonGuardar.disabled = false;
     }
   });

@@ -11,7 +11,7 @@ import os
 import re
 from datetime import date
 from pathlib import Path
-from unittest import expectedFailure, skipUnless
+from unittest import skipUnless
 
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.core.cache import cache
@@ -234,9 +234,6 @@ class RevisionManualTests(AccesibilidadTests):
                     pagina = self.pagina_nueva(ruta, viewport=viewport)
                     if preparar:
                         preparar(pagina)
-                        if preparar is armar_ruta:
-                            # Ver test_al_armar_la_ruta_el_foco_no_cae_al_inicio: hoy el foco se pierde al enviar.
-                            pagina.focus('#ruta-dias .planeador-dia-tarjeta')
                         # Desde lo que se acaba de abrir, el recorrido sigue y da la vuelta a toda la página.
                         self.assertNotEqual(pagina.evaluate('document.activeElement.tagName'), 'BODY')
                         _, problemas = self.recorrer_con_tab(pagina)
@@ -252,18 +249,16 @@ class RevisionManualTests(AccesibilidadTests):
                         self.assertEqual(pagina.evaluate('document.activeElement.tagName'), 'MAIN')
                     self.assertEqual(problemas, [])
 
-    @expectedFailure
     def test_al_armar_la_ruta_el_foco_no_cae_al_inicio(self):
-        # PENDIENTE (planeador.js, a cargo de otra sesión): el botón se deshabilita mientras se arma la ruta y
-        # Chromium manda el foco a <body>; con Tab, la persona vuelve a empezar desde la barra de navegación.
-        # Arreglo propuesto: aria-disabled en lugar de disabled, o enfocar #ruta-detalle al terminar.
-        # Cuando se corrija, esta prueba pasará y unittest la marcará como «unexpected success»: quitar el decorador.
+        # El botón se deshabilita mientras se arma la ruta y Chromium manda el foco a <body>; al terminar,
+        # planeador.js enfoca el resumen (role=status), que anuncia el resultado. Con Tab se sigue desde ahí.
         pagina = self.pagina_nueva('/planeador/')
         pagina.check('#ruta-form input[value="miradores"]')
         pagina.focus('#ruta-form button[type="submit"]')
         pagina.keyboard.press('Enter')
         pagina.wait_for_selector('#ruta-detalle .parada')
-        self.assertNotEqual(pagina.evaluate('document.activeElement.tagName'), 'BODY')
+        self.assertEqual(pagina.evaluate('document.activeElement.id'), 'ruta-resumen')
+        self.assertEqual(pagina.get_attribute('#ruta-resumen', 'role'), 'status')
 
     def test_el_saludo_de_axo_no_mueve_la_pagina(self):
         # Lighthouse medía un CLS de 0,032 en cada página: la burbuja agrandaba el contenedor de Axo.

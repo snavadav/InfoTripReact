@@ -84,7 +84,7 @@ El paso opcional «¿A dónde vas?» usa el buscador tolerante (destinos y munic
 | Tipo (`modo`) | Qué hace |
 |---|---|
 | `circulo` | Sin destino. Sitios dentro de `RADIO_KM` de la salida; el regreso lo decide la persona. |
-| `ida_vuelta` | Sitios en el corredor hasta el destino; el último día se vuelve a la salida. |
+| `ida_vuelta` | Sitios en el corredor hasta el destino; el último día se vuelve a la salida. Si el destino es un municipio, su mejor sitio es obligatorio: sin eso, lo cercano a la salida podía llenar el viaje sin llegar. Si no cabe, la página lo avisa. |
 | `ida` | Sitios en el corredor; el viaje termina en el destino (punto final del optimizador). |
 | `base` | Día 1 por el corredor hasta el destino, donde se duerme; desde el día 2, paseos de ida y vuelta alrededor de él. Pide al menos 2 días. |
 
@@ -123,9 +123,42 @@ Las aptitudes de solo ida y base incluyen el bono de 100 del destino obligatorio
 
 **El híbrido nunca queda por debajo del voraz** en ningún tipo de viaje. Por escenario nuevo: Tapalpa solo ida +15.2 %, Puerto Vallarta solo ida +0.1 %, Mazamitla base +3.8 %, Chapala base +7.7 %. El tiempo medio por plan es de 0.75 s; en 76 de 630 corridas pasó de 1.3 s (máximo 2.7 s), igual que antes en los escenarios sin destino (59 de 420), con la máquina ocupada en otras tareas.
 
+## Dónde comer
+
+Cada hora de comer ofrece 2 o 3 opciones a menos de 3 km (`apps/rutas/comida.py`), de mejor a peor: mercado o fonda, restaurante, cafetería y comida rápida, más la calificación de reseñas publicadas y la cercanía. Las cadenas (lista versionada `CADENAS`) bajan, pero no desaparecen. Precio y calificación solo aparecen si vienen de reseñas publicadas. «Recomendado por el equipo» lo marca solo el staff o el grupo Moderación en el admin. Los mercados vienen de OpenStreetMap y del DENUE: ver [importar-osm.md](importar-osm.md).
+
+## Ruta editable y guardar como escapada
+
+Cada parada tiene cuatro botones:
+
+- 📌 **Fijar**: queda en su día en el siguiente cálculo.
+- 🔄 **Cambiar por otro**: pide a `POST /api/v1/rutas/alternativas/` hasta 3 sitios que caben en el hueco (de la salida de la parada anterior a la llegada a la siguiente, o al fin del día). Ordena por puntaje menos el desvío en minutos / 120 (`MINUTOS_POR_PUNTO`). Límite: 20 por minuto sin cuenta y 40 con cuenta.
+- ☕ **Quitar y descansar**: quita la parada y deja un bloque «Tiempo libre · X min» a esa hora.
+- ✕ **Quitar**: quita la parada y reacomoda ese día.
+
+Al editar, la página vuelve a pedir el plan con:
+
+- `fijados[]` (`{destino, dia, hora?}`): obligatorios en su día, aunque queden fuera de la zona;
+- `excluidos[]`: nunca entran;
+- `descansos[]` (`{dia, inicio, duracion}`): sitios «en el lugar», sin manejo, con ventana de ±30 min (`HOLGURA_DESCANSO`).
+
+Las paradas que no se tocan se fijan en su día y a su hora para que no cambie lo que la persona ya vio; al quitar, el día de esa parada se reacomoda. El genético siembra un orden que pone lo obligatorio en su día y a su hora (`_orden_con_obligatorios`), y cada obligatorio que entra suma 100 a la aptitud. Si algo no cabe, la página lo avisa. Con todas las paradas fijadas, un plan editado tarda entre 0.27 y 0.66 s en el genético con los 354 destinos de prueba.
+
+Los descansos salen aparte en cada día (`descansos`, con `despues_de`). Así, el enlace a Google Maps, el `.ics` y la ruta compartida siguen iguales; la página de la ruta compartida también muestra el tiempo libre.
+
+**Guardar como escapada** (`POST /api/v1/rutas/guardar-escapada/`, con sesión) vuelve a calcular el plan en el servidor con la misma petición y crea un `Viaje` (`apps/rutas/escapada.py`) con:
+
+- lugares;
+- actividades por día: visitas, comida elegida, tiempo libre y dónde dormir;
+- fechas y personas;
+- un presupuesto que solo suma entradas y comidas con precio conocido.
+
+Del navegador solo llega qué opción de comida se eligió, y solo cuenta si era una de las ofrecidas. No guarda coordenadas de quien la armó. Responde con `/mis-viajes/?editar=<id>`, que abre la escapada en el editor. `despues_de_guardar()` queda como punto de extensión (por ejemplo, para invitar amigos).
+
 ## Limitaciones
 
 - Solo considera viajes en auto. No toma en cuenta transporte público ni tráfico.
 - Los tiempos de manejo son estimados, no de rutas por carretera.
 - Los horarios dependen de la fuente. Si no hay un horario publicado, se supone uno y la página lo avisa.
 - El puntaje no usa todavía las calificaciones de la comunidad, porque aún no hay reseñas reales.
+- Al quitar la última parada de un día cambia dónde se duerme; si eso hace que una parada fijada del día siguiente ya no quepa, la página lo avisa en lugar de moverla.

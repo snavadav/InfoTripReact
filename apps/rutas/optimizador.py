@@ -388,7 +388,9 @@ def _orden_con_obligatorios(problema, plan):
         for parada in paradas:
             momento[parada.sitio] = (numero, parada.inicio, 1)
     for indice, sitio in enumerate(problema.sitios):
-        if sitio.obligatorio and indice not in momento:
+        # Si la persona lo vio a una hora (fijado o descanso), va a esa hora aunque el voraz lo haya puesto en
+        # otra: así, con toda la ruta fijada, la semilla repite el plan que ya tenía.
+        if sitio.obligatorio and (indice not in momento or sitio.objetivo is not None):
             hora = sitio.objetivo if sitio.objetivo is not None else problema.dias[sitio.dia or 0].inicio
             # A la misma hora, lo obligatorio va primero.
             momento[indice] = (sitio.dia or 0, hora, 0)

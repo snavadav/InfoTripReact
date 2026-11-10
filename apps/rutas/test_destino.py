@@ -174,6 +174,19 @@ class PlanearConDestinoTests(APITestCase):
         self.assertIn('Piedras Bola', self.nombres(plan))
         self.assertTrue(plan['viaje']['regresar'])
 
+    def test_ida_y_vuelta_a_un_municipio_llega_aunque_haya_mucho_cerca_de_casa(self):
+        # Diez sitios afines junto a la salida llenarían el viaje sin acercarse a Tapalpa.
+        for i in range(10):
+            nuevo = Destino.objects.create(nombre=f'Pueblo cercano {i}', slug=f'pueblo-cercano-{i}', municipio=self.gdl,
+                                           descripcion='-', latitud=20.67 + i / 200, longitud=-103.35)
+            nuevo.categorias.add(self.naturaleza)
+        plan = self.peticion(dias=1, destino='municipio:tapalpa', modo='ida_vuelta').json()
+        self.assertTrue({'Pueblo de Tapalpa', 'Piedras Bola'} & set(self.nombres(plan)), self.nombres(plan))
+        # Si el horario no alcanza, se dice.
+        corto = self.peticion(dias=1, hora_inicio='09:00', hora_fin='12:00', destino='municipio:tapalpa',
+                              modo='ida_vuelta').json()
+        self.assertIn('no alcanza a llegar a Tapalpa', ' '.join(corto['avisos']))
+
     def test_quedarse_duerme_en_el_destino(self):
         plan = self.peticion(destino='municipio:tapalpa', modo='base').json()
         self.assertEqual(plan['viaje']['modo'], 'base')
