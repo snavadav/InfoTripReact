@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     'apps.metricas',
     'apps.curador',
     'apps.rutas',
+    'apps.datos',
 ]
 
 # ─── MIDDLEWARE ───────────────────────────────────────────────
@@ -172,6 +173,14 @@ def configurar_cache(redis_url):
 
 # Clave del DENUE (INEGI), solo para el comando importar_denue. Va en la URL de cada consulta: nunca al navegador.
 DENUE_TOKEN = config('DENUE_TOKEN', default='')
+
+# ─── Datos siempre al día (docs/actualizacion-datos.md) ───
+# Tareas que corre el servicio `tareas`: denue (mensual), osm y fuentes_oficiales (semanales). Vacío: ninguna.
+TAREAS_PROGRAMADAS = config('TAREAS_PROGRAMADAS', default='denue,osm,fuentes_oficiales')
+# El lector de sitios oficiales usa la API de Claude solo cuando una página cambió. Sin clave, la tarea se salta.
+# El SDK la lee del entorno; aquí solo se comprueba que exista. Nunca se escribe en registros.
+ANTHROPIC_API_KEY = config('ANTHROPIC_API_KEY', default='')
+IA_MODELO = config('IA_MODELO', default='') or 'claude-haiku-5-5'
 
 REDIS_URL = config('REDIS_URL', default='')
 CACHES = configurar_cache(REDIS_URL)
