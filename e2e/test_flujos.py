@@ -967,6 +967,33 @@ class FlujosTests(StaticLiveServerTestCase):
         self.pagina.wait_for_selector('#shared-routes-status:has-text("Ruta borrada")')
         self.assertFalse(RutaCompartida.objects.exists())
 
+    def test_con_la_ruta_armada_el_formulario_se_pliega_y_se_puede_reabrir(self):
+        self.armar_ruta_de_dos_dias()
+        # El formulario deja su lugar a una fila con lo elegido y el resultado usa todo el ancho.
+        self.assertTrue(self.pagina.locator('#ruta-form').is_hidden())
+        resumen = self.pagina.inner_text('#ruta-plegado-texto')
+        self.assertIn('2 días', resumen)
+        self.assertIn('Miradores', resumen)
+        self.assertEqual(self.pagina.get_attribute('#ruta-cambiar', 'aria-expanded'), 'false')
+        ancho = self.pagina.evaluate("document.getElementById('ruta-resultado').offsetWidth / document.querySelector('.planeador-layout').offsetWidth")
+        self.assertGreater(ancho, .95)
+        self.assertGreaterEqual(self.pagina.locator('#ruta-cambiar').bounding_box()['height'], 44)
+        # «Cambiar» lo vuelve a mostrar tal como estaba y lleva el foco al primer campo.
+        self.pagina.click('#ruta-cambiar')
+        self.assertTrue(self.pagina.locator('#ruta-form').is_visible())
+        self.assertEqual(self.pagina.get_attribute('#ruta-cambiar', 'aria-expanded'), 'true')
+        self.assertEqual(self.pagina.evaluate('document.activeElement.id'), 'ruta-municipio')
+        self.assertTrue(self.pagina.is_checked('#ruta-form input[value="miradores"]'))
+        self.assertTrue(self.pagina.locator('#ruta-aviso-edicion').is_hidden())
+        self.pagina.click('#ruta-cambiar')
+        self.assertTrue(self.pagina.locator('#ruta-form').is_hidden())
+        # Un error al volver a armar deja el formulario abierto, con el error a la vista.
+        self.pagina.click('#ruta-cambiar')
+        self.pagina.fill('#ruta-form [name="hora_fin"]', '08:00')
+        self.pagina.click('#ruta-form button[type="submit"]')
+        self.pagina.wait_for_selector('#ruta-error-cuando:not([hidden])')
+        self.assertTrue(self.pagina.locator('#ruta-form').is_visible())
+
     def armar_ruta_de_dos_dias(self):
         self.destino.categorias.add(Categoria.objects.create(nombre='Miradores', slug='miradores'))
         self.abrir('/planeador/')
