@@ -15,7 +15,7 @@ from functools import lru_cache
 from django.contrib.postgres.search import TrigramSimilarity, TrigramWordSimilarity
 from django.contrib.postgres.lookups import Unaccent
 from django.db import connection
-from django.db.models import Case, IntegerField, Q, Value, When
+from django.db.models import Avg, Case, IntegerField, Q, Value, When
 from django.urls import reverse
 
 from apps.comunidad.selectors import PUEBLOS_MAGICOS
@@ -333,6 +333,10 @@ def lugares_por_nombre(texto, limite=MAXIMO_LUGARES):
     return list(lugares[:limite])
 
 
+def _redondo(valor):
+    return None if valor is None else round(float(valor), 5)
+
+
 def autocompletar(texto):
     """Lo que el campo de búsqueda propone mientras se escribe: destinos, municipios, colecciones y lugares."""
     consulta = interpretar(texto)
@@ -352,14 +356,22 @@ def autocompletar(texto):
         if slug in por_sinonimo or _coincide_nombre(consulta, _palabras(nombre)):
             resultados.append({'tipo': 'categoria', 'nombre': nombre, 'detalle': 'Categoría',
                                'url': f"{reverse('destinos-listado')}?{urlencode({'categoria': slug})}"})
-    for _, nombre, slug, region in municipios_para(consulta):
+    municipios = municipios_para(consulta)
+    # El punto medio de sus destinos públicos: el planeador lo usa como destino del viaje.
+    centros = {fila['slug']: fila for fila in Municipio.objects.filter(slug__in=[m[2] for m in municipios]).annotate(
+        lat=Avg('destinos__latitud', filter=Q(destinos__es_activo=True)),
+        lng=Avg('destinos__longitud', filter=Q(destinos__es_activo=True))).values('slug', 'lat', 'lng')}
+    for _, nombre, slug, region in municipios:
+        centro = centros.get(slug, {})
         resultados.append({'tipo': 'municipio', 'nombre': nombre, 'detalle': f'Municipio · {region}',
-                           'url': f"{reverse('destinos-listado')}?{urlencode({'municipio': slug})}"})
+                           'url': f"{reverse('destinos-listado')}?{urlencode({'municipio': slug})}", 'slug': slug,
+                           'latitud': _redondo(centro.get('lat')), 'longitud': _redondo(centro.get('lng'))})
     publicos = Destino.objects.filter(es_activo=True)
     destinos, busqueda = buscar_destinos(publicos, texto)
     for destino in destinos.select_related('municipio').order_by('-relevancia', 'nombre', 'pk')[:MAXIMO_DESTINOS]:
         resultados.append({'tipo': 'destino', 'nombre': destino.nombre, 'detalle': destino.municipio.nombre,
-                           'url': reverse('destino-detalle', kwargs={'slug': destino.slug})})
+                           'url': reverse('destino-detalle', kwargs={'slug': destino.slug}), 'slug': destino.slug,
+                           'latitud': _redondo(destino.latitud), 'longitud': _redondo(destino.longitud)})
     for lugar in lugares_por_nombre(texto):
         detalle = ' · '.join(filter(None, [lugar.get_subtipo_display(), getattr(lugar.municipio, 'nombre', '')]))
         resultados.append({'tipo': 'lugar', 'nombre': lugar.nombre, 'detalle': detalle,

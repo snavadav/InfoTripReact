@@ -6,12 +6,15 @@ la clave va en la dirección de cada consulta: no debe aparecer en registros, er
 """
 import json
 import re
+import statistics
 import time
 import urllib.error
 import urllib.request
 
 from django.conf import settings
 from django.utils.text import slugify
+
+from apps.core.geo import distancia_km
 
 BASE = 'https://www.inegi.org.mx/app/api/denue/v1/consulta/'
 AGENTE = 'InfoTrip-proyecto-academico/1.0 (https://github.com/snavadav/InfoTripReact)'
@@ -50,6 +53,16 @@ NO_PARA_VIAJEROS = ('comedor-', 'cooperativa', 'club-de-nutricion', 'herbalife',
                     'escuela', 'primaria', 'secundaria')
 MINUSCULAS = {'De', 'Del', 'La', 'Las', 'El', 'Los', 'Y', 'E', 'En', 'A'}
 
+# Mercados públicos. El DENUE no los registra como negocio, pero cada puesto dice si está dentro de uno
+# (tipo_corredor_industrial = "MERCADO PUBLICO") y cómo se llama (nom_corredor_industrial). Con los puestos de
+# comida (722) se arma un lugar por mercado: el punto es la mediana de sus puestos y la clave, la del primer puesto
+# con "M" delante. Nunca se inventa un mercado: sin puestos registrados en él, no aparece.
+TIPO_MERCADO = 'MERCADO PUBLICO'
+ACTIVIDAD_COMIDA = ('722', '72/722/0/0')
+# Un puesto a más de esto de la mediana de su mercado es otro mercado con el mismo nombre o un error de captura.
+KM_DENTRO_DEL_MERCADO = 1
+PREFIJO_MERCADO = 'M'
+
 
 class ErrorDenue(Exception):
     """El servicio no respondió o la descarga está incompleta. Nunca incluye la dirección: lleva la clave."""
@@ -79,10 +92,10 @@ def contar(actividad):
     return sum(int(fila['Total']) for fila in filas) if filas else 0
 
 
-def descargar(espera=1):
+def descargar(espera=1, actividades=None):
     """Todas las páginas de cada actividad. Si falta una parte importante, no devuelve nada."""
     registros = []
-    for actividad, ruta in ACTIVIDADES:
+    for actividad, ruta in actividades or ACTIVIDADES:
         esperados = contar(actividad)
         de_esta, inicio = [], 1
         while True:
@@ -150,6 +163,51 @@ def _sitio_web(valor):
     if not sitio or not re.fullmatch(r'(https?://)?[a-z0-9.-]+\.[a-z]{2,}(/\S*)?', sitio) or len(sitio) > 290:
         return ''
     return sitio if sitio.startswith('http') else f'https://{sitio}'
+
+
+def _nombre_de_mercado(texto):
+    nombre = nombre_legible(texto)
+    return nombre if slugify(nombre).startswith('mercado') else f'Mercado {nombre}'
+
+
+def mercados(registros):
+    """Un lugar por mercado público, a partir de sus puestos de comida. Los campos son los de interpretar()."""
+    grupos = {}
+    for registro in registros:
+        nombre = re.sub(r'\s+', ' ', registro.get('nom_corredor_industrial') or '').strip()
+        if (registro.get('tipo_corredor_industrial') or '').strip().upper() != TIPO_MERCADO or not nombre:
+            continue
+        if not str(registro.get('CLASE_ACTIVIDAD_ID', '')).startswith('722'):
+            continue
+        try:
+            punto = (float(registro['Latitud']), float(registro['Longitud']))
+        except (KeyError, TypeError, ValueError):
+            continue
+        partes = [parte.strip() for parte in registro.get('Ubicacion', '').split(',')]
+        if len(partes) < 3 or not partes[1]:
+            continue
+        # La localidad separa los "Mercado Municipal" de dos pueblos del mismo municipio.
+        clave = (slugify(partes[0]), slugify(partes[1]), slugify(nombre))
+        grupos.setdefault(clave, {'nombre': nombre, 'municipio': partes[1], 'puestos': []})['puestos'].append(
+            (str(registro.get('Id', '')), punto))
+    lugares = []
+    for grupo in grupos.values():
+        mediana = (statistics.median(p[0] for _, p in grupo['puestos']),
+                   statistics.median(p[1] for _, p in grupo['puestos']))
+        dentro = [(ident, p) for ident, p in grupo['puestos']
+                  if ident and distancia_km(*mediana, *p) <= KM_DENTRO_DEL_MERCADO]
+        if not dentro:
+            continue
+        primero = min((ident for ident, _ in dentro), key=lambda ident: (len(ident), ident))
+        lugares.append({
+            'denue_id': f'{PREFIJO_MERCADO}{primero}'[:20],
+            'nombre': _nombre_de_mercado(grupo['nombre'])[:200], 'tipo': 'comer', 'subtipo': 'marketplace',
+            'municipio': grupo['municipio'],
+            'latitud': round(statistics.median(p[0] for _, p in dentro), 6),
+            'longitud': round(statistics.median(p[1] for _, p in dentro), 6),
+            'direccion': '', 'telefono': '', 'sitio_web': '',
+        })
+    return sorted(lugares, key=lambda lugar: lugar['denue_id'])
 
 
 def interpretar(registros, tipo_de_subtipo):

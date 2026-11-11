@@ -22,7 +22,7 @@ from .servicio import municipios_de_salida
 from .views import PeticionRutaSerializer, armar_plan
 
 PARAMETROS_GUARDADOS = ('municipio', 'fecha', 'dias', 'hora_inicio', 'hora_fin', 'intereses', 'ritmo', 'personas',
-                        'presupuesto', 'regresar')
+                        'presupuesto', 'regresar', 'destino', 'modo', 'fijados', 'excluidos', 'descansos')
 
 
 class CompartirAnonimoThrottle(AnonRateThrottle):
@@ -61,7 +61,11 @@ def para_guardar(plan, datos):
 
 def titulo_de(plan):
     dias = len(plan['dias'])
-    return f'Ruta de {dias} {"día" if dias == 1 else "días"} desde {plan["origen"]["nombre"]}'[:160]
+    titulo = f'Ruta de {dias} {"día" if dias == 1 else "días"} desde {plan["origen"]["nombre"]}'
+    destino = (plan.get('viaje') or {}).get('destino')
+    if destino:
+        titulo += f' a {destino["nombre"]}'
+    return titulo[:160]
 
 
 # ── API ───────────────────────────────────────────────────────
@@ -138,11 +142,16 @@ def pagina_ruta_compartida(request, enlace):
     if caducada:
         return caducada
     plan = con_enlaces(copy.deepcopy(ruta.plan), ruta.parametros.get('regresar', True))
+    viaje = plan.get('viaje') or {}
     for numero, dia in enumerate(plan['dias']):
         dia['numero'] = numero + 1
         dia['color'] = numero % 3
         dia['fecha_obj'] = _fecha_legible(dia['fecha'])
-        for parada in dia['paradas']:
+        # Ratos libres (ruta editada): se muestran después de la parada que les toca.
+        libres = [{**libre, 'duracion_texto': duracion(libre['duracion_min'])} for libre in dia.get('descansos', [])]
+        dia['libres_al_inicio'] = [libre for libre in libres if libre['despues_de'] == 0]
+        for posicion, parada in enumerate(dia['paradas'], start=1):
+            parada['libres'] = [libre for libre in libres if libre['despues_de'] == posicion]
             parada['visita_texto'] = duracion(parada['visita_min'])
             parada['manejo_texto'] = duracion(parada['manejo_min']) if parada['manejo_min'] else ''
             parada['precio_texto'] = precio_texto(parada['precio'])
@@ -152,6 +161,7 @@ def pagina_ruta_compartida(request, enlace):
     return render(request, 'rutas/ruta_compartida.html', {
         'ruta': ruta, 'plan': plan,
         'mapa': {'origen': plan['origen'], 'regresar': ruta.parametros.get('regresar', True),
+                 'modo': viaje.get('modo', 'circulo'), 'destino': viaje.get('destino'),
                  'dias': [[{'nombre': p['destino']['nombre'], 'url': p['destino']['url'],
                             'latitud': p['destino']['latitud'], 'longitud': p['destino']['longitud']}
                            for p in d['paradas']] for d in plan['dias']]},

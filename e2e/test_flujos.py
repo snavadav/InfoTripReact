@@ -847,11 +847,81 @@ class FlujosTests(StaticLiveServerTestCase):
         # Un marcador numerado por parada, más el de salida.
         self.assertEqual(self.pagina.locator('#ruta-mapa .pin-ruta').count(), 1)
         self.pagina.click('#ruta-guardar')
-        self.pagina.wait_for_selector('#ruta-guardar-estado:has-text("Guardada")')
+        # Se guarda como escapada y se abre en su editor.
+        self.pagina.wait_for_selector('#trip-status:has-text("quedó guardada como escapada")')
         viaje = Viaje.objects.get(autor=self.usuario)
         self.assertEqual(list(viaje.lugares.all()), [self.destino])
         self.assertEqual(viaje.actividades[0]['titulo'], 'Mirador')
         self.assertIn('Dormir: Cabañas del Bosque', [a['titulo'] for a in viaje.actividades])
+        self.assertEqual(self.pagina.input_value('#trip-form [name="nombre"]'), viaje.nombre)
+
+    def test_guadalajara_a_tapalpa_cambiar_descansar_y_guardar_como_escapada(self):
+        naturaleza = Categoria.objects.create(nombre='Naturaleza', slug='naturaleza')
+        tapalpa = self.destino.municipio
+        gdl = Municipio.objects.create(nombre='Guadalajara', slug='guadalajara', region=tapalpa.region)
+        Destino.objects.create(nombre='Bosque Colomos', slug='bosque-colomos', municipio=gdl, descripcion='-',
+                               latitud=20.705, longitud=-103.393).categorias.add(naturaleza)
+        for i, (nombre, lat, lng) in enumerate([('Las Piedrotas', 19.965, -103.745),
+                                                ('Presa del Nogal', 19.950, -103.770),
+                                                ('Salto del Nogal', 19.920, -103.780),
+                                                ('Bosque de Tapalpa', 19.940, -103.730),
+                                                ('Valle de los Enigmas', 19.975, -103.760)]):
+            Destino.objects.create(nombre=nombre, slug=f'sitio-{i}', municipio=tapalpa, descripcion='-',
+                                   latitud=lat, longitud=lng).categorias.add(naturaleza)
+        self.iniciar_sesion()
+        self.abrir('/planeador/')
+        self.pagina.select_option('#ruta-municipio', 'guadalajara')
+        self.pagina.check('#ruta-form input[value="naturaleza"]')
+        self.pagina.check('#ruta-form [name="dias"][value="1"]')
+        self.pagina.fill('#ruta-destino', 'Tapalpa')
+        self.pagina.locator('.buscador-opciones [role="option"]').filter(
+            has=self.pagina.locator('.buscador-nombre', has_text=re.compile('^Tapalpa$'))).click()
+        self.assertTrue(self.pagina.is_checked('#ruta-form [name="modo"][value="ida_vuelta"]'))
+        self.pagina.click('#ruta-form .planeador-mas summary')
+        self.pagina.fill('#ruta-form [name="hora_inicio"]', '08:00')
+        self.pagina.fill('#ruta-form [name="hora_fin"]', '18:00')
+        self.pagina.click('#ruta-form button[type="submit"]')
+        self.pagina.wait_for_selector('#ruta-detalle .parada')
+        # Al terminar, el foco va al resumen, que lo anuncia.
+        self.assertEqual(self.pagina.evaluate('document.activeElement.id'), 'ruta-resumen')
+        antes = self.pagina.locator('#ruta-detalle .parada h4').all_inner_texts()
+        self.assertTrue(antes)
+
+        # Cambiar la última parada del día (la que tiene más hueco) por otra que quepa.
+        self.pagina.locator('#ruta-detalle .parada').last.locator('button:has-text("Cambiar por otro")').click()
+        self.pagina.wait_for_selector('#ruta-detalle .parada-alternativa')
+        opcion = self.pagina.locator('#ruta-detalle .parada-alternativa').first
+        nueva = opcion.locator('a').inner_text()
+        self.assertNotIn(nueva, antes)
+        opcion.locator('button:has-text("Elegir")').click()
+        self.pagina.wait_for_selector('#ruta-edicion-estado:has-text("Cambiamos")')
+        despues = self.pagina.locator('#ruta-detalle .parada h4').all_inner_texts()
+        self.assertIn(nueva, despues)
+        self.assertNotIn(antes[-1], despues)
+        self.assertEqual(self.pagina.evaluate('document.activeElement.id'), 'ruta-resumen')
+
+        # Quitar otra parada y dejar ese rato libre.
+        quitada = [nombre for nombre in despues if nombre != nueva][0]
+        self.pagina.locator('#ruta-detalle .parada', has_text=quitada).locator(
+            'button:has-text("Quitar y descansar")').click()
+        self.pagina.wait_for_selector('#ruta-detalle .planeador-descanso:has-text("Tiempo libre")')
+        self.assertNotIn(quitada, self.pagina.locator('#ruta-detalle .parada h4').all_inner_texts())
+        self.assertIn(nueva, self.pagina.locator('#ruta-detalle .parada h4').all_inner_texts())
+
+        # Guardar como escapada: se abre el editor con la agenda.
+        self.pagina.click('#ruta-guardar')
+        self.pagina.wait_for_selector('#trip-status:has-text("quedó guardada como escapada")')
+        viaje = Viaje.objects.get(autor=self.usuario)
+        self.assertEqual(viaje.nombre, 'Escapada a Tapalpa')
+        nombres = set(viaje.lugares.values_list('nombre', flat=True))
+        self.assertIn(nueva, nombres)
+        self.assertNotIn(quitada, nombres)
+        self.assertIn('Tiempo libre', [a['titulo'] for a in viaje.actividades])
+        self.assertTrue(self.pagina.evaluate(
+            "[...document.querySelectorAll('#trip-activities input')].some(e => e.value === 'Tiempo libre')"))
+        # Desde ahí se puede invitar a amigos (el bote del grupo del módulo de amigos).
+        self.pagina.click('#trip-status button:has-text("Invitar amigos")')
+        self.pagina.wait_for_url(re.compile(rf'/mis-viajes/{viaje.pk}/bote/#bote-amigos$'))
 
     def test_compartir_una_ruta_por_enlace(self):
         self.armar_ruta_de_dos_dias()

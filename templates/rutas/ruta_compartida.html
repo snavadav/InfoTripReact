@@ -35,6 +35,7 @@
     {% if dia.paradas %}
     {% if dia.google_maps %}<p class="parada-acciones"><a href="{{ dia.google_maps.url }}" target="_blank" rel="noopener noreferrer">Abrir el día {{ dia.numero }} en Google Maps<span class="sr-only"> (se abre en otra pestaña)</span></a>{% if dia.google_maps.incluidas < dia.google_maps.total %}<span class="planeador-ayuda">Incluye las primeras {{ dia.google_maps.incluidas }} de {{ dia.google_maps.total }} paradas.</span>{% endif %}</p>{% endif %}
     <ol class="planeador-paradas">
+      {% for libre in dia.libres_al_inicio %}<li class="planeador-util planeador-descanso"><strong>Tiempo libre · {{ libre.duracion_texto }}</strong> <span>{{ libre.inicio }}–{{ libre.fin }}</span></li>{% endfor %}
       {% for parada in dia.paradas %}
       <li class="parada">
         <span class="parada-num" aria-hidden="true">{{ forloop.counter }}</span>
@@ -50,6 +51,7 @@
         </div>
       </li>
       {% if parada.comida_despues %}<li class="planeador-util"><strong>Hora de comer:</strong>{% if parada.comida %} <a href="{{ parada.comida.url }}">{{ parada.comida.nombre }}</a> <span>{{ parada.comida.subtipo }} · a {{ parada.comida.distancia }}</span>{% else %} <span>no tenemos un lugar registrado cerca.</span>{% endif %}</li>{% endif %}
+      {% for libre in parada.libres %}<li class="planeador-util planeador-descanso"><strong>Tiempo libre · {{ libre.duracion_texto }}</strong> <span>{{ libre.inicio }}–{{ libre.fin }}</span></li>{% endfor %}
       {% endfor %}
       {% if dia.dormir %}<li class="planeador-util"><strong>Dormir:</strong> <a href="{{ dia.dormir.url }}">{{ dia.dormir.nombre }}</a> <span>{{ dia.dormir.subtipo }} · a {{ dia.dormir.distancia }}</span></li>{% endif %}
     </ol>

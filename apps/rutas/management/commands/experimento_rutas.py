@@ -15,10 +15,11 @@ from decimal import Decimal
 from django.core.management.base import BaseCommand, CommandError
 
 from apps.rutas.optimizador import Parametros, genetico, voraz
-from apps.rutas.servicio import construir_problema, municipios_de_salida
+from apps.rutas.servicio import construir_problema, municipios_de_salida, resolver_destino
 
 # Origen, días, intereses, ritmo, personas y presupuesto para entradas. Fechas fijas para que sea repetible:
-# un sábado y un lunes, porque muchos museos cierran en lunes.
+# un sábado y un lunes, porque muchos museos cierran en lunes. Los primeros 12 son sin destino (en círculo);
+# los últimos agregan un destino con los tipos de viaje del Planeador 2.0: (…, tipo de viaje, destino).
 ESCENARIOS = [
     ('guadalajara', 1, ['ciudad-y-cultura'], 'normal', 2, None, date(2026, 11, 14)),
     ('guadalajara', 2, ['ciudad-y-cultura', 'pueblos'], 'normal', 2, None, date(2026, 11, 14)),
@@ -32,6 +33,18 @@ ESCENARIOS = [
     ('tequila', 2, ['ciudad-y-cultura', 'pueblos', 'arqueologia'], 'normal', 2, Decimal('800'), date(2026, 11, 14)),
     ('chapala', 1, ['lago', 'ciudad-y-cultura', 'miradores'], 'tranquilo', 2, None, date(2026, 11, 14)),
     ('tapalpa', 2, ['naturaleza', 'miradores', 'pueblos'], 'normal', 4, None, date(2026, 11, 14)),
+    ('guadalajara', 1, ['pueblos', 'naturaleza', 'miradores'], 'normal', 2, None, date(2026, 11, 14), 'ida',
+     'municipio:tapalpa'),
+    ('guadalajara', 2, ['costa', 'pueblos', 'ciudad-y-cultura'], 'normal', 2, None, date(2026, 11, 14), 'ida',
+     'municipio:puerto-vallarta'),
+    ('zapopan', 2, ['ciudad-y-cultura', 'pueblos', 'arqueologia'], 'normal', 3, Decimal('600'), date(2026, 11, 16),
+     'ida', 'destino:tequila'),
+    ('guadalajara', 3, ['naturaleza', 'pueblos', 'miradores'], 'tranquilo', 2, None, date(2026, 11, 14), 'base',
+     'municipio:mazamitla'),
+    ('guadalajara', 2, ['lago', 'pueblos', 'ciudad-y-cultura'], 'normal', 4, None, date(2026, 11, 14), 'base',
+     'municipio:chapala'),
+    ('tlaquepaque', 3, ['pueblos', 'naturaleza', 'ciudad-y-cultura'], 'intenso', 2, None, date(2026, 11, 14), 'base',
+     'destino:tapalpa'),
 ]
 METODOS = ['voraz', 'genetico_puro', 'genetico_hibrido']
 
@@ -63,15 +76,18 @@ class Command(BaseCommand):
         archivo = open(salida, 'w', newline='', encoding='utf-8') if salida else None
         escritor = None
         try:
-            for numero, (municipio, dias, intereses, ritmo, personas, presupuesto, fecha) in enumerate(
-                    ESCENARIOS[:escenarios], start=1):
-                if municipio not in origenes:
-                    self.stdout.write(f'Escenario {numero}: {municipio} no tiene destinos en esta base; se omite.')
+            for numero, escenario in enumerate(ESCENARIOS[:escenarios], start=1):
+                municipio, dias, intereses, ritmo, personas, presupuesto, fecha = escenario[:7]
+                modo, hacia = escenario[7:] or ('circulo', None)
+                destino = resolver_destino(hacia) if hacia else None
+                if municipio not in origenes or (hacia and destino is None):
+                    self.stdout.write(f'Escenario {numero}: {municipio} o {hacia} no tiene destinos en esta base; '
+                                      'se omite.')
                     continue
                 problema, _, _ = construir_problema(origenes[municipio], fecha, dias, 9 * 60, 19 * 60, intereses,
-                                                    ritmo, personas, presupuesto)
+                                                    ritmo, personas, presupuesto, modo=modo, destino=destino)
                 base = {'escenario': numero, 'origen': municipio, 'dias': dias, 'intereses': '+'.join(intereses),
-                        'candidatos': len(problema.sitios)}
+                        'modo': modo, 'destino': hacia or '', 'candidatos': len(problema.sitios)}
                 del_escenario = [{**base, 'metodo': 'voraz', 'semilla': '', **self.medidas(voraz(problema))}]
                 for metodo, parametros in (('genetico_puro', Parametros(sembrados=0)),
                                            ('genetico_hibrido', Parametros())):
@@ -85,8 +101,8 @@ class Command(BaseCommand):
                         escritor.writeheader()
                     escritor.writerows(del_escenario)
                     archivo.flush()
-                self.stdout.write(f'Escenario {numero} listo: {municipio}, {dias} día(s), '
-                                  f'{len(problema.sitios)} candidatos.')
+                self.stdout.write(f'Escenario {numero} listo: {municipio}, {dias} día(s), {modo}'
+                                  f'{" a " + hacia if hacia else ""}, {len(problema.sitios)} candidatos.')
                 self.stdout.flush()
         finally:
             if archivo:
@@ -104,7 +120,14 @@ class Command(BaseCommand):
                 'segundos': round(plan.segundos, 4), 'generaciones': plan.generaciones}
 
     def resumen(self, filas):
-        self.stdout.write('\nPor método (todas las corridas de todos los escenarios):')
+        self.resumen_de(filas, 'todos los escenarios')
+        modos = sorted({f['modo'] for f in filas})
+        if len(modos) > 1:
+            for modo in modos:
+                self.resumen_de([f for f in filas if f['modo'] == modo], f'tipo de viaje «{modo}»')
+
+    def resumen_de(self, filas, titulo):
+        self.stdout.write(f'\nPor método ({titulo}, todas las corridas):')
         self.stdout.write(f'{"método":<18}{"n":>5}{"aptitud media":>15}{"desv. est.":>12}{"sitios":>8}'
                           f'{"km":>8}{"segundos":>10}')
         for metodo in METODOS:

@@ -7,8 +7,12 @@ from django.urls import reverse
 from apps.comunidad.selectors import textos_practicos
 from apps.destinos.lugares import cerca_de
 from apps.destinos.models import Categoria, Destino, Municipio
+from .comida import opciones_comida
 from .horarios import Horario, leer_horario, leer_precio
-from .optimizador import FACTOR_CARRETERA, Dia, Problema, Sitio, distancia_km, genetico, voraz
+from .optimizador import (
+    FACTOR_CARRETERA, Dia, Problema, Sitio, _ventana, distancia_km, genetico, km_por_carretera, minutos_de_manejo,
+    voraz,
+)
 
 # Minutos de visita en ritmo normal, por categoría.
 DURACION = {'ciudad-y-cultura': 75, 'miradores': 30, 'naturaleza': 120, 'costa': 180, 'arqueologia': 90,
@@ -19,9 +23,30 @@ RITMOS = {'tranquilo': 1.3, 'normal': 1.0, 'intenso': 0.75}
 AL_AIRE_LIBRE = {'miradores', 'naturaleza', 'costa', 'lago', 'pueblos'}
 VENTANA_AIRE_LIBRE = (8 * 60, 19 * 60)
 VENTANA_GENERAL = (10 * 60, 17 * 60)
-# Hasta dónde se buscan sitios en línea recta, según los días del viaje.
+# Sin destino: hasta dónde se buscan sitios en línea recta desde la salida, según los días del viaje.
 RADIO_KM = {1: 80, 2: 150, 3: 200}
+# Con destino, los sitios se buscan en un corredor: entra uno si el desvío para pasar por él,
+# d(salida, sitio) + d(sitio, destino) − d(salida, destino), en línea recta, cabe en este margen. Es una elipse
+# con la salida y el destino como focos; crece con los días porque con más tiempo uno se puede alejar más del
+# camino. 30 km es lo que se desvía alguien que sale por una hora de la carretera (ida y vuelta, con curvas).
+MARGEN_CORREDOR_KM = {1: 30, 2: 60, 3: 90}
+# Quedarse en el destino: del día 2 en adelante se sale a pasear y se vuelve a dormir ahí. 50 km en línea recta
+# son alrededor de una hora de manejo por carretera: un paseo de ida y vuelta que deja el día para visitar. Lo que
+# solo queda en el corredor (más lejos del destino) se visita únicamente el día 1, de camino.
+RADIO_BASE_KM = 50
+# Los sitios a esta distancia del destino suman BONO_DESTINO: la ruta llega a él y lo recorre, no solo pasa.
+RADIO_ZONA_DESTINO_KM = 20
+BONO_DESTINO = 0.3
+# Tipos de viaje. 'circulo' es el de siempre: sin destino, en un círculo alrededor de la salida.
+MODOS = {'circulo': 'Sin destino', 'ida_vuelta': 'Ida y vuelta', 'ida': 'Solo ida', 'base': 'Quedarme en el destino'}
 MAXIMO_CANDIDATOS = 45
+# Un descanso puede empezar hasta media hora antes o después de lo pedido: así cabe aunque la parada anterior
+# cambie un poco al recalcular.
+HOLGURA_DESCANSO = 30
+# Alternativas para cambiar una parada: cuántas y cuánto pesa cada minuto de desvío frente al puntaje
+# (dos horas de desvío valen lo que un sitio afín).
+ALTERNATIVAS = 3
+MINUTOS_POR_PUNTO = 120
 PUNTAJE_INTERES = 1.0
 PUNTAJE_OTRO = 0.2
 BONO_HORARIO = 0.2
@@ -48,34 +73,153 @@ def _ventana_supuesta(slugs):
     return Horario({dia: [(abre, cierra)] for dia in range(7)})
 
 
-def candidatos(origen, intereses, dias, ritmo):
-    """(sitios, destinos por clave): los más afines y cercanos dentro del radio del viaje."""
-    radio = RADIO_KM[dias]
-    destinos = []
-    for destino in Destino.objects.filter(es_activo=True).select_related('municipio').prefetch_related('categorias'):
-        punto = (float(destino.latitud), float(destino.longitud))
+def resolver_destino(valor):
+    """A dónde va la persona: 'destino:<slug>' (un destino público) o 'municipio:<slug>'. None si no existe.
+
+    Devuelve nombre, punto y, si es un destino, su clave: ese sitio se vuelve parada obligatoria.
+    """
+    tipo, _, slug = (valor or '').partition(':')
+    if tipo == 'destino':
+        destino = Destino.objects.filter(es_activo=True, slug=slug).first()
+        if destino:
+            return {'tipo': 'destino', 'slug': slug, 'nombre': destino.nombre, 'clave': destino.pk,
+                    'punto': (float(destino.latitud), float(destino.longitud)),
+                    'url': reverse('destino-detalle', args=[slug])}
+    elif tipo == 'municipio':
+        municipio = municipios_de_salida().filter(slug=slug).first()
+        if municipio:
+            return {'tipo': 'municipio', 'slug': slug, 'nombre': municipio.nombre, 'clave': None,
+                    'punto': (float(municipio.lat), float(municipio.lng)),
+                    'url': f"{reverse('destinos-listado')}?municipio={slug}"}
+    return None
+
+
+def lejania(origen, punto, dias, modo='circulo', destino=None):
+    """Qué tan apartado del viaje queda un sitio: 0 en el camino, 1 en el límite, None si queda fuera."""
+    if modo == 'circulo' or destino is None:
+        radio = RADIO_KM[dias]
         distancia = distancia_km(origen, punto)
-        if distancia <= radio:
-            destinos.append((destino, punto, distancia))
+        return distancia / radio if distancia <= radio else None
+    margen = MARGEN_CORREDOR_KM[1 if modo == 'base' else dias]
+    desvio = distancia_km(origen, punto) + distancia_km(punto, destino) - distancia_km(origen, destino)
+    valores = [desvio / margen] if desvio <= margen else []
+    if modo == 'base':
+        alrededor = distancia_km(destino, punto)
+        if alrededor <= RADIO_BASE_KM:
+            valores.append(alrededor / RADIO_BASE_KM)
+    return min(valores) if valores else None
+
+
+def _destinos_activos():
+    return Destino.objects.filter(es_activo=True).select_related('municipio').prefetch_related('categorias')
+
+
+def _sitio_de(d, punto, textos, intereses, ritmo):
+    """El sitio del optimizador para un destino, con su puntaje base. Anota en `d` lo que se muestra después."""
+    slugs = {c.slug for c in d.categorias.all()}
+    horario = leer_horario(textos.get((d.pk, 'horarios')))
+    precio = leer_precio(textos.get((d.pk, 'precios')))
+    puntaje = (PUNTAJE_INTERES if slugs & intereses else PUNTAJE_OTRO) + (BONO_HORARIO if horario else 0) + (
+        BONO_PRECIO if precio else 0)
+    duracion = max(DURACION.get(slug, DURACION_GENERAL) for slug in slugs) if slugs else DURACION_GENERAL
+    d.horario_confirmado = horario is not None
+    d.guiado = bool(horario and horario.guiado)
+    d.slugs = slugs
+    return Sitio(d.pk, punto, puntaje, round(duracion * RITMOS[ritmo]), horario or _ventana_supuesta(slugs), precio)
+
+
+def candidatos(origen, intereses, dias, ritmo, modo='circulo', destino=None, fijados=None, excluidos=()):
+    """(sitios, destinos por clave): los más afines y cercanos dentro del círculo o del corredor del viaje.
+
+    `destino` es lo que devuelve resolver_destino. Si es un destino concreto, entra siempre como obligatorio.
+    `fijados` ({clave: {'dia', 'hora'}}) entran siempre, obligatorios y en su día, aunque queden fuera de la zona;
+    los `excluidos` nunca entran.
+    """
+    fijados = fijados or {}
+    excluidos = set(excluidos)
+    punto_destino = destino['punto'] if destino else None
+    obligatorio = destino['clave'] if destino and modo != 'circulo' else None
+    destinos = []
+    for d in _destinos_activos():
+        if d.pk in excluidos:
+            continue
+        punto = (float(d.latitud), float(d.longitud))
+        valor = lejania(origen, punto, dias, modo, punto_destino)
+        if valor is not None or d.pk == obligatorio or d.pk in fijados:
+            destinos.append((d, punto, valor or 0))
     textos = textos_practicos([d.pk for d, _, _ in destinos], ['horarios', 'precios'])
     puntuados = []
-    for destino, punto, distancia in destinos:
-        slugs = {c.slug for c in destino.categorias.all()}
-        horario = leer_horario(textos.get((destino.pk, 'horarios')))
-        precio = leer_precio(textos.get((destino.pk, 'precios')))
-        puntaje = (PUNTAJE_INTERES if slugs & intereses else PUNTAJE_OTRO) + (BONO_HORARIO if horario else 0) + (
-            BONO_PRECIO if precio else 0)
-        duracion = max(DURACION.get(slug, DURACION_GENERAL) for slug in slugs) if slugs else DURACION_GENERAL
-        sitio = Sitio(destino.pk, punto, puntaje, round(duracion * RITMOS[ritmo]),
-                      horario or _ventana_supuesta(slugs), precio)
-        destino.horario_confirmado = horario is not None
-        destino.guiado = bool(horario and horario.guiado)
-        destino.slugs = slugs
+    for d, punto, valor in destinos:
+        sitio = _sitio_de(d, punto, textos, intereses, ritmo)
+        if punto_destino and modo != 'circulo' and distancia_km(punto_destino, punto) <= RADIO_ZONA_DESTINO_KM:
+            sitio.puntaje += BONO_DESTINO
+        sitio.obligatorio = d.pk == obligatorio
+        if modo == 'base' and distancia_km(punto_destino, punto) > RADIO_BASE_KM:
+            # Solo queda en el camino de ida: desde el día 2 se pasea alrededor del destino, no de vuelta a casa.
+            sitio.dia = 0
+        if d.pk in fijados:
+            # La persona lo fijó en un día (y quizá a una hora): ese día manda sobre lo anterior.
+            sitio.obligatorio, sitio.dia, sitio.objetivo = True, fijados[d.pk]['dia'], fijados[d.pk].get('hora')
         # Lo afín y cercano primero; la distancia pesa poco para no dejar fuera lo que vale el viaje.
-        puntuados.append((puntaje - distancia / (radio * 4), sitio, destino))
+        orden = float('inf') if sitio.obligatorio else sitio.puntaje - valor / 4
+        puntuados.append([orden, sitio, d])
+    if modo == 'ida_vuelta' and destino and destino['clave'] is None:
+        # Ida y vuelta a un municipio: nada obliga a llegar (no hay punto final) y lo cercano a la salida puede
+        # llenar el viaje. El mejor sitio del municipio se vuelve obligatorio para que la ruta llegue.
+        zona = [fila for fila in puntuados if fila[2].municipio.slug == destino['slug']]
+        if zona and not any(fila[1].obligatorio for fila in zona):
+            mejor = max(zona, key=lambda fila: (fila[1].puntaje, -distancia_km(punto_destino, fila[1].punto)))
+            mejor[0], mejor[1].obligatorio = float('inf'), True
     puntuados.sort(key=lambda fila: (-fila[0], fila[2].pk))
     elegidos = puntuados[:MAXIMO_CANDIDATOS]
     return [s for _, s, _ in elegidos], {d.pk: d for _, _, d in elegidos}
+
+
+def sitios_de_descanso(origen, descansos):
+    """Un sitio «en el lugar» por descanso: no se maneja, dura lo pedido y empieza cerca de la hora pedida.
+
+    `descansos`: [{'dia', 'inicio' (minutos), 'duracion' (minutos)}]. La ventana deja HOLGURA_DESCANSO de margen
+    porque la parada anterior puede terminar un poco antes o después que en el plan que vio la persona.
+    """
+    sitios = []
+    for numero, descanso in enumerate(descansos):
+        inicio, duracion = descanso['inicio'], descanso['duracion']
+        ventana = (max(0, inicio - HOLGURA_DESCANSO), min(24 * 60, inicio + duracion + HOLGURA_DESCANSO))
+        sitios.append(Sitio(('descanso', numero), origen, 0, duracion, Horario({d: [ventana] for d in range(7)}),
+                            dia=descanso['dia'], obligatorio=True, en_sitio=True, objetivo=inicio))
+    return sitios
+
+
+def advertencia_tiempo(origen, origen_nombre, destino, dias, inicio, fin, modo):
+    """Aviso, antes de calcular, si el puro trayecto directo no cabe en el horario. No impide calcular."""
+    if not destino or modo == 'circulo':
+        return None
+    directo = minutos_de_manejo(km_por_carretera(origen, destino['punto']))
+    por_dia = fin - inicio
+    if modo == 'ida_vuelta':
+        necesario, disponible, como = 2 * directo, por_dia * dias, 'ida y vuelta'
+    elif modo == 'base':
+        # El primer día hay que llegar a dormir al destino.
+        necesario, disponible, como = directo, por_dia, 'el primer día'
+    else:
+        necesario, disponible, como = directo, por_dia * dias, 'de ida'
+    if necesario <= disponible:
+        return None
+    if modo == 'base':
+        sugerencia = 'Empieza más temprano el primer día o termina más tarde.'
+    elif dias < max(RADIO_KM):
+        sugerencia = 'Prueba con más días o con un horario más amplio.'
+    else:
+        sugerencia = 'Prueba con un horario más amplio o con un destino más cercano.'
+    return (f'Solo manejar de {origen_nombre} a {destino["nombre"]} {como} toma unas {_duracion(necesario)} '
+            f'(estimado, sin paradas) y tu horario da {_duracion(disponible)}. {sugerencia}')
+
+
+def _duracion(minutos):
+    horas, resto = divmod(minutos, 60)
+    if not horas:
+        return f'{resto} min'
+    return f'{horas} h {resto} min' if resto else f'{horas} h'
 
 
 def _hora(minutos):
@@ -95,70 +239,195 @@ def _mas_cercano(punto, tipo, radio_km):
     return encontrados[0] if encontrados else None
 
 
+def regresa(modo, regresar):
+    """Si el último día se vuelve a la salida: lo decide el tipo de viaje; sin destino, la persona."""
+    return {'ida_vuelta': True, 'ida': False, 'base': False}.get(modo, regresar)
+
+
 def construir_problema(origen, fecha, dias, inicio, fin, intereses, ritmo='normal', personas=1, presupuesto=None,
-                       regresar=True):
-    """(problema, fechas, destinos por clave). Lo usan el planeador y el experimento."""
-    sitios, destinos = candidatos(origen, set(intereses), dias, ritmo)
+                       regresar=True, modo='circulo', destino=None, fijados=None, excluidos=(), descansos=()):
+    """(problema, fechas, destinos por clave). Lo usan el planeador y el experimento.
+
+    - circulo: como siempre; sin destino.
+    - ida_vuelta: corredor hasta el destino y regreso a la salida el último día.
+    - ida: corredor; el viaje termina en el destino (punto final del optimizador).
+    - base: el día 1, corredor hasta el destino y ahí se duerme; desde el día 2 se sale y se vuelve a él.
+
+    Ruta editada: `fijados` ({clave: {'dia', 'hora'}}) y `descansos` son obligatorios en su día; los
+    `excluidos` no entran. Los descansos van al final de la lista de sitios.
+    """
+    if destino is None:
+        modo = 'circulo'
+    sitios, destinos = candidatos(origen, set(intereses), dias, ritmo, modo, destino, fijados, excluidos)
+    sitios += sitios_de_descanso(origen, descansos)
     fechas = [fecha + timedelta(days=i) for i in range(dias)]
-    problema = Problema(origen, [Dia(f.weekday(), inicio, fin) for f in fechas], sitios, personas, presupuesto,
-                        regresar)
+    final = destino['punto'] if modo in ('ida', 'base') else None
+    nodo_final = len(sitios) + 1
+    dias_del_viaje = []
+    for numero, dia in enumerate(fechas):
+        if modo == 'base':
+            dias_del_viaje.append(Dia(dia.weekday(), inicio, fin, desde=nodo_final if numero else None,
+                                      hasta=nodo_final))
+        else:
+            dias_del_viaje.append(Dia(dia.weekday(), inicio, fin))
+    problema = Problema(origen, dias_del_viaje, sitios, personas, presupuesto, regresa(modo, regresar), final)
     return problema, fechas, destinos
 
 
 def planear(origen, fecha, dias, inicio, fin, intereses, ritmo='normal', personas=1, presupuesto=None,
-            regresar=True):
-    """El itinerario listo para mostrar. `inicio` y `fin` en minutos desde medianoche."""
+            regresar=True, modo='circulo', destino=None, origen_nombre='la salida', fijados=None, excluidos=(),
+            descansos=()):
+    """El itinerario listo para mostrar. `inicio` y `fin` en minutos desde medianoche.
+
+    `fijados`, `excluidos` y `descansos`: ver construir_problema. Los descansos salen aparte en cada día
+    (`descansos`, con `despues_de` = cuántas paradas van antes) para que el calendario y los mapas no cambien.
+    """
+    if destino is None:
+        modo = 'circulo'
+    fijados = fijados or {}
+    regresar = regresa(modo, regresar)
+    advertencia = advertencia_tiempo(origen, origen_nombre, destino, dias, inicio, fin, modo)
     problema, fechas, destinos = construir_problema(origen, fecha, dias, inicio, fin, intereses, ritmo, personas,
-                                                    presupuesto, regresar)
+                                                    presupuesto, regresar, modo, destino, fijados, excluidos,
+                                                    descansos)
     sitios = problema.sitios
     plan = genetico(problema, semilla=SEMILLA)
     simple = voraz(problema)
-    sin_precio, supuestos, resultado_dias = set(), set(), []
+    sin_precio, supuestos, resultado_dias, puestos = set(), set(), [], set()
     for numero, (dia, paradas) in enumerate(zip(fechas, plan.dias)):
-        filas = []
+        filas, libres, aqui = [], [], None
         for parada in paradas:
             sitio = sitios[parada.sitio]
-            destino = destinos[sitio.clave]
+            puestos.add(sitio.clave)
+            if sitio.en_sitio:
+                # Se descansa donde se está: si toca comer después, las opciones son las de la última parada. Al
+                # empezar el día no se buscan (ese punto puede ser la ubicación de la persona).
+                comidas = opciones_comida(aqui) if parada.comida_despues and aqui else []
+                libres.append({'inicio': _hora(parada.inicio), 'fin': _hora(parada.salida),
+                               'duracion_min': sitio.duracion, 'despues_de': len(filas),
+                               'comida_despues': parada.comida_despues, 'comidas': comidas,
+                               'comida': comidas[0] if comidas else None})
+                continue
+            visto = destinos[sitio.clave]
+            aqui = sitio.punto
             precio = sitio.precio_para(dia.weekday())
             if precio is None:
-                sin_precio.add(destino.pk)
-            if not destino.horario_confirmado:
-                supuestos.add(destino.pk)
+                sin_precio.add(visto.pk)
+            if not visto.horario_confirmado:
+                supuestos.add(visto.pk)
+            # Dos o tres opciones; la primera es la sugerida y la persona puede elegir otra con un toque.
+            comidas = opciones_comida(sitio.punto) if parada.comida_despues else []
             filas.append({
-                'destino': {'id': destino.pk, 'nombre': destino.nombre, 'url': reverse('destino-detalle',
-                            args=[destino.slug]), 'municipio': destino.municipio.nombre,
+                'comida': comidas[0] if comidas else None, 'comidas': comidas,
+                'destino': {'id': visto.pk, 'nombre': visto.nombre, 'url': reverse('destino-detalle',
+                            args=[visto.slug]), 'municipio': visto.municipio.nombre,
                             'latitud': sitio.punto[0], 'longitud': sitio.punto[1]},
                 'llegada': _hora(parada.llegada), 'inicio': _hora(parada.inicio), 'salida': _hora(parada.salida),
                 'km': round(parada.km, 1), 'manejo_min': parada.manejo, 'visita_min': sitio.duracion,
-                'precio': None if precio is None else str(precio), 'horario_confirmado': destino.horario_confirmado,
-                'guiado': destino.guiado,
-                'comida': _lugar(_mas_cercano(sitio.punto, 'comer', 3)) if parada.comida_despues else None,
+                'precio': None if precio is None else str(precio), 'horario_confirmado': visto.horario_confirmado,
+                'guiado': visto.guiado, 'fijado': visto.pk in fijados,
                 'comida_despues': parada.comida_despues,
             })
         ultimo = numero == dias - 1
-        duerme = filas and (not ultimo or not regresar)
+        # Quedándose en el destino se duerme ahí cada noche; en solo ida, la última noche es en el destino.
+        if modo == 'base' or (modo == 'ida' and ultimo):
+            punto_dormir = destino['punto']
+        elif filas and (not ultimo or not regresar):
+            punto_dormir = aqui
+        else:
+            punto_dormir = None
         resultado_dias.append({
-            'fecha': dia.isoformat(), 'dia_semana': dia.weekday(), 'paradas': filas,
-            'dormir': _lugar(_mas_cercano(sitios[paradas[-1].sitio].punto, 'dormir', 10)) if duerme else None,
+            'fecha': dia.isoformat(), 'dia_semana': dia.weekday(), 'paradas': filas, 'descansos': libres,
+            'dormir': _lugar(_mas_cercano(punto_dormir, 'dormir', 10)) if punto_dormir else None,
         })
-    avisos = [f'Tiempos de manejo aproximados: distancia en línea recta × {FACTOR_CARRETERA} por las curvas de la '
-              'carretera, sin tráfico. Confirma la ruta en tu aplicación de mapas.']
+    avisos = [advertencia] if advertencia else []
+    avisos.append(f'Tiempos de manejo aproximados: distancia en línea recta × {FACTOR_CARRETERA} por las curvas de '
+                  'la carretera, sin tráfico. Confirma la ruta en tu aplicación de mapas.')
+    if destino and destino['clave'] and modo != 'circulo':
+        visitado = any(sitios[i].clave == destino['clave'] for i in plan.visitados)
+        if not visitado:
+            avisos.append(f'No cupo una visita a {destino["nombre"]} con ese horario; la ruta llega hasta ahí.'
+                          if modo != 'ida_vuelta' else f'No cupo una visita a {destino["nombre"]} con ese horario.')
+    elif destino and modo == 'ida_vuelta':
+        llega = any(destinos[sitios[i].clave].municipio.slug == destino['slug']
+                    for i in plan.visitados if not sitios[i].en_sitio)
+        if not llega:
+            avisos.append(f'Con ese horario la ruta no alcanza a llegar a {destino["nombre"]}. Prueba con más días o '
+                          'un horario más amplio.')
+    for clave, fijado in fijados.items():
+        if clave not in puestos and clave in destinos:
+            avisos.append(f'No cupo {destinos[clave].nombre} el día {fijado["dia"] + 1} con este horario.')
+    faltan = sum(1 for s in sitios if s.en_sitio and s.clave not in puestos)
+    if faltan:
+        avisos.append(f'{faltan} descanso(s) no cupieron a la hora pedida.')
     if supuestos:
         avisos.append(f'{len(supuestos)} sitio(s) sin horario publicado: supusimos uno habitual. Confírmalo antes '
                       'de ir.')
     if sin_precio:
         avisos.append(f'{len(sin_precio)} sitio(s) sin precio conocido: el total no los incluye.')
-    if not plan.visitados:
+    visitas = [i for i in plan.visitados if not sitios[i].en_sitio]
+    if not visitas:
         avisos.append('No encontramos sitios que quepan en ese horario. Prueba con más horas, otro día o más '
                       'intereses.')
     return {
+        'viaje': {'modo': modo, 'modo_nombre': MODOS[modo], 'regresar': regresar, 'advertencia': advertencia,
+                  'destino': None if destino is None else {
+                      'nombre': destino['nombre'], 'url': destino['url'], 'tipo': destino['tipo'],
+                      'latitud': destino['punto'][0], 'longitud': destino['punto'][1]}},
         'dias': resultado_dias,
-        'totales': {'sitios': len(plan.visitados), 'km': round(plan.km), 'manejo_min': plan.manejo,
+        'totales': {'sitios': len(visitas), 'km': round(plan.km), 'manejo_min': plan.manejo,
                     'costo_entradas': str(plan.costo), 'personas': personas,
                     'presupuesto': None if presupuesto is None else str(presupuesto)},
         'avisos': avisos,
         'metodo': {'nombre': 'Algoritmo genético', 'puntaje': round(plan.puntaje, 2),
                    'segundos': round(plan.segundos, 2), 'generaciones': plan.generaciones,
-                   'candidatos': len(sitios),
-                   'voraz': {'puntaje': round(simple.puntaje, 2), 'sitios': len(simple.visitados)}},
+                   'candidatos': len(destinos),
+                   'voraz': {'puntaje': round(simple.puntaje, 2),
+                             'sitios': sum(not sitios[i].en_sitio for i in simple.visitados)}},
     }
+
+
+def alternativas(anterior, siguiente, fecha, desde, hasta, intereses, ritmo='normal', excluidos=(),
+                 cuantas=ALTERNATIVAS):
+    """Hasta `cuantas` sitios que caben en un hueco del itinerario, del mejor al peor.
+
+    Se sale de `anterior` a la hora `desde` (minutos) y hay que estar en `siguiente` a la hora `hasta`; sin
+    `siguiente`, basta con terminar la visita antes de `hasta`. Caben si abren (horario publicado o supuesto) y el
+    manejo de ida y de salida entra en el hueco. Orden: puntaje menos el desvío en minutos / MINUTOS_POR_PUNTO.
+    Los puntos solo se usan para el cálculo; no se guardan.
+    """
+    hueco = hasta - desde
+    excluidos = set(excluidos)
+    cercanos = []
+    for d in _destinos_activos():
+        if d.pk in excluidos:
+            continue
+        punto = (float(d.latitud), float(d.longitud))
+        ida = minutos_de_manejo(km_por_carretera(anterior, punto))
+        if ida < hueco:
+            cercanos.append((d, punto, ida))
+    textos = textos_practicos([d.pk for d, _, _ in cercanos], ['horarios', 'precios'])
+    directo = minutos_de_manejo(km_por_carretera(anterior, siguiente)) if siguiente else 0
+    dia = Dia(fecha.weekday(), desde, hasta)
+    opciones = []
+    for d, punto, ida in cercanos:
+        sitio = _sitio_de(d, punto, textos, set(intereses), ritmo)
+        inicio = _ventana(sitio, dia, desde + ida)
+        if inicio is None:
+            continue
+        salida = inicio + sitio.duracion
+        vuelta = minutos_de_manejo(km_por_carretera(punto, siguiente)) if siguiente else 0
+        if salida + vuelta > hasta:
+            continue
+        desvio = ida + vuelta - directo
+        precio = sitio.precio_para(fecha.weekday())
+        opciones.append((sitio.puntaje - desvio / MINUTOS_POR_PUNTO, d.pk, {
+            'destino': {'id': d.pk, 'nombre': d.nombre, 'url': reverse('destino-detalle', args=[d.slug]),
+                        'municipio': d.municipio.nombre, 'latitud': punto[0], 'longitud': punto[1]},
+            'llegada': _hora(desde + ida), 'inicio': _hora(inicio), 'salida': _hora(salida),
+            'manejo_min': ida, 'visita_min': sitio.duracion, 'desvio_min': max(desvio, 0),
+            'precio': None if precio is None else str(precio), 'horario_confirmado': d.horario_confirmado,
+            'afin': bool(d.slugs & set(intereses)),
+        }))
+    opciones.sort(key=lambda fila: (-fila[0], fila[1]))
+    return [opcion for _, _, opcion in opciones[:cuantas]]
