@@ -1,10 +1,10 @@
 /* Contenido de la comunidad, cuentas, pasaporte, misiones y formularios en panel. */
-.community-section { margin-top: 3rem; }
+.community-section { margin-top: 2.75rem; }
 .community-section > h2 { margin-bottom: .4rem; }
 #practical-title { margin-top: 1.75rem; }
 .community-box {
   margin-top: .75rem;
-  padding: 1rem 1.25rem;
+  padding: 1.1rem 1.25rem;
   border: 1px solid var(--linea);
   border-radius: var(--radio);
   background: var(--panel);
@@ -14,7 +14,15 @@
 .community-box > p + p, .community-box > ul + p { margin-top: .4rem; }
 .community-box > ul { color: var(--texto-2); font-size: .9375rem; }
 .community-box > button, .community-box > form, .community-box > a { margin-top: .6rem; }
-.community-box > summary, details.community-box > summary { padding: .55rem 0; font-weight: 600; }
+.community-box > summary, details.community-box > summary { padding: 0; font-weight: 600; }
+/* Un desplegable cerrado es una fila de 44 px, no una tarjeta alta. */
+details.community-box { padding-block: .3rem; }
+details.community-box[open] { padding-bottom: 1.1rem; }
+/* Estados vacíos: texto tenue, sin caja. */
+p.community-box { margin-top: .5rem; padding: 0; border: 0; background: none; color: var(--texto-3); font-size: .9375rem; }
+.community-form fieldset { display: grid; }
+.community-form fieldset legend { margin-bottom: .25rem; }
+.community-form fieldset .check-label { min-height: 44px; }
 details > form, details > p { margin-top: .6rem; }
 .community-note { margin: .4rem 0; color: var(--texto-3); font-size: .875rem; }
 .community-form { display: grid; gap: .75rem; max-width: 560px; }
@@ -38,8 +46,11 @@ details > form, details > p { margin-top: .6rem; }
 .rating { color: var(--texto); font-weight: 600; font-size: .9375rem; }
 .community-photo { max-height: 420px; margin-top: .5rem; border-radius: var(--radio-s); filter: var(--filtro-foto); }
 .community-answer { margin: .6rem 0; padding-left: .8rem; border-left: 2px solid var(--linea-fuerte); }
-.practical-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: .6rem; }
-.practical-grid .community-box { margin: 0; }
+/* Datos prácticos: una sola caja con celdas separadas por líneas finas, en vez de ocho tarjetas sueltas. */
+.practical-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); overflow: hidden; border: 1px solid var(--linea); border-radius: var(--radio); background: var(--panel); }
+.practical-grid .community-box { margin: 0; padding: .9rem 1.1rem; border: 0; border-radius: 0; background: none; box-shadow: 1px 0 0 var(--linea), 0 1px 0 var(--linea); }
+.practical-grid .community-box > h3 + p:last-child { color: var(--texto-3); }
+.practical-grid + details.community-box { margin-top: .6rem; }
 .practical-grid h3 { margin-bottom: .3rem; }
 .data-freshness { display: inline-block; margin: .3rem 0; padding: .1rem .5rem; border-radius: 4px; font-size: .8125rem; font-weight: 500; }
 .data-freshness--recent { background: var(--exito-suave); color: var(--exito); }
@@ -72,7 +83,7 @@ details > form, details > p { margin-top: .6rem; }
 .referencias-oficiales { margin-top: 2rem; padding-top: 1.25rem; border-top: 1px solid var(--linea-fuerte); }
 .referencias-oficiales h3 { margin-top: 1rem; }
 .referencias-oficiales ul { display: grid; gap: .6rem; margin: .75rem 0 0; padding: 0; list-style: none; }
-.referencia-oficial { padding: .9rem 1rem; border: 1px dashed var(--linea-fuerte); border-radius: var(--radio); background: var(--panel-2); }
+.referencia-oficial { padding: .9rem 1rem; border: 1px solid var(--linea); border-radius: var(--radio); background: var(--panel-2); }
 .referencia-oficial > p { color: var(--texto-2); font-size: .9375rem; overflow-wrap: anywhere; }
 .referencia-oficial > p + p { margin-top: .3rem; }
 .referencia-concepto { margin-right: .4rem; color: var(--texto-3); font-family: var(--fuente-mono); font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; }
@@ -101,8 +112,8 @@ details > form, details > p { margin-top: .6rem; }
 .cerca-grupo ul { margin-top: .4rem; padding: 0; list-style: none; }
 .cerca-grupo > summary { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: .75rem; min-height: 44px; padding: .2rem 0; list-style: none; }
 .cerca-grupo > summary::-webkit-details-marker { display: none; }
-.cerca-grupo > summary::after { content: "+"; grid-column: 2; grid-row: 1 / span 2; color: var(--acento); font-size: 1.5rem; line-height: 1; }
-.cerca-grupo[open] > summary::after { content: "−"; }
+.cerca-grupo > summary::after { content: "+"; grid-column: 2; grid-row: 1 / span 2; width: auto; height: auto; margin: 0; border: 0; color: var(--acento); font-size: 1.5rem; line-height: 1; transform: none; }
+.cerca-grupo[open] > summary::after { content: "−"; margin: 0; transform: none; }
 .cerca-grupo > summary h3 { grid-column: 1; font-size: 1.0625rem; }
 .cerca-grupo > summary span { grid-column: 1; color: var(--texto-3); font-size: .875rem; font-weight: 400; }
 .cerca-grupo li { padding: .5rem 0; border-top: 1px solid var(--linea); }
