@@ -7,6 +7,10 @@
   <h1>Armar una ruta</h1>
   <p class="planeador-intro">Cuéntanos cuándo sales y qué te gusta. Elegimos qué visitar y en qué orden para que te dé tiempo, respetando horarios y tu presupuesto.</p>
   <div class="planeador-layout">
+    <div id="ruta-plegado" class="planeador-plegado" hidden>
+      <p id="ruta-plegado-texto"></p>
+      <button type="button" id="ruta-cambiar" aria-expanded="false" aria-controls="ruta-form">Cambiar</button>
+    </div>
     <form id="ruta-form" class="planeador-form" novalidate>
       <fieldset class="planeador-paso">
         <legend><span class="planeador-num" aria-hidden="true">1</span>¿Desde dónde sales?</legend>
@@ -94,6 +98,7 @@
         <p class="planeador-error" id="ruta-error-personas" hidden></p>
       </fieldset>
 
+      <p class="planeador-advertencia" id="ruta-aviso-edicion" hidden>Al volver a armar la ruta se pierden tus cambios: las paradas que fijaste o quitaste y tus ratos libres.</p>
       <button type="submit" class="planeador-enviar">Armar mi ruta</button>
       <p class="form-status planeador-estado" role="status"></p>
     </form>

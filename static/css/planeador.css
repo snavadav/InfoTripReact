@@ -288,3 +288,14 @@ a.planeador-boton-principal:hover { background: var(--acento-fuerte); color: var
 @media (prefers-reduced-motion: reduce) {
   .editar-boton, .alternativa-elegir { transition: none; }
 }
+
+/* ── Formulario plegado ─────────────────────────────────
+   Con la ruta armada, el formulario se resume en una fila y el resultado usa todo el ancho. */
+.planeador-plegado { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem 1rem; padding: .6rem .75rem .6rem 1.1rem; border: 1px solid var(--linea); border-radius: var(--radio-l); background: var(--panel); }
+.planeador-plegado p { display: flex; flex-wrap: wrap; gap: .15rem 0; min-width: 0; margin: 0; color: var(--texto-2); font-size: 1rem; }
+.planeador-plegado p span:nth-child(2) { color: var(--texto); font-weight: 650; }
+.planeador-plegado p span + span + span::before { content: '·'; margin: 0 .5rem; color: var(--texto-3); }
+.planeador-plegado button { flex: none; }
+.planeador-layout.es-plegado { grid-template-columns: minmax(0, 1fr); }
+.planeador-layout.es-plegado .planeador-mapa { aspect-ratio: auto; height: clamp(260px, 42vh, 420px); min-height: 0; }
+#ruta-aviso-edicion[hidden] { display: none; }
