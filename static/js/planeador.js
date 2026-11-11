@@ -25,7 +25,7 @@
   const pesos = new Intl.NumberFormat('es-MX', {style: 'currency', currency: 'MXN', maximumFractionDigits: 0});
   const sinMovimiento = window.matchMedia('(prefers-reduced-motion: reduce)');
   let ubicacion = null, ultimoPlan = null, ultimaPeticion = null, mapa = null, capa = null;
-  let diaElegido = 0, capasDia = [], extras = {}, origenMapa = null;
+  let diaElegido = 0, capasDia = [], extras = {}, origenMapa = null, carrusel = null;
 
   // ── Utilidades de DOM ───────────────────────────────────
   function elemento(etiqueta, texto, clase) {
@@ -241,13 +241,17 @@
       .bindPopup(elemento('strong', `Salida: ${plan.origen.nombre}`)).addTo(capa);
     let anterior = origenMapa;
     plan.dias.forEach((dia, numero) => {
-      const grupo = {marcadores: [], linea: null, puntos: [anterior]};
+      const grupo = {marcadores: [], paradas: [], linea: null, puntos: [anterior]};
       dia.paradas.forEach((parada, indice) => {
         const punto = [parada.destino.latitud, parada.destino.longitud];
         grupo.puntos.push(punto);
-        grupo.marcadores.push(L.marker(punto, {icon: numerado(indice + 1, numero), title: parada.destino.nombre,
+        const marcador = L.marker(punto, {icon: numerado(indice + 1, numero), title: parada.destino.nombre,
           alt: `Día ${numero + 1}, parada ${indice + 1}: ${parada.destino.nombre}`})
-          .bindPopup(popup(`Día ${numero + 1} · ${indice + 1}. ${parada.destino.nombre}`, parada.destino.url)).addTo(capa));
+          .bindPopup(popup(`Día ${numero + 1} · ${indice + 1}. ${parada.destino.nombre}`, parada.destino.url)).addTo(capa);
+        // Tocar un marcador lleva el carrusel a esa parada.
+        marcador.on('click', () => verParada(numero, indice));
+        grupo.marcadores.push(marcador);
+        grupo.paradas.push(marcador);
         if (parada.comida) {
           grupo.marcadores.push(L.marker([parada.comida.latitud, parada.comida.longitud], {icon: InfoTripMapa.iconoLugar('comer'),
             title: parada.comida.nombre, alt: parada.comida.nombre}).bindPopup(popup(parada.comida.nombre, parada.comida.url)).addTo(capa));
@@ -285,6 +289,14 @@
     const puntos = capasDia[numero]?.puntos || [];
     const limites = puntos.length > 1 ? L.latLngBounds(puntos) : capa.getBounds();
     if (limites.isValid()) mapa.fitBounds(limites.pad(0.15), {maxZoom: 14, animate: !sinMovimiento.matches});
+  }
+  // El marcador de la parada que se está viendo en el carrusel crece y queda encima.
+  function marcarEnMapa() {
+    capasDia.forEach((grupo, dia) => grupo.paradas.forEach((marcador, indice) => {
+      const actual = !!carrusel && dia === diaElegido && indice === carrusel.indice;
+      marcador.getElement()?.querySelector('.pin-ruta')?.classList.toggle('es-actual', actual);
+      if (dia === diaElegido) marcador.setZIndexOffset(actual ? 2000 : 1000);
+    }));
   }
 
   // ── Resumen y tarjetas de día ───────────────────────────
@@ -350,11 +362,12 @@
     });
     dibujarDetalle(ultimoPlan, numero);
     resaltarEnMapa(numero);
+    marcarEnMapa();
   }
 
   // ── Detalle del día: paradas, comida y dónde dormir ─────
-  function lugarUtil(titulo, lugar) {
-    const fila = elemento('li', '', 'planeador-util');
+  function lugarUtil(titulo, lugar, etiqueta = 'li') {
+    const fila = elemento(etiqueta, '', 'planeador-util');
     fila.append(elemento('strong', titulo));
     if (lugar) {
       fila.append(enlace(lugar.nombre, lugar.url), elemento('span', `${lugar.subtipo} · a ${lugar.distancia}`));
@@ -370,17 +383,87 @@
     detalle.className = `planeador-detalle dia-${numero % COLORES}`;
     detalle.setAttribute('aria-label', `Paradas del día ${numero + 1}`);
     if (!dia.paradas.length) {
+      carrusel = null;
       detalle.replaceChildren(titulo, elemento('p', 'Este día no cabe ninguna visita con esos datos. Prueba con más horas o más intereses.'));
       return;
     }
     const lista = elemento('ol', '', 'planeador-paradas');
-    dia.paradas.forEach((parada, indice) => {
-      lista.append(dibujarParada(parada, indice));
-      if (parada.comida_despues) lista.append(lugarUtil('Hora de comer:', parada.comida));
+    dia.paradas.forEach((parada, indice) => lista.append(dibujarParada(parada, indice)));
+    const piezas = [titulo, elemento('p', 'Horas estimadas. Toca el nombre de un lugar para ver su ficha completa.'),
+      enlaceDelDia(dia, numero), armarCarrusel(lista, dia)];
+    if (dia.dormir !== null) piezas.push(lugarUtil('Dormir:', dia.dormir, 'p'));
+    detalle.replaceChildren(...piezas);
+  }
+
+  // ── Carrusel: una parada a la vista; se desliza o se usan los botones ─
+  function armarCarrusel(lista, dia) {
+    const caja = elemento('div', '', 'planeador-carrusel');
+    const total = dia.paradas.length;
+    const propio = carrusel = {lista, indice: 0, total, estado: null, puntos: [], anterior: null, siguiente: null};
+    if (total > 1) {
+      const barra = elemento('div', '', 'carrusel-barra');
+      const boton = (simbolo, nombre, paso) => {
+        const b = elemento('button', simbolo, 'carrusel-boton');
+        b.type = 'button';
+        b.setAttribute('aria-label', nombre);
+        b.addEventListener('click', () => irAParada(propio.indice + paso));
+        return b;
+      };
+      propio.anterior = boton('‹', 'Parada anterior', -1);
+      propio.siguiente = boton('›', 'Parada siguiente', 1);
+      const centro = elemento('div', '', 'carrusel-centro');
+      propio.estado = elemento('p', '', 'carrusel-estado');
+      propio.estado.setAttribute('aria-live', 'polite');
+      const puntos = elemento('div', '', 'carrusel-puntos');
+      puntos.setAttribute('aria-hidden', 'true');
+      propio.puntos = dia.paradas.map(() => elemento('span', '', 'carrusel-punto'));
+      puntos.append(...propio.puntos);
+      centro.append(propio.estado, puntos);
+      barra.append(propio.anterior, centro, propio.siguiente);
+      caja.append(barra);
+      let pendiente = false;
+      lista.addEventListener('scroll', () => {
+        if (pendiente) return;
+        pendiente = true;
+        requestAnimationFrame(() => {
+          pendiente = false;
+          if (propio !== carrusel) return;
+          const cerca = paradaALaVista(lista);
+          if (cerca !== propio.indice) marcarParada(cerca);
+        });
+      });
+    }
+    caja.append(lista);
+    marcarParada(0);
+    return caja;
+  }
+  function paradaALaVista(lista) {
+    let mejor = 0, distancia = Infinity;
+    [...lista.children].forEach((item, i) => {
+      const d = Math.abs(item.offsetLeft - lista.scrollLeft);
+      if (d < distancia) { distancia = d; mejor = i; }
     });
-    if (dia.dormir !== null) lista.append(lugarUtil('Dormir:', dia.dormir));
-    detalle.replaceChildren(titulo, elemento('p', 'Horas estimadas. Toca el nombre de un lugar para ver su ficha completa.'),
-      enlaceDelDia(dia, numero), lista);
+    return mejor;
+  }
+  function marcarParada(indice) {
+    carrusel.indice = indice;
+    if (carrusel.estado) {
+      carrusel.estado.textContent = `Parada ${indice + 1} de ${carrusel.total}`;
+      carrusel.puntos.forEach((punto, i) => punto.classList.toggle('es-actual', i === indice));
+      // aria-disabled y no disabled: el botón no pierde el foco al llegar al extremo.
+      carrusel.anterior.setAttribute('aria-disabled', String(indice === 0));
+      carrusel.siguiente.setAttribute('aria-disabled', String(indice === carrusel.total - 1));
+    }
+    marcarEnMapa();
+  }
+  function irAParada(indice) {
+    if (!carrusel) return;
+    const destino = carrusel.lista.children[Math.min(carrusel.total - 1, Math.max(0, indice))];
+    carrusel.lista.scrollTo({left: destino.offsetLeft, behavior: sinMovimiento.matches ? 'auto' : 'smooth'});
+  }
+  function verParada(dia, indice) {
+    if (dia !== diaElegido) elegirDia(dia);
+    irAParada(indice);
   }
 
   // Todo el día en Google Maps, con sus paradas en orden.
@@ -428,6 +511,7 @@
       externo('Cómo llegar', `https://www.google.com/maps/dir/?api=1&destination=${d.latitud},${d.longitud}`, '',
         ' (abre Google Maps en otra pestaña)'));
     cuerpo.append(extra, acciones);
+    if (parada.comida_despues) cuerpo.append(lugarUtil('Después, hora de comer:', parada.comida, 'p'));
     item.append(elemento('span', String(indice + 1), 'parada-num'), cuerpo);
     item.firstChild.setAttribute('aria-hidden', 'true');
     return item;
@@ -546,13 +630,16 @@
   }
 
   function bloqueResenas(info, destino) {
-    const caja = bloque(info.total_resenas ? `Reseñas · ${info.promedio} de 5 (${plural(info.total_resenas, 'reseña', 'reseñas')})` : 'Reseñas');
     if (!info.resenas.length) {
+      const caja = bloque('Reseñas');
       const vacio = elemento('p', 'Aún no hay reseñas de este lugar. ¿Ya fuiste? Cuéntanos cómo te fue: ', 'parada-sin-resenas');
       vacio.append(enlace('Compartir mi experiencia', `${destino.url}#reportar-gasto`));
       caja.append(vacio);
       return caja;
     }
+    // Plegadas, para que las tarjetas del carrusel midan parecido.
+    const caja = elemento('details', '', 'parada-bloque parada-plegable');
+    caja.append(elemento('summary', `Reseñas · ${info.promedio} de 5 (${plural(info.total_resenas, 'reseña', 'reseñas')})`));
     const lista = elemento('ul', '', 'parada-resenas');
     info.resenas.forEach(resena => {
       const item = elemento('li', '', 'parada-resena');

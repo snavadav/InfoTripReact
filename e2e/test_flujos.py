@@ -806,6 +806,8 @@ class FlujosTests(StaticLiveServerTestCase):
         self.assertEqual(tarjetas.nth(0).get_attribute('aria-pressed'), 'true')
         self.assertIn('1 parada', tarjetas.nth(0).inner_text())
         self.assertIn('Sin paradas', tarjetas.nth(1).inner_text())
+        # Las reseñas van plegadas dentro de la tarjeta de la parada.
+        self.pagina.click('#ruta-detalle .parada-plegable summary')
         detalle = self.pagina.inner_text('#ruta-detalle')
         for texto in ['Lugar de prueba', 'Todos los días de 8 a 18 h', 'Ayuntamiento', 'Llegas', 'Sales',
                       'Vista increíble al valle', '5 de 5 estrellas']:
