@@ -1,15 +1,16 @@
 /* Sistema visual de InfoTrip: temas, tipografía, navegación y elementos comunes.
-   Principios: una sola tarea clara por pantalla, mucho aire, un solo acento (agave) y coral solo para
-   lo seleccionado. Accesibilidad: texto base de 16 px, contraste AA (4.5:1) en ambos temas,
+   Principios: una sola tarea clara por pantalla, mucho aire y un solo acento (agave). Lo seleccionado se
+   pinta siempre igual (--seleccion + borde de acento); el coral queda para la marca y el mapa. Menos cajas:
+   el borde se reserva para lo que se puede tocar o agrupa un formulario. Accesibilidad: texto base de 16 px, contraste AA (4.5:1) en ambos temas,
    objetivos táctiles de 44 px y foco siempre visible. Los colores se usan siempre mediante estas variables. */
 
 :root {
   color-scheme: light;
-  --fondo: #F6F7F8;
+  --fondo: #F8F9FA;
   --panel: #FFFFFF;
-  --panel-2: #F6F7F8;
+  --panel-2: #F5F6F7;
   --panel-3: #ECEEF0;
-  --linea: #E1E4E7;
+  --linea: #E7E9EC;
   --linea-fuerte: #B9C0C6;
   --texto: #14171A;
   --texto-2: #424B53;
@@ -26,12 +27,22 @@
   --aviso-suave: #FBF1DC;
   --peligro: #B3261E;
   --peligro-suave: #FBE9E7;
+  --sobre-peligro: #FFFFFF;
+  --seleccion: var(--acento-suave);
   --foco: #0B5CAD;
-  --sombra: 0 1px 2px rgba(20, 23, 26, .06), 0 8px 24px rgba(20, 23, 26, .08);
-  --sombra-flotante: 0 2px 6px rgba(20, 23, 26, .10), 0 16px 40px rgba(20, 23, 26, .16);
-  --radio-s: 10px;
-  --radio: 14px;
-  --radio-l: 20px;
+  --sombra: 0 1px 2px rgba(20, 23, 26, .04), 0 6px 20px rgba(20, 23, 26, .06);
+  --sombra-flotante: 0 2px 6px rgba(20, 23, 26, .08), 0 16px 40px rgba(20, 23, 26, .14);
+  --radio-s: 8px;
+  --radio: 12px;
+  --radio-l: 16px;
+  /* Escala de espacios: todo margen o relleno nuevo sale de aquí. */
+  --esp-1: .25rem;
+  --esp-2: .5rem;
+  --esp-3: .75rem;
+  --esp-4: 1rem;
+  --esp-5: 1.5rem;
+  --esp-6: 2.5rem;
+  --esp-7: 4rem;
   --nav-alto: 64px;
   --ancho: 1120px;
   --fuente: 'Geist', system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -63,6 +74,7 @@
   --aviso-suave: #33270F;
   --peligro: #FF8A80;
   --peligro-suave: #3A1A18;
+  --sobre-peligro: #2A0907;
   --foco: #8CC8FF;
   --sombra: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .4);
   --sombra-flotante: 0 2px 6px rgba(0, 0, 0, .5), 0 16px 40px rgba(0, 0, 0, .55);
@@ -85,7 +97,7 @@ body {
 img { display: block; max-width: 100%; height: auto; }
 ul, ol { padding-left: 1.25rem; }
 h1, h2, h3 { line-height: 1.15; letter-spacing: -.022em; font-weight: 650; text-wrap: balance; }
-h1 { font-size: clamp(1.875rem, 1.45rem + 1.6vw, 2.75rem); }
+h1 { font-size: clamp(1.75rem, 1.45rem + 1.3vw, 2.375rem); }
 h2 { font-size: clamp(1.25rem, 1.1rem + .5vw, 1.5rem); }
 h3 { font-size: 1.0625rem; letter-spacing: -.012em; }
 p { text-wrap: pretty; }
@@ -132,6 +144,7 @@ button, .boton {
   transition: background-color .12s, border-color .12s, color .12s;
 }
 button:hover:not(:disabled), .boton:hover { background: var(--panel-3); color: var(--texto); }
+button:active:not(:disabled), .boton:active { transform: translateY(1px); }
 button:disabled { opacity: .55; cursor: not-allowed; }
 button[type="submit"], .boton-primario, .btn-primary {
   border-color: var(--acento);
@@ -158,8 +171,33 @@ input::placeholder, textarea::placeholder { color: var(--texto-3); }
 input:focus, select:focus, textarea:focus { border-color: var(--acento); outline: 2px solid var(--acento-suave); outline-offset: 0; }
 input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid var(--foco); outline-offset: 0; }
 input[type="checkbox"], input[type="radio"] { width: 1.15rem; height: 1.15rem; min-height: 0; padding: 0; accent-color: var(--acento); flex: none; }
+textarea { line-height: 1.5; resize: vertical; }
+/* Selector de archivo: el botón nativo se ve como un botón secundario del sitio. */
+input[type="file"] { padding: .3rem; color: var(--texto-2); font-size: .9375rem; }
+input[type="file"]::file-selector-button {
+  min-height: 34px;
+  margin-right: .75rem;
+  padding: 0 .85rem;
+  border: 1px solid var(--linea-fuerte);
+  border-radius: 6px;
+  background: var(--panel-2);
+  color: var(--texto);
+  font: inherit;
+  font-weight: 550;
+  cursor: pointer;
+}
 label { font-size: .9375rem; font-weight: 500; }
-summary { cursor: pointer; font-size: .9375rem; font-weight: 550; }
+/* Grupos de opciones: sin el marco gris del navegador; quien necesite caja la define con su clase. */
+fieldset { min-width: 0; border: 0; }
+legend { padding: 0; font-size: .9375rem; font-weight: 550; }
+/* Desplegables: la flecha va a la derecha y gira al abrir, igual en toda la app. */
+summary { display: flex; align-items: center; justify-content: space-between; gap: .75rem; min-height: 44px; cursor: pointer; font-size: .9375rem; font-weight: 550; list-style: none; }
+summary::-webkit-details-marker { display: none; }
+summary::after { content: ''; flex: none; width: .5rem; height: .5rem; margin: -.2rem .3rem 0; border: solid var(--texto-3); border-width: 0 2px 2px 0; transform: rotate(45deg); transition: transform .15s; }
+details[open] > summary::after { margin-top: .2rem; transform: rotate(-135deg); }
+/* Acción destructiva: se distingue del botón primario. */
+.boton-peligro, button.boton-peligro, #delete-account-form button[type="submit"] { border-color: var(--peligro); background: var(--peligro); color: var(--sobre-peligro); }
+.boton-peligro:hover, button.boton-peligro:hover:not(:disabled), #delete-account-form button[type="submit"]:hover:not(:disabled) { border-color: var(--peligro); background: var(--peligro); color: var(--sobre-peligro); filter: brightness(.92); }
 
 /* Navegación: cuatro destinos principales; lo personal vive en el menú de cuenta. */
 #navbar {
@@ -205,7 +243,7 @@ summary { cursor: pointer; font-size: .9375rem; font-weight: 550; }
   text-decoration: none;
 }
 .nav-links a:hover { background: var(--panel-3); color: var(--texto); }
-.nav-links a[aria-current="page"] { color: var(--texto); box-shadow: inset 0 -3px 0 var(--acento); border-radius: 0; }
+.nav-links a[aria-current="page"] { color: var(--texto); font-weight: 650; box-shadow: inset 0 -2px 0 var(--acento); border-radius: 0; }
 .nav-actions { display: flex; align-items: center; gap: .5rem; }
 #nav-guest { display: flex; align-items: center; gap: .5rem; }
 .btn-ghost, .btn-primary, .btn-logout {
@@ -222,7 +260,7 @@ summary { cursor: pointer; font-size: .9375rem; font-weight: 550; }
 .btn-ghost:hover { background: var(--panel-3); color: var(--texto); }
 .btn-primary { border: 1px solid var(--acento); }
 .nav-user-wrap { display: none; position: relative; }
-.account-toggle { gap: .55rem; padding: 0 .6rem 0 .35rem; border-color: var(--linea); }
+.account-toggle { gap: .55rem; padding: 0 .6rem 0 .35rem; border-color: transparent; background: transparent; }
 .account-toggle::after { content: ''; width: .45rem; height: .45rem; margin: -.2rem .1rem 0 .15rem; border: solid currentColor; border-width: 0 2px 2px 0; transform: rotate(45deg); }
 .account-menu {
   position: absolute;
@@ -280,7 +318,8 @@ summary { cursor: pointer; font-size: .9375rem; font-weight: 550; }
   width: 44px;
   height: 44px;
   padding: 0;
-  border-color: var(--linea);
+  border-color: transparent;
+  background: transparent;
   color: var(--texto-2);
 }
 .theme-toggle svg { width: 19px; height: 19px; }
@@ -341,7 +380,11 @@ summary { cursor: pointer; font-size: .9375rem; font-weight: 550; }
 .mobile-user-info { display: none; align-items: center; gap: .6rem; padding: .5rem .75rem; }
 
 /* Páginas de contenido */
-.explore-shell { width: min(var(--ancho), 100%); margin: 0 auto; padding: 2.25rem 1.5rem 1rem; }
+.explore-shell { width: min(var(--ancho), 100%); margin: 0 auto; padding: 2rem 1.5rem 1rem; }
+/* Cabecera de página: título, entradilla y aire antes del contenido, igual en todas. */
+.explore-shell > h1, .explore-shell > header h1 { margin-bottom: var(--esp-2); }
+.explore-shell > h1 + p { max-width: 68ch; color: var(--texto-2); font-size: 1.0625rem; }
+.explore-shell > h1 + p:empty { display: none; }
 .legal-page { max-width: 780px; }
 .legal-page > h1 { margin-bottom: .75rem; }
 .legal-page > h2 { margin: 1.75rem 0 .5rem; }
@@ -373,8 +416,8 @@ summary { cursor: pointer; font-size: .9375rem; font-weight: 550; }
 }
 .empty-catalog {
   padding: 2rem 1.25rem;
-  border: 1px dashed var(--linea-fuerte);
   border-radius: var(--radio);
+  background: var(--panel-2);
   color: var(--texto-2);
   text-align: center;
 }
