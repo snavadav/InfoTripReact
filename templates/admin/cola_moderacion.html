@@ -2,14 +2,14 @@
 {% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url 'admin:index' %}">Inicio</a> › Cola de moderación</div>{% endblock %}
 {% block content %}
 <div id="content-main">
-  <p>Lo más antiguo aparece primero. Las acciones Publicar, Ocultar, Resolver y Desestimar siguen en cada lista.</p>
+  <p>Lo más antiguo aparece primero. Las acciones Publicar, Ocultar, Resolver, Desestimar, Aprobar y Rechazar siguen en cada lista. Nada de las fuentes oficiales se publica sin que alguien lo apruebe.</p>
   {% for seccion in secciones %}
   <div class="module">
     <table>
       <caption><a href="{{ seccion.lista }}" class="section">{{ seccion.titulo }}: {{ seccion.total }}</a></caption>
       <tbody>
       {% for elemento in seccion.elementos %}
-        <tr><th scope="row"><a href="{{ elemento.enlace }}">{{ elemento.texto }}</a></th><td>{{ elemento.creado|date:"d/m/Y H:i" }}</td></tr>
+        <tr><th scope="row"><a href="{{ elemento.enlace }}">{{ elemento.texto }}</a>{% if elemento.fuente %} · <a href="{{ elemento.fuente }}" target="_blank" rel="noopener noreferrer">ver fuente</a>{% endif %}</th><td>{{ elemento.creado|date:elemento.formato }}</td></tr>
       {% empty %}
         <tr><td colspan="2">Nada pendiente.</td></tr>
       {% endfor %}

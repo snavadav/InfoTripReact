@@ -271,6 +271,9 @@ Registrarse o iniciar sesión envía un código al correo, y `verificar-codigo` 
 | `python manage.py importar_denue` | Importa negocios del DENUE del INEGI; requiere `DENUE_TOKEN` ([guía](docs/importar-osm.md)) |
 | `python manage.py importar_lugares` | Importa dónde comer, dormir y servicios de OpenStreetMap; se publican de inmediato ([guía](docs/importar-osm.md)) |
 | `python manage.py importar_osm` | Importa lugares de OpenStreetMap, ocultos hasta publicarlos; gratis y sin cuenta ([guía](docs/importar-osm.md)) |
+| `python manage.py ejecutar_tareas` | Corre las tareas de datos al día que tocan (DENUE mensual, OSM y sitios oficiales semanales); sin claves se saltan ([guía](docs/actualizacion-datos.md)) |
+| `python manage.py sembrar_fuentes_oficiales` | Registra como fuentes oficiales las páginas que cita `referencias_costo.csv`; se puede repetir ([guía](docs/actualizacion-datos.md)) |
+| `python manage.py revisar_fuentes_oficiales` | Lee precios y horarios de sitios oficiales con IA y crea propuestas para aprobar; requiere `ANTHROPIC_API_KEY` ([guía](docs/actualizacion-datos.md)) |
 
 Los registros van a la salida estándar. `LOG_LEVEL` ajusta el detalle, y nunca incluyen correos ni contraseñas. Copias de seguridad, restauración y monitoreo en [la guía de operación](docs/operacion.md).
 

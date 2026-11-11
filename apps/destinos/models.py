@@ -57,6 +57,10 @@ class Destino(models.Model):
     es_activo = models.BooleanField(default=True)
     # Procedencia de OpenStreetMap (por ejemplo, node/123). Su licencia exige dar crédito e identificar estos datos.
     osm_id = models.CharField(max_length=30, null=True, blank=True, unique=True, editable=False)
+    # Horario publicado por una fuente oficial. Solo se llena al aprobar una propuesta: siempre con su cita.
+    horario = models.CharField(max_length=200, blank=True)
+    horario_fuente_url = models.URLField(max_length=500, blank=True, editable=False)
+    horario_fecha_consulta = models.DateField(null=True, blank=True, editable=False)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_actualizacion = models.DateTimeField(auto_now=True)
 
@@ -79,6 +83,9 @@ class Destino(models.Model):
 # Subtipo de OpenStreetMap → tipo de Lugar.
 TIPO_DE_SUBTIPO = {
     'restaurant': 'comer', 'fast_food': 'comer', 'cafe': 'comer', 'bar': 'comer', 'pub': 'comer',
+    # Mercado público: de OpenStreetMap (amenity=marketplace) y de los puestos de comida del DENUE que el INEGI
+    # ubica dentro de un "MERCADO PUBLICO". Va en comer porque ahí está la comida local de siempre.
+    'marketplace': 'comer',
     'hotel': 'dormir', 'motel': 'dormir', 'hostel': 'dormir', 'guest_house': 'dormir', 'apartment': 'dormir',
     'fuel': 'gasolina', 'pharmacy': 'farmacia', 'atm': 'cajero', 'bank': 'cajero',
     # Solo tiendas útiles para quien viaja. Papelerías, ópticas o talleres serían miles de puntos que estorban.
@@ -106,7 +113,7 @@ class Lugar(models.Model):
         ('department_store', 'Tienda departamental'), ('mall', 'Centro comercial'), ('bakery', 'Panadería'),
         ('pastry', 'Pastelería'), ('confectionery', 'Dulcería'), ('alcohol', 'Licorería'), ('wine', 'Vinos'),
         ('beverages', 'Bebidas'), ('gift', 'Regalos y recuerdos'), ('craft', 'Artesanías y manualidades'),
-        ('art', 'Arte y galería'),
+        ('art', 'Arte y galería'), ('marketplace', 'Mercado'),
     ]
     nombre = models.CharField(max_length=200)
     tipo = models.CharField(max_length=10, choices=TIPOS)
@@ -130,6 +137,17 @@ class Lugar(models.Model):
     denue_id = models.CharField(max_length=20, null=True, blank=True, unique=True, editable=False)
     # Editado por el equipo: la siguiente importación no debe pisar la corrección.
     protegido = models.BooleanField(default=False, editable=False)
+    # Ya no aparece en su fuente (OSM o DENUE). No se borra ni se oculta solo: una persona decide en la cola.
+    posiblemente_cerrado = models.BooleanField(default=False, editable=False)
+    ausente_desde = models.DateField(null=True, blank=True, editable=False)
+    # Si el horario viene de una fuente oficial aprobada, la importación de OSM no lo pisa.
+    horario_fuente_url = models.URLField(max_length=500, blank=True, editable=False)
+    horario_fecha_consulta = models.DateField(null=True, blank=True, editable=False)
+    # Lo marca el equipo (staff o el grupo Moderación) en el admin; el planeador muestra el distintivo.
+    recomendado_equipo = models.BooleanField(
+        'recomendado por el equipo', default=False,
+        help_text='Solo el equipo lo marca, después de conocer el lugar. Se muestra como «Recomendado por el equipo».',
+    )
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_actualizacion = models.DateTimeField(auto_now=True)
 

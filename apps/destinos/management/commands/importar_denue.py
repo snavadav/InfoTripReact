@@ -1,20 +1,25 @@
 """Importa negocios del DENUE (INEGI) que le sirven a quien viaja. Requiere DENUE_TOKEN en .env.
 
 Se publican de inmediato. Lo que ya existe de OpenStreetMap o de la comunidad no se duplica, y lo editado en el
-admin no se toca. Guía: docs/importar-osm.md
+admin no se toca. También arma los mercados públicos a partir de los puestos de comida que el DENUE ubica dentro de
+uno (ver denue.mercados). Con --solo-mercados descarga solo la comida y toca únicamente los mercados.
+Guía: docs/importar-osm.md
 """
 import json
 
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
+from django.utils import timezone
 
 from apps.core.geo import distancia_km
 from apps.core.texto import se_parecen
-from apps.destinos.denue import ErrorDenue, descargar, interpretar
+from apps.destinos.denue import ACTIVIDAD_COMIDA, ErrorDenue, descargar, interpretar, mercados
+from apps.destinos.ausentes import marcar_ausentes as marcar_ausentes_de
 from apps.destinos.models import Lugar, TIPO_DE_SUBTIPO
 from .importar_osm import municipio_de
 
-CAMPOS = ['nombre', 'tipo', 'subtipo', 'latitud', 'longitud', 'direccion', 'telefono', 'sitio_web', 'municipio']
+CAMPOS = ['nombre', 'tipo', 'subtipo', 'latitud', 'longitud', 'direccion', 'telefono', 'sitio_web', 'municipio',
+          'posiblemente_cerrado', 'ausente_desde']
 TANDA = 1000
 METROS_DE_DUPLICADO = 100
 # Celdas de unos 110 m: basta comparar con la propia y sus vecinas, no con decenas de miles de lugares.
@@ -52,25 +57,37 @@ class Command(BaseCommand):
         parser.add_argument('--simular', action='store_true', help='Muestra qué haría sin guardar nada.')
         parser.add_argument('--retirar-ausentes', action='store_true',
                             help='Oculta lo importado antes que ya no aparece en el DENUE.')
+        parser.add_argument('--marcar-ausentes', action='store_true',
+                            help='Marca como posiblemente cerrado lo que ya no aparece en el DENUE, sin '
+                                 'borrarlo ni ocultarlo: una persona decide en la cola de moderación.')
+        parser.add_argument('--solo-mercados', action='store_true',
+                            help='Solo los mercados públicos (descarga solo la comida); no toca los demás lugares.')
 
-    def handle(self, *args, archivo, guardar, simular, retirar_ausentes, **opciones):
+    def handle(self, *args, archivo, guardar, simular, retirar_ausentes, marcar_ausentes=False, solo_mercados=False,
+               **opciones):
         try:
-            registros = self.leer(archivo) if archivo else descargar()
+            registros = self.leer(archivo) if archivo else descargar(
+                actividades=[ACTIVIDAD_COMIDA] if solo_mercados else None)
         except ErrorDenue as error:
             raise CommandError(str(error)) from None
         if guardar:
             with open(guardar, 'w', encoding='utf-8') as salida:
                 json.dump(registros, salida, ensure_ascii=False)
-        lugares, omitidos = interpretar(registros, TIPO_DE_SUBTIPO)
+        lugares, omitidos = ([], 0) if solo_mercados else interpretar(registros, TIPO_DE_SUBTIPO)
+        de_mercados = mercados(registros)
+        lugares += de_mercados
         if not lugares:
             raise CommandError('La descarga no trae ningún lugar: no se cambió nada.')
 
-        existentes = {lugar.denue_id: lugar for lugar in Lugar.objects.exclude(denue_id=None)}
+        importados = Lugar.objects.exclude(denue_id=None)
+        if solo_mercados:
+            importados = importados.filter(subtipo='marketplace')
+        existentes = {lugar.denue_id: lugar for lugar in importados}
         rejilla = Rejilla()
         # Incluye lo ya importado del DENUE: si no, al repetir se crearía lo que antes se descartó por parecido.
         for fila in Lugar.objects.values_list('nombre', 'latitud', 'longitud'):
             rejilla.agregar(*fila)
-        municipios, nuevos, cambiados, protegidos, duplicados = {}, [], [], 0, 0
+        municipios, nuevos, cambiados, protegidos, reaparecidos, duplicados = {}, [], [], 0, 0, 0
         # atomic: un fallo a mitad no deja una importación parcial; al simular siempre se revierte.
         with transaction.atomic():
             for lugar in lugares:
@@ -88,6 +105,8 @@ class Command(BaseCommand):
                 elif registro.protegido:
                     protegidos += 1
                 else:
+                    reaparecidos += registro.posiblemente_cerrado
+                    lugar.update(posiblemente_cerrado=False, ausente_desde=None)
                     for campo in CAMPOS:
                         setattr(registro, campo, lugar[campo])
                     cambiados.append(registro)
@@ -99,13 +118,22 @@ class Command(BaseCommand):
                 ausentes = [lugar.pk for clave, lugar in existentes.items()
                             if clave not in vigentes and lugar.es_activo and not lugar.protegido]
                 retirados = Lugar.objects.filter(pk__in=ausentes).update(es_activo=False)
+            marcados = 0
+            if marcar_ausentes:
+                vigentes = {lugar['denue_id'] for lugar in lugares}
+                marcados = marcar_ausentes_de(existentes, vigentes, timezone.localdate())
             if simular:
                 transaction.set_rollback(True)
 
+        self.conteos = {'creados': len(nuevos), 'actualizados': len(cambiados), 'ya_existian': duplicados,
+                        'protegidos': protegidos, 'retirados': retirados, 'posiblemente_cerrados': marcados,
+                        'reaparecidos': reaparecidos, 'omitidos': omitidos}
         accion = 'Se crearían' if simular else 'Creados'
         self.stdout.write(self.style.SUCCESS(
             f'{accion} {len(nuevos)} lugares. Actualizados: {len(cambiados)}. Ya existían: {duplicados}. '
-            f'Editados en el admin, sin tocar: {protegidos}. Retirados: {retirados}. Omitidos: {omitidos}.'))
+            f'Editados en el admin, sin tocar: {protegidos}. Retirados: {retirados}. '
+            f'Posiblemente cerrados (a revisión): {marcados}. Reaparecidos: {reaparecidos}. Omitidos: {omitidos}. '
+            f'Mercados públicos en la descarga: {len(de_mercados)}.'))
 
     def leer(self, ruta):
         try:

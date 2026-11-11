@@ -4,7 +4,8 @@ from .viajes import CompartirViajeView, MisViajesView, ViajeView, VincularLugarV
 from .practica import ColaboracionesView, ConfirmarDatoView, FavoritosView, FavoritoView, ReportarColaboracionView
 from .avisos import NotificacionesView, NotificacionesLeidasView
 from .bote import (
-    BoteView, GastoBoteView, GastosBoteView, MisBotesView, ParticipanteBoteView, PublicarBoteView, UnirseBoteView,
+    BoteView, ConfirmarPagoView, GastoBoteView, GastosBoteView, InvitarAmigosView, LugaresBoteView, MisBotesView,
+    PagoBoteView, PagosBoteView, ParticipanteBoteView, PublicarBoteView, UnirseBoteView,
 )
 from .comentarios import ComentariosView
 from .cuenta import EliminarCuentaView
@@ -26,6 +27,12 @@ urlpatterns = [
     path('mis-viajes/<int:pk>/bote/gastos/<int:gasto>/', GastoBoteView.as_view(), name='bote-gasto'),
     path('mis-viajes/<int:pk>/bote/participantes/<int:participante>/', ParticipanteBoteView.as_view(),
          name='bote-participante'),
+    path('mis-viajes/<int:pk>/bote/pagos/', PagosBoteView.as_view(), name='bote-pagos'),
+    path('mis-viajes/<int:pk>/bote/pagos/<int:pago>/', PagoBoteView.as_view(), name='bote-pago'),
+    path('mis-viajes/<int:pk>/bote/pagos/<int:pago>/confirmar/', ConfirmarPagoView.as_view(),
+         name='bote-pago-confirmar'),
+    path('mis-viajes/<int:pk>/bote/invitar/', InvitarAmigosView.as_view(), name='bote-invitar'),
+    path('mis-viajes/<int:pk>/bote/lugares/', LugaresBoteView.as_view(), name='bote-lugares'),
     path('mis-viajes/<int:pk>/bote/publicar/', PublicarBoteView.as_view(), name='bote-publicar'),
     path('botes/<uuid:enlace>/unirse/', UnirseBoteView.as_view(), name='bote-unirse'),
     path('mis-botes/', MisBotesView.as_view(), name='mis-botes'),

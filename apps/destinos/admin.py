@@ -2,6 +2,15 @@ from django.contrib import admin
 from django.utils.html import format_html
 from .models import Destino, Lugar, Region, Municipio, Categoria, ReferenciaCosto, Servicio
 
+# El mismo nombre que crea `crear_moderacion`.
+GRUPO_MODERACION = 'Moderación'
+
+
+def puede_recomendar(usuario):
+    """Solo el equipo (staff) o el grupo Moderación marca «Recomendado por el equipo»."""
+    return bool(usuario.is_active and (usuario.is_superuser or usuario.is_staff
+                                       or usuario.groups.filter(name=GRUPO_MODERACION).exists()))
+
 
 class OrigenFilter(admin.SimpleListFilter):
     title = 'origen'
@@ -60,13 +69,20 @@ for modelo in [Region, Municipio, Categoria, Servicio]:
 @admin.register(Lugar)
 class LugarAdmin(admin.ModelAdmin):
     """Editar un lugar lo protege de la siguiente importación. Para retirarlo, se oculta."""
-    list_display = ['nombre', 'subtipo', 'municipio', 'es_activo', 'protegido']
-    list_filter = ['tipo', 'es_activo', 'protegido', 'municipio__region']
+    list_display = ['nombre', 'subtipo', 'municipio', 'es_activo', 'protegido', 'posiblemente_cerrado',
+                    'recomendado_equipo']
+    list_filter = ['tipo', 'subtipo', 'es_activo', 'protegido', 'posiblemente_cerrado', 'recomendado_equipo',
+                   'municipio__region']
     search_fields = ['nombre', 'municipio__nombre', 'osm_id', 'denue_id']
-    readonly_fields = ['fecha_creacion', 'fecha_actualizacion', 'osm_id', 'denue_id', 'protegido']
+    readonly_fields = ['fecha_creacion', 'fecha_actualizacion', 'osm_id', 'denue_id', 'protegido',
+                       'posiblemente_cerrado', 'ausente_desde', 'horario_fuente_url', 'horario_fecha_consulta']
     list_select_related = ['municipio']
-    actions = ['ocultar', 'publicar']
+    actions = ['ocultar', 'publicar', 'sigue_abierto']
     def has_delete_permission(self, request, obj=None): return False
+
+    def get_readonly_fields(self, request, obj=None):
+        campos = list(super().get_readonly_fields(request, obj))
+        return campos if puede_recomendar(request.user) else campos + ['recomendado_equipo']
 
     def save_model(self, request, obj, form, change):
         obj.protegido = True
@@ -74,11 +90,16 @@ class LugarAdmin(admin.ModelAdmin):
 
     @admin.action(description='Ocultar lugares seleccionados', permissions=['change'])
     def ocultar(self, request, queryset):
-        queryset.update(es_activo=False, protegido=True)
+        queryset.update(es_activo=False, protegido=True, posiblemente_cerrado=False)
 
     @admin.action(description='Publicar lugares seleccionados', permissions=['change'])
     def publicar(self, request, queryset):
         queryset.update(es_activo=True, protegido=True)
+
+    @admin.action(description='Sigue abierto: ya no aparece en su fuente, pero lo verificamos', permissions=['change'])
+    def sigue_abierto(self, request, queryset):
+        # Protegido: la siguiente importación no lo vuelve a marcar ni pisa la verificación.
+        queryset.update(posiblemente_cerrado=False, ausente_desde=None, protegido=True)
 
 
 @admin.register(ReferenciaCosto)

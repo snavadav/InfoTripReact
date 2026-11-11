@@ -34,7 +34,8 @@ def salud(request):
 
 @require_GET
 def robots(request):
-    privadas = ['/admin/', '/api/', '/perfil/', '/favoritos/', '/mis-viajes/', '/login/', '/registro/', '/recuperar/']
+    privadas = ['/admin/', '/api/', '/perfil/', '/favoritos/', '/mis-viajes/', '/login/', '/registro/', '/recuperar/',
+               '/elegir-usuario/', '/amigos/', '/u/']
     lineas = ['User-agent: *', *[f'Disallow: {ruta}' for ruta in privadas],
               f'Sitemap: {settings.PUBLIC_BASE_URL}/sitemap.xml']
     return HttpResponse('\n'.join(lineas) + '\n', content_type='text/plain')

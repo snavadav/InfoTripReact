@@ -57,6 +57,13 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     es_activo     = models.BooleanField(default=True)
     es_staff      = models.BooleanField(default=False)
     es_verificado = models.BooleanField(default=False)
+    # Lo que ven los demás en vez del correo. Nulo hasta que la persona lo elige al entrar.
+    username = models.CharField('nombre de usuario', max_length=30, null=True, blank=True)
+    username_cambiado = models.DateTimeField(null=True, blank=True, editable=False)
+    # Quién ve el pasaporte, los lugares visitados y los amigos en /u/<username>/. El nombre siempre se ve.
+    VISIBILIDADES = [('amigos', 'Solo mis amigos'), ('publico', 'Cualquier persona'), ('privado', 'Solo yo')]
+    visibilidad = models.CharField(max_length=8, choices=VISIBILIDADES, default='amigos')
+    mostrar_amigos = models.BooleanField(default=True)
     # Correos de novedades. Los códigos de acceso y la recuperación de contraseña se envían siempre.
     avisos_correo = models.BooleanField(default=True)
     fecha_registro = models.DateTimeField(auto_now_add=True)
@@ -73,6 +80,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
         verbose_name_plural = 'Usuarios'
         constraints = [
             models.UniqueConstraint(Lower('email'), name='usuario_email_unico_sin_mayusculas'),
+            models.UniqueConstraint(Lower('username'), name='usuario_username_unico_sin_mayusculas'),
         ]
 
     def __str__(self):
@@ -80,6 +88,8 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
 
     def save(self, *args, **kwargs):
         self.email = normalizar_email(self.email)
+        # Vacío cuenta como sin elegir: dos cadenas vacías chocarían en la restricción de unicidad.
+        self.username = (self.username or '').strip().lower() or None
         super().save(*args, **kwargs)
 
     @property

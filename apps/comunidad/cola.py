@@ -2,8 +2,10 @@
 from django.contrib import admin
 from django.shortcuts import render
 from django.urls import reverse
-from datetime import timedelta
+from datetime import datetime, timedelta
 from django.utils import timezone
+from apps.datos.models import PropuestaActualizacion
+from apps.destinos.models import Lugar
 from .models import (
     Aporte, Colaboracion, Comentario, ConfirmacionLugar, FotoPasaporte, PropuestaLugar, Reporte, ReporteColaboracion,
     ReporteResenaLugar, ResenaLugar,
@@ -12,18 +14,30 @@ from .models import (
 POR_SECCION = 10
 
 
-def seccion(titulo, modelo, filtro, queryset, describir):
-    nombre = modelo._meta.model_name
+def seccion(titulo, modelo, filtro, queryset, describir, fecha='creado', fuente=None):
+    """`fuente`, si se da, devuelve la dirección pública de donde viene el dato (enlace "ver fuente")."""
+    ruta = f'admin:{modelo._meta.app_label}_{modelo._meta.model_name}'
     return {
         'titulo': titulo,
         'total': queryset.count(),
-        'lista': reverse(f'admin:comunidad_{nombre}_changelist') + filtro,
+        'lista': reverse(f'{ruta}_changelist') + filtro,
         'elementos': [
-            {'texto': describir(obj), 'creado': obj.creado,
-             'enlace': reverse(f'admin:comunidad_{nombre}_change', args=[obj.pk])}
-            for obj in queryset.order_by('creado', 'pk')[:POR_SECCION]
+            {'texto': describir(obj), 'creado': getattr(obj, fecha), 'fuente': fuente(obj) if fuente else '',
+             'formato': 'd/m/Y H:i' if isinstance(getattr(obj, fecha), datetime) else 'd/m/Y',
+             'enlace': reverse(f'{ruta}_change', args=[obj.pk])}
+            for obj in queryset.order_by(fecha, 'pk')[:POR_SECCION]
         ],
     }
+
+
+def cambio_propuesto(propuesta):
+    """Dato anterior → dato nuevo, como se lee en la cola."""
+    anterior = propuesta.dato_anterior or 'sin dato'
+    return f'{propuesta.fuente.objetivo} · {propuesta.get_tipo_dato_display()}: {anterior} → {propuesta.dato_nuevo}'
+
+
+def lugar_ausente(lugar):
+    return f'{lugar.nombre} · {lugar.municipio or "sin municipio"} · ausente desde {lugar.ausente_desde:%d/%m/%Y}'
 
 
 def cola_moderacion(request):
@@ -69,6 +83,18 @@ def cola_moderacion(request):
             ConfirmacionLugar.objects.filter(abierto=False, fecha__gte=timezone.localdate() - timedelta(days=90),
                                              lugar__es_activo=True).select_related('lugar'),
             lambda c: c.lugar.nombre))
+    if request.user.has_perm('datos.view_propuestaactualizacion'):
+        secciones.append(seccion(
+            'Actualizaciones de fuentes oficiales', PropuestaActualizacion, '?estado__exact=pendiente',
+            PropuestaActualizacion.objects.filter(estado='pendiente')
+            .select_related('fuente__destino', 'fuente__lugar'),
+            cambio_propuesto, fuente=lambda propuesta: propuesta.url))
+    if request.user.has_perm('destinos.view_lugar'):
+        secciones.append(seccion(
+            'Lugares que ya no aparecen en su fuente (OpenStreetMap o DENUE)', Lugar,
+            '?posiblemente_cerrado__exact=1&es_activo__exact=1',
+            Lugar.objects.filter(posiblemente_cerrado=True, es_activo=True).select_related('municipio'),
+            lugar_ausente, fecha='ausente_desde'))
     if request.user.has_perm('comunidad.view_fotopasaporte'):
         secciones.append(seccion(
             'Fotos de pasaporte por revisar', FotoPasaporte, '?estado__exact=pendiente&mostrar__exact=1',

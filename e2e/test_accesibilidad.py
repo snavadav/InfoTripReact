@@ -11,7 +11,7 @@ import os
 import re
 from datetime import date
 from pathlib import Path
-from unittest import expectedFailure, skipUnless
+from unittest import skipUnless
 
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.core.cache import cache
@@ -199,6 +199,14 @@ class AccesibilidadTests(StaticLiveServerTestCase):
     def test_privacidad(self):
         self.revisar('/privacidad/')
 
+    def test_perfil_publico(self):
+        Usuario.objects.filter(email='ana@example.com').update(username='ana', visibilidad='publico')
+        self.revisar('/u/ana/', lambda pagina: pagina.wait_for_selector('#perfil-pasaporte:not([hidden])'))
+
+    def test_amigos_y_elegir_usuario_sin_sesion(self):
+        self.revisar('/amigos/')
+        self.revisar('/elegir-usuario/')
+
     def test_chatbot_abierto(self):
         self.revisar('/', abrir_chat)
 
@@ -215,6 +223,7 @@ class RevisionManualTests(AccesibilidadTests):
     test_portada = test_explorar_destinos = test_ficha_de_destino = test_costos_de_un_destino = None
     test_costos = test_planeador_vacio = test_planeador_con_ruta = test_pasaporte = None
     test_login = test_registro = test_privacidad = test_chatbot_abierto = None
+    test_perfil_publico = test_amigos_y_elegir_usuario_sin_sesion = None
 
     def test_con_tab_todo_se_alcanza_y_el_foco_se_ve(self):
         casos = [(ruta, None) for ruta in PAGINAS] + [('/planeador/', armar_ruta), ('/', abrir_chat)]
@@ -225,9 +234,6 @@ class RevisionManualTests(AccesibilidadTests):
                     pagina = self.pagina_nueva(ruta, viewport=viewport)
                     if preparar:
                         preparar(pagina)
-                        if preparar is armar_ruta:
-                            # Ver test_al_armar_la_ruta_el_foco_no_cae_al_inicio: hoy el foco se pierde al enviar.
-                            pagina.focus('#ruta-dias .planeador-dia-tarjeta')
                         # Desde lo que se acaba de abrir, el recorrido sigue y da la vuelta a toda la página.
                         self.assertNotEqual(pagina.evaluate('document.activeElement.tagName'), 'BODY')
                         _, problemas = self.recorrer_con_tab(pagina)
@@ -243,18 +249,16 @@ class RevisionManualTests(AccesibilidadTests):
                         self.assertEqual(pagina.evaluate('document.activeElement.tagName'), 'MAIN')
                     self.assertEqual(problemas, [])
 
-    @expectedFailure
     def test_al_armar_la_ruta_el_foco_no_cae_al_inicio(self):
-        # PENDIENTE (planeador.js, a cargo de otra sesión): el botón se deshabilita mientras se arma la ruta y
-        # Chromium manda el foco a <body>; con Tab, la persona vuelve a empezar desde la barra de navegación.
-        # Arreglo propuesto: aria-disabled en lugar de disabled, o enfocar #ruta-detalle al terminar.
-        # Cuando se corrija, esta prueba pasará y unittest la marcará como «unexpected success»: quitar el decorador.
+        # El botón se deshabilita mientras se arma la ruta y Chromium manda el foco a <body>; al terminar,
+        # planeador.js enfoca el resumen (role=status), que anuncia el resultado. Con Tab se sigue desde ahí.
         pagina = self.pagina_nueva('/planeador/')
         pagina.check('#ruta-form input[value="miradores"]')
         pagina.focus('#ruta-form button[type="submit"]')
         pagina.keyboard.press('Enter')
         pagina.wait_for_selector('#ruta-detalle .parada')
-        self.assertNotEqual(pagina.evaluate('document.activeElement.tagName'), 'BODY')
+        self.assertEqual(pagina.evaluate('document.activeElement.id'), 'ruta-resumen')
+        self.assertEqual(pagina.get_attribute('#ruta-resumen', 'role'), 'status')
 
     def test_el_saludo_de_axo_no_mueve_la_pagina(self):
         # Lighthouse medía un CLS de 0,032 en cada página: la burbuja agrandaba el contenedor de Axo.

@@ -10,6 +10,8 @@ from .views import (
     LogoutView,
     PerfilView,
     CambiarPasswordView,
+    DisponibleView,
+    NombreUsuarioView,
 )
 
 from .recuperacion import RecuperarView, RestablecerView
@@ -23,5 +25,7 @@ urlpatterns = [
     path('logout/',           LogoutView.as_view(),         name='auth-logout'),
     path('token/refresh/',    CorreoRefreshView.as_view(),   name='auth-token-refresh'),
     path('perfil/',           PerfilView.as_view(),         name='auth-perfil'),
+    path('username/',         NombreUsuarioView.as_view(),  name='auth-username'),
+    path('username/disponible/', DisponibleView.as_view(), name='auth-username-disponible'),
     path('cambiar-password/', CambiarPasswordView.as_view(),name='auth-cambiar-password'),
 ]

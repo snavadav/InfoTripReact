@@ -30,6 +30,7 @@
           <a href="/perfil/">Mi perfil y aportes</a>
           <a href="/favoritos/">Favoritos</a>
           <a href="{% url 'pasaporte' %}">Pasaporte</a>
+          <a href="{% url 'amigos' %}">Amigos</a>
           <hr>
           <button type="button" class="btn-logout" id="logoutBtn">Cerrar sesión</button>
         </div>
@@ -60,6 +61,7 @@
   </div>
   <div id="mobile-auth" hidden>
     <a href="/perfil/" class="mobile-secondary">Mi perfil y aportes</a>
+    <a href="{% url 'amigos' %}" class="mobile-secondary">Amigos</a>
     <a href="#" class="mobile-secondary" id="mobileLogoutBtn">Cerrar sesión</a>
   </div>
 </div>

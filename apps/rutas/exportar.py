@@ -42,17 +42,26 @@ def enlace_google_maps(paradas, origen=None, destino=None):
 
 
 def con_enlaces(plan, regresar, origen_publico=True):
-    """Agrega a cada día su enlace de Google Maps, de donde termina el día anterior a la última parada.
+    """Agrega a cada día su enlace de Google Maps, de donde empieza el día a donde termina.
 
     Si se sale desde la ubicación de la persona (`origen_publico=False`), el enlace no la lleva: Google
-    usa la ubicación del teléfono que lo abre.
+    usa la ubicación del teléfono que lo abre. El destino del viaje es público (un destino o un municipio):
+    en solo ida el último día termina ahí, y quedándose en el destino cada día empieza (desde el 2) y termina ahí.
     """
     origen = plan['origen']
+    viaje = plan.get('viaje') or {}
+    modo = viaje.get('modo', 'circulo')
+    final = _punto(viaje['destino']) if viaje.get('destino') and modo in ('ida', 'base') else None
     inicio = _punto(origen) if origen_publico and 'latitud' in origen else None
     anterior = inicio
     for numero, dia in enumerate(plan['dias']):
         ultimo = numero == len(plan['dias']) - 1
-        vuelta = inicio if ultimo and regresar else None
+        if modo == 'base' and numero:
+            anterior = final
+        if final and (modo == 'base' or ultimo):
+            vuelta = final
+        else:
+            vuelta = inicio if ultimo and regresar else None
         dia['google_maps'] = enlace_google_maps(dia['paradas'], anterior, vuelta)
         if dia['paradas']:
             anterior = _punto(dia['paradas'][-1]['destino'])

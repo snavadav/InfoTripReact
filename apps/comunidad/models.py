@@ -313,6 +313,8 @@ class GastoReal(models.Model):
     fecha = models.DateField()
     noches = models.PositiveSmallIntegerField(default=1, validators=[MinValueValidator(1), MaxValueValidator(365)])
     destino = models.ForeignKey('destinos.Destino', null=True, blank=True, on_delete=models.SET_NULL, related_name='+')
+    # El establecimiento donde se pagó ("Dónde"), si se eligió. Solo lo ve el grupo.
+    lugar = models.ForeignKey('destinos.Lugar', null=True, blank=True, on_delete=models.SET_NULL, related_name='+')
     # El aporte que se envió a revisión, para no publicarlo dos veces.
     aporte = models.OneToOneField(Aporte, null=True, blank=True, on_delete=models.SET_NULL, related_name='gasto_real',
                                   editable=False)
@@ -321,6 +323,26 @@ class GastoReal(models.Model):
     class Meta:
         ordering = ['-fecha', '-pk']
         constraints = [models.CheckConstraint(condition=models.Q(monto__gt=0), name='gasto_real_monto_positivo')]
+
+
+class PagoEntreParticipantes(models.Model):
+    """"Ya te pagué": lo registra quien paga y cuenta en los saldos cuando quien recibe lo confirma."""
+    viaje = models.ForeignKey(Viaje, on_delete=models.CASCADE, related_name='pagos_entre')
+    de = models.ForeignKey(Participante, on_delete=models.RESTRICT, related_name='pagos_enviados')
+    para = models.ForeignKey(Participante, on_delete=models.RESTRICT, related_name='pagos_recibidos')
+    monto = models.DecimalField(max_digits=9, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))])
+    fecha = models.DateField()
+    confirmado = models.BooleanField(default=False)
+    creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'pago entre participantes'
+        verbose_name_plural = 'pagos entre participantes'
+        ordering = ['-fecha', '-pk']
+        constraints = [
+            models.CheckConstraint(condition=models.Q(monto__gt=0), name='pago_entre_monto_positivo'),
+            models.CheckConstraint(condition=~models.Q(de=models.F('para')), name='pago_entre_sin_autopago'),
+        ]
 
 
 class VisitaComprobada(models.Model):

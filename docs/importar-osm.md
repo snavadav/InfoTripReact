@@ -97,3 +97,39 @@ python manage.py importar_denue --archivo denue.json
 - **Duplicados:** lo que ya existe de OpenStreetMap o de la comunidad, con nombre parecido a menos de 100 m, no se vuelve a crear.
 - **Clave:** va en la dirección de cada consulta, así que el comando nunca la muestra en errores y el sitio no consulta el DENUE durante una visita. El archivo de `--guardar` no la contiene.
 - **Licencia:** los [términos de INEGI](https://www.inegi.org.mx/inegi/terminos.html) permiten reutilizar los datos, también con fines comerciales, si se cita la fuente, se avisa de las transformaciones y no se presenta como postura del INEGI. La ficha, la API y `/creditos/` ya lo hacen.
+
+## Mercados públicos (Planeador 2.0)
+
+El planeador propone primero la comida local y clásica: mercados y fondas. Los mercados son el subtipo `marketplace` («Mercado», en el tipo comer) y llegan de dos fuentes. **No se inventa ninguno:** si ninguna fuente lo registra, no aparece.
+
+- **OpenStreetMap:** lo etiquetado `amenity=marketplace` con nombre. Ya va en la consulta normal de `importar_lugares`.
+- **DENUE:** el INEGI no registra el mercado como negocio, pero cada puesto dice si está dentro de un «MERCADO PUBLICO» (`tipo_corredor_industrial`) y cómo se llama (`nom_corredor_industrial`). Con los puestos de comida (actividad 722) se arma un lugar por mercado y localidad:
+  - el punto es la mediana de sus puestos; los que están a más de 1 km se descartan;
+  - la clave es la del primer puesto con una «M» delante (por ejemplo, `M6345678`);
+  - al nombre se le antepone «Mercado» si no lo trae («IV Centenario» → «Mercado IV Centenario»). Es una transformación más del nombre, como pasar de mayúsculas a minúsculas, y `/creditos/` ya avisa que los nombres se transforman.
+
+  La importación normal de `importar_denue` también los trae.
+
+Para traer **solo los mercados**, sin repetir toda la descarga ni tocar los demás lugares, en el servidor:
+
+```bash
+dc exec web python manage.py importar_lugares --solo-mercados --simular
+```
+
+```bash
+dc exec web python manage.py importar_lugares --solo-mercados
+```
+
+```bash
+dc exec web python manage.py importar_denue --solo-mercados --simular --guardar /tmp/denue-comida.json
+```
+
+```bash
+dc exec web python manage.py importar_denue --solo-mercados --archivo /tmp/denue-comida.json
+```
+
+(`dc` es el alias de `docker compose` de [despliegue-aws.md](despliegue-aws.md).) Con `--solo-mercados`, `--retirar-ausentes` solo oculta mercados que ya no aparecen; los demás lugares no se tocan. Lo que ya existe de OpenStreetMap con un nombre parecido a menos de 100 m no se duplica.
+
+### «Recomendado por el equipo»
+
+`Lugar.recomendado_equipo` (falso por omisión) solo lo cambia el equipo o el grupo Moderación en `/admin/destinos/lugar/`, después de conocer el lugar. El planeador lo sube un poco en las opciones de comida y muestra el distintivo «Recomendado por el equipo». Marcarlo protege el lugar de la siguiente importación, como cualquier edición en el admin.

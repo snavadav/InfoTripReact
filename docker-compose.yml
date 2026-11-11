@@ -90,6 +90,17 @@ services:
       [ $$((n % 288)) -eq 0 ] && python manage.py flushexpiredtokens && python manage.py purgar_eventos;
       n=$$((n + 1)); sleep 300; done"
 
+  tareas:
+    <<: *app
+    # Datos siempre al día (docs/actualizacion-datos.md): DENUE cada mes, OpenStreetMap y sitios oficiales cada
+    # semana. Revisa cada hora qué toca según el registro de EjecucionTarea; sin claves, cada tarea se salta sola.
+    # Para apagarlo: TAREAS_PROGRAMADAS= (vacío) en .env.docker, o `docker compose stop tareas`.
+    depends_on:
+      web:
+        condition: service_healthy
+    command: >-
+      sh -c "while true; do python manage.py ejecutar_tareas; sleep 3600; done"
+
   respaldos:
     # PostgreSQL 16 más el cliente de AWS, para subir las copias a S3 si RESPALDO_S3_BUCKET tiene valor.
     build:

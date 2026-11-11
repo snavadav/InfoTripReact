@@ -92,6 +92,11 @@
     document.getElementById('editor-title').textContent=current?'Editar escapada':'Nueva escapada';
     form.querySelector('.form-status').textContent=''; dirty=duplicate;calculate();form.elements.nombre.focus();
   }
+  // Abre el bote (si aún no existe) y lleva a la sección pedida: cualquier escapada guardada lo tiene.
+  const openPot=(id,hash)=>async()=>{
+    try{await InfoTrip.api(`/api/v1/mis-viajes/${id}/bote/`,{method:'POST'});location.href=`/mis-viajes/${id}/bote/${hash}`;}
+    catch(error){status.textContent=error.message;}
+  };
   function render(item) {
     const card=node('article');card.className='trip-card';card.append(node('h3',item.nombre),node('p',item.destino),node('p',`${item.fecha_inicio} → ${item.fecha_fin} · ${item.personas} viajeros`),node('p',`Estimado: ${money(cents(item.resumen.total))}`));
     const actions=node('div');actions.className='trip-actions';
@@ -109,10 +114,7 @@
       catch(error){status.textContent=error.message;}
     });
     stopSharing.hidden=!item.enlace_publico;
-    actions.append(shareTrip,stopSharing,button('Bote del grupo',async()=>{
-      try{await InfoTrip.api(`/api/v1/mis-viajes/${item.id}/bote/`,{method:'POST'});location.href=`/mis-viajes/${item.id}/bote/`;}
-      catch(error){status.textContent=error.message;}
-    }));
+    actions.append(shareTrip,stopSharing,button('Bote del grupo',openPot(item.id,'')),button('Invitar amigos',openPot(item.id,'#bote-amigos')));
     const remove=button('Eliminar',async()=>{
       if(saving)return;
       if(!confirm(`¿Eliminar la escapada «${item.nombre}»?`))return;
@@ -162,9 +164,16 @@
   showPlaces();
   const suggested=new URLSearchParams(location.search).get('destino');
   if(suggested){form.elements.destino.value=suggested.slice(0,200);form.elements.nombre.value=('Escapada a '+suggested).slice(0,120);dirty=true;}
-  const draft=suggested?null:loadDraft();
+  // Recién guardada desde el planeador: se abre en el editor.
+  const requested=Number(new URLSearchParams(location.search).get('editar'))||null;
+  async function openRequested(){
+    if(!requested)return;
+    try{const item=await InfoTrip.api(`/api/v1/mis-viajes/${requested}/`);dirty=false;edit(item);status.replaceChildren(document.createTextNode('Tu ruta quedó guardada como escapada. Ajústala aquí o '),button('Invitar amigos',openPot(item.id,'#bote-amigos')));history.replaceState(null,'',location.pathname);}
+    catch(error){status.textContent=error.message;}
+  }
+  const draft=suggested||requested?null:loadDraft();
   if(draft){edit(draft);dirty=true;status.textContent=InfoTrip.hasSession()?'Recuperamos tu borrador. Guárdalo para conservarlo en tu cuenta.':'Recuperamos tu borrador. Inicia sesión para guardarlo.';}
   calculate();
-  if(InfoTrip.hasSession())load().then(loadPots);
+  if(InfoTrip.hasSession())load().then(openRequested).then(loadPots);
   else {document.getElementById('trip-login').hidden=false;list.append(node('p','Inicia sesión para ver tus escapadas. Puedes probar el presupuesto antes de entrar.'));}
 })();
