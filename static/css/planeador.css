@@ -107,6 +107,30 @@ button.planeador-dia-tarjeta:focus-visible { outline: 3px solid var(--acento); o
 .planeador-detalle > h3::before { content: ''; width: .9rem; height: .9rem; border-radius: 50%; background: var(--color-dia); flex: none; }
 .planeador-detalle > p { margin: 0; color: var(--texto-2); font-size: 1rem; }
 .planeador-paradas { list-style: none; margin: 0; padding: 0; display: grid; gap: .9rem; }
+
+/* Carrusel del planeador: una parada a la vista; se desliza con el dedo o con los botones. */
+.planeador-carrusel { display: grid; gap: .7rem; min-width: 0; }
+.carrusel-barra { display: grid; grid-template-columns: var(--objetivo) minmax(0, 1fr) var(--objetivo); align-items: center; gap: .75rem; }
+.carrusel-centro { display: grid; justify-items: center; gap: .4rem; min-width: 0; }
+.carrusel-estado { margin: 0; color: var(--texto); font-size: 1rem; font-weight: 650; }
+.carrusel-puntos { display: flex; flex-wrap: wrap; justify-content: center; gap: .35rem; }
+.carrusel-punto { width: .5rem; height: .5rem; border-radius: 999px; background: var(--linea-fuerte); transition: width .18s, background-color .18s; }
+.carrusel-punto.es-actual { width: 1.5rem; background: var(--color-dia); }
+.planeador button.carrusel-boton { display: grid; place-items: center; width: var(--objetivo); height: var(--objetivo); padding: 0 0 .15em; border-radius: 50%; font-size: 1.5rem; line-height: 1; }
+.planeador button.carrusel-boton[aria-disabled="true"] { opacity: .4; cursor: default; }
+.carrusel-pista {
+  position: relative; display: flex; align-items: flex-start; gap: 1rem;
+  overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; scrollbar-width: none;
+}
+.carrusel-pista::-webkit-scrollbar { display: none; }
+.carrusel-pista:focus-visible { outline: 3px solid var(--acento); outline-offset: 2px; border-radius: var(--radio-l); }
+/* Cada lámina: la parada y, debajo, dónde comer y los ratos libres que le siguen. */
+.carrusel-pista > .planeador-paradas { flex: 0 0 100%; grid-template-columns: minmax(0, 1fr); min-width: 0; scroll-snap-align: start; scroll-snap-stop: always; }
+.parada-plegable > summary { display: flex; align-items: center; justify-content: space-between; gap: .5rem; min-height: var(--objetivo); font-size: 1rem; font-weight: 700; color: var(--texto); cursor: pointer; }
+.parada-plegable > summary::after { content: '▾'; color: var(--texto-2); }
+.parada-plegable[open] > summary::after { content: '▴'; }
+.pin-ruta { transition: transform .15s; }
+.pin-ruta.es-actual { transform: scale(1.25); box-shadow: 0 0 0 3px var(--color-dia), var(--sombra); }
 .parada { display: grid; grid-template-columns: 2.4rem minmax(0, 1fr); gap: .5rem .8rem; padding: 1rem 1.1rem; border: 1px solid var(--linea); border-radius: var(--radio-l); background: var(--panel); font-size: 1rem; }
 .parada-num { display: grid; place-items: center; width: 2.4rem; height: 2.4rem; border-radius: 50%; background: var(--color-dia); color: #fff; font-size: 1.0625rem; font-weight: 700; }
 .parada-cuerpo { display: grid; gap: .85rem; min-width: 0; }
