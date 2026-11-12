@@ -10,7 +10,8 @@ from .comida import opciones_comida
 from .hospedaje import opciones_hospedaje
 from .horarios import Horario, leer_horario, leer_precio
 from .optimizador import (
-    CENA_DESDE, CENA_MIN, DESAYUNO_MIN, FACTOR_CARRETERA, Dia, Problema, Sitio, _ventana, distancia_km, genetico, km_por_carretera, minutos_de_manejo,
+    CENA_DESDE, CENA_MIN, DESAYUNO_MIN, FACTOR_CARRETERA, Dia, Problema, Sitio, _ventana, distancia_km, genetico,
+    km_por_carretera, minutos_de_manejo,
     voraz,
 )
 

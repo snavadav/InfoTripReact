@@ -384,7 +384,9 @@
     const clave = claveParada(parada);
     edicion.fijados.delete(clave);
     edicion.excluidos.add(clave);
-    edicion.descansos = [...edicion.descansos, {dia: numero, inicio: parada.inicio,
+    // Si antes de esta parada iba el desayuno, el rato libre empieza a la hora de llegada: al quitarla, el
+    // desayuno pasa a la siguiente parada y no debe empujar el descanso.
+    edicion.descansos = [...edicion.descansos, {dia: numero, inicio: parada.desayuno_antes ? parada.llegada : parada.inicio,
       duracion: Math.min(240, Math.max(15, parada.visita_min))}].slice(-6);
     recalcular(fijadosPara(numero, clave, true), `En lugar de ${parada.destino.nombre} tienes tiempo libre.`);
   }
