@@ -60,7 +60,8 @@
 .discovery-title { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .discovery-title h2 { font-size: 1.125rem; }
 .surprise { flex: none; border-color: var(--linea-fuerte); }
-.discovery-filters { display: flex; gap: .5rem; margin-top: .6rem; padding-bottom: .25rem; overflow-x: auto; scrollbar-width: thin; }
+/* En escritorio los tipos de viaje pasan a otra fila si no caben; en móvil se deslizan, sin barra a la vista. */
+.discovery-filters { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .6rem; }
 .discovery-filters button { flex: none; border-color: var(--linea); border-radius: 999px; color: var(--texto-2); white-space: nowrap; }
 .discovery-filters button[aria-pressed="true"] { border-color: var(--acento); background: var(--seleccion); color: var(--texto); font-weight: 600; }
 .discovery-filters button[aria-pressed="true"]:hover:not(:disabled) { background: var(--seleccion); color: var(--texto); }
@@ -141,7 +142,8 @@
   .home-paths a:hover { position: relative; box-shadow: none; }
   .home-trust { padding-bottom: 2.25rem; }
   .home-trust ul { grid-template-columns: minmax(0, 1fr); gap: 1rem; }
-  .discovery-filters { margin-inline: -1rem; padding-inline: 1rem; }
+  .discovery-filters { flex-wrap: nowrap; margin-inline: -1rem; padding: .3rem 1rem; overflow-x: auto; scrollbar-width: none; }
+  .discovery-filters::-webkit-scrollbar { display: none; }
   .discovery-cards { display: flex; flex: none; height: 73px; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x proximity; }
   .discovery-card { flex: 0 0 78%; border-right: 1px solid var(--linea); scroll-snap-align: start; }
   .preview-copy { padding: 1rem 1.1rem 1.25rem; }
