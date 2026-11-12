@@ -23,6 +23,7 @@ from apps.destinos.sitemaps import CostosSitemap, DestinosSitemap, PaginasSitema
 from apps.usuarios.views_frontend import baja_avisos, login_view, registro_view
 from apps.destinos.frontend import (
     costos_destino, costos_indice, creditos, inicio, listado, detalle, lugar_detalle, misiones, proponer_lugar,
+    puntos_mapa,
 )
 from apps.curador.views import etiquetar as etiquetar_lugares
 from apps.metricas.views import EventosView, panel as panel_metricas
@@ -86,6 +87,8 @@ urlpatterns = [
 
     # Frontend
     path('destinos/', listado, name='destinos-listado'),
+    # Con punto: no puede confundirse con el slug de un destino.
+    path('destinos/puntos.json', puntos_mapa, name='destinos-puntos'),
     path('destinos/<slug:slug>/', detalle, name='destino-detalle'),
     path('destinos/<slug:slug>/costos/', costos_destino, name='destino-costos'),
     path('costos/', costos_indice, name='costos-indice'),

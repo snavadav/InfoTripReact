@@ -7,6 +7,8 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" integrity="sha256-YU3qCpj/P06tdPBJGPax0bm6Q1wltfwjsho5TR4+TYc=" crossorigin="">
 <link rel="stylesheet" href="{% static 'css/mapa.css' %}">
+{# Los puntos del mapa van aparte del HTML; se piden ya, mientras llega Leaflet. #}
+{% if puntos_url %}<link rel="preload" href="{{ puntos_url }}" as="fetch" crossorigin>{% endif %}
 {% endblock %}
 {% block content %}
 {% include 'partials/navBar.html' %}
@@ -79,7 +81,7 @@
     </div>
   </aside>
   <section id="map-panel" aria-label="Mapa de destinos">
-    <div id="destinations-map" aria-label="Mapa interactivo de Jalisco"></div>
+    <div id="destinations-map" aria-label="Mapa interactivo de Jalisco"{% if puntos_url %} data-puntos="{{ puntos_url }}"{% endif %}></div>
     <div class="poi-bar" role="group" aria-label="Mostrar lugares en el mapa">
       <button type="button" id="nearby" class="poi-cerca" aria-pressed="false">Cerca de mí</button>
       <button type="button" data-lugar-tipo="comer" aria-pressed="false">Comer</button>
@@ -111,7 +113,6 @@
     </article>
   </section>
 </main>
-{{ puntos_mapa|json_script:"map-places" }}
 {% endblock %}
 {% block extra_js %}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>

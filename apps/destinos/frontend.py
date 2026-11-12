@@ -6,7 +6,7 @@ import unicodedata
 from django import forms
 from django.core.paginator import Paginator
 from django.db.models import BooleanField, Case, F, Value, When
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.templatetags.static import static
@@ -19,6 +19,7 @@ from apps.comunidad.selectors import (
     costos_por_destino, cronistas, estado_de_lugar, ficha_practica, misiones_por_destino, preguntas_publicas,
     gasto_de_lugar, resenas_publicas_de_lugar, resumen, TIPOS_CON_GASTO,
 )
+from . import cache_catalogo
 from .filtros import buscar_y_filtrar
 from .lugares import activos as lugares_activos, cercanos_de_destino
 from .management.commands.sembrar_contenido import TEXTO_AUTOMATICO
@@ -214,7 +215,8 @@ class ExploracionForm(forms.Form):
             self.fields[campo].choices = [('', 'Todos')] + opciones
 
 
-def listado(request):
+def resultados_de_exploracion(request):
+    """Lo que la lista y el mapa de Explorar comparten: el formulario y los destinos que cumplen la búsqueda."""
     editorial = not Destino.objects.exists()
     formulario = ExploracionForm(request.GET, editorial=editorial)
     valido = formulario.is_valid()
@@ -246,18 +248,50 @@ def listado(request):
         resultados, sugerencia = buscar_y_filtrar(queryset, datos) if valido else (queryset.none(), '')
         if not datos.get('orden'):
             resultados = primero_lo_curado(resultados)
+    sin_busqueda = valido and not any(v not in (None, '', False) for v in datos.values())
+    return formulario, datos, editorial, resultados, sugerencia, sin_busqueda
+
+
+def puntos_mapa(request):
+    """GET: los puntos del mapa de Explorar para la misma búsqueda que la lista (todos, no solo una página).
+
+    Van aparte del HTML: con cientos de destinos pesaban más que la página entera y se repetían al paginar.
+    """
+    _, _, editorial, resultados, _, sin_busqueda = resultados_de_exploracion(request)
+    if editorial:
+        puntos = []  # La selección editorial no tiene coordenadas: no se inventan.
+    elif sin_busqueda:
+        # El catálogo completo es lo que más se pide: se guarda hasta que cambie un destino.
+        puntos = cache_catalogo.guardado('puntos-mapa', lambda: [punto_de_mapa(d) for d in resultados])
+    else:
+        puntos = [punto_de_mapa(destino) for destino in resultados]
+    respuesta = JsonResponse(puntos, safe=False, json_dumps_params={'ensure_ascii': False, 'separators': (',', ':')})
+    respuesta['Cache-Control'] = f'public, max-age={DURACION_PUNTOS_NAVEGADOR}'
+    return respuesta
+
+
+# Poco, para que un destino recién publicado aparezca pronto; la copia del servidor ahorra el cálculo.
+DURACION_PUNTOS_NAVEGADOR = 5 * 60
+
+
+def listado(request):
+    formulario, datos, editorial, resultados, sugerencia, sin_busqueda = resultados_de_exploracion(request)
+    texto = datos.get('q', '')
     pagina = Paginator(resultados, 8).get_page(request.GET.get('page'))
     lugares = []
     for destino in pagina:
         lugar = completar(destino if isinstance(destino, dict) else presentar(destino))
         lugar['tiene_info_reciente'] = getattr(destino, 'tiene_info_reciente', False)
         lugares.append(lugar)
-    # El mapa muestra todos los resultados, no solo los de esta página de la lista.
-    puntos = [] if editorial else [punto_de_mapa(destino) for destino in resultados]
+    # El mapa muestra todos los resultados, no solo los de esta página: los pide aparte a puntos_mapa().
+    # Lo que escribió la persona tal cual (sin la página): así un filtro inválido tampoco devuelve el catálogo.
+    busqueda = request.GET.copy()
+    busqueda.pop('page', None)
+    puntos_url = '' if editorial else reverse('destinos-puntos') + (f'?{busqueda.urlencode()}' if busqueda else '')
+    filtros = urlencode({k: v for k, v in datos.items() if v not in (None, '', False)})
     # Sin búsqueda ni filtros, el navegador ordena por cercanía los puntos del mapa y muestra los más cercanos
     # arriba de la primera página. La ubicación nunca llega al servidor: aquí solo se decide si ofrecerlo.
-    sin_busqueda = valido and not any(v not in (None, '', False) for v in datos.values())
-    cerca_de_ti = sin_busqueda and pagina.number == 1 and bool(puntos)
+    cerca_de_ti = sin_busqueda and pagina.number == 1 and not editorial and pagina.paginator.count > 0
     return render(
         request,
         'destinos/listado.html',
@@ -267,12 +301,12 @@ def listado(request):
             'q': texto,
             'formulario': formulario,
             'categoria': datos.get('categoria', ''),
-            'filtros': urlencode({k: v for k, v in datos.items() if v not in (None, '', False)}),
+            'filtros': filtros,
             'filtros_activos': any(v not in (None, '', False) for k, v in datos.items() if k != 'q'),
             'sugerencia': sugerencia,
             'filtros_sugerencia': urlencode({**{k: v for k, v in datos.items() if v not in (None, '', False)},
                                              'q': sugerencia}) if sugerencia else '',
-            'puntos_mapa': puntos,
+            'puntos_url': puntos_url,
             'editorial': editorial,
             'cerca_de_ti': cerca_de_ti,
         },

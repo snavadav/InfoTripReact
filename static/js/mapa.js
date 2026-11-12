@@ -1,7 +1,18 @@
 // Explorador: el mapa muestra todos los resultados y el panel flotante, el lugar elegido.
-(() => {
+// Los puntos llegan aparte del HTML (/destinos/puntos.json, con la misma búsqueda): la promesa se comparte
+// con destinos-cerca.js para pedirlos una sola vez.
+window.InfoTripPuntos = (() => {
+  const fuente = document.getElementById('destinations-map')?.dataset.puntos;
+  if (!fuente) return Promise.resolve([]);
+  // Sin cabeceras propias: así el navegador aprovecha el <link rel="preload"> de la página.
+  const promesa = fetch(fuente)
+    .then(response => (response.ok ? response.json() : Promise.reject(new Error(`HTTP ${response.status}`))));
+  promesa.catch(() => {}); // Sin Leaflet nadie la espera; el aviso lo da quien la usa.
+  return promesa;
+})();
+
+(async () => {
   'use strict';
-  const places = JSON.parse(document.getElementById('map-places').textContent);
   const panel = document.getElementById('map-panel');
   const toggle = document.getElementById('toggle-map');
   const status = document.getElementById('map-status');
@@ -181,12 +192,19 @@
     alFallarFondo: () => { status.textContent = 'El fondo del mapa no está disponible. Puedes seguir abriendo los marcadores y las fichas.'; },
   });
   cluster = InfoTripMapa.agrupador().addTo(map);
+  window.InfoTripExplorador = {map};
+  showRoute();
+  let places = [];
+  try {
+    places = await window.InfoTripPuntos;
+  } catch {
+    status.textContent = 'No se pudieron cargar los destinos del mapa. Revisa tu conexión y recarga la página; la lista sigue disponible.';
+    fit();
+    return;
+  }
   markers = InfoTripMapa.agregarPuntos(cluster, places, (place, marker) => select(place, marker, {move: false}));
   fit();
-  showRoute();
   if (!markers.size) status.textContent = 'No hay destinos con coordenadas en estos resultados. Prueba otros filtros.';
-
-  window.InfoTripExplorador = {map};
 
   // Una tarjeta ubica el lugar en el mapa; con Ctrl, Cmd o sin mapa sigue siendo un enlace a la ficha.
   // Se escucha en la lista entera: así también sirven las tarjetas de "Destinos cerca de ti", que llegan después.
