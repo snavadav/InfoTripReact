@@ -16,6 +16,24 @@
       <svg class="icono-sol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
     </button>
 
+    <div class="avisos-wrap" id="avisos-wrap" hidden>
+      <button type="button" class="avisos-toggle" id="avisos-toggle" aria-expanded="false" aria-controls="avisos-panel" aria-label="Avisos">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+        <span class="nav-avisos" id="avisos-numero" aria-hidden="true" hidden></span>
+      </button>
+      <section class="avisos-panel" id="avisos-panel" aria-labelledby="avisos-panel-titulo" hidden>
+        <header class="avisos-panel-cabeza">
+          <h2 id="avisos-panel-titulo">Avisos</h2>
+          <button type="button" class="avisos-todos-leidos" id="avisos-todos-leidos" hidden>Marcar todo como leído</button>
+        </header>
+        <div class="avisos-panel-cuerpo" id="avisos-lista" aria-live="polite"></div>
+        <footer class="avisos-panel-pie">
+          <a href="/perfil/#notices-title">Ver todos</a>
+          <a href="/perfil/#avisos-preferencias">Elegir qué avisos recibir</a>
+        </footer>
+      </section>
+    </div>
+
     <div class="nav-actions">
       <div id="nav-guest">
         <a href="/login/" class="btn-ghost">Iniciar sesión</a>
@@ -28,7 +46,6 @@
         </button>
         <div class="account-menu" id="account-menu" hidden>
           <a href="/perfil/">Mi perfil y aportes</a>
-          <a href="/perfil/#notices-title" data-avisos hidden>Avisos <span class="nav-avisos" hidden></span></a>
           <a href="/favoritos/">Favoritos</a>
           <a href="{% url 'pasaporte' %}">Pasaporte</a>
           <a href="{% url 'amigos' %}">Amigos</a>
@@ -62,7 +79,6 @@
   </div>
   <div id="mobile-auth" hidden>
     <a href="/perfil/" class="mobile-secondary">Mi perfil y aportes</a>
-    <a href="/perfil/#notices-title" class="mobile-secondary" data-avisos hidden>Avisos <span class="nav-avisos" hidden></span></a>
     <a href="{% url 'amigos' %}" class="mobile-secondary">Amigos</a>
     <a href="#" class="mobile-secondary" id="mobileLogoutBtn">Cerrar sesión</a>
   </div>
