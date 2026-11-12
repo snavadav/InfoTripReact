@@ -185,6 +185,8 @@ IA_MODELO = config('IA_MODELO', default='') or 'claude-haiku-5-5'
 
 REDIS_URL = config('REDIS_URL', default='')
 CACHES = configurar_cache(REDIS_URL)
+# Cada prueba empieza con la caché vacía: la base se deshace entre pruebas y la caché local no.
+TEST_RUNNER = 'infotrip.test_runner.Ejecutor'
 
 # ─── JWT ──────────────────────────────────────────────────────
 SIMPLE_JWT = {

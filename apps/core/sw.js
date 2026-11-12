@@ -3,6 +3,7 @@
  * Qué guarda:
  *   - Al instalarse: todo el CSS y JS propio, los íconos y la página /sin-conexion/ (caché "app", versionada).
  *   - Las páginas públicas que se visitan, con la red primero (caché "paginas", versionada, como mucho 40).
+ *   - Los puntos del mapa de Explorar (/destinos/puntos.json), con la red primero (caché "datos", como mucho 10).
  *   - Las fotos de /static/ que se ven (caché "fotos", versionada, como mucho 60).
  *   - Leaflet de unpkg, solo URLs con versión fija (caché "cdn"; esas URLs nunca cambian de contenido).
  *   - Los cuadros del mapa de OpenStreetMap que se ven, con tope de 50 MB y LRU (caché "mapa").
@@ -16,14 +17,16 @@ const PREFIJO = 'infotrip-';
 const CACHE_APP = `${PREFIJO}app-${VERSION}`;
 const CACHE_PAGINAS = `${PREFIJO}paginas-${VERSION}`;
 const CACHE_FOTOS = `${PREFIJO}fotos-${VERSION}`;
+const CACHE_DATOS = `${PREFIJO}datos-${VERSION}`;
 // Sin versión: sobreviven a los despliegues porque su contenido no depende de InfoTrip.
 const CACHE_CDN = `${PREFIJO}cdn-v1`;
 const CACHE_MAPA = `${PREFIJO}mapa-v1`;
-const CACHES_VIGENTES = [CACHE_APP, CACHE_PAGINAS, CACHE_FOTOS, CACHE_CDN, CACHE_MAPA];
+const CACHES_VIGENTES = [CACHE_APP, CACHE_PAGINAS, CACHE_FOTOS, CACHE_DATOS, CACHE_CDN, CACHE_MAPA];
 
 const PAGINA_SIN_CONEXION = PRECACHE[0];
 const MAX_PAGINAS = 40;
 const MAX_FOTOS = 60;
+const MAX_DATOS = 10;
 // Con red lenta, pasado este tiempo se muestra la copia guardada (si la hay) en lugar de seguir esperando.
 const ESPERA_RED_MS = 4000;
 
@@ -50,6 +53,8 @@ const PAGINAS_GUARDABLES = [
   /^\/terminos\/$/,
   /^\/sin-conexion\/$/,
 ];
+// Datos públicos que una página guardable pide aparte: sin ellos, la copia de la página no serviría sin red.
+const DATOS_GUARDABLES = [/^\/destinos\/puntos\.json$/];
 // Ni se interceptan: el navegador va directo a la red como si no hubiera service worker.
 const RUTAS_INTOCABLES = [/^\/api\//, /^\/admin\//, /^\/media\//, /^\/sw\.js$/];
 
@@ -84,6 +89,8 @@ self.addEventListener('fetch', evento => {
       evento.respondWith(estatico(evento, url));
     } else if (peticion.mode === 'navigate') {
       evento.respondWith(pagina(evento, url));
+    } else if (DATOS_GUARDABLES.some(ruta => ruta.test(url.pathname))) {
+      evento.respondWith(datos(evento));
     }
     return;
   }
@@ -142,6 +149,29 @@ async function guardarPagina(peticion, respuesta) {
   await cache.delete(peticion);
   await cache.put(peticion, copia);
   await recortar(CACHE_PAGINAS, MAX_PAGINAS);
+}
+
+// ─── Datos de una página: red primero, copia guardada si no hay red ─
+
+async function datos(evento) {
+  const peticion = evento.request;
+  try {
+    const respuesta = await fetch(peticion);
+    if (sePuedeGuardar(respuesta)) {
+      const copia = respuesta.clone();
+      evento.waitUntil((async () => {
+        const cache = await caches.open(CACHE_DATOS);
+        await cache.delete(peticion);
+        await cache.put(peticion, copia);
+        await recortar(CACHE_DATOS, MAX_DATOS);
+      })());
+    }
+    return respuesta;
+  } catch (error) {
+    const guardada = await caches.match(peticion, { cacheName: CACHE_DATOS, ignoreVary: true });
+    if (guardada) return guardada;
+    throw error;
+  }
 }
 
 async function paginaSinConexion() {

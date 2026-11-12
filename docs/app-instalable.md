@@ -18,6 +18,7 @@ InfoTrip se puede instalar como app en Android, iPhone, iPad y en escritorio (Ch
 |---|---|---|---|
 | `infotrip-app-<versión>` | Todo el CSS y JS propios (unos 350 KB), los íconos, `curvas.svg` y `/sin-conexion/` | Se guarda al instalar; caché primero | Lo que haya |
 | `infotrip-paginas-<versión>` | Páginas públicas visitadas: `/`, `/destinos/…`, `/lugares/<id>/`, `/costos/`, `/misiones/`, `/pasaporte/`, `/planeador/` y `/planeador/r/<uuid>/`, créditos y avisos legales | Red primero; si no hay red o tarda más de 4 s, la copia guardada; si no hay copia, `/sin-conexion/` | 40 páginas |
+| `infotrip-datos-<versión>` | Los puntos del mapa de Explorar (`/destinos/puntos.json`, con la búsqueda de cada página): sin ellos, la copia guardada de `/destinos/` mostraría el mapa vacío | Red primero; sin red, la copia guardada | 10 respuestas |
 | `infotrip-fotos-<versión>` | Fotos de `/static/images/` que se ven | Caché primero | 60 fotos |
 | `infotrip-cdn-v1` | Leaflet y markercluster de unpkg, solo URLs con versión fija | Caché primero | — |
 | `infotrip-mapa-v1` | Cuadros de `tile.openstreetmap.org` que se ven | Ver abajo | 50 MB, LRU |

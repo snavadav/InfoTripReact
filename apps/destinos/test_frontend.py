@@ -87,6 +87,16 @@ class PaginasDestinoTests(TestCase):
 class ExploracionMapaTests(TestCase):
     crear_destino = PaginasDestinoTests.crear_destino
 
+    def puntos(self, parametros=None):
+        """Los puntos del mapa que pide la página de Explorar con la misma búsqueda (data-puntos)."""
+        respuesta = self.client.get('/destinos/', parametros or {})
+        url = respuesta.context['puntos_url']
+        self.assertTrue(url.startswith('/destinos/puntos.json'))
+        datos = self.client.get(url)
+        self.assertEqual(datos.status_code, 200)
+        self.assertEqual(datos['Content-Type'], 'application/json')
+        return datos.json()
+
     def test_filtros_combinados_y_paginacion(self):
         categoria = Categoria.objects.create(nombre='Naturaleza', slug='naturaleza')
         servicio = Servicio.objects.create(nombre='Baños', slug='banos')
@@ -100,7 +110,9 @@ class ExploracionMapaTests(TestCase):
         self.assertEqual(respuesta.context['pagina'].paginator.count, 10)
         # La lista va por páginas; el mapa muestra todos los resultados.
         self.assertEqual(len(respuesta.context['lugares']), 2)
-        self.assertEqual(len(respuesta.context['puntos_mapa']), 10)
+        # La URL de los puntos no lleva la página: el mapa no cambia al paginar.
+        self.assertNotIn('page=', respuesta.context['puntos_url'])
+        self.assertEqual(len(self.client.get(respuesta.context['puntos_url']).json()), 10)
         self.assertContains(respuesta, 'servicio=banos')
         self.assertContains(respuesta, 'municipio=municipio-prueba')
 
@@ -137,15 +149,17 @@ class ExploracionMapaTests(TestCase):
         self.crear_destino()
         respuesta = self.client.get('/destinos/', {'municipio': 'desconocido'})
         self.assertTrue(respuesta.context['formulario'].errors)
-        self.assertEqual(respuesta.context['puntos_mapa'], [])
+        self.assertEqual(self.puntos({'municipio': 'desconocido'}), [])
         self.assertEqual(respuesta.context['pagina'].paginator.count, 0)
 
     def test_marcadores_solo_activos_y_json_seguro(self):
         self.crear_destino(nombre='</script><script>alert(1)</script>')
         self.crear_destino(slug='oculto', es_activo=False)
         respuesta = self.client.get('/destinos/')
-        self.assertEqual(len(respuesta.context['puntos_mapa']), 1)
-        self.assertEqual(respuesta.context['puntos_mapa'][0]['latitud'], '20.123456')
+        puntos = self.puntos()
+        self.assertEqual(len(puntos), 1)
+        self.assertEqual(puntos[0]['latitud'], '20.123456')
+        self.assertEqual(puntos[0]['nombre'], '</script><script>alert(1)</script>')
         self.assertNotContains(respuesta, '</script><script>alert(1)</script>')
 
     def test_marcador_con_resumen_corto_de_la_descripcion(self):
@@ -156,7 +170,7 @@ class ExploracionMapaTests(TestCase):
             'Mirador en Municipio prueba, Jalisco. Todavía no tenemos una descripción: '
             'si lo conoces, ayúdanos con información práctica.'))
         self.crear_destino(slug='vacio', descripcion='')
-        puntos = {punto['slug']: punto for punto in self.client.get('/destinos/').context['puntos_mapa']}
+        puntos = {punto['slug']: punto for punto in self.puntos()}
         self.assertEqual(puntos['corto']['resumen'], 'Senderos y descanso')
         self.assertLessEqual(len(puntos['largo']['resumen']), 121)
         self.assertTrue(puntos['largo']['resumen'].endswith('…'))
@@ -171,8 +185,33 @@ class ExploracionMapaTests(TestCase):
     def test_editorial_filtrada_sin_coordenadas_inventadas(self):
         respuesta = self.client.get('/destinos/', {'municipio': 'tequila', 'categoria': 'pueblos'})
         self.assertEqual(respuesta.context['pagina'].paginator.count, 1)
-        self.assertEqual(respuesta.context['puntos_mapa'], [])
+        self.assertEqual(respuesta.context['puntos_url'], '')
+        self.assertEqual(self.client.get('/destinos/puntos.json', {'municipio': 'tequila'}).json(), [])
         self.assertContains(respuesta, 'no tienen coordenadas registradas')
+
+    def test_puntos_fuera_del_html_y_en_cache_hasta_que_cambia_el_catalogo(self):
+        for numero in range(30):
+            self.crear_destino(nombre=f'Bosque {numero}', slug=f'bosque-{numero}',
+                               descripcion='Senderos entre pinos y un mirador sobre la presa. ' * 3)
+        respuesta = self.client.get('/destinos/')
+        # La página ya no incrusta los puntos: solo las 8 tarjetas de la lista.
+        self.assertNotContains(respuesta, 'map-places')
+        self.assertContains(respuesta, 'data-puntos="/destinos/puntos.json"')
+        self.assertLess(len(respuesta.content), 40_000)
+        self.assertEqual(len(self.puntos()), 30)
+        datos = self.client.get('/destinos/puntos.json')
+        self.assertIn('max-age', datos['Cache-Control'])
+        # El catálogo completo se guarda: la segunda vez no consulta destinos.
+        with self.assertNumQueries(1):  # Solo Destino.objects.exists() (selección editorial).
+            self.client.get('/destinos/puntos.json')
+        # Publicar, editar u ocultar un destino se ve de inmediato.
+        self.crear_destino(nombre='Nuevo', slug='nuevo')
+        self.assertEqual(len(self.client.get('/destinos/puntos.json').json()), 31)
+        Destino.objects.filter(slug='nuevo').get().delete()
+        self.assertEqual(len(self.client.get('/destinos/puntos.json').json()), 30)
+        bosque = Destino.objects.get(slug='bosque-0')
+        bosque.categorias.add(Categoria.objects.create(nombre='Lagos', slug='lagos'))
+        self.assertIn('Lagos', {p['categoria'] for p in self.client.get('/destinos/puntos.json').json()})
 
 
 class FiltrosCompartidosTests(TestCase):
