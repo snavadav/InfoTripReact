@@ -1116,6 +1116,69 @@ class FlujosTests(StaticLiveServerTestCase):
         self.assertFalse(self.pagina.locator('#account-toggle.con-avisos').count())
         self.assertFalse(Notificacion.objects.filter(leida=False).exists())
 
+    PAGINAS_LEGIBLES = ['/', '/destinos/', '/destinos/mirador/', '/destinos/mirador/costos/', '/costos/', '/misiones/',
+                        '/mis-viajes/', '/login/', '/registro/', '/recuperar/', '/lugares/proponer/', '/negocios/',
+                        '/comentarios/', '/privacidad/', '/creditos/']
+
+    def test_en_movil_el_texto_mide_16_px_y_los_controles_44(self):
+        self.pagina.set_viewport_size({'width': 375, 'height': 812})
+        for ruta in self.PAGINAS_LEGIBLES:
+            with self.subTest(ruta=ruta):
+                self.abrir(ruta)
+                self.pagina.wait_for_load_state('networkidle')
+                # Los desplegables se abren para medir también lo que esconden.
+                self.pagina.evaluate("document.querySelectorAll('main details').forEach(d => { d.open = true; })")
+                chicos = self.pagina.evaluate('''[...document.querySelectorAll('body *')]
+                    .filter(e => !e.closest('.leaflet-container, .sr-only, .skip-link, script, style, noscript'))
+                    .filter(e => e.getClientRects().length)
+                    .filter(e => [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()))
+                    .filter(e => parseFloat(getComputedStyle(e).fontSize) < 16)
+                    .map(e => `${e.tagName}.${e.className} «${e.textContent.trim().slice(0, 30)}»`)''')
+                self.assertEqual(sorted(set(chicos)), [])
+                # Enlaces dentro de un párrafo quedan fuera (WCAG 2.5.8 los exceptúa); botones y campos, no.
+                pequenos = self.pagina.evaluate('''[...document.querySelectorAll(
+                    'button, select, summary, textarea, input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="file"]), a')]
+                    .filter(e => !e.closest('.sr-only, .skip-link'))
+                    .filter(e => e.tagName !== 'A' || getComputedStyle(e).display !== 'inline')
+                    .filter(e => { const r = e.getBoundingClientRect(); return r.height > 0 && r.width > 0 && r.height < 44; })
+                    .map(e => `${e.tagName}.${e.className} «${(e.textContent.trim() || e.getAttribute('aria-label') || e.name || '').slice(0, 30)}» ${Math.round(e.getBoundingClientRect().height)}`)''')
+                self.assertEqual(sorted(set(pequenos)), [])
+                self.assertLessEqual(self.pagina.evaluate('document.documentElement.scrollWidth'), 375)
+
+    def test_el_indice_de_la_ficha_salta_a_cada_seccion_sin_taparla(self):
+        self.pagina.set_viewport_size({'width': 375, 'height': 812})
+        self.abrir('/destinos/mirador/')
+        self.pagina.click('.indice-pagina a[href="#community-title"]')
+        self.pagina.wait_for_function('scrollY > 200')
+        self.pagina.wait_for_timeout(400)
+        indice = self.pagina.locator('.indice-pagina').bounding_box()
+        titulo = self.pagina.locator('#community-title').bounding_box()
+        barra = self.pagina.locator('#navbar').bounding_box()
+        # El índice sigue a la vista bajo la barra y el título queda justo debajo, no escondido detrás.
+        self.assertAlmostEqual(indice['y'], barra['y'] + barra['height'], delta=2)
+        self.assertGreaterEqual(titulo['y'], indice['y'] + indice['height'])
+        self.assertLess(titulo['y'], 400)
+
+    def test_mis_viajes_sugiere_destinos_y_pliega_agenda_y_pendientes(self):
+        Viaje.objects.create(autor=self.usuario, nombre='Con agenda', destino='Tapalpa', personas=1, presupuesto=1,
+                             fecha_inicio='2026-12-01', fecha_fin='2026-12-02',
+                             actividades=[{'dia': 1, 'hora': '10:00', 'titulo': 'Caminar', 'notas': ''}])
+        self.iniciar_sesion()
+        self.abrir('/mis-viajes/')
+        agenda, pendientes = self.pagina.locator('.trip-bloque').all()
+        self.assertIsNone(agenda.get_attribute('open'))
+        # El destino propone lugares del catálogo, pero elegir uno solo llena el campo: no sale de la página.
+        self.pagina.fill('[name="destino"]', 'Mira')
+        self.pagina.click('.buscador-opciones [role="option"]:has-text("Mirador")')
+        self.assertEqual(self.pagina.input_value('[name="destino"]'), 'Mirador')
+        self.assertTrue(self.pagina.url.endswith('/mis-viajes/'))
+        # Al editar una escapada con agenda, ese bloque se abre solo y dice cuántas actividades tiene.
+        self.pagina.on('dialog', lambda dialogo: dialogo.accept())
+        self.pagina.locator('.trip-card button', has_text='Editar').click()
+        self.assertIsNotNone(agenda.get_attribute('open'))
+        self.assertEqual(agenda.locator('[data-cuenta]').inner_text(), '(1)')
+        self.assertIsNone(pendientes.get_attribute('open'))
+
     def test_axo_se_aparta_mientras_se_escribe_en_un_formulario(self):
         self.pagina.set_viewport_size({'width': 375, 'height': 812})
         self.abrir('/mis-viajes/')

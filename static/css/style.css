@@ -103,7 +103,7 @@ h3 { font-size: 1.0625rem; letter-spacing: -.012em; }
 p { text-wrap: pretty; }
 a { color: var(--acento); text-underline-offset: 3px; }
 a:hover { color: var(--acento-fuerte); }
-small { font-size: .875rem; }
+small { font-size: 1rem; }
 :focus-visible { outline: 3px solid var(--foco); outline-offset: 2px; border-radius: 4px; }
 .sr-only {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
@@ -136,7 +136,7 @@ button, .boton {
   background: var(--panel);
   color: var(--texto);
   font: inherit;
-  font-size: .9375rem;
+  font-size: 1rem;
   font-weight: 550;
   line-height: 1.2;
   text-decoration: none;
@@ -173,7 +173,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px
 input[type="checkbox"], input[type="radio"] { width: 1.15rem; height: 1.15rem; min-height: 0; padding: 0; accent-color: var(--acento); flex: none; }
 textarea { line-height: 1.5; resize: vertical; }
 /* Selector de archivo: el botón nativo se ve como un botón secundario del sitio. */
-input[type="file"] { padding: .3rem; color: var(--texto-2); font-size: .9375rem; }
+input[type="file"] { padding: .3rem; color: var(--texto-2); font-size: 1rem; }
 input[type="file"]::file-selector-button {
   min-height: 34px;
   margin-right: .75rem;
@@ -186,12 +186,12 @@ input[type="file"]::file-selector-button {
   font-weight: 550;
   cursor: pointer;
 }
-label { font-size: .9375rem; font-weight: 500; }
+label { font-size: 1rem; font-weight: 500; }
 /* Grupos de opciones: sin el marco gris del navegador; quien necesite caja la define con su clase. */
 fieldset { min-width: 0; border: 0; }
-legend { padding: 0; font-size: .9375rem; font-weight: 550; }
+legend { padding: 0; font-size: 1rem; font-weight: 550; }
 /* Desplegables: la flecha va a la derecha y gira al abrir, igual en toda la app. */
-summary { display: flex; align-items: center; justify-content: space-between; gap: .75rem; min-height: 44px; cursor: pointer; font-size: .9375rem; font-weight: 550; list-style: none; }
+summary { display: flex; align-items: center; justify-content: space-between; gap: .75rem; min-height: 44px; cursor: pointer; font-size: 1rem; font-weight: 550; list-style: none; }
 summary::-webkit-details-marker { display: none; }
 summary::after { content: ''; flex: none; width: .5rem; height: .5rem; margin: -.2rem .3rem 0; border: solid var(--texto-3); border-width: 0 2px 2px 0; transform: rotate(45deg); transition: transform .15s; }
 details[open] > summary::after { margin-top: .2rem; transform: rotate(-135deg); }
@@ -252,7 +252,7 @@ details[open] > summary::after { margin-top: .2rem; transform: rotate(-135deg); 
   min-height: 44px;
   padding: 0 1rem;
   border-radius: var(--radio-s);
-  font-size: .9375rem;
+  font-size: 1rem;
   font-weight: 550;
   text-decoration: none;
 }
@@ -301,14 +301,14 @@ details[open] > summary::after { margin-top: .2rem; transform: rotate(-135deg); 
   border-radius: 50%;
   background: var(--acento-suave);
   color: var(--acento-fuerte);
-  font-size: .875rem;
+  font-size: 1rem;
   font-weight: 650;
 }
 .user-name {
   max-width: 140px;
   overflow: hidden;
   color: var(--texto);
-  font-size: .9375rem;
+  font-size: 1rem;
   font-weight: 550;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -395,24 +395,25 @@ details[open] > summary::after { margin-top: .2rem; transform: rotate(-135deg); 
   display: block;
   margin-bottom: .4rem;
   color: var(--acento);
-  font-size: .875rem;
+  font-size: 1rem;
   font-weight: 600;
   letter-spacing: 0;
 }
 .back-link {
-  display: inline-flex;
+  display: flex;
+  width: fit-content;
   align-items: center;
   min-height: 44px;
   margin-bottom: .25rem;
   color: var(--texto-2);
-  font-size: .9375rem;
+  font-size: 1rem;
   text-decoration: none;
 }
 .back-link:hover { color: var(--texto); }
 .editorial-note {
   margin: .5rem 0;
   color: var(--texto-3);
-  font-size: .875rem;
+  font-size: 1rem;
 }
 .empty-catalog {
   padding: 2rem 1.25rem;
@@ -429,7 +430,7 @@ details[open] > summary::after { margin-top: .2rem; transform: rotate(-135deg); 
   gap: 1rem;
   margin: 1rem 0;
   color: var(--texto-3);
-  font-size: .9375rem;
+  font-size: 1rem;
 }
 .pagination a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 550; }
 .compact-footer {
@@ -442,7 +443,7 @@ details[open] > summary::after { margin-top: .2rem; transform: rotate(-135deg); 
   padding: 1.25rem 0 2rem;
   border-top: 1px solid var(--linea);
   color: var(--texto-3);
-  font-size: .875rem;
+  font-size: 1rem;
 }
 .compact-footer nav { display: flex; flex-wrap: wrap; }
 .compact-footer nav a { display: inline-flex; align-items: center; min-height: 44px; margin-right: 1rem; color: var(--texto-2); }
@@ -464,7 +465,7 @@ details[open] > summary::after { margin-top: .2rem; transform: rotate(-135deg); 
 input[type="date"]:focus-within, input[type="time"]:focus-within { outline: 3px solid var(--foco); outline-offset: 0; }
 
 /* Avisos sin leer: número en el menú de cuenta y punto sobre el botón que lo abre. */
-.nav-avisos { display: inline-grid; place-items: center; min-width: 1.5rem; height: 1.5rem; margin-left: .35rem; padding: 0 .4rem; border-radius: 999px; background: var(--acento); color: var(--sobre-acento); font-size: .875rem; font-weight: 600; line-height: 1; }
+.nav-avisos { display: inline-grid; place-items: center; min-width: 1.5rem; height: 1.5rem; margin-left: .35rem; padding: 0 .4rem; border-radius: 999px; background: var(--acento); color: var(--sobre-acento); font-size: 1rem; font-weight: 600; line-height: 1; }
 .nav-avisos[hidden] { display: none; }
 .account-toggle.con-avisos, .hamburger.con-avisos { position: relative; }
 .account-toggle.con-avisos::before, .hamburger.con-avisos::before { content: ''; position: absolute; top: .3rem; right: .3rem; width: .625rem; height: .625rem; border: 2px solid var(--panel); border-radius: 50%; background: var(--acento); }

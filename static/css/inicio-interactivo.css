@@ -6,7 +6,7 @@
 .home-top { display: grid; grid-template-columns: minmax(0, 420px) minmax(0, 1fr); gap: 1.5rem; align-items: start; padding-block: 1.75rem 2.5rem; }
 .home-panel { display: flex; flex-direction: column; min-width: 0; }
 .home-hero { display: flex; flex-direction: column; }
-.home-kicker { margin-bottom: .35rem; color: var(--acento); font-size: .9375rem; font-weight: 600; }
+.home-kicker { margin-bottom: .35rem; color: var(--acento); font-size: 1rem; font-weight: 600; }
 .home-hero h1 { font-size: clamp(1.75rem, 1.5rem + 1vw, 2.25rem); letter-spacing: -.03em; }
 .home-lead { margin-top: .4rem; color: var(--texto-2); font-size: 1rem; }
 .home-search { width: 100%; margin-top: 1rem; }
@@ -48,11 +48,11 @@
 .home-paths a:hover { border-color: var(--acento); box-shadow: var(--sombra); color: var(--texto); }
 .home-paths svg { grid-row: span 2; width: 28px; height: 28px; margin-top: .1rem; color: var(--acento); }
 .home-paths strong { font-size: 1.125rem; font-weight: 650; }
-.home-paths span { color: var(--texto-2); font-size: .9375rem; }
+.home-paths span { color: var(--texto-2); font-size: 1rem; }
 
 .home-trust { padding-block: 0 3.5rem; }
 .home-trust ul { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.5rem; padding: 1.5rem 0 0; border-top: 1px solid var(--linea); list-style: none; }
-.home-trust li { color: var(--texto-2); font-size: .9375rem; }
+.home-trust li { color: var(--texto-2); font-size: 1rem; }
 .home-trust strong { display: block; margin-bottom: .2rem; color: var(--texto); font-size: 1rem; }
 
 /* Ideas para empezar: la lista vive en el panel, bajo el buscador; la vista previa ocupa el resto. */
@@ -68,8 +68,8 @@
 .discovery-board { margin-top: .75rem; }
 .discovery-board[hidden] { display: none !important; }
 .discovery-list { height: 100%; border: 1px solid var(--linea); border-radius: var(--radio); background: var(--panel); overflow: hidden; }
-.discovery-list-heading { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .25rem 1rem; color: var(--texto-3); font-size: .875rem; }
-.discovery-list-heading a { display: inline-flex; align-items: center; min-height: 44px; font-size: .9375rem; font-weight: 550; }
+.discovery-list-heading { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .25rem 1rem; color: var(--texto-3); font-size: 1rem; }
+.discovery-list-heading a { display: inline-flex; align-items: center; min-height: 44px; font-size: 1rem; font-weight: 550; }
 /* Alto fijo: la lista y la vista previa ya ocupan su sitio antes de que el script las llene, y nada salta al cargar. */
 .discovery-cards { flex: none; height: 288px; overflow-y: auto; border-top: 1px solid var(--linea); }
 .discovery-card {
@@ -91,11 +91,11 @@
 .discovery-card img { width: 56px; height: 56px; border-radius: var(--radio-s); object-fit: cover; filter: var(--filtro-foto); }
 .discovery-card > span { display: flex; flex-direction: column; min-width: 0; }
 .discovery-card strong { font-size: 1rem; font-weight: 600; }
-.discovery-card small { color: var(--texto-3); font-size: .875rem; font-weight: 400; }
+.discovery-card small { color: var(--texto-3); font-size: 1rem; font-weight: 400; }
 .discovery-card[aria-pressed="true"] { background: var(--seleccion); box-shadow: inset 3px 0 var(--acento); }
 .discovery-card:focus-visible { outline-offset: -3px; }
 .list-controls { display: flex; align-items: center; gap: .5rem; padding: .5rem 1rem; border-top: 1px solid var(--linea); }
-.list-controls p { flex: 1; overflow: hidden; color: var(--texto-3); font-size: .875rem; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+.list-controls p { flex: 1; overflow: hidden; color: var(--texto-3); font-size: 1rem; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
 .list-controls button { width: 44px; padding: 0; }
 #discovery-empty { margin-top: .75rem; }
 
@@ -109,7 +109,7 @@
 .preview-modes button[aria-pressed="true"] { background: var(--seleccion); color: var(--texto); font-weight: 600; }
 .preview-modes button[aria-pressed="true"]:hover:not(:disabled) { background: var(--seleccion); color: var(--texto); }
 .preview-copy { padding: 1.25rem 1.5rem 1.5rem; }
-.preview-label { min-height: 1.6em; color: var(--acento); font-size: .875rem; font-weight: 600; }
+.preview-label { min-height: 1.6em; color: var(--acento); font-size: 1rem; font-weight: 600; }
 .preview-copy h3 { min-height: 1.15em; margin: .2rem 0 .5rem; font-size: 1.5rem; font-weight: 650; }
 #preview-description { display: -webkit-box; min-height: 4.8em; overflow: hidden; color: var(--texto-2); -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; }
 .preview-heading { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.1rem; }
@@ -123,7 +123,7 @@
 .home-more-grid a:hover strong { color: var(--acento); }
 .home-more-grid strong::after { content: " \2192"; color: var(--acento); }
 .home-more-grid strong { font-size: 1.0625rem; }
-.home-more-grid span { color: var(--texto-2); font-size: .9375rem; }
+.home-more-grid span { color: var(--texto-2); font-size: 1rem; }
 .home-more-cta { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1.25rem; margin-top: 1.75rem; }
 .home-more-cta > a:not(.boton) { display: inline-flex; align-items: center; min-height: 44px; font-weight: 550; }
 
