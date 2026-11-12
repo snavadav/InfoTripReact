@@ -17,8 +17,8 @@
   <meta name="twitter:card" content="summary_large_image">
   {% block robots %}{% endblock %}
   {% block datos_estructurados %}{% endblock %}
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="preload" href="{% static 'fonts/geist/geist-latin.woff2' %}" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="{% static 'css/fuentes.css' %}">
   <link rel="manifest" href="{% url 'manifiesto' %}">
   <meta name="theme-color" content="#FFFFFF">
   <link rel="icon" href="{% static 'images/app/icono.svg' %}" type="image/svg+xml">

@@ -2,7 +2,7 @@
 {% load static %}
 {% block title %}{{ seo.titulo }}{% endblock %}
 {% block datos_estructurados %}<script type="application/ld+json">{{ seo.datos_estructurados|safe }}</script>{% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/comunidad.css' %}">{% if not lugar.editorial %}<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""><link rel="stylesheet" href="{% static 'css/mapa.css' %}">{% endif %}{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/comunidad.css' %}">{% if not lugar.editorial %}<link rel="stylesheet" href="{% static 'vendor/leaflet-1.9.4/leaflet.css' %}"><link rel="stylesheet" href="{% static 'css/mapa.css' %}">{% endif %}{% endblock %}
 {% block content %}
 {% include 'partials/navBar.html' %}
 <main class="explore-shell detail-shell">
@@ -27,4 +27,4 @@
 </main>
 {% endblock %}
 
-{% block extra_js %}{% if not lugar.editorial %}<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script><script src="{% static 'js/mapa-base.js' %}" defer></script><script src="{% static 'js/ficha-mapa.js' %}" defer></script>{% endif %}<script src="{% static 'js/cuenta-api.js' %}"></script><script src="{% static 'js/comunidad.js' %}"></script><script src="{% static 'js/practica.js' %}" defer></script>{% endblock %}
+{% block extra_js %}{% if not lugar.editorial %}<script src="{% static 'vendor/leaflet-1.9.4/leaflet.js' %}" defer></script><script src="{% static 'js/mapa-base.js' %}" defer></script><script src="{% static 'js/ficha-mapa.js' %}" defer></script>{% endif %}<script src="{% static 'js/cuenta-api.js' %}"></script><script src="{% static 'js/comunidad.js' %}"></script><script src="{% static 'js/practica.js' %}" defer></script>{% endblock %}
