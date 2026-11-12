@@ -1,17 +1,20 @@
-/* Portada: una pregunta, un buscador y tres caminos. Lo secundario va más abajo, con aire entre secciones. */
+/* Portada: arriba, un panel de búsqueda al estilo de un mapa (campo, tipos de viaje y lista de ideas) y, al
+   lado, el lugar elegido en grande. Los tres caminos y lo secundario van debajo. */
 .home { outline: none; }
 .home > section, .home > nav, .home-footer { width: min(var(--ancho), 100%); margin: 0 auto; padding-inline: 1.5rem; }
 
-.home-hero { display: flex; flex-direction: column; align-items: center; padding-block: clamp(3rem, 8vh, 6rem) 2.5rem; text-align: center; }
-.home-kicker { margin-bottom: .75rem; color: var(--acento); font-size: 1rem; font-weight: 600; }
-.home-hero h1 { font-size: clamp(2.25rem, 1.6rem + 3vw, 3.75rem); letter-spacing: -.035em; }
-.home-lead { max-width: 38rem; margin-top: 1rem; color: var(--texto-2); font-size: clamp(1.0625rem, 1rem + .3vw, 1.25rem); }
-.home-search { width: min(640px, 100%); margin-top: 2rem; }
+.home-top { display: grid; grid-template-columns: minmax(0, 420px) minmax(0, 1fr); gap: 1.5rem; align-items: start; padding-block: 1.75rem 2.5rem; }
+.home-panel { display: flex; flex-direction: column; min-width: 0; }
+.home-hero { display: flex; flex-direction: column; }
+.home-kicker { margin-bottom: .35rem; color: var(--acento); font-size: .9375rem; font-weight: 600; }
+.home-hero h1 { font-size: clamp(1.75rem, 1.5rem + 1vw, 2.25rem); letter-spacing: -.03em; }
+.home-lead { margin-top: .4rem; color: var(--texto-2); font-size: 1rem; }
+.home-search { width: 100%; margin-top: 1rem; }
 .home-search > div {
   display: flex;
   align-items: center;
   gap: .5rem;
-  padding: .4rem .4rem .4rem 1.1rem;
+  padding: .3rem .3rem .3rem 1rem;
   border: 1px solid var(--linea-fuerte);
   border-radius: 999px;
   background: var(--panel);
@@ -19,11 +22,11 @@
 }
 .home-search > div:focus-within { border-color: var(--acento); }
 .home-search svg { flex: none; width: 22px; height: 22px; color: var(--texto-3); }
-.home-search input { flex: 1; min-width: 0; min-height: 48px; padding: 0 .25rem; border: 0; background: transparent; font-size: 1.125rem; }
+.home-search input { flex: 1; min-width: 0; min-height: 44px; padding: 0 .25rem; border: 0; background: transparent; font-size: 1.0625rem; }
 .home-search input:focus, .home-search input:focus-visible { outline: none; }
 .home-search > div:has(input:focus-visible) { outline: 3px solid var(--foco); outline-offset: 2px; }
-.home-search button { min-height: 48px; padding: 0 1.5rem; border-radius: 999px; font-size: 1rem; }
-.home-cerca { margin-top: 1rem; }
+.home-search button { min-height: 44px; padding: 0 1.25rem; border-radius: 999px; font-size: 1rem; }
+.home-cerca { margin: .35rem 0 0 -.5rem; }
 .home-cerca a { display: inline-flex; align-items: center; gap: .4rem; min-height: 44px; padding: 0 .5rem; font-size: 1rem; font-weight: 550; }
 .home-cerca svg { width: 20px; height: 20px; }
 
@@ -52,22 +55,23 @@
 .home-trust li { color: var(--texto-2); font-size: .9375rem; }
 .home-trust strong { display: block; margin-bottom: .2rem; color: var(--texto); font-size: 1rem; }
 
-/* Ideas para empezar: la vista previa manda; la lista es un índice. */
-.discovery { padding-block: 3rem; border-top: 1px solid var(--linea); }
-.discovery-title { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; }
-.discovery-title p { margin-top: .35rem; color: var(--texto-2); }
+/* Ideas para empezar: la lista vive en el panel, bajo el buscador; la vista previa ocupa el resto. */
+.discovery { margin-top: .5rem; padding-top: .75rem; border-top: 1px solid var(--linea); }
+.discovery-title { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.discovery-title h2 { font-size: 1.125rem; }
 .surprise { flex: none; border-color: var(--linea-fuerte); }
-.discovery-filters { display: flex; gap: .5rem; margin: 1.25rem -1.5rem 0; padding: 0 1.5rem .25rem; overflow-x: auto; scrollbar-width: thin; }
+.discovery-filters { display: flex; gap: .5rem; margin-top: .6rem; padding-bottom: .25rem; overflow-x: auto; scrollbar-width: thin; }
 .discovery-filters button { flex: none; border-color: var(--linea); border-radius: 999px; color: var(--texto-2); white-space: nowrap; }
 .discovery-filters button[aria-pressed="true"] { border-color: var(--acento); background: var(--seleccion); color: var(--texto); font-weight: 600; }
 .discovery-filters button[aria-pressed="true"]:hover:not(:disabled) { background: var(--seleccion); color: var(--texto); }
-.discovery-layout { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 1.5rem; margin-top: 1.5rem; }
 .discovery-board, .discovery-list { display: flex; flex-direction: column; min-height: 0; }
+.discovery-board { margin-top: .75rem; }
 .discovery-board[hidden] { display: none !important; }
 .discovery-list { height: 100%; border: 1px solid var(--linea); border-radius: var(--radio); background: var(--panel); overflow: hidden; }
 .discovery-list-heading { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .25rem 1rem; color: var(--texto-3); font-size: .875rem; }
 .discovery-list-heading a { display: inline-flex; align-items: center; min-height: 44px; font-size: .9375rem; font-weight: 550; }
-.discovery-cards { flex: 1; max-height: 470px; min-height: 0; overflow-y: auto; border-top: 1px solid var(--linea); }
+/* Alto fijo: la lista y la vista previa ya ocupan su sitio antes de que el script las llene, y nada salta al cargar. */
+.discovery-cards { flex: none; height: 288px; overflow-y: auto; border-top: 1px solid var(--linea); }
 .discovery-card {
   display: grid;
   grid-template-columns: 56px minmax(0, 1fr);
@@ -93,7 +97,7 @@
 .list-controls { display: flex; align-items: center; gap: .5rem; padding: .5rem 1rem; border-top: 1px solid var(--linea); }
 .list-controls p { flex: 1; overflow: hidden; color: var(--texto-3); font-size: .875rem; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
 .list-controls button { width: 44px; padding: 0; }
-#discovery-empty { margin-top: 1.5rem; }
+#discovery-empty { margin-top: .75rem; }
 
 .place-preview { overflow: hidden; border: 1px solid var(--linea); border-radius: var(--radio); background: var(--panel); }
 .preview-visual { position: relative; aspect-ratio: 16 / 9; background: var(--panel-3); }
@@ -105,9 +109,9 @@
 .preview-modes button[aria-pressed="true"] { background: var(--seleccion); color: var(--texto); font-weight: 600; }
 .preview-modes button[aria-pressed="true"]:hover:not(:disabled) { background: var(--seleccion); color: var(--texto); }
 .preview-copy { padding: 1.25rem 1.5rem 1.5rem; }
-.preview-label { color: var(--acento); font-size: .875rem; font-weight: 600; }
-.preview-copy h3 { margin: .2rem 0 .5rem; font-size: 1.5rem; font-weight: 650; }
-#preview-description { display: -webkit-box; overflow: hidden; color: var(--texto-2); -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; }
+.preview-label { min-height: 1.6em; color: var(--acento); font-size: .875rem; font-weight: 600; }
+.preview-copy h3 { min-height: 1.15em; margin: .2rem 0 .5rem; font-size: 1.5rem; font-weight: 650; }
+#preview-description { display: -webkit-box; min-height: 4.8em; overflow: hidden; color: var(--texto-2); -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; }
 .preview-heading { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.1rem; }
 .preview-heading .boton { min-width: 150px; }
 
@@ -125,11 +129,9 @@
 
 @media (max-width: 860px) {
   .home > section, .home > nav, .home-footer { padding-inline: 1rem; }
-  .home-hero { align-items: stretch; padding-block: 2.25rem 1.75rem; text-align: left; }
-  .home-search { margin-top: 1.5rem; }
+  .home-top { grid-template-columns: minmax(0, 1fr); gap: 1rem; padding-block: 1.25rem 2rem; }
   .home-search > div { padding-left: .9rem; }
   .home-search button { padding: 0 1.1rem; }
-  .home-cerca { margin-left: -.5rem; }
   /* En móvil los tres caminos son una sola lista agrupada, no tres tarjetas. */
   .home-paths { grid-template-columns: minmax(0, 1fr); gap: 0; padding-bottom: 2.25rem; }
   .home-paths a { padding: .9rem 1.1rem; border-radius: 0; }
@@ -139,15 +141,19 @@
   .home-paths a:hover { position: relative; box-shadow: none; }
   .home-trust { padding-bottom: 2.25rem; }
   .home-trust ul { grid-template-columns: minmax(0, 1fr); gap: 1rem; }
-  .discovery { padding-block: 2.25rem; }
-  .discovery-title { flex-direction: column; align-items: flex-start; }
   .discovery-filters { margin-inline: -1rem; padding-inline: 1rem; }
-  .discovery-layout { display: flex; flex-direction: column; gap: 1rem; }
-  .discovery-cards { display: flex; flex: none; max-height: none; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x proximity; }
+  .discovery-cards { display: flex; flex: none; height: 73px; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x proximity; }
   .discovery-card { flex: 0 0 78%; border-right: 1px solid var(--linea); scroll-snap-align: start; }
   .preview-copy { padding: 1rem 1.1rem 1.25rem; }
   .preview-copy h3 { font-size: 1.3125rem; }
   .preview-heading .boton { flex: 1; min-width: 0; }
   .home-more { padding-top: 2.25rem; }
   .home-more-grid { grid-template-columns: minmax(0, 1fr); gap: 0; }
+}
+
+/* En escritorio la vista previa iguala el alto del panel: la foto crece y no queda hueco debajo. */
+@media (min-width: 861px) {
+  .home-top { align-items: stretch; }
+  .home-top .place-preview { display: flex; flex-direction: column; }
+  .home-top .preview-visual { flex: 1; min-height: 300px; aspect-ratio: auto; }
 }
