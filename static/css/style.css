@@ -203,7 +203,8 @@ details[open] > summary::after { margin-top: .2rem; transform: rotate(-135deg); 
 #navbar {
   position: sticky;
   top: 0;
-  z-index: 1000;
+  /* Sobre los controles de Leaflet (z-index 1000): el panel de avisos se abre encima del mapa. */
+  z-index: 1100;
   height: var(--nav-alto);
   background: var(--panel);
   border-bottom: 1px solid var(--linea);
@@ -464,8 +465,37 @@ details[open] > summary::after { margin-top: .2rem; transform: rotate(-135deg); 
    y perdía el contorno. :focus-within sí lo detecta (WCAG 2.4.7). */
 input[type="date"]:focus-within, input[type="time"]:focus-within { outline: 3px solid var(--foco); outline-offset: 0; }
 
-/* Avisos sin leer: número en el menú de cuenta y punto sobre el botón que lo abre. */
-.nav-avisos { display: inline-grid; place-items: center; min-width: 1.5rem; height: 1.5rem; margin-left: .35rem; padding: 0 .4rem; border-radius: 999px; background: var(--acento); color: var(--sobre-acento); font-size: 1rem; font-weight: 600; line-height: 1; }
+/* Campana de avisos: número de no leídos sobre el icono y panel desplegable con los últimos avisos. */
+.avisos-wrap { position: relative; flex: none; }
+.avisos-wrap[hidden] { display: none; }
+.avisos-toggle { position: relative; width: 44px; height: 44px; padding: 0; border-color: transparent; background: transparent; color: var(--texto-2); }
+.avisos-toggle:hover:not(:disabled), .avisos-toggle[aria-expanded="true"] { background: var(--panel-3); color: var(--texto); }
+.avisos-toggle svg { width: 21px; height: 21px; }
+.nav-avisos { position: absolute; top: -2px; right: -4px; display: inline-grid; place-items: center; min-width: 1.5rem; height: 1.5rem; padding: 0 .35rem; border: 2px solid var(--panel); border-radius: 999px; background: var(--acento); color: var(--sobre-acento); font-size: 1rem; font-weight: 700; line-height: 1; }
 .nav-avisos[hidden] { display: none; }
-.account-toggle.con-avisos, .hamburger.con-avisos { position: relative; }
-.account-toggle.con-avisos::before, .hamburger.con-avisos::before { content: ''; position: absolute; top: .3rem; right: .3rem; width: .625rem; height: .625rem; border: 2px solid var(--panel); border-radius: 50%; background: var(--acento); }
+.avisos-panel { position: absolute; top: calc(100% + .4rem); right: -3.5rem; z-index: 1001; display: flex; flex-direction: column; width: min(400px, calc(100vw - 1rem)); max-height: min(560px, calc(100vh - var(--nav-alto) - 1rem)); border: 1px solid var(--linea); border-radius: var(--radio); background: var(--panel); box-shadow: var(--sombra-flotante); }
+.avisos-panel[hidden] { display: none; }
+.avisos-panel-cabeza { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding: .6rem .6rem .4rem 1rem; }
+.avisos-panel-cabeza h2 { margin: 0; font-size: 1.25rem; }
+.avisos-todos-leidos { min-height: 44px; padding: 0 .6rem; border-color: transparent; background: transparent; color: var(--acento); font-size: 1rem; font-weight: 600; }
+.avisos-panel-cuerpo { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 0 .4rem .4rem; }
+.avisos-grupo-titulo { margin: .5rem .6rem .25rem; color: var(--texto-2); font-size: 1rem; font-weight: 650; }
+.avisos-grupo { display: grid; gap: 3px; margin: 0; padding: 0; list-style: none; }
+.aviso-enlace { display: flex; align-items: flex-start; gap: .75rem; width: 100%; min-height: 44px; padding: .6rem; border: 0; border-radius: var(--radio-s); background: transparent; color: var(--texto); font: inherit; font-size: 1rem; font-weight: 400; text-align: left; text-decoration: none; }
+.aviso-enlace:hover { background: var(--panel-3); color: var(--texto); }
+.aviso--nuevo .aviso-enlace { background: var(--acento-suave); }
+.aviso--nuevo .aviso-enlace:hover { background: var(--panel-3); }
+.aviso-icono { display: grid; flex: none; place-items: center; width: 2.5rem; height: 2.5rem; border-radius: 50%; background: var(--panel-3); color: var(--texto-2); }
+.aviso-icono svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.aviso-cuerpo { display: flex; flex: 1; flex-direction: column; gap: .2rem; min-width: 0; overflow-wrap: anywhere; }
+.aviso-texto { line-height: 1.4; }
+.aviso--nuevo .aviso-texto { font-weight: 600; }
+.aviso-pie { display: flex; flex-wrap: wrap; gap: .1rem .75rem; color: var(--texto-2); font-size: 1rem; }
+.aviso-accion-nav { color: var(--texto); font-weight: 600; }
+.aviso-punto { flex: none; width: .75rem; height: .75rem; margin-top: .45rem; border-radius: 50%; background: var(--acento); }
+.avisos-vacio { margin: .5rem .6rem 1rem; color: var(--texto-2); font-size: 1rem; }
+.avisos-panel-pie { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0 1rem; padding: .2rem 1rem; border-top: 1px solid var(--linea); }
+.avisos-panel-pie a { display: inline-flex; align-items: center; min-height: 44px; font-size: 1rem; font-weight: 600; }
+@media (max-width: 860px) {
+  .avisos-panel { position: fixed; top: calc(var(--nav-alto) + .25rem); right: .5rem; left: .5rem; width: auto; }
+}

@@ -1090,31 +1090,48 @@ class FlujosTests(StaticLiveServerTestCase):
         self.abrir('/perfil/')
         self.pagina.wait_for_selector('#profile-login:not([hidden])')
 
-    def test_los_avisos_sin_leer_se_ven_en_la_barra_y_el_menu_dice_mis_viajes(self):
+    def test_la_campana_muestra_los_avisos_y_los_marca_como_leidos(self):
         from apps.comunidad.models import Notificacion
-        Notificacion.objects.create(usuario=self.usuario, texto='Publicamos tu reseña sobre Mirador.')
-        Notificacion.objects.create(usuario=self.usuario, texto='Publicamos tu fotografía sobre Mirador.')
-        # Sin sesión no hay enlace de avisos y el menú ya dice «Mis viajes» (un solo nombre, con o sin sesión).
+        from apps.comunidad.notificar import avisar
+        avisar(self.usuario, 'aportes', 'Publicamos tu reseña sobre Mirador.', '/destinos/mirador/')
+        avisar(self.usuario, 'aportes', 'Publicamos tu fotografía sobre Mirador.', '/destinos/mirador/')
+        viejo = avisar(self.usuario, 'pasaporte', 'Ganaste el sello de Tapalpa.', '/pasaporte/')
+        Notificacion.objects.filter(pk=viejo.pk).update(leida=True)
+        # Sin sesión no hay campana y el menú ya dice «Mis viajes» (un solo nombre, con o sin sesión).
         self.abrir('/planeador/')
         self.assertEqual(self.pagina.locator('.nav-links a[href="/mis-viajes/"]').inner_text(), 'Mis viajes')
-        self.assertTrue(self.pagina.locator('#account-menu [data-avisos]').is_hidden())
+        self.assertTrue(self.pagina.locator('#avisos-toggle').is_hidden())
         self.iniciar_sesion()
         # /planeador/ no carga cuenta-api.js: el número llega con el token que pide avisos-nav.js.
         self.abrir('/planeador/')
-        self.pagina.wait_for_selector('#account-toggle.con-avisos')
-        self.pagina.click('#account-toggle')
-        numero = self.pagina.locator('#account-menu .nav-avisos')
-        self.assertEqual(numero.inner_text(), '2')
-        self.assertEqual(numero.get_attribute('aria-label'), '2 avisos sin leer')
-        self.pagina.click('#account-menu [data-avisos]')
-        # Mi perfil los muestra y los marca como leídos: el número desaparece ahí y en la siguiente página.
-        self.pagina.wait_for_selector('#my-notices :text("Publicamos tu reseña")')
-        self.assertFalse(self.pagina.locator('#account-toggle.con-avisos').count())
-        self.pagina.wait_for_function('!document.querySelector("#profile-content").hidden')
-        self.abrir('/destinos/mirador/')
-        self.pagina.wait_for_selector('#account-menu [data-avisos]', state='attached')
-        self.assertFalse(self.pagina.locator('#account-toggle.con-avisos').count())
+        self.pagina.wait_for_selector('#avisos-numero:text("2")')
+        self.assertEqual(self.pagina.get_attribute('#avisos-toggle', 'aria-label'), 'Avisos, 2 sin leer')
+        self.pagina.click('#avisos-toggle')
+        self.assertEqual(self.pagina.get_attribute('#avisos-toggle', 'aria-expanded'), 'true')
+        self.pagina.wait_for_selector('#avisos-panel .avisos-grupo[aria-label="Nuevos"] .aviso--nuevo')
+        self.assertEqual(self.pagina.locator('#avisos-panel .aviso--nuevo').count(), 2)
+        self.assertEqual(self.pagina.locator('#avisos-panel .avisos-grupo[aria-label="Anteriores"] .aviso').count(), 1)
+        # Escape cierra y devuelve el foco a la campana.
+        self.pagina.keyboard.press('Escape')
+        self.assertTrue(self.pagina.locator('#avisos-panel').is_hidden())
+        self.assertEqual(self.pagina.evaluate('document.activeElement.id'), 'avisos-toggle')
+        # Abrir un aviso lleva a su acción y lo deja leído; queda uno.
+        self.pagina.click('#avisos-toggle')
+        self.pagina.click('#avisos-panel .aviso--nuevo a:has-text("Publicamos tu reseña")')
+        self.pagina.wait_for_url('**/destinos/mirador/')
+        self.pagina.wait_for_selector('#avisos-numero:text("1")')
+        # «Marcar todo como leído» quita el número.
+        self.pagina.click('#avisos-toggle')
+        self.pagina.click('#avisos-todos-leidos')
+        self.pagina.wait_for_selector('#avisos-numero', state='hidden')
+        self.assertEqual(self.pagina.locator('#avisos-panel .aviso--nuevo').count(), 0)
         self.assertFalse(Notificacion.objects.filter(leida=False).exists())
+        # En un teléfono la campana sigue a la vista y el panel cabe en la pantalla.
+        self.pagina.set_viewport_size({'width': 375, 'height': 740})
+        self.assertTrue(self.pagina.locator('#avisos-toggle').is_visible())
+        caja = self.pagina.locator('#avisos-panel').bounding_box()
+        self.assertGreaterEqual(caja['x'], 0)
+        self.assertLessEqual(caja['x'] + caja['width'], 375)
 
     def test_un_aviso_lleva_a_su_accion_y_se_eligen_los_avisos(self):
         from apps.comunidad.notificar import avisar
