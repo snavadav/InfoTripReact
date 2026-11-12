@@ -1090,6 +1090,43 @@ class FlujosTests(StaticLiveServerTestCase):
         self.abrir('/perfil/')
         self.pagina.wait_for_selector('#profile-login:not([hidden])')
 
+    def test_los_avisos_sin_leer_se_ven_en_la_barra_y_el_menu_dice_mis_viajes(self):
+        from apps.comunidad.models import Notificacion
+        Notificacion.objects.create(usuario=self.usuario, texto='Publicamos tu reseña sobre Mirador.')
+        Notificacion.objects.create(usuario=self.usuario, texto='Publicamos tu fotografía sobre Mirador.')
+        # Sin sesión no hay enlace de avisos y el menú ya dice «Mis viajes» (un solo nombre, con o sin sesión).
+        self.abrir('/planeador/')
+        self.assertEqual(self.pagina.locator('.nav-links a[href="/mis-viajes/"]').inner_text(), 'Mis viajes')
+        self.assertTrue(self.pagina.locator('#account-menu [data-avisos]').is_hidden())
+        self.iniciar_sesion()
+        # /planeador/ no carga cuenta-api.js: el número llega con el token que pide avisos-nav.js.
+        self.abrir('/planeador/')
+        self.pagina.wait_for_selector('#account-toggle.con-avisos')
+        self.pagina.click('#account-toggle')
+        numero = self.pagina.locator('#account-menu .nav-avisos')
+        self.assertEqual(numero.inner_text(), '2')
+        self.assertEqual(numero.get_attribute('aria-label'), '2 avisos sin leer')
+        self.pagina.click('#account-menu [data-avisos]')
+        # Mi perfil los muestra y los marca como leídos: el número desaparece ahí y en la siguiente página.
+        self.pagina.wait_for_selector('#my-notices :text("Publicamos tu reseña")')
+        self.assertFalse(self.pagina.locator('#account-toggle.con-avisos').count())
+        self.pagina.wait_for_function('!document.querySelector("#profile-content").hidden')
+        self.abrir('/destinos/mirador/')
+        self.pagina.wait_for_selector('#account-menu [data-avisos]', state='attached')
+        self.assertFalse(self.pagina.locator('#account-toggle.con-avisos').count())
+        self.assertFalse(Notificacion.objects.filter(leida=False).exists())
+
+    def test_axo_se_aparta_mientras_se_escribe_en_un_formulario(self):
+        self.pagina.set_viewport_size({'width': 375, 'height': 812})
+        self.abrir('/mis-viajes/')
+        axo = self.pagina.locator('#trip-chat')
+        self.pagina.focus('[name="fecha_fin"]')
+        self.assertEqual(axo.evaluate('el => getComputedStyle(el).opacity'), '0')
+        self.assertEqual(axo.evaluate('el => getComputedStyle(el).pointerEvents'), 'none')
+        # Al salir del campo vuelve, y sigue alcanzándose con el teclado.
+        self.pagina.focus('#trip-chat-toggle')
+        self.assertEqual(axo.evaluate('el => getComputedStyle(el).opacity'), '1')
+
     def abrir_con_saludo(self, ancho=1280, alto=800):
         self.contexto.close()
         self.contexto = self.nuevo_contexto(saludo=True, viewport={'width': ancho, 'height': alto})

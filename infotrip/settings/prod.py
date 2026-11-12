@@ -21,6 +21,12 @@ if not REDIS_URL:  # noqa: F405
         'local por proceso multiplica los límites de intentos de login.'
     )
 
+# ─── BASE DE DATOS ────────────────────────────────────────────
+# Cada proceso reutiliza su conexión a PostgreSQL en lugar de abrir una por petición; antes de usarla
+# comprueba que siga viva (por ejemplo, tras reiniciar la base). 0 vuelve a una conexión por petición.
+DATABASES['default']['CONN_MAX_AGE'] = config('CONN_MAX_AGE', default=60, cast=int)  # noqa: F405
+DATABASES['default']['CONN_HEALTH_CHECKS'] = True  # noqa: F405
+
 # ─── MONITOREO DE ERRORES (opcional; compatible con Sentry y GlitchTip) ────
 # Sin datos personales: ni IP, ni cookies, ni variables locales, ni consulta de la URL, ni correos.
 # Detalle en infotrip/monitoreo.py.

@@ -171,6 +171,16 @@ docker compose --env-file .env.docker logs -f web avisos respaldos
 
 Conviene vigilar `infotrip.correo` (correos fallidos), `infotrip.seguridad` (cuentas bloqueadas) e `infotrip.salud` (base de datos, caché y Redis).
 
+### Tiempos de respuesta
+
+Cada línea de acceso de `web` termina con la duración de la petición en microsegundos (`gunicorn.conf.py`). Para ver las 20 peticiones más lentas del último día, con su ruta:
+
+```bash
+docker compose --env-file .env.docker logs --since 24h --no-log-prefix web | awk '$NF ~ /^[0-9]+$/ {print $NF/1000 " ms", $6, $7}' | sort -rn | head -20
+```
+
+Cada proceso de gunicorn se renueva tras unas 1000 peticiones y reutiliza su conexión a PostgreSQL durante `CONN_MAX_AGE` segundos (60 por defecto; `CONN_MAX_AGE=0` en `.env.docker` vuelve a una conexión por petición).
+
 ## Miniaturas
 
 Las fotos nuevas crean su miniatura al subirse. Para las anteriores, ejecuta una vez `python manage.py generar_miniaturas`.
@@ -182,3 +192,5 @@ Las fotos nuevas crean su miniatura al subirse. Para las anteriores, ejecuta una
 ## Tareas periódicas
 
 El servicio `avisos` envía los avisos por correo cada 5 minutos y borra una vez al día los tokens caducados (`flushexpiredtokens`) y los eventos de más de 13 meses (`purgar_eventos`). Sin Docker, programa esos mismos comandos.
+
+El mismo servicio intenta cada hora `resumen_moderacion`: un correo al día, a partir de las 8:00, con los totales de la cola de moderación y los fallos de tareas o correos de las últimas 24 horas. Lo reciben las cuentas activas del grupo Moderación y los superusuarios; si no hay nada pendiente, no se envía. Para probarlo: `docker compose --env-file .env.docker exec web python manage.py resumen_moderacion --forzar`.

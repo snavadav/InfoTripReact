@@ -462,3 +462,9 @@ details[open] > summary::after { margin-top: .2rem; transform: rotate(-135deg); 
 /* En fecha y hora, el último Tab enfoca el botón del calendario o reloj: el campo deja de coincidir con :focus
    y perdía el contorno. :focus-within sí lo detecta (WCAG 2.4.7). */
 input[type="date"]:focus-within, input[type="time"]:focus-within { outline: 3px solid var(--foco); outline-offset: 0; }
+
+/* Avisos sin leer: número en el menú de cuenta y punto sobre el botón que lo abre. */
+.nav-avisos { display: inline-grid; place-items: center; min-width: 1.5rem; height: 1.5rem; margin-left: .35rem; padding: 0 .4rem; border-radius: 999px; background: var(--acento); color: var(--sobre-acento); font-size: .875rem; font-weight: 600; line-height: 1; }
+.nav-avisos[hidden] { display: none; }
+.account-toggle.con-avisos, .hamburger.con-avisos { position: relative; }
+.account-toggle.con-avisos::before, .hamburger.con-avisos::before { content: ''; position: absolute; top: .3rem; right: .3rem; width: .625rem; height: .625rem; border: 2px solid var(--panel); border-radius: 50%; background: var(--acento); }

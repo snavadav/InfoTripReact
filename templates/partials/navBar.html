@@ -6,7 +6,7 @@
 
     <ul class="nav-links">
       <li><a href="/destinos/">Explorar</a></li>
-      <li><a href="/mis-viajes/" data-trip-label>Planear escapada</a></li>
+      <li><a href="/mis-viajes/">Mis viajes</a></li>
       <li><a href="{% url 'planeador' %}">Armar ruta</a></li>
       <li><a href="{% url 'costos-indice' %}">Costos</a></li>
     </ul>
@@ -28,6 +28,7 @@
         </button>
         <div class="account-menu" id="account-menu" hidden>
           <a href="/perfil/">Mi perfil y aportes</a>
+          <a href="/perfil/#notices-title" data-avisos hidden>Avisos <span class="nav-avisos" hidden></span></a>
           <a href="/favoritos/">Favoritos</a>
           <a href="{% url 'pasaporte' %}">Pasaporte</a>
           <a href="{% url 'amigos' %}">Amigos</a>
@@ -49,7 +50,7 @@
     <span class="user-name" id="mobileUserName"></span>
   </div>
   <a href="/destinos/">Explorar</a>
-  <a href="/mis-viajes/" data-trip-label>Planear escapada</a>
+  <a href="/mis-viajes/">Mis viajes</a>
   <a href="{% url 'planeador' %}">Armar ruta</a>
   <a href="{% url 'costos-indice' %}">Costos</a>
   <div class="sep"></div>
@@ -61,6 +62,7 @@
   </div>
   <div id="mobile-auth" hidden>
     <a href="/perfil/" class="mobile-secondary">Mi perfil y aportes</a>
+    <a href="/perfil/#notices-title" class="mobile-secondary" data-avisos hidden>Avisos <span class="nav-avisos" hidden></span></a>
     <a href="{% url 'amigos' %}" class="mobile-secondary">Amigos</a>
     <a href="#" class="mobile-secondary" id="mobileLogoutBtn">Cerrar sesión</a>
   </div>
@@ -68,3 +70,4 @@
 
 <script src="{% static 'js/navbar.js' %}"></script>
 <script src="{% static 'js/session-ui.js' %}" defer></script>
+<script src="{% static 'js/avisos-nav.js' %}" defer></script>
