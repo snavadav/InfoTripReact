@@ -1,8 +1,8 @@
 """Guardar una ruta del planeador como escapada (apps.comunidad.Viaje) para seguir editándola en Mis viajes.
 
 El plan se vuelve a calcular en el servidor con la misma petición (sale igual: el genético usa una semilla fija),
-así que nada de lo que se guarda viene del navegador salvo qué opción de comida eligió la persona, y esa se
-acepta solo si es una de las que el plan ofrece.
+así que nada de lo que se guarda viene del navegador salvo qué opción eligió la persona para cada comida
+(desayuno, comida y cena), y esa se acepta solo si es una de las que el plan ofrece.
 
 Privacidad: la escapada lleva destinos, horarios y lugares públicos; nunca el punto de salida de quien la armó.
 
@@ -56,16 +56,29 @@ def _comida_elegida(contenedor, elegidas):
     return contenedor.get('comida')
 
 
-def _actividad_de_comida(numero, hora, comida, personas, gastos):
-    notas = f'{comida["tipo"]} a {comida["distancia"]} de la parada anterior.'
+# Cómo se nombra cada comida: (verbo de la actividad, concepto del gasto).
+MOMENTOS = {'desayuno': ('Desayunar', 'Desayuno'), 'comida': ('Comer', 'Comida'), 'cena': ('Cenar', 'Cena')}
+
+
+def _actividad_de_comida(numero, hora, comida, personas, gastos, momento='comida', referencia='la parada anterior'):
+    verbo, concepto = MOMENTOS[momento]
+    notas = f'{comida["tipo"]} a {comida["distancia"]} de {referencia}.'
     if comida.get('precio'):
         precio = comida['precio']
         notas += f' ${precio["minimo"]} a ${precio["maximo"]} por persona según {precio["reportes"]} reseña(s).'
         # El máximo reportado: mejor que sobre a que falte. Solo con precio real de reseñas publicadas.
-        gastos.append({'concepto': 'comida', 'descripcion': _corto(f'Comida en {comida["nombre"]}', 120),
+        gastos.append({'concepto': 'comida', 'descripcion': _corto(f'{concepto} en {comida["nombre"]}', 120),
                        'monto': str(Decimal(precio['maximo'])), 'reparto': 'individual', 'cantidad': 1})
-    return {'dia': numero, 'hora': hora, 'titulo': _corto(f'Comer en {comida["nombre"]}', TITULO_MAXIMO),
+    return {'dia': numero, 'hora': hora, 'titulo': _corto(f'{verbo} en {comida["nombre"]}', TITULO_MAXIMO),
             'notas': _corto(notas, NOTAS_MAXIMO)}
+
+
+def _desayuno_o_cena(numero, dia, momento, elegidas, personas, actividades, gastos):
+    datos = dia.get(momento)
+    comida = _comida_elegida(datos, elegidas) if datos else None
+    if comida:
+        actividades.append(_actividad_de_comida(numero, datos['hora'], comida, personas, gastos, momento,
+                                                datos['cerca_de']))
 
 
 def actividades_y_gastos(plan, elegidas=()):
@@ -86,6 +99,7 @@ def actividades_y_gastos(plan, elegidas=()):
                 if comida:
                     actividades.append(_actividad_de_comida(numero, libre['fin'], comida, personas, gastos))
 
+        _desayuno_o_cena(numero, dia, 'desayuno', elegidas, personas, actividades, gastos)
         descansar(0)
         for posicion, parada in enumerate(dia['paradas'], start=1):
             destino = parada['destino']
@@ -102,6 +116,7 @@ def actividades_y_gastos(plan, elegidas=()):
             if comida:
                 actividades.append(_actividad_de_comida(numero, parada['salida'], comida, personas, gastos))
             descansar(posicion)
+        _desayuno_o_cena(numero, dia, 'cena', elegidas, personas, actividades, gastos)
         if dia.get('dormir'):
             actividades.append({'dia': numero, 'hora': '', 'titulo': _corto(f'Dormir: {dia["dormir"]["nombre"]}',
                                                                              TITULO_MAXIMO),

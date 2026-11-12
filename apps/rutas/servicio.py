@@ -5,12 +5,13 @@ from django.db.models import Avg, Count, Q
 from django.urls import reverse
 
 from apps.comunidad.selectors import textos_practicos
-from apps.destinos.lugares import cerca_de
 from apps.destinos.models import Categoria, Destino, Municipio
 from .comida import opciones_comida
+from .hospedaje import opciones_hospedaje
 from .horarios import Horario, leer_horario, leer_precio
 from .optimizador import (
-    FACTOR_CARRETERA, Dia, Problema, Sitio, _ventana, distancia_km, genetico, km_por_carretera, minutos_de_manejo,
+    CENA_DESDE, CENA_MIN, DESAYUNO_MIN, FACTOR_CARRETERA, Dia, Problema, Sitio, _ventana, distancia_km, genetico,
+    km_por_carretera, minutos_de_manejo,
     voraz,
 )
 
@@ -226,17 +227,16 @@ def _hora(minutos):
     return f'{minutos // 60:02d}:{minutos % 60:02d}'
 
 
-def _lugar(lugar):
-    if not lugar:
-        return None
-    return {'id': lugar.pk, 'nombre': lugar.nombre, 'subtipo': lugar.get_subtipo_display(),
-            'url': reverse('lugar-detalle', args=[lugar.pk]), 'distancia': lugar.distancia_legible,
-            'latitud': float(lugar.latitud), 'longitud': float(lugar.longitud)}
+def hay_cena(fin):
+    """Si el horario del día alcanza para cenar: termina al menos CENA_MIN después de CENA_DESDE."""
+    return fin >= CENA_DESDE + CENA_MIN
 
 
-def _mas_cercano(punto, tipo, radio_km):
-    encontrados = cerca_de(punto[0], punto[1], radio_km=radio_km, tipo=tipo, limite=1)
-    return encontrados[0] if encontrados else None
+def _comida_del_dia(hora, junto_a, punto, momento, duracion):
+    """Desayuno o cena: a qué hora, cerca de qué y sus opciones (la primera es la sugerida)."""
+    opciones = opciones_comida(punto, momento=momento)
+    return {'hora': _hora(hora), 'duracion_min': duracion, 'cerca_de': junto_a, 'comidas': opciones,
+            'comida': opciones[0] if opciones else None}
 
 
 def regresa(modo, regresar):
@@ -253,6 +253,9 @@ def construir_problema(origen, fecha, dias, inicio, fin, intereses, ritmo='norma
     - ida: corredor; el viaje termina en el destino (punto final del optimizador).
     - base: el día 1, corredor hasta el destino y ahí se duerme; desde el día 2 se sale y se vuelve a él.
 
+    Comidas: cada día aparta el desayuno antes de la primera visita si se llega en horas de desayuno, y la cena
+    al final si el horario alcanza (`hay_cena`): entonces las visitas terminan CENA_MIN antes de `fin`.
+
     Ruta editada: `fijados` ({clave: {'dia', 'hora'}}) y `descansos` son obligatorios en su día; los
     `excluidos` no entran. Los descansos van al final de la lista de sitios.
     """
@@ -263,13 +266,14 @@ def construir_problema(origen, fecha, dias, inicio, fin, intereses, ritmo='norma
     fechas = [fecha + timedelta(days=i) for i in range(dias)]
     final = destino['punto'] if modo in ('ida', 'base') else None
     nodo_final = len(sitios) + 1
+    fin_visitas = fin - CENA_MIN if hay_cena(fin) else fin
     dias_del_viaje = []
     for numero, dia in enumerate(fechas):
         if modo == 'base':
-            dias_del_viaje.append(Dia(dia.weekday(), inicio, fin, desde=nodo_final if numero else None,
-                                      hasta=nodo_final))
+            dias_del_viaje.append(Dia(dia.weekday(), inicio, fin_visitas, desde=nodo_final if numero else None,
+                                      hasta=nodo_final, desayuno=True))
         else:
-            dias_del_viaje.append(Dia(dia.weekday(), inicio, fin))
+            dias_del_viaje.append(Dia(dia.weekday(), inicio, fin_visitas, desayuno=True))
     problema = Problema(origen, dias_del_viaje, sitios, personas, presupuesto, regresa(modo, regresar), final)
     return problema, fechas, destinos
 
@@ -295,7 +299,7 @@ def planear(origen, fecha, dias, inicio, fin, intereses, ritmo='normal', persona
     simple = voraz(problema)
     sin_precio, supuestos, resultado_dias, puestos = set(), set(), [], set()
     for numero, (dia, paradas) in enumerate(zip(fechas, plan.dias)):
-        filas, libres, aqui = [], [], None
+        filas, libres, aqui, nodo, desayuno = [], [], None, 0, None
         for parada in paradas:
             sitio = sitios[parada.sitio]
             puestos.add(sitio.clave)
@@ -309,7 +313,9 @@ def planear(origen, fecha, dias, inicio, fin, intereses, ritmo='normal', persona
                                'comida': comidas[0] if comidas else None})
                 continue
             visto = destinos[sitio.clave]
-            aqui = sitio.punto
+            aqui, nodo = sitio.punto, parada.sitio + 1
+            if parada.desayuno_antes:
+                desayuno = _comida_del_dia(parada.llegada, visto.nombre, sitio.punto, 'desayuno', DESAYUNO_MIN)
             precio = sitio.precio_para(dia.weekday())
             if precio is None:
                 sin_precio.add(visto.pk)
@@ -326,7 +332,7 @@ def planear(origen, fecha, dias, inicio, fin, intereses, ritmo='normal', persona
                 'km': round(parada.km, 1), 'manejo_min': parada.manejo, 'visita_min': sitio.duracion,
                 'precio': None if precio is None else str(precio), 'horario_confirmado': visto.horario_confirmado,
                 'guiado': visto.guiado, 'fijado': visto.pk in fijados,
-                'comida_despues': parada.comida_despues,
+                'comida_despues': parada.comida_despues, 'desayuno_antes': parada.desayuno_antes,
             })
         ultimo = numero == dias - 1
         # Quedándose en el destino se duerme ahí cada noche; en solo ida, la última noche es en el destino.
@@ -336,9 +342,32 @@ def planear(origen, fecha, dias, inicio, fin, intereses, ritmo='normal', persona
             punto_dormir = aqui
         else:
             punto_dormir = None
+        cena = None
+        if filas and hay_cena(fin):
+            # Las visitas acabaron CENA_MIN antes del fin del día (ver construir_problema): la cena siempre cabe.
+            termina, cierre = paradas[-1].salida, problema.cierres[numero]
+            if cierre is None:
+                cena = _comida_del_dia(max(termina, CENA_DESDE), filas[-1]['destino']['nombre'], aqui, 'cena',
+                                       CENA_MIN)
+            elif cierre == 0:
+                # Se cena antes de manejar de regreso: a más tardar, a la hora que deja llegar a tiempo.
+                limite = fin - CENA_MIN - problema.minutos[nodo][0]
+                cena = _comida_del_dia(max(termina, min(CENA_DESDE, limite)), filas[-1]['destino']['nombre'], aqui,
+                                       'cena', CENA_MIN)
+            else:
+                # Se cena donde se duerme, ya en el destino.
+                llegada = termina + problema.minutos[nodo][cierre]
+                cena = _comida_del_dia(max(llegada, CENA_DESDE), destino['nombre'], destino['punto'], 'cena',
+                                       CENA_MIN)
+        # Dónde dormir: siempre hay opciones si el día tuvo visitas. Sin noche de por medio (se vuelve a casa)
+        # son solo por si la persona decide quedarse: `dormir` queda en None y no entra a la escapada.
+        punto_hospedaje = punto_dormir or aqui
+        hospedajes = opciones_hospedaje(punto_hospedaje) if punto_hospedaje else []
         resultado_dias.append({
             'fecha': dia.isoformat(), 'dia_semana': dia.weekday(), 'paradas': filas, 'descansos': libres,
-            'dormir': _lugar(_mas_cercano(punto_dormir, 'dormir', 10)) if punto_dormir else None,
+            'desayuno': desayuno, 'cena': cena,
+            'dormir': hospedajes[0] if punto_dormir and hospedajes else None,
+            'hospedajes': hospedajes, 'hospedaje_opcional': punto_dormir is None,
         })
     avisos = [advertencia] if advertencia else []
     avisos.append(f'Tiempos de manejo aproximados: distancia en línea recta × {FACTOR_CARRETERA} por las curvas de '

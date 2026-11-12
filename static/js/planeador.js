@@ -29,7 +29,9 @@
   const pesos = new Intl.NumberFormat('es-MX', {style: 'currency', currency: 'MXN', maximumFractionDigits: 0});
   const sinMovimiento = window.matchMedia('(prefers-reduced-motion: reduce)');
   let ubicacion = null, ultimoPlan = null, ultimaPeticion = null, mapa = null, capa = null;
-  let diaElegido = 0, capasDia = [], extras = {}, origenMapa = null, destinoElegido = null, carrusel = null;
+  let diaElegido = 0, capasDia = [], extras = {}, origenMapa = null, destinoElegido = null, carrusel = null, servicios = null;
+  // Dónde quedó dibujada cada comida (por su dato del plan), para llevar ahí desde el resumen del día.
+  const bloquesDeComida = new WeakMap();
   // Ruta editada: lo que fijó la persona (por destino), lo que quitó y sus ratos libres. Se reinicia al armar
   // una ruta nueva con el formulario.
   let peticionBase = null, edicion = nuevaEdicion(), recalculando = false;
@@ -427,7 +429,9 @@
     const clave = claveParada(parada);
     edicion.fijados.delete(clave);
     edicion.excluidos.add(clave);
-    edicion.descansos = [...edicion.descansos, {dia: numero, inicio: parada.inicio,
+    // Si antes de esta parada iba el desayuno, el rato libre empieza a la hora de llegada: al quitarla, el
+    // desayuno pasa a la siguiente parada y no debe empujar el descanso.
+    edicion.descansos = [...edicion.descansos, {dia: numero, inicio: parada.desayuno_antes ? parada.llegada : parada.inicio,
       duracion: Math.min(240, Math.max(15, parada.visita_min))}].slice(-6);
     recalcular(fijadosPara(numero, clave, true), `En lugar de ${parada.destino.nombre} tienes tiempo libre.`);
   }
@@ -463,9 +467,11 @@
     if (!caja.hidden) { caja.hidden = true; boton.setAttribute('aria-expanded', 'false'); return; }
     const dia = ultimoPlan.dias[numero];
     const antes = dia.paradas[indice - 1], despues = dia.paradas[indice + 1];
-    const desde = antes ? minutos(antes.salida) + (antes.comida_despues ? 60 : 0) : minutos(ultimaPeticion.hora_inicio);
+    const desde = antes ? minutos(antes.salida) + (antes.comida_despues ? 60 : 0)
+      : minutos(ultimaPeticion.hora_inicio) + (parada.desayuno_antes && dia.desayuno ? dia.desayuno.duracion_min : 0);
     const siguiente = despues ? [despues.destino.latitud, despues.destino.longitud] : puntoFinal(ultimoPlan, numero);
-    const hasta = (despues ? minutos(despues.inicio) : minutos(ultimaPeticion.hora_fin)) - (parada.comida_despues ? 60 : 0);
+    const hasta = (despues ? minutos(despues.inicio) : minutos(ultimaPeticion.hora_fin) - (dia.cena ? dia.cena.duracion_min : 0))
+      - (parada.comida_despues ? 60 : 0);
     const anterior = antes ? [antes.destino.latitud, antes.destino.longitud] : puntoInicial(ultimoPlan, numero);
     const excluidos = [...new Set([...paradasConDia(ultimoPlan).map(({parada: p}) => claveParada(p)), ...edicion.excluidos])];
     caja.hidden = false;
@@ -545,7 +551,7 @@
     quitarlo.addEventListener('click', () => quitarDescanso(libre, numero));
     fila.append(quitarlo);
     const filas = [fila];
-    if (libre.comida_despues) filas.push(bloqueComida(libre, numero, `libre-${indice}`));
+    if (libre.comida_despues) filas.push(bloqueComida(libre, numero, `libre-${indice}`, `Hora de comer · ${libre.fin}`));
     return filas;
   }
 
@@ -604,6 +610,11 @@
           grupo.marcadores.push(L.marker([parada.comida.latitud, parada.comida.longitud], {icon: InfoTripMapa.iconoLugar('comer'),
             title: parada.comida.nombre, alt: parada.comida.nombre}).bindPopup(popup(parada.comida.nombre, parada.comida.url)).addTo(capa));
         }
+      });
+      [dia.desayuno, dia.cena].forEach(momento => {
+        if (!momento || !momento.comida) return;
+        grupo.marcadores.push(L.marker([momento.comida.latitud, momento.comida.longitud], {icon: InfoTripMapa.iconoLugar('comer'),
+          title: momento.comida.nombre, alt: momento.comida.nombre}).bindPopup(popup(momento.comida.nombre, momento.comida.url)).addTo(capa));
       });
       if (dia.dormir) {
         grupo.marcadores.push(L.marker([dia.dormir.latitud, dia.dormir.longitud], {icon: InfoTripMapa.iconoLugar('dormir'),
@@ -715,16 +726,80 @@
     marcarEnMapa();
   }
 
-  // ── Detalle del día: paradas, comida y dónde dormir ─────
-  function lugarUtil(titulo, lugar, etiqueta = 'li') {
-    const fila = elemento(etiqueta, '', 'planeador-util');
-    fila.append(elemento('strong', titulo));
-    if (lugar) {
-      fila.append(enlace(lugar.nombre, lugar.url), elemento('span', `${lugar.subtipo} · a ${lugar.distancia}`));
-    } else {
-      fila.append(elemento('span', 'no tenemos un lugar registrado cerca.'));
+  // ── Detalle del día: paradas, comidas y dónde dormir ────
+  // Las comidas del día en orden: desayuno, comida y cena.
+  function comidasDelDia(dia) {
+    const comidas = [];
+    if (dia.desayuno) comidas.push({nombre: 'Desayuno', hora: dia.desayuno.hora, dato: dia.desayuno});
+    (dia.descansos || []).forEach(libre => {
+      if (libre.comida_despues) comidas.push({nombre: 'Comida', hora: libre.fin, dato: libre});
+    });
+    dia.paradas.forEach(parada => {
+      if (parada.comida_despues) comidas.push({nombre: 'Comida', hora: parada.salida, dato: parada});
+    });
+    if (dia.cena) comidas.push({nombre: 'Cena', hora: dia.cena.hora, dato: dia.cena});
+    return comidas.sort((a, b) => minutos(a.hora) - minutos(b.hora));
+  }
+  function datosDeResenas(opcion, unidad) {
+    const datos = [];
+    if (opcion.calificacion !== null && opcion.calificacion !== undefined) {
+      datos.push(elemento('span', `Calificación ${opcion.calificacion} de 5 (${plural(opcion.num_resenas, 'reseña', 'reseñas')})`, 'comida-meta'));
     }
-    return fila;
+    if (opcion.precio) {
+      datos.push(elemento('span', `${pesos.format(+opcion.precio.minimo)} a ${pesos.format(+opcion.precio.maximo)} ${unidad}, según ${plural(opcion.precio.reportes, 'reseña', 'reseñas')}`, 'comida-meta'));
+    }
+    if (opcion.recomendado_equipo) datos.push(elemento('span', 'Recomendado por el equipo', 'comida-distintivo'));
+    return datos;
+  }
+  // Siempre a la vista, arriba del carrusel: qué comidas tocan hoy y dónde quedarse a dormir.
+  function llenarServicios(dia, numero) {
+    if (!servicios) return;
+    const comer = elemento('div', '', 'servicios-grupo');
+    comer.append(elemento('h4', 'Dónde comer'));
+    const comidas = comidasDelDia(dia);
+    if (!comidas.length) {
+      comer.append(elemento('p', 'Con este horario no toca ninguna comida durante la ruta.', 'planeador-ayuda'));
+    } else {
+      const lista = elemento('ul', '', 'servicios-lista');
+      comidas.forEach(comida => {
+        const fila = elemento('li', '', 'servicio');
+        fila.append(elemento('strong', `${comida.nombre} · ${comida.hora}`));
+        const elegida = comida.dato.comida;
+        if (elegida) {
+          fila.append(enlace(elegida.nombre, elegida.url), elemento('span', `${elegida.tipo} · a ${elegida.distancia}`, 'comida-meta'));
+        } else {
+          fila.append(elemento('span', 'No tenemos un lugar registrado cerca.', 'comida-meta'));
+        }
+        if ((comida.dato.comidas || []).length > 1) {
+          const ver = elemento('button', 'Ver opciones', 'editar-boton');
+          ver.type = 'button';
+          ver.setAttribute('aria-label', `Ver opciones para ${comida.nombre.toLowerCase()} del día ${numero + 1}`);
+          // Desliza el carrusel hasta la parada de esa comida y baja a sus opciones.
+          ver.addEventListener('click', () => bloquesDeComida.get(comida.dato)?.scrollIntoView(
+            {block: 'center', inline: 'start', behavior: sinMovimiento.matches ? 'auto' : 'smooth'}));
+          fila.append(ver);
+        }
+        lista.append(fila);
+      });
+      comer.append(lista);
+    }
+    const dormir = elemento('div', '', 'servicios-grupo');
+    dormir.append(elemento('h4', 'Dónde dormir'));
+    const hospedajes = dia.hospedajes || (dia.dormir ? [dia.dormir] : []);
+    if (!hospedajes.length) {
+      dormir.append(elemento('p', 'No tenemos un hospedaje registrado cerca.', 'planeador-ayuda'));
+    } else {
+      dormir.append(elemento('p', dia.hospedaje_opcional ? 'Hoy vuelves a casa. Por si prefieres quedarte:' : 'Cerca de donde termina el día:', 'planeador-ayuda'));
+      const lista = elemento('ul', '', 'servicios-lista');
+      hospedajes.forEach(opcion => {
+        const fila = elemento('li', '', 'servicio');
+        fila.append(enlace(opcion.nombre, opcion.url), elemento('span', `${opcion.subtipo} · a ${opcion.distancia}`, 'comida-meta'),
+          ...datosDeResenas(opcion, 'por noche'));
+        lista.append(fila);
+      });
+      dormir.append(lista);
+    }
+    servicios.replaceChildren(comer, dormir);
   }
 
   function dibujarDetalle(plan, numero) {
@@ -734,11 +809,11 @@
     detalle.setAttribute('aria-label', `Paradas del día ${numero + 1}`);
     const libres = dia.descansos || [];
     if (!dia.paradas.length && !libres.length) {
-      carrusel = null;
+      carrusel = servicios = null;
       detalle.replaceChildren(titulo, elemento('p', 'Este día no cabe ninguna visita con esos datos. Prueba con más horas o más intereses.'));
       return;
     }
-    // Una lámina del carrusel por parada, con lo que le sigue: dónde comer y ratos libres.
+    // Una lámina del carrusel por parada, con lo que le toca: desayuno, dónde comer, ratos libres y cena.
     const laminas = [];
     let lista = null;
     const nuevaLamina = () => {
@@ -752,14 +827,17 @@
     descansosEn(0);
     dia.paradas.forEach((parada, indice) => {
       if (indice) nuevaLamina();
+      else if (dia.desayuno) lista.append(bloqueComida(dia.desayuno, numero, 'desayuno', `Desayuno · ${dia.desayuno.hora}`));
       lista.append(dibujarParada(parada, indice, numero));
-      if (parada.comida_despues) lista.append(bloqueComida(parada, numero, parada.destino.id));
+      if (parada.comida_despues) lista.append(bloqueComida(parada, numero, parada.destino.id, `Hora de comer · ${parada.salida}`));
       descansosEn(indice + 1);
     });
-    const piezas = [titulo, elemento('p', 'Horas estimadas. Toca el nombre de un lugar para ver su ficha completa.'),
-      enlaceDelDia(dia, numero), armarCarrusel(laminas)];
-    if (dia.dormir !== null) piezas.push(lugarUtil('Dormir:', dia.dormir, 'p'));
-    detalle.replaceChildren(...piezas);
+    if (dia.cena) lista.append(bloqueComida(dia.cena, numero, 'cena', `Cena · ${dia.cena.hora}`));
+    servicios = elemento('section', '', 'planeador-servicios');
+    servicios.setAttribute('aria-label', `Dónde comer y dormir el día ${numero + 1}`);
+    detalle.replaceChildren(titulo, elemento('p', 'Horas estimadas. Toca el nombre de un lugar para ver su ficha completa.'),
+      enlaceDelDia(dia, numero), servicios, armarCarrusel(laminas));
+    llenarServicios(dia, numero);
   }
 
   // ── Carrusel: una parada a la vista; se desliza o se usan los botones ─
@@ -837,10 +915,11 @@
 
   // Dónde comer: dos o tres opciones, lo local primero. Se elige con un toque; precio y calificación solo si
   // vienen de reseñas publicadas.
-  function bloqueComida(parada, numero, clave) {
+  function bloqueComida(parada, numero, clave, encabezado = 'Hora de comer') {
     const fila = elemento('li', '', 'planeador-util planeador-comida');
-    const titulo = elemento('strong', 'Hora de comer');
+    const titulo = elemento('strong', encabezado);
     titulo.id = `comida-titulo-${numero}-${clave}`;
+    bloquesDeComida.set(parada, fila);
     fila.append(titulo);
     if (!parada.comidas || !parada.comidas.length) {
       fila.append(elemento('span', 'no tenemos un lugar registrado cerca.'));
@@ -859,19 +938,14 @@
       radio.checked = parada.comida?.id === opcion.id;
       radio.addEventListener('change', () => {
         parada.comida = opcion;
+        llenarServicios(ultimoPlan.dias[numero], numero);
         dibujarMapa(ultimoPlan);
         resaltarEnMapa(diaElegido);
         marcarEnMapa();
       });
       const cuerpo = elemento('span', '', 'comida-cuerpo');
       cuerpo.append(elemento('span', opcion.nombre, 'comida-nombre'), elemento('span', `${opcion.tipo} · a ${opcion.distancia}`, 'comida-meta'));
-      if (opcion.calificacion !== null) {
-        cuerpo.append(elemento('span', `Calificación ${opcion.calificacion} de 5 (${plural(opcion.num_resenas, 'reseña', 'reseñas')})`, 'comida-meta'));
-      }
-      if (opcion.precio) {
-        cuerpo.append(elemento('span', `${pesos.format(+opcion.precio.minimo)} a ${pesos.format(+opcion.precio.maximo)} por persona, según ${plural(opcion.precio.reportes, 'reseña', 'reseñas')}`, 'comida-meta'));
-      }
-      if (opcion.recomendado_equipo) cuerpo.append(elemento('span', 'Recomendado por el equipo', 'comida-distintivo'));
+      cuerpo.append(...datosDeResenas(opcion, 'por persona'));
       tarjeta.append(radio, cuerpo);
       const ficha = enlace('Ficha', opcion.url, 'comida-ficha');
       ficha.setAttribute('aria-label', `Ficha de ${opcion.nombre}`);
@@ -1112,8 +1186,8 @@
   // El servidor vuelve a calcular la ruta con la misma petición y la guarda en Mis viajes; de aquí solo va qué
   // opción de comida eligió la persona. Después se abre el editor de la escapada.
   function comidasElegidas(plan) {
-    return plan.dias.flatMap(dia => [...dia.paradas, ...(dia.descansos || [])])
-      .filter(item => item.comida).map(item => item.comida.id).slice(0, 20);
+    return plan.dias.flatMap(dia => [dia.desayuno, ...dia.paradas, ...(dia.descansos || []), dia.cena])
+      .filter(item => item && item.comida).map(item => item.comida.id).slice(0, 20);
   }
 
   botonGuardar.addEventListener('click', async () => {

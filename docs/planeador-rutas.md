@@ -123,7 +123,21 @@ Las aptitudes de solo ida y base incluyen el bono de 100 del destino obligatorio
 
 **El híbrido nunca queda por debajo del voraz** en ningún tipo de viaje. Por escenario nuevo: Tapalpa solo ida +15.2 %, Puerto Vallarta solo ida +0.1 %, Mazamitla base +3.8 %, Chapala base +7.7 %. El tiempo medio por plan es de 0.75 s; en 76 de 630 corridas pasó de 1.3 s (máximo 2.7 s), igual que antes en los escenarios sin destino (59 de 420), con la máquina ocupada en otras tareas.
 
-## Dónde comer
+## Dónde comer y dónde dormir
+
+La ruta incluye hasta tres comidas por día, según el horario:
+
+| Comida | Cuándo entra | Dónde se busca | Tiempo que aparta |
+|---|---|---|---|
+| Desayuno | Si se llega a la primera parada entre las 6:00 y las 10:30 | Cerca de la primera parada | 45 min antes de la visita (aprovecha la espera si el sitio aún no abre) |
+| Comida | Entre las 13:30 y las 16:00, si después hay otra parada | Cerca de la parada anterior | 60 min |
+| Cena | Si el día termina a las 20:00 o después | Cerca de la última parada, o del destino si ahí se duerme | 60 min: las visitas acaban una hora antes del fin del día |
+
+El desayuno lo acomoda el optimizador (`Dia.desayuno`, `Parada.desayuno_antes`); para la cena, `construir_problema` le quita una hora al fin del día (`hay_cena`). En el desayuno una cafetería vale tanto como un mercado; en la cena, tanto como un restaurante (`PRIORIDAD_POR_MOMENTO`). Las tablas del experimento de arriba se midieron antes de apartar el desayuno.
+
+Dónde dormir (`apps/rutas/hospedaje.py`): 2 o 3 opciones a menos de 10 km de donde termina el día. Orden: hotel o casa de huéspedes, hostal o departamento y, al final, motel; luego reseñas publicadas, «Recomendado por el equipo» y cercanía. Si ese día se vuelve a casa, las opciones salen igual («por si prefieres quedarte»), pero `dormir` queda en `null` y no entra a la escapada.
+
+La página muestra todo esto en una sección fija por día, arriba de las paradas: «Dónde comer» (cada comida con su hora y el lugar elegido) y «Dónde dormir».
 
 Cada hora de comer ofrece 2 o 3 opciones a menos de 3 km (`apps/rutas/comida.py`), de mejor a peor: mercado o fonda, restaurante, cafetería y comida rápida, más la calificación de reseñas publicadas y la cercanía. Las cadenas (lista versionada `CADENAS`) bajan, pero no desaparecen. Precio y calificación solo aparecen si vienen de reseñas publicadas. «Recomendado por el equipo» lo marca solo el staff o el grupo Moderación en el admin. Los mercados vienen de OpenStreetMap y del DENUE: ver [importar-osm.md](importar-osm.md).
 
@@ -149,11 +163,11 @@ Los descansos salen aparte en cada día (`descansos`, con `despues_de`). Así, e
 **Guardar como escapada** (`POST /api/v1/rutas/guardar-escapada/`, con sesión) vuelve a calcular el plan en el servidor con la misma petición y crea un `Viaje` (`apps/rutas/escapada.py`) con:
 
 - lugares;
-- actividades por día: visitas, comida elegida, tiempo libre y dónde dormir;
+- actividades por día: visitas, desayuno, comida y cena elegidos, tiempo libre y dónde dormir;
 - fechas y personas;
 - un presupuesto que solo suma entradas y comidas con precio conocido.
 
-Del navegador solo llega qué opción de comida se eligió, y solo cuenta si era una de las ofrecidas. No guarda coordenadas de quien la armó. Responde con `/mis-viajes/?editar=<id>`, que abre la escapada en el editor. `despues_de_guardar()` queda como punto de extensión (por ejemplo, para invitar amigos).
+Del navegador solo llega qué opción se eligió para cada comida, y solo cuenta si era una de las ofrecidas. No guarda coordenadas de quien la armó. Responde con `/mis-viajes/?editar=<id>`, que abre la escapada en el editor. `despues_de_guardar()` queda como punto de extensión (por ejemplo, para invitar amigos).
 
 ## Limitaciones
 

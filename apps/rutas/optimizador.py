@@ -30,6 +30,14 @@ ESTACIONAR_MIN = 10
 COMIDA_DESDE = 13 * 60 + 30
 COMIDA_HASTA = 16 * 60
 COMIDA_MIN = 60
+# Desayuno: al llegar a la primera parada del día, si se llega a esas horas (solo con `Dia.desayuno`).
+DESAYUNO_DESDE = 6 * 60
+DESAYUNO_HASTA = 10 * 60 + 30
+DESAYUNO_MIN = 45
+# Cena: al terminar las visitas, si el horario del día alcanza para cenar a partir de esta hora. El optimizador
+# no la acomoda: quien arma el problema le quita CENA_MIN al fin del día (ver servicio.construir_problema).
+CENA_DESDE = 19 * 60
+CENA_MIN = 60
 # Peso del tiempo al volante frente al puntaje: solo desempata itinerarios de interés parecido.
 PESO_MANEJO = 0.002
 # Bono de aptitud por cada sitio obligatorio (fijado por la persona o un descanso) que entra al plan. Es mucho
@@ -90,6 +98,8 @@ class Dia:
     # Nodo al que hay que llegar antes de `fin` (por ejemplo, volver a dormir al destino). None: el día acaba
     # en la última parada, salvo el último (ver Problema.cierre).
     hasta: int | None = None
+    # Aparta DESAYUNO_MIN antes de la primera visita si se llega a ella en horas de desayuno.
+    desayuno: bool = False
 
 
 @dataclass
@@ -144,6 +154,8 @@ class Parada:
     manejo: int
     # Se come al terminar esta visita.
     comida_despues: bool = False
+    # Se desayuna al llegar, antes de esta visita (la primera del día).
+    desayuno_antes: bool = False
 
 
 @dataclass
@@ -174,6 +186,8 @@ class _Estado:
     lugar: int
     hora: int
     comio: bool = False
+    # Ya hubo una visita con traslado: el desayuno solo va antes de la primera.
+    llego: bool = False
     paradas: list = field(default_factory=list)
 
 
@@ -206,7 +220,10 @@ def _intentar(problema, estado, indice, numero, gastado):
     else:
         nodo = indice + 1
         manejo, km = problema.minutos[estado.lugar][nodo], problema.km[estado.lugar][nodo]
-    inicio = _ventana(sitio, dia, hora + manejo)
+    llegada = hora + manejo
+    desayuno = (dia.desayuno and not sitio.en_sitio and not estado.llego
+                and DESAYUNO_DESDE <= llegada < DESAYUNO_HASTA)
+    inicio = _ventana(sitio, dia, llegada + DESAYUNO_MIN if desayuno else llegada)
     if inicio is None:
         return None
     salida = inicio + sitio.duracion
@@ -221,7 +238,7 @@ def _intentar(problema, estado, indice, numero, gastado):
             return None
     elif salida > dia.fin:
         return None
-    return Parada(indice, hora + manejo, inicio, salida, km, manejo), comida_antes
+    return Parada(indice, llegada, inicio, salida, km, manejo, desayuno_antes=desayuno), comida_antes
 
 
 def _agregar(problema, estado, parada, comida_antes):
@@ -231,6 +248,7 @@ def _agregar(problema, estado, parada, comida_antes):
     estado.paradas.append(parada)
     if not problema.sitios[parada.sitio].en_sitio:
         estado.lugar = parada.sitio + 1
+        estado.llego = True
     estado.hora = parada.salida
 
 

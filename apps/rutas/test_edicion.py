@@ -191,12 +191,25 @@ class GuardarEscapadaTests(ConDatosDelPlaneador):
         self.assertIn('Tiempo libre', titulos)
         self.assertIn('Comer en Fonda Doña Paz', titulos)
         self.assertIn('Dormir: Hotel Centro', titulos)
+        # Con salida a las 11:00 y fin a las 19:00 la ruta no incluye desayuno ni cena.
+        self.assertFalse([t for t in titulos if t.startswith(('Desayunar', 'Cenar'))])
         self.assertEqual(viaje.actividades, sorted(viaje.actividades, key=lambda a: (a['dia'], a['hora'] or '99:99')))
         # Presupuesto: solo entradas con precio publicado (sábado: 80 y 95 por persona), nada inventado.
         self.assertEqual(viaje.presupuesto, 2 * (80 + 95))
         self.assertEqual({g['concepto'] for g in viaje.gastos}, {'entradas'})
         # La escapada se abre en el editor de Mis viajes (la misma API la lee).
         self.assertEqual(self.client.get(f'/api/v1/mis-viajes/{viaje.pk}/').status_code, 200)
+
+    def test_guarda_desayuno_y_cena_cuando_tocan(self):
+        Lugar.objects.create(nombre='Cenaduría El Mirador', tipo='comer', subtipo='restaurant', latitud=20.7501,
+                             longitud=-103.3001)
+        self.client.force_authenticate(self.persona)
+        self.assertEqual(self.guardar(dias=1, hora_inicio='09:00', hora_fin='21:00').status_code, 201)
+        actividades = {a['titulo']: a for a in Viaje.objects.get(autor=self.persona).actividades}
+        self.assertIn('Desayunar en Fonda Doña Paz', actividades)
+        self.assertIn('Cenar en Cenaduría El Mirador', actividades)
+        self.assertGreater(actividades['Cenar en Cenaduría El Mirador']['hora'],
+                           actividades['Mirador Lejano']['hora'])
 
     def test_respeta_la_comida_elegida_si_era_una_opcion(self):
         mercado = Lugar.objects.create(nombre='Mercado Corona', tipo='comer', subtipo='marketplace', latitud=20.6769,

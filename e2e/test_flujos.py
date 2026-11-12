@@ -878,7 +878,8 @@ class FlujosTests(StaticLiveServerTestCase):
             has=self.pagina.locator('.buscador-nombre', has_text=re.compile('^Tapalpa$'))).click()
         self.assertTrue(self.pagina.is_checked('#ruta-form [name="modo"][value="ida_vuelta"]'))
         self.pagina.click('#ruta-form .planeador-mas summary')
-        self.pagina.fill('#ruta-form [name="hora_inicio"]', '08:00')
+        # Desde las 7:00: el desayuno aparta 45 minutos y el día debe alcanzar para cambiar una parada y descansar.
+        self.pagina.fill('#ruta-form [name="hora_inicio"]', '07:00')
         self.pagina.fill('#ruta-form [name="hora_fin"]', '18:00')
         self.pagina.click('#ruta-form button[type="submit"]')
         self.pagina.wait_for_selector('#ruta-detalle .parada')

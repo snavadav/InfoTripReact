@@ -248,6 +248,18 @@ a.planeador-boton-principal:hover { background: var(--acento-fuerte); color: var
 
 /* ── Dónde comer: opciones que se eligen con un toque ───── */
 .planeador-comida { display: grid; gap: .6rem; }
+/* Dónde comer y dónde dormir del día: siempre a la vista, arriba del carrusel. */
+.planeador-servicios { display: grid; gap: 1rem; padding: 1rem; border: 1px solid var(--linea-fuerte); border-radius: var(--radio-l); background: var(--panel); }
+@media (min-width: 760px) { .planeador-servicios { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.servicios-grupo { display: grid; align-content: start; gap: .6rem; min-width: 0; }
+.servicios-grupo h4 { margin: 0; color: var(--texto); font-size: 1.1rem; }
+.servicios-grupo > p { margin: 0; }
+.servicios-lista { display: grid; gap: .5rem; margin: 0; padding: 0; list-style: none; }
+.servicio { display: grid; justify-items: start; gap: .15rem; padding: .6rem .8rem; border: 1px dashed var(--linea-fuerte); border-radius: var(--radio); font-size: 1rem; }
+.servicio strong { color: var(--texto); }
+.servicio a { font-weight: 600; overflow-wrap: anywhere; }
+.servicio a:focus-visible { outline: 3px solid var(--acento); outline-offset: 2px; }
+.servicio .editar-boton { margin-top: .3rem; }
 .comida-opciones { display: grid; gap: .5rem; }
 .comida-opcion { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: .5rem; }
 .comida-tarjeta { position: relative; display: flex; gap: .7rem; align-items: flex-start; min-height: var(--objetivo); padding: .6rem .8rem; border: 1px solid var(--linea-fuerte); border-radius: var(--radio); background: var(--panel); color: var(--texto); cursor: pointer; }
