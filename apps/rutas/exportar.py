@@ -118,8 +118,12 @@ def calendario_ics(ruta, url_publica):
                      f'Llegas a las {parada["llegada"]}; visita de {duracion(parada["visita_min"])}; {precio}.']
             if not parada['horario_confirmado']:
                 notas.append('Horario no confirmado: confírmalo antes de ir.')
+            if orden == 1 and (dia.get('desayuno') or {}).get('comida'):
+                notas.append(f'Antes, a desayunar ({dia["desayuno"]["hora"]}): {dia["desayuno"]["comida"]["nombre"]}.')
             if parada.get('comida'):
                 notas.append(f'Después, a comer: {parada["comida"]["nombre"]}.')
+            if orden == len(dia['paradas']) and (dia.get('cena') or {}).get('comida'):
+                notas.append(f'Al terminar, a cenar ({dia["cena"]["hora"]}): {dia["cena"]["comida"]["nombre"]}.')
             notas.append('Horas y tiempos de manejo estimados.')
             notas.append(f'Ficha: {settings.PUBLIC_BASE_URL}{destino["url"]}')
             lineas += [

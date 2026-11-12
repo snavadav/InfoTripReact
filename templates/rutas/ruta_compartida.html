@@ -37,6 +37,7 @@
     <ol class="planeador-paradas">
       {% for libre in dia.libres_al_inicio %}<li class="planeador-util planeador-descanso"><strong>Tiempo libre · {{ libre.duracion_texto }}</strong> <span>{{ libre.inicio }}–{{ libre.fin }}</span></li>{% endfor %}
       {% for parada in dia.paradas %}
+      {% if forloop.first and dia.desayuno %}<li class="planeador-util"><strong>Desayuno · {{ dia.desayuno.hora }}:</strong>{% if dia.desayuno.comida %} <a href="{{ dia.desayuno.comida.url }}">{{ dia.desayuno.comida.nombre }}</a> <span>{{ dia.desayuno.comida.subtipo }} · a {{ dia.desayuno.comida.distancia }}</span>{% else %} <span>no tenemos un lugar registrado cerca.</span>{% endif %}</li>{% endif %}
       <li class="parada">
         <span class="parada-num" aria-hidden="true">{{ forloop.counter }}</span>
         <div class="parada-cuerpo">
@@ -53,6 +54,7 @@
       {% if parada.comida_despues %}<li class="planeador-util"><strong>Hora de comer:</strong>{% if parada.comida %} <a href="{{ parada.comida.url }}">{{ parada.comida.nombre }}</a> <span>{{ parada.comida.subtipo }} · a {{ parada.comida.distancia }}</span>{% else %} <span>no tenemos un lugar registrado cerca.</span>{% endif %}</li>{% endif %}
       {% for libre in parada.libres %}<li class="planeador-util planeador-descanso"><strong>Tiempo libre · {{ libre.duracion_texto }}</strong> <span>{{ libre.inicio }}–{{ libre.fin }}</span></li>{% endfor %}
       {% endfor %}
+      {% if dia.cena %}<li class="planeador-util"><strong>Cena · {{ dia.cena.hora }}:</strong>{% if dia.cena.comida %} <a href="{{ dia.cena.comida.url }}">{{ dia.cena.comida.nombre }}</a> <span>{{ dia.cena.comida.subtipo }} · a {{ dia.cena.comida.distancia }}</span>{% else %} <span>no tenemos un lugar registrado cerca.</span>{% endif %}</li>{% endif %}
       {% if dia.dormir %}<li class="planeador-util"><strong>Dormir:</strong> <a href="{{ dia.dormir.url }}">{{ dia.dormir.nombre }}</a> <span>{{ dia.dormir.subtipo }} · a {{ dia.dormir.distancia }}</span></li>{% endif %}
     </ol>
     {% else %}

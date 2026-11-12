@@ -19,6 +19,12 @@ REVISADOS = 40
 # Bares y cantinas no son una comida de viaje familiar: no se proponen.
 SUBTIPOS = ('marketplace', 'restaurant', 'cafe', 'fast_food')
 PRIORIDAD = {'marketplace': 3, 'fonda': 3, 'restaurant': 2, 'cafe': 1, 'fast_food': 0}
+# En el desayuno la cafetería vale tanto como el mercado; en la cena, tanto como el restaurante.
+PRIORIDAD_POR_MOMENTO = {
+    'desayuno': {**PRIORIDAD, 'cafe': 3},
+    'comida': PRIORIDAD,
+    'cena': {**PRIORIDAD, 'cafe': 2},
+}
 # Cada estrella por encima o por debajo de 3 mueve un cuarto de nivel; solo con reseñas publicadas.
 PESO_CALIFICACION = 0.25
 BONO_RECOMENDADO = 0.75
@@ -64,8 +70,8 @@ NOMBRE_CLASE = {'marketplace': 'Mercado', 'fonda': 'Fonda o cocina tradicional',
                 'cafe': 'Cafetería', 'fast_food': 'Comida rápida'}
 
 
-def puntaje(lugar, radio_km=RADIO_KM):
-    valor = PRIORIDAD[clase_de(lugar)]
+def puntaje(lugar, radio_km=RADIO_KM, momento='comida'):
+    valor = PRIORIDAD_POR_MOMENTO[momento][clase_de(lugar)]
     if getattr(lugar, 'num_resenas', 0) and lugar.calificacion_promedio is not None:
         valor += (float(lugar.calificacion_promedio) - 3) * PESO_CALIFICACION
     if lugar.recomendado_equipo:
@@ -93,9 +99,12 @@ def tarjeta(lugar):
     }
 
 
-def opciones_comida(punto, radio_km=RADIO_KM, cuantas=OPCIONES):
-    """Las mejores opciones para comer cerca de un punto, ya como tarjetas. Lista vacía si no hay ninguna."""
+def opciones_comida(punto, radio_km=RADIO_KM, cuantas=OPCIONES, momento='comida'):
+    """Las mejores opciones para comer cerca de un punto, ya como tarjetas. Lista vacía si no hay ninguna.
+
+    `momento`: 'desayuno', 'comida' o 'cena'; cambia cuánto vale una cafetería.
+    """
     cercanos = [lugar for lugar in cerca_de(punto[0], punto[1], radio_km=radio_km, tipo='comer', limite=REVISADOS)
                 if lugar.subtipo in SUBTIPOS]
-    cercanos.sort(key=lambda lugar: (-puntaje(lugar, radio_km), lugar.distancia_km, lugar.pk))
+    cercanos.sort(key=lambda lugar: (-puntaje(lugar, radio_km, momento), lugar.distancia_km, lugar.pk))
     return [tarjeta(lugar) for lugar in cercanos[:cuantas]]

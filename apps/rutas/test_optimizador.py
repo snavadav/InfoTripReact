@@ -6,7 +6,7 @@ from django.test import SimpleTestCase
 
 from .horarios import Horario, Precio
 from .optimizador import (
-    COMIDA_MIN, Dia, Parametros, Problema, Sitio, _cruce_ox, decodificar, distancia_km, genetico, minutos_de_manejo,
+    COMIDA_MIN, DESAYUNO_MIN, Dia, Parametros, Problema, Sitio, _cruce_ox, decodificar, distancia_km, genetico, minutos_de_manejo,
     voraz,
 )
 
@@ -135,3 +135,29 @@ class MetodosTests(SimpleTestCase):
         for _ in range(50):
             hijo = _cruce_ox(list(range(10)), azar.sample(range(10), 10), azar)
             self.assertEqual(sorted(hijo), list(range(10)))
+
+
+class DesayunoTests(SimpleTestCase):
+    def test_aparta_el_desayuno_antes_de_la_primera_visita(self):
+        sitios = [sitio('a', km=1), sitio('b', km=2)]
+        sin = decodificar(Problema(ORIGEN, un_dia(), sitios), [0, 1])
+        dia = Dia(SABADO, h(9), h(18), desayuno=True)
+        con = decodificar(Problema(ORIGEN, [dia], sitios), [0, 1])
+        primera, segunda = con.dias[0]
+        self.assertTrue(primera.desayuno_antes)
+        self.assertFalse(segunda.desayuno_antes)
+        self.assertEqual(primera.llegada, sin.dias[0][0].llegada)
+        self.assertEqual(primera.inicio, sin.dias[0][0].inicio + DESAYUNO_MIN)
+        self.assertFalse(any(p.desayuno_antes for p in sin.dias[0]))
+
+    def test_el_desayuno_aprovecha_la_espera_a_que_abran(self):
+        # Llega a las 9 y pico y abren a las 10: desayuna mientras espera, sin retrasar la visita.
+        dia = Dia(SABADO, h(9), h(18), desayuno=True)
+        plan = decodificar(Problema(ORIGEN, [dia], [sitio('a', horario=abierto(h(10), h(18)))]), [0])
+        self.assertTrue(plan.dias[0][0].desayuno_antes)
+        self.assertEqual(plan.dias[0][0].inicio, h(10))
+
+    def test_sin_desayuno_si_se_llega_tarde(self):
+        dia = Dia(SABADO, h(11), h(18), desayuno=True)
+        plan = decodificar(Problema(ORIGEN, [dia], [sitio('a')]), [0])
+        self.assertFalse(plan.dias[0][0].desayuno_antes)

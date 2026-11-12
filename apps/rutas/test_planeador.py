@@ -118,6 +118,57 @@ class PlaneadorTests(APITestCase):
         self.assertTrue(opciones[-1]['cadena'])
         self.assertEqual(paradas[0]['comida'], opciones[0])
 
+    def test_desayuno_antes_de_la_primera_parada(self):
+        dia = self.peticion().json()['dias'][0]
+        primera = dia['paradas'][0]
+        self.assertTrue(primera['desayuno_antes'])
+        self.assertFalse(any(p['desayuno_antes'] for p in dia['paradas'][1:]))
+        self.assertEqual(dia['desayuno']['hora'], primera['llegada'])
+        self.assertEqual(dia['desayuno']['cerca_de'], primera['destino']['nombre'])
+        self.assertEqual(dia['desayuno']['comida']['nombre'], 'Fonda Doña Paz')
+
+        def minutos(hora):
+            return int(hora[:2]) * 60 + int(hora[3:])
+        # La visita empieza al menos 45 minutos después de llegar: ese rato es el desayuno.
+        self.assertGreaterEqual(minutos(primera['inicio']) - minutos(primera['llegada']), 45)
+        # El horario termina a las 19:00: no alcanza para cenar dentro de la ruta.
+        self.assertIsNone(dia['cena'])
+
+    def test_sin_desayuno_si_se_sale_tarde(self):
+        dia = self.peticion(hora_inicio='11:00').json()['dias'][0]
+        self.assertIsNone(dia['desayuno'])
+        self.assertFalse(any(p['desayuno_antes'] for p in dia['paradas']))
+
+    def test_cena_si_el_horario_alcanza(self):
+        # Sin nada registrado cerca de la última parada, la cena sale sin lugar.
+        self.assertIsNone(self.peticion(hora_fin='21:00').json()['dias'][0]['cena']['comida'])
+        Lugar.objects.create(nombre='Cenaduría El Mirador', tipo='comer', subtipo='restaurant', latitud=20.7501,
+                             longitud=-103.3001)
+        dia = self.peticion(hora_fin='21:00').json()['dias'][0]
+        self.assertEqual(dia['paradas'][-1]['destino']['nombre'], 'Mirador Lejano')
+        self.assertEqual(dia['cena']['comida']['nombre'], 'Cenaduría El Mirador')
+        self.assertEqual(dia['cena']['cerca_de'], dia['paradas'][-1]['destino']['nombre'])
+        # Las visitas acaban una hora antes del fin del día y la cena cabe antes de regresar.
+        self.assertLessEqual(dia['paradas'][-1]['salida'], '20:00')
+        self.assertGreaterEqual(dia['cena']['hora'], dia['paradas'][-1]['salida'])
+        self.assertLessEqual(dia['cena']['hora'], '20:00')
+
+    def test_hospedaje_con_opciones_aunque_se_vuelva_a_casa(self):
+        # Un motel pegado a la última parada no le gana al hotel.
+        Lugar.objects.create(nombre='Motel de Paso', tipo='dormir', subtipo='motel', latitud=20.6768,
+                             longitud=-103.3380)
+        Lugar.objects.create(nombre='Hostal Tapatío', tipo='dormir', subtipo='hostel', latitud=20.6766,
+                             longitud=-103.3421)
+        dia = self.peticion().json()['dias'][0]
+        self.assertIsNone(dia['dormir'])
+        self.assertTrue(dia['hospedaje_opcional'])
+        nombres = [h['nombre'] for h in dia['hospedajes']]
+        self.assertEqual(nombres[0], 'Hotel Centro')
+        self.assertEqual(nombres[-1], 'Motel de Paso')
+        dias = self.peticion(dias=2).json()['dias']
+        self.assertFalse(dias[0]['hospedaje_opcional'])
+        self.assertEqual(dias[0]['dormir'], dias[0]['hospedajes'][0])
+
     def test_desde_mi_ubicacion_sin_guardarla(self):
         datos = {'latitud': 20.6770, 'longitud': -103.3450, 'fecha': proximo(5).isoformat(), 'dias': 1,
                  'hora_inicio': '09:00', 'hora_fin': '19:00', 'intereses': ['ciudad-y-cultura']}
