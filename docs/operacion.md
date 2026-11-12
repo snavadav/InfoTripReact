@@ -187,7 +187,7 @@ Las fotos nuevas crean su miniatura al subirse. Para las anteriores, ejecuta una
 
 ## Métricas
 
-`/admin/metricas/` (personal) muestra los eventos de los últimos 7 y 30 días, los embudos de activación, contribución y referencia, la retención a 30 días y el porcentaje de fichas con al menos 3 datos prácticos. Para el tráfico desde buscadores usa [Google Search Console](https://search.google.com/search-console), que es gratis: registra el dominio y envía `/sitemap.xml`.
+`/admin/metricas/` (personal) muestra los eventos de los últimos 7 y 30 días, los embudos de activación, contribución y referencia, la retención a 30 días, el porcentaje de fichas con al menos 3 datos prácticos, las 10 fichas más vistas y cada evento comparado con los 30 días anteriores. El inicio del admin (`/admin/`) abre con «Estado del sitio»: cuánto hay en la cola y desde cuándo espera lo más antiguo, los avisos por correo fallidos de la semana y la última corrida de cada tarea programada. Desde `/admin/moderacion/` se publica u oculta en un clic; al ocultar se elige un motivo de una lista cerrada, que es lo que recibe quien lo envió. Para el tráfico desde buscadores usa [Google Search Console](https://search.google.com/search-console), que es gratis: registra el dominio y envía `/sitemap.xml`.
 
 ## Tareas periódicas
 

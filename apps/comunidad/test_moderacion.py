@@ -188,6 +188,65 @@ class ColaModeracionTests(DatosModeracion):
         secciones = self.client.get('/admin/moderacion/').context['secciones']
         self.assertEqual([s['titulo'] for s in secciones], ['Colaboraciones pendientes'])
 
+    def decidir(self, objeto, accion, motivo=''):
+        return self.client.post('/admin/moderacion/', {
+            'tipo': objeto._meta.model_name, 'pk': objeto.pk, 'accion': accion, 'motivo': motivo}, follow=True)
+
+    def test_publicar_desde_la_cola_en_un_paso(self):
+        aporte = self.aporte(texto='Vista increíble desde el mirador')
+        self.client.force_login(self.moderador)
+        respuesta = self.client.get('/admin/moderacion/')
+        # El texto completo y los botones están en la cola: no hace falta abrir otra página.
+        self.assertContains(respuesta, 'Vista increíble desde el mirador')
+        self.assertContains(respuesta, 'value="publicar"')
+        respuesta = self.decidir(aporte, 'publicar')
+        self.assertRedirects(respuesta, '/admin/moderacion/')
+        aporte.refresh_from_db()
+        self.assertEqual(aporte.estado, 'publicado')
+        decision = Decision.objects.get(aporte=aporte)
+        self.assertEqual((decision.moderador, decision.estado_nuevo), (self.moderador, 'publicado'))
+        self.assertEqual(Notificacion.objects.get().texto, 'Publicamos tu reseña sobre Destino.')
+
+    def test_ocultar_pide_un_motivo_y_se_lo_cuenta_al_autor(self):
+        colaboracion = self.colaboracion()
+        self.client.force_login(self.moderador)
+        respuesta = self.decidir(colaboracion, 'ocultar')
+        self.assertContains(respuesta, 'Elige un motivo')
+        colaboracion.refresh_from_db()
+        self.assertEqual(colaboracion.estado, 'pendiente')
+        # Un motivo que no está en la lista cerrada tampoco vale: nunca se envía texto libre al autor.
+        self.decidir(colaboracion, 'ocultar', 'texto libre con <b>datos</b> de un reporte')
+        self.assertFalse(Notificacion.objects.exists())
+        self.decidir(colaboracion, 'ocultar', 'fuera_de_tema')
+        colaboracion.refresh_from_db()
+        self.assertEqual(colaboracion.estado, 'oculto')
+        self.assertEqual(Notificacion.objects.get().texto,
+                         'Ocultamos tu pregunta sobre Destino tras la revisión. Motivo: no trata sobre este lugar.')
+        self.assertIn('no trata sobre este lugar', RevisionColaboracion.objects.get().motivo)
+
+    def test_sin_permiso_de_cambio_no_hay_botones_ni_se_puede_decidir(self):
+        aporte = self.aporte()
+        personal = Usuario.objects.create_user('staff@example.com', 'Sol', 'Prueba', 'Clave-segura-483!', es_staff=True)
+        personal.user_permissions.add(Permission.objects.get(codename='view_aporte'))
+        self.client.force_login(personal)
+        self.assertNotContains(self.client.get('/admin/moderacion/'), 'value="publicar"')
+        self.assertEqual(self.decidir(aporte, 'publicar').status_code, 403)
+        aporte.refresh_from_db()
+        self.assertEqual(aporte.estado, 'pendiente')
+
+    def test_decidir_dos_veces_o_algo_inexistente_no_falla(self):
+        aporte = self.aporte()
+        self.client.force_login(self.moderador)
+        self.decidir(aporte, 'publicar')
+        self.assertContains(self.decidir(aporte, 'publicar'), 'Sin cambios')
+        self.assertEqual(Decision.objects.count(), 1)
+        respuesta = self.client.post('/admin/moderacion/', {'tipo': 'aporte', 'pk': 999999, 'accion': 'publicar'},
+                                     follow=True)
+        self.assertContains(respuesta, 'ya no existe')
+        respuesta = self.client.post('/admin/moderacion/', {'tipo': 'usuario', 'pk': 1, 'accion': 'publicar'},
+                                     follow=True)
+        self.assertContains(respuesta, 'No entendimos')
+
 
 @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
                    PUBLIC_BASE_URL='https://infotrip.example')
