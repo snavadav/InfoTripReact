@@ -160,6 +160,19 @@ def normalizar(texto):
     return ''.join(c for c in unicodedata.normalize('NFD', texto.casefold()) if not unicodedata.combining(c))
 
 
+def opciones_de_filtros():
+    """Solo lo que tiene destinos publicados: un filtro sin resultados no le sirve a nadie."""
+    return {
+        campo: list(modelo.objects.filter(**{relacion: True}).distinct().values_list('slug', 'nombre'))
+        for campo, modelo, relacion in [
+            ('categoria', Categoria, 'destinos__es_activo'),
+            ('municipio', Municipio, 'destinos__es_activo'),
+            ('region', Region, 'municipios__destinos__es_activo'),
+            ('servicio', Servicio, 'destinos__es_activo'),
+        ]
+    }
+
+
 class ExploracionForm(forms.Form):
     q = forms.CharField(label='Destino o municipio', required=False, max_length=200,
                         widget=forms.TextInput(attrs={'placeholder': '¿A dónde quieres ir?'}))
@@ -202,14 +215,8 @@ class ExploracionForm(forms.Form):
         super().__init__(*args, **kwargs)
         if not editorial:
             self.fields['q'].widget.attrs['data-autocompletar'] = reverse('destinos:sugerencias')
-        # Solo lo que tiene destinos publicados: un filtro sin resultados no le sirve a nadie.
-        for campo, modelo, relacion in [
-            ('categoria', Categoria, 'destinos__es_activo'),
-            ('municipio', Municipio, 'destinos__es_activo'),
-            ('region', Region, 'municipios__destinos__es_activo'),
-            ('servicio', Servicio, 'destinos__es_activo'),
-        ]:
-            opciones = list(modelo.objects.filter(**{relacion: True}).distinct().values_list('slug', 'nombre'))
+        guardadas = cache_catalogo.guardado('opciones-filtros', opciones_de_filtros)
+        for campo, opciones in guardadas.items():
             if editorial and campo != 'servicio':
                 opciones = sorted({(slugify(lugar[campo]), lugar[campo]) for lugar in INSPIRACION})
             self.fields[campo].choices = [('', 'Todos')] + opciones
@@ -361,7 +368,7 @@ def descripcion_de_costos(nombre, costos):
 
 
 def costos_indice(request):
-    costos = costos_por_destino()
+    costos = cache_catalogo.guardado('costos-por-destino', costos_por_destino)
     # Por concepto y por nombre: un ranking de totales compararía destinos con datos distintos.
     filas = [{'destino': destino, 'montos': [fila['mediana'] for fila in costos[destino.pk]['conceptos']]}
              for destino in Destino.objects.filter(pk__in=costos, es_activo=True).order_by('nombre')]
@@ -376,21 +383,31 @@ def costos_indice(request):
     })
 
 
-def misiones(request):
+def filas_de_misiones(municipio):
     destinos = Destino.objects.filter(es_activo=True).select_related('municipio').order_by('nombre')
-    municipio = request.GET.get('municipio', '')
-    municipios = Municipio.objects.filter(destinos__es_activo=True).distinct().order_by('nombre')
     if municipio:
         destinos = destinos.filter(municipio__slug=municipio)
     destinos = list(destinos)
     pendientes = misiones_por_destino([destino.pk for destino in destinos])
-    filas = [{'destino': destino, **pendientes[destino.pk]} for destino in destinos
-             if pendientes[destino.pk]['faltan'] or pendientes[destino.pk]['confirmar']]
+    return [{'destino': destino, **pendientes[destino.pk]} for destino in destinos
+            if pendientes[destino.pk]['faltan'] or pendientes[destino.pk]['confirmar']]
+
+
+def misiones(request):
+    municipio = request.GET.get('municipio', '')
+    municipios = cache_catalogo.guardado('municipios-con-destinos', lambda: list(
+        Municipio.objects.filter(destinos__es_activo=True).distinct().order_by('nombre')))
+    # Un municipio que no existe no se guarda: cualquiera podría llenar la caché con nombres inventados.
+    if municipio and municipio not in {m.slug for m in municipios}:
+        filas = []
+    else:
+        filas = cache_catalogo.guardado(f'misiones:{municipio}', lambda: filas_de_misiones(municipio))
     seo = {'titulo': 'Misiones de la comunidad: qué falta saber en Jalisco — InfoTrip',
            'descripcion': 'Ayuda a otros viajeros: cuenta los horarios, accesos y precios que aún faltan en Jalisco.'}
     return render(request, 'destinos/misiones.html', {
         'pagina': Paginator(filas, 12).get_page(request.GET.get('pagina')), 'municipios': municipios,
-        'municipio_actual': municipio, 'seo': seo, 'cronistas': cronistas(), 'minimo_cronista': MINIMO_CRONISTA,
+        'municipio_actual': municipio, 'seo': seo, 'cronistas': cache_catalogo.guardado('cronistas', cronistas),
+        'minimo_cronista': MINIMO_CRONISTA,
         'total_misiones': sum(len(fila['faltan']) + len(fila['confirmar']) for fila in filas),
     })
 

@@ -4,7 +4,6 @@ Enrutador principal del proyecto
 """
 
 from django.contrib import admin
-from django.contrib.sitemaps.views import sitemap
 from django.shortcuts import render
 from django.views.generic import TemplateView
 from django.urls import path, include
@@ -19,7 +18,7 @@ from apps.comunidad.pasaporte import foto_publica, pasaporte, pasaporte_publico
 from apps.comunidad.viajes import viaje_publico
 from apps.core.pwa import manifiesto, service_worker, sin_conexion
 from apps.core.views import robots, salud
-from apps.destinos.sitemaps import CostosSitemap, DestinosSitemap, PaginasSitemap
+from apps.destinos.sitemaps import CostosSitemap, DestinosSitemap, PaginasSitemap, sitemap_en_cache
 from apps.usuarios.views_frontend import baja_avisos, login_view, registro_view
 from apps.destinos.frontend import (
     costos_destino, costos_indice, creditos, inicio, listado, detalle, lugar_detalle, misiones, proponer_lugar,
@@ -45,7 +44,7 @@ urlpatterns = [
     path('manifest.webmanifest', manifiesto, name='manifiesto'),
     path('sw.js', service_worker, name='service-worker'),
     path('sin-conexion/', sin_conexion, name='sin-conexion'),
-    path('sitemap.xml', sitemap,
+    path('sitemap.xml', sitemap_en_cache,
          {'sitemaps': {'paginas': PaginasSitemap, 'destinos': DestinosSitemap, 'costos': CostosSitemap}},
          name='django.contrib.sitemaps.views.sitemap'),
     path('favoritos/', TemplateView.as_view(template_name='comunidad/favoritos.html'), name='favoritos'),

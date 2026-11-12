@@ -202,8 +202,7 @@ class ExploracionMapaTests(TestCase):
         datos = self.client.get('/destinos/puntos.json')
         self.assertIn('max-age', datos['Cache-Control'])
         # El catálogo completo se guarda: la segunda vez no consulta destinos.
-        # Destino.objects.exists() (selección editorial) y las opciones de los cuatro filtros del formulario.
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(1):  # Solo Destino.objects.exists() (selección editorial).
             self.client.get('/destinos/puntos.json')
         # Publicar, editar u ocultar un destino se ve de inmediato.
         self.crear_destino(nombre='Nuevo', slug='nuevo')

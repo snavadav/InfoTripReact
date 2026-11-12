@@ -5,6 +5,7 @@ PostgreSQL y en SQLite: una clave fonética del español («tlakepake» = «Tlaq
 palabra y, solo si una palabra no aparece en ningún lado, similitud aproximada. Los lugares (decenas de
 miles) se buscan en la base: en PostgreSQL con unaccent y trigramas apoyados en un índice GIN.
 """
+import hashlib
 import re
 import unicodedata
 from urllib.parse import urlencode
@@ -19,6 +20,7 @@ from django.db.models import Avg, Case, IntegerField, Q, Value, When
 from django.urls import reverse
 
 from apps.comunidad.selectors import PUEBLOS_MAGICOS
+from . import cache_catalogo
 from .models import Categoria, Destino, Lugar, Municipio
 
 # Versión de las listas de abajo: súbela al cambiarlas para saber con cuál se comportó una búsqueda.
@@ -142,8 +144,20 @@ def _palabras(texto):
 
 
 def documentos(queryset):
-    """Lo mínimo para ordenar el catálogo. Dos consultas, sin importar cuántos destinos haya."""
+    """Lo mínimo para ordenar el catálogo. Dos consultas, sin importar cuántos destinos haya.
+
+    Se guarda por versión del catálogo y por consulta SQL: cada tecla del buscador lo necesita y casi
+    siempre es el mismo conjunto (los destinos públicos).
+    """
     queryset = queryset.order_by()
+    try:
+        huella = hashlib.sha1(str(queryset.query).encode()).hexdigest()
+    except Exception:  # Una consulta que no se puede escribir como texto: se calcula sin guardar.
+        return _documentos(queryset)
+    return cache_catalogo.guardado(f'documentos:{huella}', lambda: _documentos(queryset))
+
+
+def _documentos(queryset):
     categorias = {}
     for pk, slug, nombre in queryset.values_list('pk', 'categorias__slug', 'categorias__nombre'):
         if slug:
@@ -270,7 +284,7 @@ def buscar_destinos(queryset, texto):
     docs = documentos(queryset)
     resultado = ordenar(consulta, docs)
     if not resultado.puntajes:
-        municipios = Municipio.objects.filter(destinos__es_activo=True).values_list('nombre', flat=True).distinct()
+        municipios = [nombre for nombre, _, _ in municipios_con_destinos()]
         resultado.sugerencia = sugerir(consulta, docs, municipios)
         return queryset.none().annotate(relevancia=Value(0, output_field=IntegerField())), resultado
     relevancia = Case(*[When(pk=pk, then=Value(valor)) for pk, valor in resultado.puntajes.items()],
@@ -296,11 +310,19 @@ def _coincide_nombre(consulta, palabras):
     )
 
 
+def municipios_con_destinos():
+    return cache_catalogo.guardado('municipios-buscador', lambda: list(
+        Municipio.objects.filter(destinos__es_activo=True).distinct().values_list('nombre', 'slug', 'region__nombre')))
+
+
+def categorias_con_destinos():
+    return cache_catalogo.guardado('categorias-buscador', lambda: dict(
+        Categoria.objects.filter(destinos__es_activo=True).distinct().values_list('slug', 'nombre')))
+
+
 def municipios_para(consulta, limite=MAXIMO_MUNICIPIOS):
-    filas = (Municipio.objects.filter(destinos__es_activo=True).distinct()
-             .values_list('nombre', 'slug', 'region__nombre'))
     encontrados = []
-    for nombre, slug, region in filas:
+    for nombre, slug, region in municipios_con_destinos():
         palabras = _palabras(nombre)
         if consulta.palabras and _coincide_nombre(consulta, palabras):
             encontrados.append((-_cercania(palabras, consulta.clave), nombre, slug, region))
@@ -347,10 +369,7 @@ def autocompletar(texto):
         if 'slugs' in regla:
             resultados.append({'tipo': 'coleccion', 'nombre': regla['nombre'], 'detalle': 'Colección',
                                'url': f"{reverse('destinos-listado')}?{urlencode({'q': regla['nombre']})}"})
-    nombres_categoria = {
-        slug: nombre for slug, nombre in
-        Categoria.objects.filter(destinos__es_activo=True).distinct().values_list('slug', 'nombre')
-    }
+    nombres_categoria = categorias_con_destinos()
     por_sinonimo = {regla['categoria'] for _, regla in consulta.sinonimos if 'categoria' in regla}
     for slug, nombre in nombres_categoria.items():
         if slug in por_sinonimo or _coincide_nombre(consulta, _palabras(nombre)):
