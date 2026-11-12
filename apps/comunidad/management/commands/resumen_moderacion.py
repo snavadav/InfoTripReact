@@ -15,44 +15,13 @@ from django.core.management.base import BaseCommand
 from django.db.models import Q
 from django.utils import timezone
 
-from apps.comunidad.models import (
-    Aporte, Colaboracion, Comentario, FotoPasaporte, Notificacion, PropuestaLugar, Reporte, ReporteColaboracion,
-    ReporteResenaLugar, ResenaLugar,
-)
-from apps.datos.models import EjecucionTarea, PropuestaActualizacion
+from apps.comunidad.salud import fallos, pendientes
 from apps.usuarios.models import Usuario
 from .crear_moderacion import GRUPO
 
 registro = logging.getLogger('infotrip.correo')
 # El servicio lo intenta cada hora: antes de esta hora (de México) no sale, para que no llegue de madrugada.
 HORA_MINIMA = 8
-
-
-def pendientes():
-    """[(título, total)] de lo que espera una decisión, en el orden de la cola. Solo lo que tiene algo."""
-    filas = [
-        ('Aportes pendientes', Aporte.objects.filter(estado='pendiente')),
-        ('Colaboraciones pendientes', Colaboracion.objects.filter(estado='pendiente')),
-        ('Reseñas de lugares pendientes', ResenaLugar.objects.filter(estado='pendiente')),
-        ('Lugares propuestos', PropuestaLugar.objects.filter(estado='pendiente')),
-        ('Fotos de pasaporte por revisar', FotoPasaporte.objects.filter(estado='pendiente', mostrar=True)),
-        ('Reportes abiertos', Reporte.objects.filter(resuelto=False)),
-        ('Reportes de información abiertos', ReporteColaboracion.objects.filter(resuelto=False)),
-        ('Reportes de reseñas de lugares abiertos', ReporteResenaLugar.objects.filter(resuelto=False)),
-        ('Actualizaciones de fuentes oficiales', PropuestaActualizacion.objects.filter(estado='pendiente')),
-        ('Comentarios del sitio sin atender', Comentario.objects.filter(atendido=False)),
-    ]
-    return [(titulo, total) for titulo, consulta in filas if (total := consulta.count())]
-
-
-def fallos(desde):
-    """[(título, total)] de lo que falló desde `desde`: tareas programadas y correos que ya no se reintentan."""
-    filas = [
-        ('Tareas programadas con error', EjecucionTarea.objects.filter(resultado='error', inicio__gte=desde)),
-        ('Avisos por correo que no se pudieron enviar', Notificacion.objects.filter(
-            correo_intentos__gte=Notificacion.MAX_INTENTOS_CORREO, correo_enviado__isnull=True, creado__gte=desde)),
-    ]
-    return [(titulo, total) for titulo, consulta in filas if (total := consulta.count())]
 
 
 def destinatarios():

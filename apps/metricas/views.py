@@ -12,7 +12,8 @@ from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
 
-from apps.comunidad.models import Reporte, ReporteColaboracion
+from apps.comunidad.models import Reporte, ReporteColaboracion, ReporteResenaLugar
+from apps.comunidad.salud import total_en_cola
 from apps.destinos.models import Destino
 from apps.usuarios.models import Usuario
 from .models import Evento
@@ -51,9 +52,23 @@ EMBUDOS = [
 ]
 
 
-def conteos(desde):
-    filas = Evento.objects.filter(creado__gte=desde).values('nombre').annotate(total=Count('pk'))
-    return {fila['nombre']: fila['total'] for fila in filas}
+def conteos(desde, hasta=None):
+    eventos = Evento.objects.filter(creado__gte=desde)
+    if hasta:
+        eventos = eventos.filter(creado__lt=hasta)
+    return {fila['nombre']: fila['total'] for fila in eventos.values('nombre').annotate(total=Count('pk'))}
+
+
+MAS_VISTOS = 10
+
+
+def destinos_mas_vistos(desde):
+    """Las fichas más abiertas desde `desde`. Cuenta eventos `ficha_vista`, no personas."""
+    filas = list(Evento.objects.filter(nombre='ficha_vista', creado__gte=desde).exclude(destino='')
+                 .values('destino').annotate(total=Count('pk')).order_by('-total', 'destino')[:MAS_VISTOS])
+    nombres = dict(Destino.objects.filter(slug__in=[fila['destino'] for fila in filas]).values_list('slug', 'nombre'))
+    return [{'slug': fila['destino'], 'nombre': nombres.get(fila['destino'], fila['destino']), 'total': fila['total']}
+            for fila in filas]
 
 
 def embudos(totales):
@@ -93,7 +108,7 @@ def fichas_utiles():
 def horas_para_resolver_reportes(desde):
     """Tiempo medio entre un reporte y su resolución; None si aún no se ha resuelto ninguno."""
     duraciones = []
-    for modelo in (Reporte, ReporteColaboracion):
+    for modelo in (Reporte, ReporteColaboracion, ReporteResenaLugar):
         duraciones += [fila['duracion'] for fila in modelo.objects.filter(resuelto_en__gte=desde).annotate(
             duracion=ExpressionWrapper(F('resuelto_en') - F('creado'), output_field=DurationField())
         ).values('duracion')]
@@ -106,11 +121,13 @@ def panel(request):
     ahora = timezone.now()
     ultimos_30 = conteos(ahora - timedelta(days=30))
     ultimos_7 = conteos(ahora - timedelta(days=7))
+    previos_30 = conteos(ahora - timedelta(days=60), ahora - timedelta(days=30))
     nombres = Evento.DEL_NAVEGADOR + Evento.DEL_SERVIDOR
     contexto = {
         **admin.site.each_context(request), 'title': 'Métricas de uso',
-        'eventos': [{'nombre': nombre, 'dias_7': ultimos_7.get(nombre, 0), 'dias_30': ultimos_30.get(nombre, 0)}
-                    for nombre in nombres],
+        'eventos': [{'nombre': nombre, 'dias_7': ultimos_7.get(nombre, 0), 'dias_30': ultimos_30.get(nombre, 0),
+                     'previos_30': previos_30.get(nombre, 0)} for nombre in nombres],
+        'mas_vistos': destinos_mas_vistos(ahora - timedelta(days=30)), 'en_cola': total_en_cola(),
         'embudos': embudos(ultimos_30), 'retencion': retencion_30_dias(ahora), 'fichas': fichas_utiles(),
         'horas_para_resolver': horas_para_resolver_reportes(ahora - timedelta(days=30)),
     }

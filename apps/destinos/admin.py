@@ -51,11 +51,20 @@ class DestinoAdmin(admin.ModelAdmin):
 
     @admin.action(description='Publicar destinos seleccionados', permissions=['change'])
     def publicar(self, request, queryset):
-        queryset.update(es_activo=True)
+        self.cambiar_visibilidad(request, queryset, True)
 
     @admin.action(description='Ocultar destinos seleccionados', permissions=['change'])
     def ocultar(self, request, queryset):
-        queryset.update(es_activo=False)
+        self.cambiar_visibilidad(request, queryset, False)
+
+    def cambiar_visibilidad(self, request, queryset, visible):
+        """Deja constancia en el historial de cada destino: `update()` solo no registra quién lo hizo."""
+        cambiados = list(queryset.exclude(es_activo=visible))
+        for destino in cambiados:
+            self.log_change(request, destino, 'Publicado desde la lista.' if visible else 'Ocultado desde la lista.')
+        queryset.update(es_activo=visible)
+        self.message_user(request, f'{len(cambiados)} destinos {"publicados" if visible else "ocultados"}.',
+                          fail_silently=True)
 
 
 class CatalogoAdmin(admin.ModelAdmin):

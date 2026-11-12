@@ -1,0 +1,18 @@
+{% extends "admin/index.html" %}
+{% comment %}El inicio de Django, con un bloque arriba que dice de un vistazo si algo necesita atención.{% endcomment %}
+{% load salud_admin %}
+{% block content %}
+{% if user.is_active and user.is_staff %}{% salud_del_sitio as salud %}
+<div class="module" id="salud-del-sitio" style="margin-bottom: 20px;">
+  <table style="width: 100%;">
+    <caption>Estado del sitio</caption>
+    <tbody>
+      <tr><th scope="row">En la cola de moderación</th><td><a href="{% url 'cola-moderacion' %}">{{ salud.en_cola }}</a>{% if salud.dias_mas_antiguo is not None %} · lo más antiguo espera desde hace {{ salud.dias_mas_antiguo }} día{{ salud.dias_mas_antiguo|pluralize }}{% endif %}</td></tr>
+      <tr><th scope="row">Avisos por correo que no se pudieron enviar (7 días)</th><td>{{ salud.correos_fallidos }}</td></tr>
+      {% for tarea in salud.tareas %}<tr><th scope="row">{{ tarea.nombre }}</th><td>{% if tarea.corrida %}{{ tarea.corrida.get_resultado_display }} · {{ tarea.corrida.inicio|date:'d/m/Y H:i' }}{% if tarea.corrida.resultado == 'error' %} · <a href="{% url 'admin:datos_ejecuciontarea_change' tarea.corrida.pk %}">ver el error</a>{% endif %}{% else %}Aún no ha corrido{% endif %}</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{{ block.super }}
+{% endblock %}
