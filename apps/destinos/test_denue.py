@@ -189,7 +189,7 @@ class AtribucionTests(APITestCase):
         self.assertContains(ficha, 'no representa una postura del INEGI')
         self.assertNotContains(ficha, 'Agregado por la comunidad')
         self.assertNotContains(ficha, 'colaboradores de OpenStreetMap')
-        datos = self.client.get('/api/v1/lugares/', {'sur': 19.9, 'oeste': -103.8, 'norte': 20, 'este': -103.7}).data['resultados'][0]
+        datos = self.client.get(f'/api/v1/lugares/{self.sitio.pk}/').data
         self.assertIn('INEGI', datos['atribucion'])
         self.assertContains(self.client.get('/creditos/'), 'DENUE')
 

@@ -307,4 +307,5 @@ class PaginaTests(Base):
     def test_la_api_y_la_ficha_de_destino_llevan_a_la_ficha_del_lugar(self):
         self.resena()
         sitio = self.client.get('/api/v1/lugares/', {'sur': 19.9, 'oeste': -103.8, 'norte': 20, 'este': -103.7}).data['resultados'][0]
-        self.assertEqual((sitio['url'], sitio['num_resenas'], sitio['calificacion_promedio']), (self.url(), 1, 4.0))
+        self.assertEqual((sitio['id'], sitio['num_resenas'], sitio['calificacion_promedio']), (self.lugar.pk, 1, 4.0))
+        self.assertEqual(self.client.get(f'/api/v1/lugares/{sitio["id"]}/').data['url'], self.url())
