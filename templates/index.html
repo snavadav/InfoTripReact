@@ -4,23 +4,57 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/inicio-interactivo.css' %}">
 <link rel="stylesheet" href="{% static 'css/buscador.css' %}">
+{# Sin JavaScript no hay lista interactiva: se ocultan sus marcos vacíos y queda la lista de <noscript>. #}
+<noscript><link rel="stylesheet" href="{% static 'css/inicio-sin-js.css' %}"></noscript>
 {% endblock %}
 {% block content %}
 {% include 'partials/navBar.html' %}
 <main class="home" id="contenido" tabindex="-1">
-  <section class="home-hero" aria-labelledby="home-title">
-    <p class="home-kicker">Escapadas por Jalisco</p>
-    <h1 id="home-title">¿A dónde quieres ir?</h1>
-    <p class="home-lead">Busca un pueblo, una playa o un municipio. Te decimos qué hay, cómo llegar y qué cuentan quienes ya fueron.</p>
-    <form class="home-search" action="{% url 'destinos-listado' %}" role="search">
-      <label class="sr-only" for="destination-query">Destino o municipio</label>
-      <div>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input id="destination-query" type="search" name="q" maxlength="200" placeholder="Ej. Tapalpa" autocomplete="off" data-autocompletar="{% url 'destinos:sugerencias' %}">
-        <button type="submit">Buscar</button>
+  {# Panel de búsqueda al estilo de un mapa, sin mapa: campo, tipos de viaje y lista a la izquierda; el lugar elegido a la derecha. #}
+  <section class="home-top" aria-labelledby="home-title">
+    <div class="home-panel">
+      <header class="home-hero">
+        <p class="home-kicker">Escapadas por Jalisco</p>
+        <h1 id="home-title">¿A dónde quieres ir?</h1>
+        <p class="home-lead">Busca un pueblo, una playa o un municipio, o elige una idea de la lista.</p>
+      </header>
+      <form class="home-search" action="{% url 'destinos-listado' %}" role="search">
+        <label class="sr-only" for="destination-query">Destino o municipio</label>
+        <div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input id="destination-query" type="search" name="q" maxlength="200" placeholder="Ej. Tapalpa" autocomplete="off" data-autocompletar="{% url 'destinos:sugerencias' %}">
+          <button type="submit">Buscar</button>
+        </div>
+      </form>
+      <p class="home-cerca"><a href="{% url 'destinos-listado' %}#cerca"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>Ver qué hay cerca de mí</a></p>
+      <section class="discovery" aria-labelledby="discovery-title">
+        <div class="discovery-title"><h2 id="discovery-title">Ideas para empezar</h2><button id="surprise-place" class="surprise" type="button">Sorpréndeme</button></div>
+        <div class="discovery-filters" role="group" aria-label="Filtrar ideas por tipo de viaje"><button type="button" data-category="" aria-pressed="true">Todo</button>{% for categoria in categorias_inicio %}<button type="button" data-category="{{ categoria }}" aria-pressed="false">{{ categoria }}</button>{% endfor %}</div>
+        <div class="discovery-board" id="discovery-board">
+          <div class="discovery-list">
+            <div class="discovery-list-heading"><span id="selection-count"></span><a href="{% url 'destinos-listado' %}">Ver todos en el mapa</a></div>
+            <div class="discovery-cards" id="discovery-cards"></div>
+            <div class="list-controls"><button type="button" id="previous-place" aria-label="Destino anterior">←</button><p id="selection-position" role="status"></p><button type="button" id="next-place" aria-label="Siguiente destino">→</button></div>
+          </div>
+        </div>
+        <p id="discovery-empty" class="empty-catalog" hidden>No hay ideas de este tipo todavía. <a href="{% url 'destinos-listado' %}">Explora el catálogo completo</a>.</p>
+        <noscript>{% include 'destinos/tarjetas.html' %}</noscript>
+      </section>
+    </div>
+    <section class="place-preview" id="place-preview" aria-labelledby="preview-name">
+      <div class="preview-visual">
+        <img id="preview-image" alt="">
+        <div id="preview-placeholder" hidden>Aún sin fotografía</div>
+        <iframe id="preview-map" title="Mapa del destino seleccionado" referrerpolicy="no-referrer-when-downgrade" hidden></iframe>
+        <div class="preview-modes" role="group" aria-label="Vista del destino"><button type="button" id="photo-mode" aria-pressed="true">Foto</button><button type="button" id="map-mode" aria-pressed="false">Mapa</button></div>
       </div>
-    </form>
-    <p class="home-cerca"><a href="{% url 'destinos-listado' %}#cerca"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>Ver qué hay cerca de mí</a></p>
+      <div class="preview-copy">
+        <p id="preview-label" class="preview-label"></p>
+        <h3 id="preview-name"></h3>
+        <p id="preview-description"></p>
+        <div class="preview-heading"><a class="boton boton-primario preview-detail" id="preview-detail">Ver ficha</a><a class="boton" id="preview-directions" target="_blank" rel="noopener noreferrer" aria-label="Cómo llegar (abre un mapa en otra pestaña)">Cómo llegar ↗</a></div>
+      </div>
+    </section>
   </section>
 
   <nav class="home-paths" aria-label="¿Qué quieres hacer?">
@@ -48,41 +82,6 @@
       <li><strong>Nada se publica sin revisión.</strong> Reseñas, preguntas y gastos de la comunidad pasan por moderación humana.</li>
       <li><strong>Si no sabemos algo, lo decimos.</strong> Preferimos "sin confirmar" a un dato inventado.</li>
     </ul>
-  </section>
-
-  <section class="discovery" aria-labelledby="discovery-title">
-    <header class="discovery-toolbar">
-      <div class="discovery-title">
-        <div><h2 id="discovery-title">Ideas para empezar</h2><p>Destinos con ficha completa. Elige uno para ver de qué se trata.</p></div>
-        <button id="surprise-place" class="surprise" type="button">Sorpréndeme</button>
-      </div>
-      <div class="discovery-filters" role="group" aria-label="Filtrar ideas por tipo de viaje"><button type="button" data-category="" aria-pressed="true">Todo</button>{% for categoria in categorias_inicio %}<button type="button" data-category="{{ categoria }}" aria-pressed="false">{{ categoria }}</button>{% endfor %}</div>
-    </header>
-    <div class="discovery-layout">
-      <section class="place-preview" id="place-preview" aria-labelledby="preview-name" hidden>
-        <div class="preview-visual">
-          <img id="preview-image" alt="">
-          <div id="preview-placeholder" hidden>Aún sin fotografía</div>
-          <iframe id="preview-map" title="Mapa del destino seleccionado" referrerpolicy="no-referrer-when-downgrade" hidden></iframe>
-          <div class="preview-modes" role="group" aria-label="Vista del destino"><button type="button" id="photo-mode" aria-pressed="true">Foto</button><button type="button" id="map-mode" aria-pressed="false">Mapa</button></div>
-        </div>
-        <div class="preview-copy">
-          <p id="preview-label" class="preview-label"></p>
-          <h3 id="preview-name"></h3>
-          <p id="preview-description"></p>
-          <div class="preview-heading"><a class="boton boton-primario preview-detail" id="preview-detail">Ver ficha</a><a class="boton" id="preview-directions" target="_blank" rel="noopener noreferrer" aria-label="Cómo llegar (abre un mapa en otra pestaña)">Cómo llegar ↗</a></div>
-        </div>
-      </section>
-      <div class="discovery-board" id="discovery-board" hidden>
-        <div class="discovery-list">
-          <div class="discovery-list-heading"><span id="selection-count"></span><a href="{% url 'destinos-listado' %}">Ver todos en el mapa</a></div>
-          <div class="discovery-cards" id="discovery-cards"></div>
-          <div class="list-controls"><button type="button" id="previous-place" aria-label="Destino anterior">←</button><p id="selection-position" role="status"></p><button type="button" id="next-place" aria-label="Siguiente destino">→</button></div>
-        </div>
-      </div>
-    </div>
-    <p id="discovery-empty" class="empty-catalog" hidden>No hay ideas de este tipo todavía. <a href="{% url 'destinos-listado' %}">Explora el catálogo completo</a>.</p>
-    <noscript>{% include 'destinos/tarjetas.html' %}</noscript>
   </section>
 
   <section class="home-more" aria-labelledby="more-title">
