@@ -7,7 +7,9 @@ from django.core.cache import cache
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import TestCase
+from django.utils import timezone
 from rest_framework.test import APITestCase
+from apps.comunidad.models import ResenaLugar
 
 from .lugares import cerca_de
 from .models import Destino, Lugar, Municipio, Region, TIPO_DE_SUBTIPO
@@ -150,10 +152,26 @@ class ZonaTests(BaseLugares):
         self.assertEqual([sitio['nombre'] for sitio in datos['resultados']], ['Dentro'])
         self.assertFalse(datos['truncado'])
         sitio = datos['resultados'][0]
-        self.assertEqual((sitio['subtipo_nombre'], sitio['municipio'], sitio['osm_url']),
-                         ('Restaurante', 'Tapalpa', 'https://www.openstreetmap.org/node/1'))
-        self.assertIn('OpenStreetMap', sitio['atribucion'])
+        # Solo lo del marcador; el resto llega al abrirlo (LugarDetalleTests).
+        self.assertEqual(set(sitio), {'id', 'nombre', 'tipo', 'latitud', 'longitud'})
+        self.assertEqual(sitio['tipo'], 'comer')
         self.assertEqual(len(self.client.get(self.URL, self.ZONA).data['resultados']), 2)
+
+    def test_respuesta_ligera_con_calificacion_solo_si_hay_resenas(self):
+        for numero in range(300):
+            self.crear(f'Taquería La Güera {numero}', direccion='Av. Juárez 123, Centro, Tapalpa, Jalisco',
+                       telefono='+52 343 432 0000', sitio_web='https://ejemplo.mx/una-pagina-larga', horario='Lu-Do 08:00-22:00')
+        respuesta = self.client.get(self.URL, self.ZONA)
+        # Antes eran ~440 bytes por lugar (132 KB por zona en Guadalajara); la meta es menos de 30 KB.
+        self.assertLess(len(respuesta.content), 30_000)
+        self.assertNotIn('telefono', respuesta.data['resultados'][0])
+        self.assertNotIn('calificacion_promedio', respuesta.data['resultados'][0])
+        sitio = Lugar.objects.order_by('pk').first()
+        autor = get_user_model().objects.create_user('ana@example.com', 'Ana', 'P', 'Prueba-segura-493!')
+        ResenaLugar.objects.create(lugar=sitio, autor=autor, calificacion=4, texto='Bien',
+                                   fecha_visita=timezone.localdate(), estado='publicado')
+        primero = self.client.get(self.URL, self.ZONA).data['resultados'][0]
+        self.assertEqual((primero['calificacion_promedio'], primero['num_resenas']), (4.0, 1))
 
     def test_zona_invalida_o_enorme(self):
         for cambio in [{'norte': 19}, {'este': -104}, {'sur': 10}, {'tipo': 'inventado'}, {'sur': 'x'}]:
@@ -172,6 +190,18 @@ class ZonaTests(BaseLugares):
             self.crear(f'Lugar {numero}')
         with self.assertNumQueries(1):
             self.client.get(self.URL, self.ZONA)
+
+
+class LugarDetalleTests(BaseLugares):
+    def test_ficha_completa_al_abrir_y_solo_activos(self):
+        sitio = self.crear('Dentro', osm_id='node/1')
+        oculto = self.crear('Oculto', es_activo=False)
+        datos = self.client.get(f'/api/v1/lugares/{sitio.pk}/').data
+        self.assertEqual((datos['subtipo_nombre'], datos['municipio'], datos['osm_url'], datos['url']),
+                         ('Restaurante', 'Tapalpa', 'https://www.openstreetmap.org/node/1', f'/lugares/{sitio.pk}/'))
+        self.assertIn('OpenStreetMap', datos['atribucion'])
+        self.assertEqual(self.client.get(f'/api/v1/lugares/{oculto.pk}/').status_code, 404)
+        self.assertEqual(self.client.get('/api/v1/lugares/999999/').status_code, 404)
 
 
 class CercaTests(BaseLugares):
@@ -226,7 +256,9 @@ class TiposTests(BaseLugares):
         self.assertContains(self.client.get('/lugares/proponer/'), 'value="supermarket"')
         self.crear('Súper', tipo='comprar', subtipo='supermarket')
         datos = self.client.get('/api/v1/lugares/', {'sur': 19.9, 'oeste': -103.8, 'norte': 20, 'este': -103.7, 'tipo': 'comprar'}).data
-        self.assertEqual(datos['resultados'][0]['tipo_nombre'], 'Comprar')
+        self.assertEqual(datos['resultados'][0]['tipo'], 'comprar')
+        ficha = self.client.get(f"/api/v1/lugares/{datos['resultados'][0]['id']}/").data
+        self.assertEqual(ficha['tipo_nombre'], 'Comprar')
 
 
 class FichaTests(BaseLugares):
