@@ -142,6 +142,7 @@ SPECTACULAR_SETTINGS = {
     'ENUM_NAME_OVERRIDES': {
         'TipoDeLugarEnum': 'apps.destinos.models.TIPOS_DE_LUGAR',
         'EstadoConRetiroEnum': 'apps.comunidad.models.ESTADOS_CON_RETIRO',
+        'TipoDeAvisoEnum': 'apps.comunidad.notificar.OPCIONES_TIPO',
     },
 }
 

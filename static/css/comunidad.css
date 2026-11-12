@@ -125,3 +125,14 @@ details > form, details > p { margin-top: .6rem; }
 .cerca-enlaces { display: flex; flex-wrap: wrap; gap: .1rem .7rem; font-size: 1rem; }
 .cerca-enlaces a { display: inline-flex; align-items: center; min-height: 44px; }
 .practical-grid .community-note, .practical-grid .contribution-text { overflow-wrap: anywhere; }
+
+/* Mi perfil · elegir qué avisos recibir */
+.avisos-tabla { width: 100%; border-collapse: collapse; margin: .4rem 0 .8rem; font-size: 1rem; }
+.avisos-tabla th, .avisos-tabla td { padding: .35rem .25rem; border-bottom: 1px solid var(--linea); text-align: center; vertical-align: middle; }
+.avisos-tabla thead th { color: var(--texto-2); font-weight: 600; }
+.avisos-tabla thead th:first-child, .avisos-tabla th[scope="row"] { text-align: left; font-weight: 400; }
+.avisos-tabla td { width: 5.5rem; }
+.avisos-nombre { display: block; color: var(--texto); font-weight: 600; }
+.avisos-detalle { display: block; color: var(--texto-3); font-size: 1rem; }
+.community-form label.avisos-celda { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; cursor: pointer; }
+.aviso-accion { display: inline-flex; align-items: center; min-height: 44px; font-weight: 600; }

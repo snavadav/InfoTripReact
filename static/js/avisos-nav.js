@@ -34,23 +34,38 @@
     return cookie ? decodeURIComponent(cookie.slice('csrftoken='.length)) : '';
   }
   // En páginas con cuenta-api.js se comparte su token; en las demás se pide uno con el mismo cerrojo de sesión.
-  async function pedir() {
-    if (window.InfoTrip) return window.InfoTrip.api('/api/v1/notificaciones/');
+  async function pedir(url, opciones = {}) {
+    if (window.InfoTrip) return window.InfoTrip.api(url, opciones);
     const renovar = async () => {
       const respuesta = await fetch('/api/v1/auth/token/refresh/', {method: 'POST', headers: {'X-CSRFToken': csrf()}});
       return respuesta.ok ? (await respuesta.json()).access : null;
     };
     const access = await (navigator.locks ? navigator.locks.request('infotrip-sesion', renovar) : renovar());
     if (!access) return null;
-    const respuesta = await fetch('/api/v1/notificaciones/', {headers: {Authorization: 'Bearer ' + access}});
+    const respuesta = await fetch(url, {...opciones, headers: {Authorization: 'Bearer ' + access}});
     return respuesta.ok ? respuesta.json() : null;
   }
 
   if (location.pathname === '/perfil/') { recordar(0); pintar(0); return; }
+  // Se llegó desde un aviso (?aviso=<id> en el enlace del correo): ese aviso queda leído y el número se ajusta.
+  const parametros = new URLSearchParams(location.search);
+  const abierto = Number(parametros.get('aviso')) || null;
+  if (abierto) {
+    parametros.delete('aviso');
+    const resto = parametros.toString();
+    history.replaceState(history.state, '', location.pathname + (resto ? '?' + resto : '') + location.hash);
+    pedir(`/api/v1/notificaciones/${abierto}/leida/`, {method: 'POST'}).then(datos => {
+      if (!datos) return;
+      recordar(datos.no_leidas || 0);
+      pintar(datos.no_leidas || 0);
+    }).catch(() => { /* Si falla, el aviso se marca como leído al abrir Mi perfil. */ });
+    return;
+  }
+
   const guardado = recordado();
   if (guardado !== null) { pintar(guardado); return; }
   pintar(0);
-  pedir().then(datos => {
+  pedir('/api/v1/notificaciones/').then(datos => {
     if (!datos) return;
     recordar(datos.no_leidas || 0);
     pintar(datos.no_leidas || 0);

@@ -2,7 +2,7 @@ from django.urls import path
 from .views import PublicarView, MisAportesView, EditarAporteView, ReportarView
 from .viajes import CompartirViajeView, MisViajesView, ViajeView, VincularLugarView
 from .practica import ColaboracionesView, ConfirmarDatoView, FavoritosView, FavoritoView, ReportarColaboracionView
-from .avisos import NotificacionesView, NotificacionesLeidasView
+from .avisos import NotificacionLeidaView, NotificacionesView, NotificacionesLeidasView, PreferenciasAvisosView
 from .bote import (
     BoteView, ConfirmarPagoView, GastoBoteView, GastosBoteView, InvitarAmigosView, LugaresBoteView, MisBotesView,
     PagoBoteView, PagosBoteView, ParticipanteBoteView, PublicarBoteView, UnirseBoteView,
@@ -20,6 +20,8 @@ urlpatterns = [
     path('mi-cuenta/eliminar/', EliminarCuentaView.as_view(), name='eliminar-cuenta'),
     path('notificaciones/', NotificacionesView.as_view(), name='notificaciones'),
     path('notificaciones/leidas/', NotificacionesLeidasView.as_view(), name='notificaciones-leidas'),
+    path('notificaciones/<int:pk>/leida/', NotificacionLeidaView.as_view(), name='notificacion-leida'),
+    path('notificaciones/preferencias/', PreferenciasAvisosView.as_view(), name='notificaciones-preferencias'),
     path('mis-viajes/<int:pk>/lugares/', VincularLugarView.as_view(), name='vincular-lugar'),
     path('mis-viajes/<int:pk>/compartir/', CompartirViajeView.as_view(), name='compartir-viaje'),
     path('mis-viajes/<int:pk>/bote/', BoteView.as_view(), name='bote'),

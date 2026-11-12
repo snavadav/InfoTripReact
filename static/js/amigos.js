@@ -27,6 +27,11 @@
       lista(document.getElementById('lista-enviadas'), datos.enviadas, 'No tienes solicitudes pendientes.', hecho);
       lista(document.getElementById('lista-bloqueados'), datos.bloqueados, 'No has bloqueado a nadie.', hecho);
       document.getElementById('amigos-contenido').hidden = false;
+      // Desde un aviso (/amigos/#recibidas-titulo): la sección aparece al cargar, así que se lleva ahí a mano.
+      if (location.hash) {
+        document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView();
+        history.replaceState(history.state, '', location.pathname + location.search);
+      }
     } catch (error) { estado.textContent = error.message; }
   }
   async function buscarAhora() {

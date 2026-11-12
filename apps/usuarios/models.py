@@ -66,6 +66,9 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     mostrar_amigos = models.BooleanField(default=True)
     # Correos de novedades. Los códigos de acceso y la recuperación de contraseña se envían siempre.
     avisos_correo = models.BooleanField(default=True)
+    # Tipos de aviso (apps.comunidad.notificar.TIPOS) que la persona apagó por completo o solo por correo.
+    avisos_silenciados = models.JSONField(default=list, blank=True)
+    avisos_sin_correo = models.JSONField(default=list, blank=True)
     fecha_registro = models.DateTimeField(auto_now_add=True)
     ultimo_acceso  = models.DateTimeField(null=True, blank=True)
 

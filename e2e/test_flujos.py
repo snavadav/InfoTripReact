@@ -1116,6 +1116,38 @@ class FlujosTests(StaticLiveServerTestCase):
         self.assertFalse(self.pagina.locator('#account-toggle.con-avisos').count())
         self.assertFalse(Notificacion.objects.filter(leida=False).exists())
 
+    def test_un_aviso_lleva_a_su_accion_y_se_eligen_los_avisos(self):
+        from apps.comunidad.notificar import avisar
+        viaje = Viaje.objects.create(autor=self.usuario, nombre='Tapalpa en familia', destino='Tapalpa', personas=2,
+                                     presupuesto=1000, fecha_inicio=date(2026, 12, 1), fecha_fin=date(2026, 12, 2))
+        aviso = avisar(self.usuario, 'viaje_pronto', '«Tapalpa en familia» empieza mañana.',
+                       f'/mis-viajes/?abrir={viaje.pk}')
+        self.iniciar_sesion()
+        # El enlace del correo (?aviso=) abre la escapada en el editor y deja el aviso leído.
+        self.abrir(f'/mis-viajes/?abrir={viaje.pk}&ref=aviso&aviso={aviso.pk}')
+        self.pagina.wait_for_selector('#editor-title:text("Editar escapada")')
+        self.assertEqual(self.pagina.input_value('#trip-form [name="nombre"]'), 'Tapalpa en familia')
+        self.pagina.wait_for_function('!location.search.includes("aviso=")')
+        aviso.refresh_from_db()
+        self.assertTrue(aviso.leida)
+        # En Mi perfil el aviso ofrece su acción y, desde el correo, se llega a elegir qué avisos recibir.
+        self.abrir('/perfil/#avisos-preferencias')
+        self.pagina.wait_for_selector('#my-notices a.aviso-accion:text("Ver escapada")')
+        self.pagina.wait_for_selector('#avisos-preferencias[open] #avisos-tipos tr')
+        agenda_correo = self.pagina.locator('input[name="sin_correo"][value="viaje_hoy"]')
+        self.assertTrue(agenda_correo.is_enabled())
+        self.pagina.uncheck('input[name="app"][value="viaje_hoy"]')
+        self.assertTrue(agenda_correo.is_disabled())
+        self.pagina.uncheck('input[name="sin_correo"][value="lugares"]')
+        self.pagina.click('#avisos-form button[type="submit"]')
+        self.pagina.wait_for_selector('#avisos-form .form-status:text("Avisos guardados.")')
+        self.usuario.refresh_from_db()
+        self.assertEqual((self.usuario.avisos_silenciados, self.usuario.avisos_sin_correo), (['viaje_hoy'], ['lugares']))
+        # Cada casilla es un objetivo de al menos 44 × 44 px.
+        chicas = self.pagina.evaluate('''[...document.querySelectorAll('.avisos-celda')]
+            .map(c => c.getBoundingClientRect()).filter(r => r.width < 44 || r.height < 44).length''')
+        self.assertEqual(chicas, 0)
+
     PAGINAS_LEGIBLES = ['/', '/destinos/', '/destinos/mirador/', '/destinos/mirador/costos/', '/costos/', '/misiones/',
                         '/mis-viajes/', '/login/', '/registro/', '/recuperar/', '/lugares/proponer/', '/negocios/',
                         '/comentarios/', '/privacidad/', '/creditos/']

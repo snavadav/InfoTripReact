@@ -94,17 +94,50 @@
         const item=node('article',null,'community-box');
         if(!aviso.leida) item.append(node('p','Nuevo','data-freshness data-freshness--recent'));
         item.append(node('p',aviso.texto),node('p',new Date(aviso.creado).toLocaleDateString('es-MX'),'community-note'));
-        if(aviso.enlace){const link=node('a','Abrir →');link.href=aviso.enlace;item.append(link);}
+        if(aviso.enlace){const link=node('a',`${aviso.accion} →`,'aviso-accion');link.href=aviso.enlace;item.append(link);}
         notices.append(item);
       });
       if(!data.results.length) notices.append(node('p','No tienes avisos por ahora.'));
       if(data.no_leidas) await InfoTrip.api('/api/v1/notificaciones/leidas/',{method:'POST'});
     } catch(error){notices.append(node('p',error.message));}
   }
+  // Qué avisos recibir: cada tipo dentro de InfoTrip y, si se quiere, también por correo.
+  const prefs=document.getElementById('avisos-form');
+  function check(name,value,checked,label){const input=node('input');input.type='checkbox';input.name=name;input.value=value;input.checked=checked;input.setAttribute('aria-label',label);const wrap=node('label',null,'avisos-celda');wrap.append(input);return wrap;}
+  function syncPrefs(){
+    const email=prefs.elements.correo.checked;
+    prefs.querySelectorAll('input[name="sin_correo"]').forEach(input=>{
+      const app=prefs.querySelector(`input[name="app"][value="${input.value}"]`);
+      input.disabled=!email||!app.checked;
+    });
+  }
+  function paintPrefs(data){
+    prefs.elements.correo.checked=data.correo;
+    const rows=data.tipos.map(tipo=>{
+      const row=node('tr'), name=node('th');name.scope='row';
+      name.append(node('span',tipo.nombre,'avisos-nombre'),node('span',tipo.detalle,'avisos-detalle'));
+      const app=node('td'), email=node('td');
+      app.append(check('app',tipo.tipo,!data.silenciados.includes(tipo.tipo),`${tipo.nombre}: en InfoTrip`));
+      if(tipo.correo_posible)email.append(check('sin_correo',tipo.tipo,!data.sin_correo.includes(tipo.tipo),`${tipo.nombre}: por correo`));
+      else email.append(node('span','Solo en InfoTrip','avisos-detalle'));
+      row.append(name,app,email);return row;
+    });
+    document.getElementById('avisos-tipos').replaceChildren(...rows);syncPrefs();
+  }
+  async function loadPrefs(){
+    try{paintPrefs(await InfoTrip.api('/api/v1/notificaciones/preferencias/'));}
+    catch(error){prefs.querySelector('.form-status').textContent=error.message;}
+    if(location.hash==='#avisos-preferencias'){const box=document.getElementById('avisos-preferencias');box.open=true;box.scrollIntoView();}
+  }
+  prefs.addEventListener('change',syncPrefs);
+  prefs.addEventListener('submit',event=>{event.preventDefault();InfoTrip.submit(prefs,async feedback=>{
+    const off=name=>[...prefs.querySelectorAll(`input[name="${name}"]`)].filter(input=>!input.checked).map(input=>input.value);
+    const data=await InfoTrip.api('/api/v1/notificaciones/preferencias/',{method:'PUT',body:{correo:prefs.elements.correo.checked,silenciados:off('app'),sin_correo:off('sin_correo')}});
+    paintPrefs(data);feedback.textContent='Avisos guardados.';
+  });});
   more.addEventListener('click',load);
   form.addEventListener('submit',event=>{event.preventDefault();InfoTrip.submit(form,async feedback=>{
     const body=new FormData(form);if(!form.elements.foto_perfil.files.length)body.delete('foto_perfil');
-    body.set('avisos_correo',form.elements.avisos_correo.checked);
     const user=await InfoTrip.api('/api/v1/auth/perfil/',{method:'PATCH',body});localStorage.setItem('usuario',JSON.stringify(user));
     feedback.textContent='Perfil guardado.';if(user.foto_perfil){const image=document.getElementById('profile-photo');image.src=user.foto_perfil;image.hidden=false;}
   });});
@@ -126,13 +159,12 @@
     try {
       const user=await InfoTrip.api('/api/v1/auth/perfil/');
       for(const name of ['nombre','apellido','ciudad_origen','bio'])form.elements[name].value=user[name]||'';
-      form.elements.avisos_correo.checked=user.avisos_correo;
       document.getElementById('profile-email').textContent=`${user.email} · ${user.es_verificado?'Correo confirmado':'Correo pendiente'}`;
       const handle=document.getElementById('profile-username');
       handle.replaceChildren(user.username?`Tu nombre de usuario: @${user.username} · `:'Aún no eliges tu nombre de usuario · ');
       const handleLink=document.createElement('a');handleLink.href='/elegir-usuario/?next=/perfil/';handleLink.textContent=user.username?'Cambiar':'Elegirlo';handle.append(handleLink);
       if(user.foto_perfil){const image=document.getElementById('profile-photo');image.src=user.foto_perfil;image.hidden=false;}
-      document.getElementById('profile-content').hidden=false;status.textContent='';await Promise.all([loadNotices(),load(),loadPlaceReviews(),loadPlaceProposals()]);
+      document.getElementById('profile-content').hidden=false;status.textContent='';await Promise.all([loadNotices(),loadPrefs(),load(),loadPlaceReviews(),loadPlaceProposals()]);
     }catch(error){status.textContent=error.message;document.getElementById('profile-login').hidden=false;}
   })();
 })();
