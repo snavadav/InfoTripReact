@@ -144,8 +144,8 @@ class AccesibilidadTests(StaticLiveServerTestCase):
         if not saludo:
             contexto.add_init_script(SIN_SALUDO)
         if sin_fuentes:
-            # La llegada de Geist desde Google Fonts depende de la red y también mueve el texto.
-            contexto.route(re.compile(r'https://fonts\.(googleapis|gstatic)\.com/.*'), lambda ruta: ruta.abort())
+            # La llegada de Geist (static/fonts/) también mueve el texto: se compara con la fuente del sistema.
+            contexto.route(re.compile(r'.*/fonts/geist/.*\.woff2$'), lambda ruta: ruta.abort())
         contexto.add_init_script(TEMA % tema)
         self.addCleanup(contexto.close)
         pagina = contexto.new_page()

@@ -5,7 +5,7 @@
  *   - Las páginas públicas que se visitan, con la red primero (caché "paginas", versionada, como mucho 40).
  *   - Los puntos del mapa de Explorar (/destinos/puntos.json), con la red primero (caché "datos", como mucho 10).
  *   - Las fotos de /static/ que se ven (caché "fotos", versionada, como mucho 60).
- *   - Leaflet de unpkg, solo URLs con versión fija (caché "cdn"; esas URLs nunca cambian de contenido).
+ *   - Leaflet (static/vendor/) y las fuentes (static/fonts/) que se usan, junto con el CSS y JS propios.
  *   - Los cuadros del mapa de OpenStreetMap que se ven, con tope de 50 MB y LRU (caché "mapa").
  * Qué NO guarda nunca: la API (/api/, incluida /api/v1/auth/), /admin/, /media/, nada que no sea GET, las
  * páginas con datos de una persona (pasaporte o escapada compartidos, botes, perfil, mis viajes, favoritos)
@@ -18,10 +18,10 @@ const CACHE_APP = `${PREFIJO}app-${VERSION}`;
 const CACHE_PAGINAS = `${PREFIJO}paginas-${VERSION}`;
 const CACHE_FOTOS = `${PREFIJO}fotos-${VERSION}`;
 const CACHE_DATOS = `${PREFIJO}datos-${VERSION}`;
-// Sin versión: sobreviven a los despliegues porque su contenido no depende de InfoTrip.
-const CACHE_CDN = `${PREFIJO}cdn-v1`;
+// Sin versión: sobrevive a los despliegues porque su contenido no depende de InfoTrip.
+// (La antigua caché "cdn-v1" de unpkg ya no está en la lista: se borra al activarse esta versión.)
 const CACHE_MAPA = `${PREFIJO}mapa-v1`;
-const CACHES_VIGENTES = [CACHE_APP, CACHE_PAGINAS, CACHE_FOTOS, CACHE_DATOS, CACHE_CDN, CACHE_MAPA];
+const CACHES_VIGENTES = [CACHE_APP, CACHE_PAGINAS, CACHE_FOTOS, CACHE_DATOS, CACHE_MAPA];
 
 const PAGINA_SIN_CONEXION = PRECACHE[0];
 const MAX_PAGINAS = 40;
@@ -96,8 +96,6 @@ self.addEventListener('fetch', evento => {
   }
   if (url.origin === ORIGEN_MAPA) {
     evento.respondWith(cuadroDelMapa(evento));
-  } else if (url.origin === 'https://unpkg.com' && /@\d+\.\d+\.\d+\//.test(url.pathname)) {
-    evento.respondWith(desdeCdn(evento));
   }
 });
 
@@ -190,28 +188,13 @@ async function estatico(evento, url) {
   if (guardado) return guardado;
   const respuesta = await fetch(peticion);
   const ruta = url.pathname.slice(STATIC_URL.length);
-  if (sePuedeGuardar(respuesta) && /^(css|js|images)\//.test(ruta)) {
+  if (sePuedeGuardar(respuesta) && /^(css|js|images|vendor|fonts)\//.test(ruta)) {
     const copia = respuesta.clone();
     evento.waitUntil((async () => {
       const nombre = ruta.startsWith('images/') ? CACHE_FOTOS : CACHE_APP;
       await (await caches.open(nombre)).put(peticion, copia);
       if (nombre === CACHE_FOTOS) await recortar(CACHE_FOTOS, MAX_FOTOS);
     })());
-  }
-  return respuesta;
-}
-
-// ─── Leaflet en unpkg: URLs con versión, no cambian ───────────
-
-async function desdeCdn(evento) {
-  const peticion = evento.request;
-  const guardado = await caches.match(peticion, { cacheName: CACHE_CDN });
-  if (guardado) return guardado;
-  const respuesta = await fetch(peticion);
-  // Solo respuestas CORS legibles: las opacas ocupan mucho más en la cuota del navegador.
-  if (respuesta.type === 'cors' && sePuedeGuardar(respuesta)) {
-    const copia = respuesta.clone();
-    evento.waitUntil(caches.open(CACHE_CDN).then(cache => cache.put(peticion, copia)));
   }
   return respuesta;
 }
