@@ -87,10 +87,19 @@ class Moderable(models.Model):
 class Notificacion(models.Model):
     """Aviso interno para un usuario; se muestra en Mi perfil y, si corresponde, se envía por correo.
 
-    El correo no se envía al moderar: lo envía después el comando `enviar_avisos`.
+    Se crean con apps.comunidad.notificar.avisar(), que respeta las preferencias de cada persona. El correo no se
+    envía en la petición: lo envía después el comando `enviar_avisos`.
     """
     MAX_INTENTOS_CORREO = 3
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notificaciones')
+    # Una de las claves de notificar.TIPOS; 'general' para los avisos anteriores a los tipos.
+    tipo = models.CharField(max_length=20, default='general')
+    # Evita duplicados: un aviso programado lleva una clave estable (p. ej. «viaje_pronto:12:2026-11-14»).
+    clave = models.CharField(max_length=80, blank=True)
+    # Quien provocó el aviso, si es otra persona. Si bloquea a quien lo recibe o se da de baja, el aviso se oculta;
+    # si elimina su cuenta, se borra.
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE,
+                              related_name='+')
     texto = models.CharField(max_length=300)
     enlace = models.CharField(max_length=300, blank=True)
     leida = models.BooleanField(default=False)
@@ -105,6 +114,10 @@ class Notificacion(models.Model):
             models.Index(fields=['usuario', 'leida'], name='notificacion_usuario_idx'),
             models.Index(fields=['correo_pendiente'], name='notificacion_correo_idx',
                          condition=models.Q(correo_pendiente=True)),
+        ]
+        constraints = [
+            models.UniqueConstraint(fields=['usuario', 'clave'], condition=~models.Q(clave=''),
+                                    name='notificacion_una_por_clave'),
         ]
 
 

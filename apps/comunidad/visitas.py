@@ -14,7 +14,8 @@ from rest_framework.views import APIView
 from apps.core.geo import distancia_km
 from apps.destinos.models import Destino
 from apps.metricas.models import registrar
-from .models import Notificacion, VisitaComprobada
+from .models import VisitaComprobada
+from .notificar import avisar
 from .selectors import SLUGS_PUEBLOS
 from .views import AporteThrottle
 
@@ -71,6 +72,7 @@ class VisitaView(APIView):
     def avisar_sello(self, usuario, destino):
         total = VisitaComprobada.objects.filter(autor=usuario, destino__slug__in=SLUGS_PUEBLOS,
                                                 destino__es_activo=True).count()
-        Notificacion.objects.create(usuario=usuario, enlace='/pasaporte/', texto=(
-            f'Ganaste el sello de {destino.nombre}: llevas {total} de {len(SLUGS_PUEBLOS)} en tu pasaporte.'))
+        avisar(usuario, 'pasaporte',
+               f'Ganaste el sello de {destino.nombre}: llevas {total} de {len(SLUGS_PUEBLOS)} en tu pasaporte.',
+               '/pasaporte/')
         registrar('sello_obtenido', usuario=usuario, destino=destino.slug)

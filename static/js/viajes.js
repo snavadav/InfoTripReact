@@ -177,11 +177,16 @@
   showPlaces();
   const suggested=new URLSearchParams(location.search).get('destino');
   if(suggested){form.elements.destino.value=suggested.slice(0,200);form.elements.nombre.value=('Escapada a '+suggested).slice(0,120);dirty=true;}
-  // Recién guardada desde el planeador: se abre en el editor.
-  const requested=Number(new URLSearchParams(location.search).get('editar'))||null;
+  // Recién guardada desde el planeador (?editar=) o abierta desde un aviso (?abrir=): se abre en el editor.
+  const params=new URLSearchParams(location.search);
+  const fromPlanner=Number(params.get('editar'))||null;
+  const requested=fromPlanner||Number(params.get('abrir'))||null;
   async function openRequested(){
     if(!requested)return;
-    try{const item=await InfoTrip.api(`/api/v1/mis-viajes/${requested}/`);dirty=false;edit(item);status.replaceChildren(document.createTextNode('Tu ruta quedó guardada como escapada. Ajústala aquí o '),button('Invitar amigos',openPot(item.id,'#bote-amigos')));history.replaceState(null,'',location.pathname);}
+    try{const item=await InfoTrip.api(`/api/v1/mis-viajes/${requested}/`);dirty=false;edit(item);
+      if(fromPlanner)status.replaceChildren(document.createTextNode('Tu ruta quedó guardada como escapada. Ajústala aquí o '),button('Invitar amigos',openPot(item.id,'#bote-amigos')));
+      else status.textContent=`Abriste «${item.nombre}».`;
+      history.replaceState(null,'',location.pathname);}
     catch(error){status.textContent=error.message;}
   }
   const draft=suggested||requested?null:loadDraft();

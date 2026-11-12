@@ -57,7 +57,8 @@ def anonimizar_cuenta(usuario):
     GastoReal.objects.filter(registrado_por=usuario).update(
         registrado_por=None, descripcion='Gasto de una cuenta eliminada'
     )
-    Notificacion.objects.filter(usuario=usuario).delete()
+    # También los avisos que provocó a otras personas: su texto lleva su nombre o su @usuario.
+    Notificacion.objects.filter(Q(usuario=usuario) | Q(actor=usuario)).delete()
     Amistad.objects.filter(Q(de=usuario) | Q(para=usuario)).delete()
     Bloqueo.objects.filter(Q(de=usuario) | Q(para=usuario)).delete()
     PasaporteCompartido.objects.filter(usuario=usuario).delete()

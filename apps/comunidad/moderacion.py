@@ -6,7 +6,9 @@ from django.utils import timezone
 from apps.core.geo import distancia_km
 from apps.destinos.models import Destino, Lugar, TIPO_DE_SUBTIPO
 from apps.metricas.models import registrar
+from apps.usuarios.models import Usuario
 from .models import Aporte, Favorito, Notificacion, PropuestaLugar, ResenaLugar
+from .notificar import avisar, nuevo
 
 registro = logging.getLogger('infotrip.moderacion')
 TEXTO_NOVEDAD = 'Hay información nueva sobre'
@@ -94,7 +96,7 @@ def avisar_al_autor(objeto, anterior, estado, motivo_publico=''):
         if motivo_publico and estado == 'oculto':
             texto = f'{texto} Motivo: {motivo_publico}.'[:Notificacion._meta.get_field('texto').max_length]
         enlace = objeto.enlace_publicado() if estado == 'publicado' else ''
-        Notificacion.objects.create(usuario=objeto.autor, texto=texto, enlace=enlace, correo_pendiente=True)
+        avisar(objeto.autor, 'aportes', texto, enlace)
 
 
 def avisar_a_quienes_lo_guardaron(objeto):
@@ -104,10 +106,9 @@ def avisar_a_quienes_lo_guardaron(objeto):
     recientes = Notificacion.objects.filter(
         enlace=enlace, texto__startswith=TEXTO_NOVEDAD, creado__gte=timezone.now() - timedelta(days=7),
     ).values('usuario')
-    personas = (Favorito.objects.filter(destino=destino, autor__es_activo=True).exclude(autor=objeto.autor)
-                .exclude(autor__in=recientes).values_list('autor', flat=True))
-    Notificacion.objects.bulk_create([
-        Notificacion(usuario_id=persona, texto=f'{TEXTO_NOVEDAD} {destino.nombre}, uno de tus lugares guardados.',
-                     enlace=enlace, correo_pendiente=True)
-        for persona in personas
-    ])
+    personas = (Usuario.objects.filter(pk__in=Favorito.objects.filter(destino=destino).values('autor'),
+                                       es_activo=True)
+                .exclude(pk=objeto.autor_id).exclude(pk__in=recientes))
+    avisos = (nuevo(persona, 'lugares', f'{TEXTO_NOVEDAD} {destino.nombre}, uno de tus lugares guardados.', enlace)
+              for persona in personas)
+    Notificacion.objects.bulk_create([aviso for aviso in avisos if aviso])

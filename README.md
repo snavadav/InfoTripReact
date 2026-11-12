@@ -260,7 +260,7 @@ Registrarse o iniciar sesión envía un código al correo, y `verificar-codigo` 
 | Ruta o comando | Descripción |
 |---|---|
 | `/health/` | Estado de la base de datos y la caché: 200 si responden, 503 si no |
-| `python manage.py enviar_avisos` | Crea las invitaciones tras un viaje y envía los avisos pendientes; programarlo cada pocos minutos |
+| `python manage.py enviar_avisos` | Crea los recordatorios (escapada próxima, agenda del día, pagos sin confirmar, cuentas por saldar, ¿cómo te fue?) y envía los avisos pendientes; programarlo cada pocos minutos. Para probar: `--forzar` ignora la hora, `--fecha AAAA-MM-DD` simula otro día y `--sin-correo` solo los crea |
 | `python manage.py generar_miniaturas` | Crea las miniaturas de fotos anteriores a este campo; basta una vez |
 | `python manage.py purgar_eventos` | Borra los eventos de uso de más de 13 meses |
 | `python manage.py cargar_destinos_iniciales` | Carga opcional del catálogo inicial |
