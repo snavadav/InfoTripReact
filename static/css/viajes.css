@@ -9,18 +9,18 @@
 #saved-trips { display: grid; gap: .5rem; }
 article.trip-card { padding: .85rem; border: 1px solid var(--linea); border-radius: var(--radio); background: var(--panel); }
 article.trip-card h3 { margin-bottom: .15rem; }
-article.trip-card p { color: var(--texto-2); font-size: .875rem; }
+article.trip-card p { color: var(--texto-2); font-size: 1rem; }
 .trip-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem; margin-top: .6rem; }
-.trip-actions button { min-height: 44px; padding: .25rem .6rem; font-size: .875rem; }
+.trip-actions button { min-height: 44px; padding: .25rem .6rem; font-size: 1rem; }
 .trip-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
 .trip-expense { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .6rem; margin-bottom: .5rem; padding: .75rem; border: 1px solid var(--linea); border-radius: var(--radio-s); }
-.trip-expense legend { padding: 0 .3rem; color: var(--texto-3); font-size: .8125rem; }
+.trip-expense legend { padding: 0 .3rem; color: var(--texto-3); font-size: 1rem; }
 .trip-expense > button { align-self: end; justify-self: start; }
 .trip-task { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: end; gap: .6rem; margin-bottom: .4rem; }
 .trip-task label:first-child { display: flex; align-items: center; gap: .4rem; min-height: 44px; font-weight: 400; }
 .trip-task:has(input[type="checkbox"]:checked) input[name="texto"] { color: var(--texto-3); text-decoration: line-through; }
-#trip-places .trip-actions { justify-content: space-between; margin: 0 0 .25rem; font-size: .9375rem; }
-.trip-totals { padding: .75rem; border-radius: var(--radio-s); background: var(--panel-2); font-variant-numeric: tabular-nums; font-size: .875rem; }
+#trip-places .trip-actions { justify-content: space-between; margin: 0 0 .25rem; font-size: 1rem; }
+.trip-totals { padding: .75rem; border-radius: var(--radio-s); background: var(--panel-2); font-variant-numeric: tabular-nums; font-size: 1rem; }
 .trip-totals:empty { display: none; }
 #trip-form h3 { margin-top: .5rem; }
 #trip-activities:empty, #trip-tasks:empty, #trip-expenses:empty { display: none; }
@@ -29,12 +29,12 @@ article.trip-card p { color: var(--texto-2); font-size: .875rem; }
 .bote-pago { font-weight: 600; }
 .bote-gasto { padding: .75rem 0; border-top: 1px solid var(--linea); }
 .bote-gasto:first-child { border-top: 0; }
-.bote-gasto p { color: var(--texto-2); font-size: .9375rem; }
+.bote-gasto p { color: var(--texto-2); font-size: 1rem; }
 .bote-entre { padding: .6rem .75rem; border: 1px solid var(--linea); border-radius: var(--radio-s); }
-.bote-entre legend { padding: 0 .3rem; font-size: .9375rem; font-weight: 500; }
+.bote-entre legend { padding: 0 .3rem; font-size: 1rem; font-weight: 500; }
 .community-form .bote-entre label { display: flex; align-items: center; gap: .5rem; margin: .25rem 0; font-weight: 400; }
-#bote-personas .trip-actions { justify-content: space-between; margin: 0; padding: .4rem 0; border-top: 1px solid var(--linea); font-size: .9375rem; }
-#joined-pots { margin-top: 1rem; font-size: .9375rem; }
+#bote-personas .trip-actions { justify-content: space-between; margin: 0; padding: .4rem 0; border-top: 1px solid var(--linea); font-size: 1rem; }
+#joined-pots { margin-top: 1rem; font-size: 1rem; }
 #bote-contenido h3 { margin-top: .75rem; }
 
 @media (max-width: 860px) {
@@ -53,11 +53,11 @@ article.trip-card p { color: var(--texto-2); font-size: .875rem; }
 .bote-sugerido:first-child { border-top: 0; }
 .bote-tabla-caja { max-width: 100%; margin-top: .5rem; overflow-x: auto; }
 .bote-tabla-caja:focus-visible { outline: 2px solid var(--foco); }
-.bote-tabla { width: 100%; border-collapse: collapse; font-size: .9375rem; font-variant-numeric: tabular-nums; }
-.bote-tabla caption { text-align: left; color: var(--texto-3); font-size: .875rem; padding-bottom: .35rem; }
+.bote-tabla { width: 100%; border-collapse: collapse; font-size: 1rem; font-variant-numeric: tabular-nums; }
+.bote-tabla caption { text-align: left; color: var(--texto-3); font-size: 1rem; padding-bottom: .35rem; }
 .bote-tabla th, .bote-tabla td { padding: .45rem .5rem; border-top: 1px solid var(--linea); text-align: right; white-space: nowrap; }
 .bote-tabla th[scope="row"], .bote-tabla thead th:first-child { text-align: left; white-space: normal; font-weight: 600; }
-.bote-tabla thead th { color: var(--texto-3); font-weight: 500; font-size: .8125rem; }
+.bote-tabla thead th { color: var(--texto-3); font-weight: 500; font-size: 1rem; }
 .bote-donde { display: grid; gap: .25rem; }
 .bote-donde > label { font-weight: 500; }
 .enlace-boton { min-height: 0; padding: 0; border: 0; background: none; color: var(--acento); text-decoration: underline; font: inherit; cursor: pointer; }
@@ -69,3 +69,10 @@ article.trip-card p { color: var(--texto-2); font-size: .875rem; }
   .bote-tabla th, .bote-tabla td { padding: .15rem 0; border: 0; text-align: left; white-space: normal; }
   .bote-tabla td::before { content: attr(data-etiqueta) ": "; color: var(--texto-3); }
 }
+
+/* Agenda y pendientes plegados hasta que se usan: el formulario abre con lo esencial (fechas, viajeros y gastos). */
+.trip-bloque { margin: .75rem 0; border: 1px solid var(--linea); border-radius: var(--radio); background: var(--panel); }
+.trip-bloque > summary { display: flex; align-items: center; gap: .5rem; min-height: 44px; padding: 0 .9rem; font-size: 1rem; font-weight: 600; cursor: pointer; }
+.trip-bloque[open] { padding-bottom: .9rem; }
+.trip-bloque[open] > :not(summary) { margin-left: .9rem; margin-right: .9rem; }
+.trip-bloque-cuenta { color: var(--texto-2); font-weight: 400; }
