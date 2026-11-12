@@ -1,6 +1,8 @@
 /* Asistente Axo: un ajolote que abre un panel guiado, sin competir con el mapa. */
 .trip-chat { position: fixed; right: 1rem; bottom: 1rem; z-index: 900; display: flex; flex-direction: column; align-items: flex-end; gap: .6rem; }
 .trip-chat [hidden], .trip-chat[hidden] { display: none !important; }
+/* Con un campo de formulario enfocado (chatbot.js) se aparta sin dejar de estar en el orden de tabulación. */
+.trip-chat.is-apartado { opacity: 0; pointer-events: none; }
 .trip-chat-toggle {
   width: 56px;
   min-height: 56px;

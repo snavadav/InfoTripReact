@@ -151,7 +151,6 @@ def inicio(request):
     return render(request, 'index.html', {
         'lugares': [completar(lugar) for lugar in seleccion],
         'exploracion': [completar(lugar) for lugar in lugares],
-        'puntos_mapa': [punto_de_mapa(destino) for destino in destinos_publicos(con_fotos=True)],
         'categorias_inicio': sorted({categoria for lugar in lugares for categoria in lugar['categorias']}),
     })
 

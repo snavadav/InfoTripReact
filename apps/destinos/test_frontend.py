@@ -165,7 +165,8 @@ class ExploracionMapaTests(TestCase):
         self.assertEqual(puntos['importado']['resumen'], '')
         self.assertEqual(puntos['vacio']['resumen'], '')
         self.assertEqual(puntos['corto']['municipio'], 'Municipio prueba')
-        self.assertEqual(self.client.get('/').context['puntos_mapa'][0].keys(), puntos['corto'].keys())
+        # La portada no pinta el mapa: no debe calcular los puntos de todo el catálogo.
+        self.assertNotIn('puntos_mapa', self.client.get('/').context)
 
     def test_editorial_filtrada_sin_coordenadas_inventadas(self):
         respuesta = self.client.get('/destinos/', {'municipio': 'tequila', 'categoria': 'pueblos'})

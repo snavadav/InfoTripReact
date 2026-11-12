@@ -20,7 +20,7 @@
 
   const menu = [
     ['Planear mi escapada', 'plan'], ['Buscar un destino', 'search'], ['¿Qué hay cerca de mí?', 'nearby'],
-    ['¿Cuánto cuesta?', 'costs'], ['Mis escapadas', 'trips'], ['¿De dónde salen los datos?', 'sources'],
+    ['¿Cuánto cuesta?', 'costs'], ['Mis viajes', 'trips'], ['¿De dónde salen los datos?', 'sources'],
     ['Ayuda con mi cuenta', 'account']
   ];
   // Respuestas editoriales: no representan precios, disponibilidad ni visitas verificadas.
@@ -30,11 +30,11 @@
     search: { text: 'Escribe el nombre de un destino o municipio de Jalisco y lo busco en el catálogo.', focusInput: true, choices: [['¿Qué hay cerca de mí?', 'nearby'], ['Ver todo el catálogo', 'menu']], links: [['Explorar el catálogo →', 'catalog']] },
     plan: { text: 'El planeador arma el recorrido de un día con lugares reales del catálogo: eliges punto de partida, qué te gusta, tu horario y tu presupuesto, y te propone un orden de visita.\n\nConfirma horarios con cada lugar antes de salir.', links: [['Abrir el planeador →', 'planner']], choices: [['Qué llevar', 'packing'], ['¿Cuánto cuesta?', 'costs'], ['Guardar mi escapada', 'trips']] },
     costs: { text: `En Costos ves lo que pagaron otros viajeros por entrada, comida, hospedaje y transporte.\n\nSolo damos una cifra cuando un concepto tiene al menos ${MINIMO_REPORTES} reportes reales del último año: con menos, un solo dato raro podría engañarte. Si no hay cifra, no significa que sea gratis. Es una referencia, no una cotización.\n\nTip: escribe «costos de» y un destino, por ejemplo «costos de Tapalpa».`, links: [['Ver costos por destino →', 'costs']], choices: [['¿De dónde salen los datos?', 'sources'], ['Dividir gastos con amigos', 'trips']] },
-    trips: { text: 'En Mis escapadas creas un plan con fechas, lugares y gastos, calculas el reparto por persona y lo compartes. Con el Bote del grupo cada quien anota lo que pagó.\n\nNecesitas iniciar sesión para guardarlas. Los importes son tus estimaciones, no cotizaciones.', links: [['Ir a Mis escapadas →', 'trips']], choices: [['Planear mi escapada', 'plan'], ['Ayuda con mi cuenta', 'account']] },
+    trips: { text: 'En Mis viajes creas un plan con fechas, lugares y gastos, calculas el reparto por persona y lo compartes. Con el Bote del grupo cada quien anota lo que pagó.\n\nNecesitas iniciar sesión para guardarlas. Los importes son tus estimaciones, no cotizaciones.', links: [['Ir a Mis viajes →', 'trips']], choices: [['Planear mi escapada', 'plan'], ['Ayuda con mi cuenta', 'account']] },
     nearby: { text: 'Puedo buscar lugares a tu alrededor (restaurantes, hospedaje, farmacias, cajeros…). Necesito tu permiso de ubicación una sola vez; no la guardamos.', choices: [['Buscar con mi ubicación', 'locate'], ['Mejor el mapa', 'menu']], links: [['Ver en el mapa →', 'nearby']] },
     sources: { text: 'Así obtengo lo que te muestro:\n• Negocios como restaurantes, hospedajes y tiendas: Directorio Estadístico Nacional de Unidades Económicas (INEGI, DENUE).\n• El mapa y muchos lugares: OpenStreetMap, hecho por voluntarios.\n• Horarios y costos de museos y zonas arqueológicas: Sistema de Información Cultural de la Secretaría de Cultura.\n• Reseñas, fotos y gastos: aportes de viajeros, revisados antes de publicarse.\n\nCada ficha cita su fuente. Si un dato no está, no lo invento. La información puede cambiar: confirma con el lugar antes de ir.', links: [['Créditos y fuentes →', 'credits']], choices: [['¿Cuánto cuesta?', 'costs'], ['Compartir mi experiencia', 'contribute']] },
     contribute: { text: 'Para compartir tu experiencia:\n1. Inicia sesión.\n2. Abre la ficha de un destino o lugar.\n3. Publica una reseña, una foto o un gasto, con la fecha de tu visita.\n\nLos aportes pasan por moderación antes de publicarse. La revisión no prueba que alguien haya visitado el lugar.', links: [['Explorar destinos →', 'catalog'], ['Crear cuenta →', 'register']], choices: [['¿De dónde salen los datos?', 'sources']] },
-    account: { text: 'Te ayudo con tu cuenta:\n• ¿Olvidaste tu contraseña? Usa «Recuperar contraseña» y te llegará un código al correo.\n• En Mi perfil editas tus datos y gestionas tus aportes.\n\nNunca compartas contraseñas ni códigos en una conversación. Yo nunca te los voy a pedir.', links: [['Iniciar sesión →', 'login'], ['Crear cuenta →', 'register'], ['Recuperar contraseña →', 'recover'], ['Mi perfil →', 'profile']], choices: [['Mis escapadas', 'trips']] },
+    account: { text: 'Te ayudo con tu cuenta:\n• ¿Olvidaste tu contraseña? Usa «Recuperar contraseña» y te llegará un código al correo.\n• En Mi perfil editas tus datos y gestionas tus aportes.\n\nNunca compartas contraseñas ni códigos en una conversación. Yo nunca te los voy a pedir.', links: [['Iniciar sesión →', 'login'], ['Crear cuenta →', 'register'], ['Recuperar contraseña →', 'recover'], ['Mi perfil →', 'profile']], choices: [['Mis viajes', 'trips']] },
     packing: { text: 'Lista básica para tu salida:\n• Agua y protección solar.\n• Calzado adecuado para la actividad.\n• Teléfono cargado y batería de respaldo.\n• Identificación, efectivo y contactos importantes.\n• Confirmaciones de transporte o alojamiento.\n\nRevisa el pronóstico y si el lugar acepta tarjeta.', choices: [['¿Cuánto cuesta?', 'costs'], ['Planear mi escapada', 'plan']] },
     ai: { text: 'No soy una inteligencia artificial: soy un asistente con respuestas escritas por el equipo de InfoTrip. Reconozco palabras clave y busco en el catálogo real, así que no invento lugares, precios ni horarios.', choices: [['¿De dónde salen los datos?', 'sources'], ['Ver opciones', 'menu']] },
     thanks: { text: '¡Con gusto! Que tengas una gran escapada. Si necesitas algo más, aquí ando.', choices: [['Ver opciones', 'menu']] },
@@ -316,6 +316,13 @@
     log.replaceChildren();
     show('home', true);
   });
+  // Mientras se escribe en un formulario de la página, Axo se aparta: en pantallas chicas tapaba campos y botones.
+  const esCampo = el => el instanceof HTMLElement && !root.contains(el)
+    && el.matches('textarea, select, input:not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit])');
+  document.addEventListener('focusin', event => {
+    if (panel.hidden && esCampo(event.target)) { ocultarSaludo(); root.classList.add('is-apartado'); }
+  });
+  document.addEventListener('focusout', () => root.classList.remove('is-apartado'));
   root.hidden = false;
   setTimeout(mostrarSaludo, 1500);
 })();

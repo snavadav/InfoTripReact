@@ -12,6 +12,4 @@
     link.href = `${link.getAttribute('href')}?next=${encodeURIComponent(here)}`;
   });
   document.querySelectorAll('[data-session-only]').forEach(el => {el.hidden = !authenticated;});
-  document.querySelectorAll('[data-trip-label]').forEach(el => {el.textContent = authenticated ? 'Mis viajes' : 'Planear escapada';});
-  if (document.getElementById('trip-form')) document.title = `${authenticated ? 'Mis viajes' : 'Planear escapada'} — InfoTrip`;
 })();
