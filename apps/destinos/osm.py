@@ -39,9 +39,23 @@ CONSULTA_LUGARES = """
 [out:json][timeout:300];
 area["ISO3166-2"="MX-JAL"][admin_level=4]->.jalisco;
 (
-  nwr["amenity"~"^(restaurant|fast_food|cafe|bar|pub|fuel|pharmacy|atm|bank|marketplace)$"]["name"](area.jalisco);
-  nwr["tourism"~"^(hotel|motel|hostel|guest_house|apartment)$"]["name"](area.jalisco);
+  nwr["amenity"~"^(restaurant|fast_food|cafe|bar|pub|fuel|pharmacy|atm|bank|marketplace|ice_cream|food_court)$"]["name"](area.jalisco);
+  nwr["tourism"~"^(hotel|motel|hostel|guest_house|apartment|museum|chalet)$"]["name"](area.jalisco);
   nwr["shop"~"^(convenience|supermarket|variety_store|department_store|mall|bakery|pastry|confectionery|alcohol|wine|beverages|gift|craft|art)$"]["name"](area.jalisco);
+  nwr["leisure"~"^(park|nature_reserve)$"]["name"](area.jalisco);
+);
+out center tags;
+rel(area.jalisco)["boundary"="administrative"]["admin_level"="6"];
+out geom;
+"""
+
+# Solo museos y parques, para traerlos sin repetir toda la descarga: importar_lugares --solo-museos-parques.
+CONSULTA_MUSEOS_PARQUES = """
+[out:json][timeout:300];
+area["ISO3166-2"="MX-JAL"][admin_level=4]->.jalisco;
+(
+  nwr["tourism"="museum"]["name"](area.jalisco);
+  nwr["leisure"~"^(park|nature_reserve)$"]["name"](area.jalisco);
 );
 out center tags;
 rel(area.jalisco)["boundary"="administrative"]["admin_level"="6"];
@@ -160,13 +174,21 @@ NOMBRES_DE_TIENDA_GENERICOS = {
 }
 
 
-def _nombre_generico(nombre):
+# Lo mismo con las áreas verdes: "Parque" a secas no distingue a ninguno de los cientos que hay.
+NOMBRES_DE_PARQUE_GENERICOS = {
+    'area-verde', 'areas-verdes', 'cancha', 'jardin', 'juegos-infantiles', 'parque', 'parque-infantil', 'plaza',
+    'plazuela', 'unidad-deportiva',
+}
+GENERICOS_POR_TIPO = {'comprar': NOMBRES_DE_TIENDA_GENERICOS, 'parque': NOMBRES_DE_PARQUE_GENERICOS}
+
+
+def _nombre_generico(nombre, tipo='comprar'):
     slug = slugify(nombre)
-    return slug in NOMBRES_DE_TIENDA_GENERICOS or 'sin-nombre' in slug
+    return slug in GENERICOS_POR_TIPO[tipo] or 'sin-nombre' in slug
 
 
 def _subtipo_de(etiquetas):
-    for clave in ('amenity', 'tourism', 'shop'):
+    for clave in ('amenity', 'tourism', 'shop', 'leisure'):
         if etiquetas.get(clave) in TIPO_DE_SUBTIPO:
             return etiquetas[clave]
     return None
@@ -223,7 +245,8 @@ def interpretar_lugares(datos):
         if clave in vistos or not nombre or not subtipo or 'lat' not in centro:
             omitidos += 1
             continue
-        if TIPO_DE_SUBTIPO[subtipo] == 'comprar' and _nombre_generico(nombre):
+        tipo = TIPO_DE_SUBTIPO[subtipo]
+        if tipo in GENERICOS_POR_TIPO and _nombre_generico(nombre, tipo):
             omitidos += 1
             continue
         vistos.add(clave)

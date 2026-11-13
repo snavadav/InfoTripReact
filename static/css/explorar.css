@@ -124,9 +124,14 @@ a.trip-card img, .photo-placeholder { width: 76px; height: 76px; border-radius: 
 #destinations-map { position: absolute; inset: 0; }
 .poi-bar { position: absolute; top: .9rem; right: 3.75rem; left: .9rem; z-index: 790; display: flex; gap: .3rem; overflow-x: auto; scrollbar-width: none; }
 .poi-bar::-webkit-scrollbar { display: none; }
-.poi-bar button { flex: none; min-height: 44px; padding: .25rem .7rem; border-color: var(--linea); box-shadow: var(--sombra); font-size: 1rem; white-space: nowrap; }
-.poi-bar button[aria-pressed="true"], .poi-bar button[aria-pressed="true"]:hover:not(:disabled) { border-color: var(--acento); background: var(--seleccion); color: var(--texto); font-weight: 600; }
-.poi-bar .poi-cerca { border-color: var(--acento); color: var(--acento); }
+/* Vidrio gris ahumado: deja ver el mapa debajo. Apagado es translúcido; encendido, sólido y claro. */
+.poi-bar { --vidrio: rgba(38, 43, 48, .68); --vidrio-hover: rgba(38, 43, 48, .82); --vidrio-borde: rgba(255, 255, 255, .26); --sobre-vidrio: #FFFFFF; --vidrio-activo: #FFFFFF; --sobre-vidrio-activo: #14171A; padding: .15rem .1rem .5rem; }
+:root[data-theme="dark"] .poi-bar { --vidrio: rgba(150, 160, 170, .3); --vidrio-hover: rgba(150, 160, 170, .44); --vidrio-borde: rgba(255, 255, 255, .2); --vidrio-activo: #F2F4F5; --sobre-vidrio-activo: #0F1214; }
+.poi-bar button { display: inline-flex; flex: none; align-items: center; gap: .4rem; min-height: 44px; padding: .25rem .85rem; border: 1px solid var(--vidrio-borde); border-radius: 999px; background: var(--vidrio); color: var(--sobre-vidrio); box-shadow: 0 2px 10px rgba(0, 0, 0, .18); font-size: 1rem; font-weight: 500; white-space: nowrap; -webkit-backdrop-filter: blur(10px) saturate(1.3); backdrop-filter: blur(10px) saturate(1.3); }
+.poi-bar button:hover:not(:disabled) { border-color: var(--vidrio-borde); background: var(--vidrio-hover); color: var(--sobre-vidrio); }
+.poi-bar button svg { flex: none; width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.poi-bar button[aria-pressed="true"], .poi-bar button[aria-pressed="true"]:hover:not(:disabled) { border-color: var(--vidrio-activo); background: var(--vidrio-activo); color: var(--sobre-vidrio-activo); font-weight: 600; }
+@media (prefers-reduced-transparency: reduce) { .poi-bar { --vidrio: #3A4046; --vidrio-hover: #2C3237; } }
 .poi-hint { position: absolute; top: 3.6rem; left: 50%; z-index: 790; padding: .25rem .7rem; border-radius: var(--radio-s); background: var(--panel); box-shadow: var(--sombra); font-size: 1rem; transform: translateX(-50%); white-space: nowrap; }
 .nearby-panel { margin: .75rem 0; padding: .75rem; border: 1px solid var(--linea-fuerte); border-radius: var(--radio); }
 .nearby-fila { display: flex; justify-content: space-between; gap: .75rem; width: 100%; min-height: 48px; padding: .4rem 0; border: 0; border-top: 1px solid var(--linea); border-radius: 0; background: transparent; text-align: left; }

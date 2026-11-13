@@ -590,13 +590,19 @@ class FlujosTests(StaticLiveServerTestCase):
         self.assertIn('Hotel Sierra', self.pagina.inner_text('#nearby-list'))
         self.pagina.click('#nearby-list .nearby-fila')
         self.pagina.wait_for_selector('.lugar-popup:has-text("Hotel Sierra")')
-        # Al cerrar sigue el filtro, ahora por la zona visible del mapa.
+        # Al cerrar sigue el filtro, ahora por la zona visible del mapa; otro tipo se suma al que ya estaba.
         self.pagina.click('#nearby-close')
         self.pagina.click('[data-lugar-tipo="comer"]')
-        self.pagina.wait_for_selector('.pin-lugar', state='attached')
-        self.pagina.click('.pin-lugar')
+        self.pagina.wait_for_selector('.pin-lugar--comer', state='attached')
+        self.pagina.wait_for_selector('.pin-lugar--dormir', state='attached')
+        self.assertEqual(self.pagina.get_attribute('[data-lugar-tipo="dormir"]', 'aria-pressed'), 'true')
+        self.pagina.click('.pin-lugar--comer')
         self.pagina.wait_for_selector('.lugar-popup:has-text("Fonda Doña Ana")')
         self.assertEqual(self.pagina.get_attribute('.lugar-popup a[href^="tel:"]', 'href'), 'tel:331234')
+        # Apagar un tipo quita solo sus marcas.
+        self.pagina.click('[data-lugar-tipo="comer"]')
+        self.pagina.wait_for_selector('.pin-lugar--comer', state='detached')
+        self.assertEqual(self.pagina.locator('.pin-lugar--dormir').count(), 1)
 
     def crear_destinos_para_cercania(self):
         municipio = Municipio.objects.create(nombre='Zapopan', slug='zapopan', region=self.destino.municipio.region)

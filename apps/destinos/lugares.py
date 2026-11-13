@@ -5,6 +5,7 @@ de la dirección, y se usa solo para calcular distancias: no se guarda en ningú
 """
 from math import cos, radians
 
+from django.db.models import OuterRef, Subquery
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from drf_spectacular.utils import extend_schema, inline_serializer
@@ -17,7 +18,7 @@ from rest_framework.views import APIView
 from apps.comunidad.selectors import con_resumen_de_resenas
 from apps.core.geo import distancia_km
 from .denue import ATRIBUCION as ATRIBUCION_DENUE
-from .models import Lugar
+from .models import Destino, Lugar
 
 KM_POR_GRADO = 111.32
 RADIO_CERCA_KM = 5
@@ -40,7 +41,10 @@ class CercaThrottle(AnonRateThrottle):
 
 
 def activos():
-    return con_resumen_de_resenas(Lugar.objects.filter(es_activo=True).select_related('municipio'))
+    # Un museo puede ser también un destino con ficha completa (misma clave de OpenStreetMap): se enlaza esa.
+    destino = Destino.objects.filter(es_activo=True, osm_id=OuterRef('osm_id')).values('slug')[:1]
+    return con_resumen_de_resenas(Lugar.objects.filter(es_activo=True).select_related('municipio')
+                                  .annotate(destino_slug=Subquery(destino)))
 
 
 def cerca_de(latitud, longitud, radio_km=RADIO_CERCA_KM, tipo='', limite=MAXIMO_CERCA):
@@ -96,6 +100,8 @@ class LugarSerializer(serializers.ModelSerializer):
                   'num_resenas', 'osm_url', 'atribucion']
 
     def get_url(self, lugar) -> str:
+        if getattr(lugar, 'destino_slug', None):
+            return reverse('destino-detalle', kwargs={'slug': lugar.destino_slug})
         return reverse('lugar-detalle', kwargs={'pk': lugar.pk})
 
     def get_osm_url(self, lugar) -> str:

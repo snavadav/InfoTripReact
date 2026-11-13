@@ -79,6 +79,46 @@ Las personas proponen lugares en `/lugares/proponer/`. Se revisan en `/admin/mod
 
 De las 7,719 tiendas con nombre que había en Jalisco el 30 de octubre de 2026, solo se traen las útiles para quien viaja: conveniencia, supermercados, tiendas variadas y departamentales, centros comerciales, panaderías, pastelerías, dulcerías, licorerías, vinos, bebidas, regalos, artesanías y arte. Se omiten las demás (por ejemplo 1,658 papelerías, ópticas, purificadoras y talleres) y las registradas sin un nombre real, como "Papeleria sin nombre". Para agregar un tipo, súmalo a `TIPO_DE_SUBTIPO` y `Lugar.SUBTIPOS` y a la consulta de `apps/destinos/osm.py`.
 
+## Museos y parques
+
+El mapa de `/destinos/` tiene botones de **Museos** y **Parques**. Son dos tipos más de `Lugar` (`museo` y `parque`) y salen de OpenStreetMap: `tourism=museum`, `leisure=park` y `leisure=nature_reserve` («Área natural»), siempre con nombre. El 13 de noviembre de 2026 eran 78 museos y 1,605 parques y áreas naturales; se omiten los parques sin nombre propio («Parque», «Área verde», «Jardín»).
+
+- Ya van en la consulta normal de `importar_lugares`. Para traer **solo estos**, sin repetir toda la descarga ni tocar los demás lugares, en el servidor (después de `migrate`):
+
+```bash
+dc exec web python manage.py importar_lugares --solo-museos-parques --simular
+```
+
+```bash
+dc exec web python manage.py importar_lugares --solo-museos-parques
+```
+
+- Casi todos los museos ya son también un destino con ficha completa. Cuando el museo y el destino tienen la misma clave de OpenStreetMap, «Ver ficha» lleva a la ficha del destino; si no, a la del lugar.
+- La comunidad también puede proponerlos en `/lugares/proponer/`.
+- El curador de lugares no pide etiquetarlos: decide sobre negocios, y estos no están en duda.
+
+## Cargar un CSV de lugares
+
+`importar_csv` carga un archivo preparado fuera del sitio (por ejemplo, una selección de OpenStreetMap y del Sistema de Información Cultural) **sin duplicar** lo que ya existe. Solo agrega: nunca cambia ni borra nada, y se puede repetir.
+
+```bash
+python manage.py importar_csv lugares.csv --simular
+```
+
+```bash
+python manage.py importar_csv lugares.csv
+```
+
+- **Columnas:** `nombre`, `municipio`, `estado`, `latitud`, `longitud`, `categoria`, `modelo_sugerido` (`Lugar` o `Destino`), `tipo`, `subtipo`, `direccion`, `telefono`, `sitio_web`, `horario`, `horario_fuente_url`, `fuente_nombre`, `fuente_url`, `fuente_id` y `fecha_consulta`. Las demás se ignoran.
+- **Lugares** (`modelo_sugerido=Lugar`): se publican de inmediato, como en `importar_lugares`.
+- **Destinos** (`modelo_sugerido=Destino`): quedan **ocultos** con el texto automático, hasta que el equipo los revise y publique en `/admin/destinos/destino/`. Lo que viene del Sistema de Información Cultural lleva la cita de la fuente en la descripción; consérvala al reescribirla.
+- **Duplicados:** se omite la fila si su clave de OpenStreetMap ya existe como lugar o como destino (publicado u oculto: lo que el equipo ocultó no vuelve a entrar), o si hay algo con el mismo nombre a menos de 150 m.
+- **Qué no entra:** tiendas de alimentos que no le sirven a quien viaja (carnicerías, pescaderías, fruterías, queserías), igual que en la importación de OpenStreetMap, y filas sin nombre, sin municipio o con coordenadas fuera de Jalisco.
+- **Subtipos:** heladerías, zonas de comida y cabañas son subtipos de `Lugar` y también van en la consulta de `importar_lugares`, para que la importación semanal no los marque como desaparecidos.
+- En el servidor el archivo debe estar dentro del contenedor: cópialo antes con `docker compose cp lugares.csv web:/tmp/lugares.csv`.
+
+El 13 de noviembre de 2026, de un archivo de 5,000 filas entraron 166 lugares y 1,282 destinos ocultos; 3,462 ya existían.
+
 ## Negocios del DENUE (INEGI)
 
 El [DENUE](https://www.inegi.org.mx/servicios/api_denue.html) agrega muchos negocios y más datos de contacto que OpenStreetMap, sobre todo fuera de las ciudades. Necesita una clave gratuita, en `.env` como `DENUE_TOKEN`:

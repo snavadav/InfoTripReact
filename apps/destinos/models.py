@@ -86,15 +86,19 @@ TIPO_DE_SUBTIPO = {
     # Mercado público: de OpenStreetMap (amenity=marketplace) y de los puestos de comida del DENUE que el INEGI
     # ubica dentro de un "MERCADO PUBLICO". Va en comer porque ahí está la comida local de siempre.
     'marketplace': 'comer',
+    'ice_cream': 'comer', 'food_court': 'comer',
     'hotel': 'dormir', 'motel': 'dormir', 'hostel': 'dormir', 'guest_house': 'dormir', 'apartment': 'dormir',
+    'chalet': 'dormir',
     'fuel': 'gasolina', 'pharmacy': 'farmacia', 'atm': 'cajero', 'bank': 'cajero',
     # Solo tiendas útiles para quien viaja. Papelerías, ópticas o talleres serían miles de puntos que estorban.
     'convenience': 'comprar', 'supermarket': 'comprar', 'variety_store': 'comprar', 'department_store': 'comprar',
     'mall': 'comprar', 'bakery': 'comprar', 'pastry': 'comprar', 'confectionery': 'comprar', 'alcohol': 'comprar',
     'wine': 'comprar', 'beverages': 'comprar', 'gift': 'comprar', 'craft': 'comprar', 'art': 'comprar',
+    # Qué ver sin que sea un destino con ficha completa: todos los museos y parques con nombre de OpenStreetMap.
+    'museum': 'museo', 'park': 'parque', 'nature_reserve': 'parque',
 }
 TIPOS_DE_LUGAR = [('comer', 'Comer'), ('dormir', 'Dormir'), ('gasolina', 'Gasolina'), ('farmacia', 'Farmacia'),
-                  ('cajero', 'Cajero o banco'), ('comprar', 'Comprar')]
+                  ('cajero', 'Cajero o banco'), ('comprar', 'Comprar'), ('museo', 'Museo'), ('parque', 'Parque')]
 
 
 class Lugar(models.Model):
@@ -114,6 +118,8 @@ class Lugar(models.Model):
         ('pastry', 'Pastelería'), ('confectionery', 'Dulcería'), ('alcohol', 'Licorería'), ('wine', 'Vinos'),
         ('beverages', 'Bebidas'), ('gift', 'Regalos y recuerdos'), ('craft', 'Artesanías y manualidades'),
         ('art', 'Arte y galería'), ('marketplace', 'Mercado'),
+        ('museum', 'Museo'), ('park', 'Parque'), ('nature_reserve', 'Área natural'),
+        ('ice_cream', 'Heladería'), ('food_court', 'Zona de comida'), ('chalet', 'Cabaña'),
     ]
     nombre = models.CharField(max_length=200)
     tipo = models.CharField(max_length=10, choices=TIPOS)

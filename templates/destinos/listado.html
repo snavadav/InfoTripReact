@@ -82,10 +82,12 @@
   </aside>
   <section id="map-panel" aria-label="Mapa de destinos">
     <div id="destinations-map" aria-label="Mapa interactivo de Jalisco"{% if puntos_url %} data-puntos="{{ puntos_url }}"{% endif %}></div>
-    <div class="poi-bar" role="group" aria-label="Mostrar lugares en el mapa">
+    <div class="poi-bar" role="group" aria-label="Mostrar lugares en el mapa; puedes elegir varios tipos">
       <button type="button" id="nearby" class="poi-cerca" aria-pressed="false">Cerca de mí</button>
       <button type="button" data-lugar-tipo="comer" aria-pressed="false">Comer</button>
       <button type="button" data-lugar-tipo="dormir" aria-pressed="false">Dormir</button>
+      <button type="button" data-lugar-tipo="museo" aria-pressed="false">Museos</button>
+      <button type="button" data-lugar-tipo="parque" aria-pressed="false">Parques</button>
       <button type="button" data-lugar-tipo="comprar" aria-pressed="false">Comprar</button>
       <button type="button" data-lugar-tipo="gasolina" aria-pressed="false">Gasolina</button>
       <button type="button" data-lugar-tipo="farmacia" aria-pressed="false">Farmacia</button>
