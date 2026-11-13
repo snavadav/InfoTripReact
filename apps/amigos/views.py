@@ -18,7 +18,8 @@ from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 
-from apps.comunidad.models import Notificacion, VisitaComprobada
+from apps.comunidad import notificar
+from apps.comunidad.models import VisitaComprobada
 from apps.comunidad.pasaporte import sellos_de
 from apps.usuarios.models import Usuario
 from .models import Amistad, Bloqueo
@@ -63,8 +64,8 @@ def persona(usuario, rel=None, visitante=None):
     return datos
 
 
-def avisar(usuario, texto):
-    Notificacion.objects.create(usuario=usuario, texto=texto[:300], enlace='/amigos/')
+def avisar(usuario, texto, actor, ancla):
+    notificar.avisar(usuario, 'amistad', texto, f'/amigos/#{ancla}', actor=actor)
 
 
 def cuenta_de(username, visitante=None):
@@ -172,7 +173,7 @@ class SolicitudesView(APIView):
             except IntegrityError:
                 # Solicitud cruzada al mismo tiempo: la otra ya creó el registro de la pareja.
                 return Response(persona(otro, relacion(yo, otro)), status=200)
-            avisar(otro, f'@{yo.username} te envió una solicitud de amistad.')
+            avisar(otro, f'@{yo.username} te envió una solicitud de amistad.', yo, 'recibidas-titulo')
         return Response(persona(otro, 'enviada', yo), status=201)
 
 
@@ -180,7 +181,8 @@ def aceptar(amistad):
     amistad.estado, amistad.respondido = 'aceptada', timezone.now()
     amistad.save(update_fields=['estado', 'respondido'])
     if amistad.para.username:
-        avisar(amistad.de, f'@{amistad.para.username} aceptó tu solicitud de amistad.')
+        avisar(amistad.de, f'@{amistad.para.username} aceptó tu solicitud de amistad.', amistad.para,
+               'mis-amigos-titulo')
     return 'amigos'
 
 

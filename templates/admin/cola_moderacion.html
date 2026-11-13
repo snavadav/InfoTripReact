@@ -1,15 +1,34 @@
 {% extends "admin/base_site.html" %}
+{% block extrastyle %}{{ block.super }}
+<style>
+  .cola-detalle { margin: .35rem 0 0; font-weight: normal; white-space: pre-line; overflow-wrap: anywhere; }
+  .cola-foto { display: block; max-width: 240px; max-height: 180px; margin-top: .5rem; border-radius: 4px; }
+  .cola-decidir { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-top: .6rem; }
+  .cola-decidir button, .cola-decidir select { min-height: 44px; padding: 0 .9rem; font-size: 1rem; }
+  .cola-decidir .cola-ocultar { background: var(--delete-button-bg, #ba2121); color: #fff; }
+</style>
+{% endblock %}
 {% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url 'admin:index' %}">Inicio</a> › Cola de moderación</div>{% endblock %}
 {% block content %}
 <div id="content-main">
-  <p>Lo más antiguo aparece primero. Las acciones Publicar, Ocultar, Resolver, Desestimar, Aprobar y Rechazar siguen en cada lista. Nada de las fuentes oficiales se publica sin que alguien lo apruebe.</p>
+  <p>Lo más antiguo aparece primero. Aportes, colaboraciones, reseñas, lugares propuestos y fotos se pueden publicar u ocultar aquí mismo; al ocultar, quien lo envió recibe el motivo que elijas. Resolver, Desestimar, Aprobar y Rechazar siguen en cada lista. Nada de las fuentes oficiales se publica sin que alguien lo apruebe.</p>
   {% for seccion in secciones %}
   <div class="module">
     <table>
       <caption><a href="{{ seccion.lista }}" class="section">{{ seccion.titulo }}: {{ seccion.total }}</a></caption>
       <tbody>
       {% for elemento in seccion.elementos %}
-        <tr><th scope="row"><a href="{{ elemento.enlace }}">{{ elemento.texto }}</a>{% if elemento.fuente %} · <a href="{{ elemento.fuente }}" target="_blank" rel="noopener noreferrer">ver fuente</a>{% endif %}</th><td>{{ elemento.creado|date:elemento.formato }}</td></tr>
+        <tr><th scope="row"><a href="{{ elemento.enlace }}">{{ elemento.texto }}</a>{% if elemento.fuente %} · <a href="{{ elemento.fuente }}" target="_blank" rel="noopener noreferrer">ver fuente</a>{% endif %}
+          {% if elemento.detalle %}<p class="cola-detalle">{{ elemento.detalle }}</p>{% endif %}
+          {% if elemento.imagen %}<a href="{{ elemento.imagen }}" target="_blank" rel="noopener"><img class="cola-foto" src="{{ elemento.imagen }}" alt="Foto enviada: {{ elemento.texto }}" loading="lazy"></a>{% endif %}
+          {% if elemento.tipo %}<form method="post" class="cola-decidir">{% csrf_token %}
+            <input type="hidden" name="tipo" value="{{ elemento.tipo }}"><input type="hidden" name="pk" value="{{ elemento.pk }}">
+            <button type="submit" name="accion" value="publicar" class="default">Publicar</button>
+            <label for="motivo-{{ elemento.tipo }}-{{ elemento.pk }}">Motivo para ocultar</label>
+            <select name="motivo" id="motivo-{{ elemento.tipo }}-{{ elemento.pk }}"><option value="">Elige…</option>{% for clave, texto in motivos %}<option value="{{ clave }}">{{ texto|capfirst }}</option>{% endfor %}</select>
+            <button type="submit" name="accion" value="ocultar" class="cola-ocultar">Ocultar</button>
+          </form>{% endif %}
+        </th><td>{{ elemento.creado|date:elemento.formato }}</td></tr>
       {% empty %}
         <tr><td colspan="2">Nada pendiente.</td></tr>
       {% endfor %}

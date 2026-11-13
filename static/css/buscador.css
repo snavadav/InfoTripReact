@@ -35,7 +35,7 @@
   outline-offset: -2px;
 }
 .buscador-nombre { font-weight: 600; font-size: 1rem; }
-.buscador-detalle { color: var(--texto-3); font-size: .8125rem; }
+.buscador-detalle { color: var(--texto-3); font-size: 1rem; }
 @media (forced-colors: active) {
   .buscador-opciones [role="option"][aria-selected="true"] { outline: 2px solid Highlight; }
 }

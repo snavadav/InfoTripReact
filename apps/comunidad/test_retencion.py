@@ -131,4 +131,6 @@ class BajaDeCorreosTests(RetencionBase):
 
     def test_se_cambia_desde_el_perfil(self):
         self.client.force_login(self.viajera)
-        self.assertContains(self.client.get('/perfil/'), 'name="avisos_correo"')
+        respuesta = self.client.get('/perfil/')
+        self.assertContains(respuesta, 'id="avisos-preferencias"')
+        self.assertContains(respuesta, 'id="avisos-form"')

@@ -1,12 +1,16 @@
 {% extends 'base.html' %}{% load static %}
 {% block title %}Armar una ruta — InfoTrip{% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/comunidad.css' %}"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""><link rel="stylesheet" href="{% static 'css/mapa.css' %}"><link rel="stylesheet" href="{% static 'css/buscador.css' %}"><link rel="stylesheet" href="{% static 'css/planeador.css' %}">{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/comunidad.css' %}"><link rel="stylesheet" href="{% static 'vendor/leaflet-1.9.4/leaflet.css' %}"><link rel="stylesheet" href="{% static 'css/mapa.css' %}"><link rel="stylesheet" href="{% static 'css/buscador.css' %}"><link rel="stylesheet" href="{% static 'css/planeador.css' %}">{% endblock %}
 {% block content %}{% include 'partials/navBar.html' %}
 <main class="explore-shell detail-shell planeador">
   <span class="eyebrow">Planeador</span>
   <h1>Armar una ruta</h1>
   <p class="planeador-intro">Cuéntanos cuándo sales y qué te gusta. Elegimos qué visitar y en qué orden para que te dé tiempo, respetando horarios y tu presupuesto.</p>
   <div class="planeador-layout">
+    <div id="ruta-plegado" class="planeador-plegado" hidden>
+      <p id="ruta-plegado-texto"></p>
+      <button type="button" id="ruta-cambiar" aria-expanded="false" aria-controls="ruta-form">Cambiar</button>
+    </div>
     <form id="ruta-form" class="planeador-form" novalidate>
       <fieldset class="planeador-paso">
         <legend><span class="planeador-num" aria-hidden="true">1</span>¿Desde dónde sales?</legend>
@@ -94,6 +98,7 @@
         <p class="planeador-error" id="ruta-error-personas" hidden></p>
       </fieldset>
 
+      <p class="planeador-advertencia" id="ruta-aviso-edicion" hidden>Al volver a armar la ruta se pierden tus cambios: las paradas que fijaste o quitaste y tus ratos libres.</p>
       <button type="submit" class="planeador-enviar">Armar mi ruta</button>
       <p class="form-status planeador-estado" role="status"></p>
     </form>
@@ -140,4 +145,4 @@
   {% include 'destinos/footer.html' %}
 </main>
 {% endblock %}
-{% block extra_js %}<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script><script src="{% static 'js/mapa-base.js' %}" defer></script><script src="{% static 'js/cuenta-api.js' %}"></script><script src="{% static 'js/buscador.js' %}" defer></script><script src="{% static 'js/compartir-ruta.js' %}" defer></script><script src="{% static 'js/planeador.js' %}" defer></script>{% endblock %}
+{% block extra_js %}<script src="{% static 'vendor/leaflet-1.9.4/leaflet.js' %}" defer></script><script src="{% static 'js/mapa-base.js' %}" defer></script><script src="{% static 'js/cuenta-api.js' %}"></script><script src="{% static 'js/buscador.js' %}" defer></script><script src="{% static 'js/compartir-ruta.js' %}" defer></script><script src="{% static 'js/planeador.js' %}" defer></script>{% endblock %}

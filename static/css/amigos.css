@@ -1,22 +1,22 @@
 /* Nombre de usuario, amigos y perfil de otras personas. */
-.arroba-campo { display: flex; align-items: stretch; max-width: 360px; border: 1px solid var(--linea-fuerte); border-radius: var(--radio-s); background: var(--fondo); }
+.arroba-campo { display: flex; align-items: stretch; max-width: 360px; border: 1px solid var(--linea-fuerte); border-radius: var(--radio-s); background: var(--panel); }
 .arroba-campo span { display: grid; place-items: center; padding: 0 .6rem; color: var(--texto-3); font-weight: 600; }
 .arroba-campo input, .community-form .arroba-campo input { flex: 1; min-width: 0; border: 0; background: transparent; box-shadow: none; outline: none; }
 .arroba-campo:focus-within { outline: 2px solid var(--foco); outline-offset: 2px; }
-.arroba-aviso { min-height: 1.4em; font-size: .9375rem; color: var(--texto-2); }
+.arroba-aviso { min-height: 1.4em; font-size: 1rem; color: var(--texto-2); }
 .arroba-aviso[data-estado="si"] { color: var(--exito); }
 .amigos-lista { display: grid; gap: .5rem; margin: .6rem 0 0; padding: 0; list-style: none; }
 .amigos-fila { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem .75rem; padding: .6rem .75rem; border: 1px solid var(--linea); border-radius: var(--radio-s); background: var(--panel); }
 .amigos-fila a { font-weight: 600; }
-.amigos-fila small { display: block; color: var(--texto-3); font-size: .875rem; font-weight: 400; }
+.amigos-fila small { display: block; color: var(--texto-3); font-size: 1rem; font-weight: 400; }
 .amigos-acciones { display: flex; flex-wrap: wrap; gap: .5rem; }
 .amigos-acciones button, .amigos-fila button { min-height: 44px; }
-.amigos-vacio { color: var(--texto-3); font-size: .9375rem; }
+.amigos-vacio { color: var(--texto-3); font-size: 1rem; }
 .perfil-cabecera { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem 1rem; }
 .perfil-cabecera .user-avatar { width: 56px; height: 56px; font-size: 1.4rem; }
 .perfil-arroba { color: var(--texto-3); font-size: 1rem; }
 .perfil-sellos { display: flex; flex-wrap: wrap; gap: .5rem; margin: .6rem 0 0; padding: 0; list-style: none; }
-.perfil-sellos li { padding: .35rem .7rem; border: 1px solid var(--linea); border-radius: 999px; font-size: .9375rem; }
+.perfil-sellos li { padding: .35rem .7rem; border: 1px solid var(--linea); border-radius: 999px; font-size: 1rem; }
 .perfil-sellos li[data-sello="no"] { color: var(--texto-3); border-style: dashed; }
 .amigos-invitar { display: grid; gap: .35rem; margin: .5rem 0; }
 .amigos-invitar label { display: flex; align-items: center; gap: .5rem; min-height: 44px; }

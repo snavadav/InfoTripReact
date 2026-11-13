@@ -82,8 +82,10 @@ class MapaTests(TestCase):
         Lugar.objects.create(nombre='Parque', tipo='parque', subtipo='nature_reserve', latitud=19.9, longitud=-103.5)
         museos = self.client.get('/api/v1/lugares/', {**ZONA, 'tipo': 'museo'}).json()['resultados']
         parques = self.client.get('/api/v1/lugares/', {**ZONA, 'tipo': 'parque'}).json()['resultados']
-        self.assertEqual([(sitio['nombre'], sitio['tipo_nombre']) for sitio in museos], [('Museo', 'Museo')])
-        self.assertEqual([(sitio['nombre'], sitio['subtipo_nombre']) for sitio in parques], [('Parque', 'Área natural')])
+        self.assertEqual([(sitio['nombre'], sitio['tipo']) for sitio in museos], [('Museo', 'museo')])
+        self.assertEqual([(sitio['nombre'], sitio['tipo']) for sitio in parques], [('Parque', 'parque')])
+        ficha = self.client.get(f"/api/v1/lugares/{parques[0]['id']}/").json()
+        self.assertEqual((ficha['tipo_nombre'], ficha['subtipo_nombre']), ('Parque', 'Área natural'))
 
     def test_un_museo_que_ya_es_destino_enlaza_la_ficha_del_destino(self):
         region = Region.objects.create(nombre='Sierra', slug='sierra')
@@ -98,8 +100,9 @@ class MapaTests(TestCase):
                                       longitud=-103.5, osm_id='node/8')
         propuesto = Lugar.objects.create(nombre='Museo Nuevo', tipo='museo', subtipo='museum', latitud=19.9,
                                          longitud=-103.5)
-        urls = {sitio['id']: sitio['url']
-                for sitio in self.client.get('/api/v1/lugares/', {**ZONA, 'tipo': 'museo'}).json()['resultados']}
+        # La zona trae solo lo del marcador; la dirección de la ficha llega al abrir el lugar.
+        urls = {sitio.pk: self.client.get(f'/api/v1/lugares/{sitio.pk}/').json()['url']
+                for sitio in (con_ficha, oculto, propuesto)}
         self.assertEqual(urls, {con_ficha.pk: '/destinos/museo-regional/', oculto.pk: f'/lugares/{oculto.pk}/',
                                 propuesto.pk: f'/lugares/{propuesto.pk}/'})
 

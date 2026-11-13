@@ -6,18 +6,31 @@ from django.utils import timezone
 from apps.core.geo import distancia_km
 from apps.destinos.models import Destino, Lugar, TIPO_DE_SUBTIPO
 from apps.metricas.models import registrar
+from apps.usuarios.models import Usuario
 from .models import Aporte, Favorito, Notificacion, PropuestaLugar, ResenaLugar
+from .notificar import avisar, nuevo
 
 registro = logging.getLogger('infotrip.moderacion')
 TEXTO_NOVEDAD = 'Hay información nueva sobre'
+# Motivos que sí se le cuentan al autor cuando su contenido no se publica: describen el contenido y nunca
+# citan el reporte de otra persona. Los elige quien modera desde la cola (cola.py).
+MOTIVOS = [
+    ('fuera_de_tema', 'no trata sobre este lugar'),
+    ('sin_fuente', 'falta la fuente o no pudimos comprobar el dato'),
+    ('duplicado', 'esa información ya está publicada'),
+    ('foto', 'la foto no se ve bien o no es del lugar'),
+    ('lenguaje', 'incluye lenguaje ofensivo o datos personales'),
+    ('publicidad', 'es publicidad'),
+]
 
 
-def moderar(objeto, moderador, estado, motivo, registrar_sin_cambio=False):
+def moderar(objeto, moderador, estado, motivo, registrar_sin_cambio=False, motivo_publico=''):
     """Cambia el estado de un objeto Moderable, deja constancia en su historial y avisa al autor.
 
     El llamador bloquea la fila (select_for_update) dentro de una transacción. Un estado en
     ESTADOS_SIN_MODERACION no se cambia, y si el estado no cambia no se registra nada salvo con
     `registrar_sin_cambio` (por ejemplo, al desestimar un reporte). Devuelve True si cambió el estado.
+    `motivo_publico` (uno de MOTIVOS) se añade al aviso al autor cuando el contenido se oculta.
     """
     anterior = objeto.estado
     cambia = anterior != estado
@@ -34,7 +47,7 @@ def moderar(objeto, moderador, estado, motivo, registrar_sin_cambio=False):
     if cambia:
         if isinstance(objeto, PropuestaLugar):
             sincronizar_lugar(objeto, estado)
-        avisar_al_autor(objeto, anterior, estado)
+        avisar_al_autor(objeto, anterior, estado, motivo_publico)
         if estado == 'publicado' and getattr(objeto, 'tipo', '') in ('correccion', 'resena'):
             avisar_a_quienes_lo_guardaron(objeto)
         if estado == 'publicado' and isinstance(objeto, Aporte):
@@ -75,12 +88,15 @@ def sincronizar_lugar(propuesta, estado):
         registrar('lugar_aprobado', usuario=propuesta.autor, destino=f'lugar-{propuesta.lugar_id}')
 
 
-def avisar_al_autor(objeto, anterior, estado):
-    # El motivo no se incluye: puede citar el texto de un reporte de otra persona.
+def avisar_al_autor(objeto, anterior, estado, motivo_publico=''):
+    # El motivo interno no se incluye: puede citar el texto de un reporte de otra persona. Solo se añade
+    # el motivo público, que es uno de la lista cerrada MOTIVOS.
     texto = objeto.aviso_para_autor(anterior, estado)
     if texto:
+        if motivo_publico and estado == 'oculto':
+            texto = f'{texto} Motivo: {motivo_publico}.'[:Notificacion._meta.get_field('texto').max_length]
         enlace = objeto.enlace_publicado() if estado == 'publicado' else ''
-        Notificacion.objects.create(usuario=objeto.autor, texto=texto, enlace=enlace, correo_pendiente=True)
+        avisar(objeto.autor, 'aportes', texto, enlace)
 
 
 def avisar_a_quienes_lo_guardaron(objeto):
@@ -90,10 +106,9 @@ def avisar_a_quienes_lo_guardaron(objeto):
     recientes = Notificacion.objects.filter(
         enlace=enlace, texto__startswith=TEXTO_NOVEDAD, creado__gte=timezone.now() - timedelta(days=7),
     ).values('usuario')
-    personas = (Favorito.objects.filter(destino=destino, autor__es_activo=True).exclude(autor=objeto.autor)
-                .exclude(autor__in=recientes).values_list('autor', flat=True))
-    Notificacion.objects.bulk_create([
-        Notificacion(usuario_id=persona, texto=f'{TEXTO_NOVEDAD} {destino.nombre}, uno de tus lugares guardados.',
-                     enlace=enlace, correo_pendiente=True)
-        for persona in personas
-    ])
+    personas = (Usuario.objects.filter(pk__in=Favorito.objects.filter(destino=destino).values('autor'),
+                                       es_activo=True)
+                .exclude(pk=objeto.autor_id).exclude(pk__in=recientes))
+    avisos = (nuevo(persona, 'lugares', f'{TEXTO_NOVEDAD} {destino.nombre}, uno de tus lugares guardados.', enlace)
+              for persona in personas)
+    Notificacion.objects.bulk_create([aviso for aviso in avisos if aviso])

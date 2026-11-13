@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('comunidad', '0023_propuesta_lugar_subtipo_mercado'),
+        ('comunidad', '0024_avisos_tipos_y_preferencias'),
     ]
 
     operations = [

@@ -3,8 +3,9 @@
  * Qué guarda:
  *   - Al instalarse: todo el CSS y JS propio, los íconos y la página /sin-conexion/ (caché "app", versionada).
  *   - Las páginas públicas que se visitan, con la red primero (caché "paginas", versionada, como mucho 40).
+ *   - Los puntos del mapa de Explorar (/destinos/puntos.json), con la red primero (caché "datos", como mucho 10).
  *   - Las fotos de /static/ que se ven (caché "fotos", versionada, como mucho 60).
- *   - Leaflet de unpkg, solo URLs con versión fija (caché "cdn"; esas URLs nunca cambian de contenido).
+ *   - Leaflet (static/vendor/) y las fuentes (static/fonts/) que se usan, junto con el CSS y JS propios.
  *   - Los cuadros del mapa de OpenStreetMap que se ven, con tope de 50 MB y LRU (caché "mapa").
  * Qué NO guarda nunca: la API (/api/, incluida /api/v1/auth/), /admin/, /media/, nada que no sea GET, las
  * páginas con datos de una persona (pasaporte o escapada compartidos, botes, perfil, mis viajes, favoritos)
@@ -16,14 +17,16 @@ const PREFIJO = 'infotrip-';
 const CACHE_APP = `${PREFIJO}app-${VERSION}`;
 const CACHE_PAGINAS = `${PREFIJO}paginas-${VERSION}`;
 const CACHE_FOTOS = `${PREFIJO}fotos-${VERSION}`;
-// Sin versión: sobreviven a los despliegues porque su contenido no depende de InfoTrip.
-const CACHE_CDN = `${PREFIJO}cdn-v1`;
+const CACHE_DATOS = `${PREFIJO}datos-${VERSION}`;
+// Sin versión: sobrevive a los despliegues porque su contenido no depende de InfoTrip.
+// (La antigua caché "cdn-v1" de unpkg ya no está en la lista: se borra al activarse esta versión.)
 const CACHE_MAPA = `${PREFIJO}mapa-v1`;
-const CACHES_VIGENTES = [CACHE_APP, CACHE_PAGINAS, CACHE_FOTOS, CACHE_CDN, CACHE_MAPA];
+const CACHES_VIGENTES = [CACHE_APP, CACHE_PAGINAS, CACHE_FOTOS, CACHE_DATOS, CACHE_MAPA];
 
 const PAGINA_SIN_CONEXION = PRECACHE[0];
 const MAX_PAGINAS = 40;
 const MAX_FOTOS = 60;
+const MAX_DATOS = 10;
 // Con red lenta, pasado este tiempo se muestra la copia guardada (si la hay) en lugar de seguir esperando.
 const ESPERA_RED_MS = 4000;
 
@@ -50,6 +53,8 @@ const PAGINAS_GUARDABLES = [
   /^\/terminos\/$/,
   /^\/sin-conexion\/$/,
 ];
+// Datos públicos que una página guardable pide aparte: sin ellos, la copia de la página no serviría sin red.
+const DATOS_GUARDABLES = [/^\/destinos\/puntos\.json$/];
 // Ni se interceptan: el navegador va directo a la red como si no hubiera service worker.
 const RUTAS_INTOCABLES = [/^\/api\//, /^\/admin\//, /^\/media\//, /^\/sw\.js$/];
 
@@ -84,13 +89,13 @@ self.addEventListener('fetch', evento => {
       evento.respondWith(estatico(evento, url));
     } else if (peticion.mode === 'navigate') {
       evento.respondWith(pagina(evento, url));
+    } else if (DATOS_GUARDABLES.some(ruta => ruta.test(url.pathname))) {
+      evento.respondWith(datos(evento));
     }
     return;
   }
   if (url.origin === ORIGEN_MAPA) {
     evento.respondWith(cuadroDelMapa(evento));
-  } else if (url.origin === 'https://unpkg.com' && /@\d+\.\d+\.\d+\//.test(url.pathname)) {
-    evento.respondWith(desdeCdn(evento));
   }
 });
 
@@ -144,6 +149,29 @@ async function guardarPagina(peticion, respuesta) {
   await recortar(CACHE_PAGINAS, MAX_PAGINAS);
 }
 
+// ─── Datos de una página: red primero, copia guardada si no hay red ─
+
+async function datos(evento) {
+  const peticion = evento.request;
+  try {
+    const respuesta = await fetch(peticion);
+    if (sePuedeGuardar(respuesta)) {
+      const copia = respuesta.clone();
+      evento.waitUntil((async () => {
+        const cache = await caches.open(CACHE_DATOS);
+        await cache.delete(peticion);
+        await cache.put(peticion, copia);
+        await recortar(CACHE_DATOS, MAX_DATOS);
+      })());
+    }
+    return respuesta;
+  } catch (error) {
+    const guardada = await caches.match(peticion, { cacheName: CACHE_DATOS, ignoreVary: true });
+    if (guardada) return guardada;
+    throw error;
+  }
+}
+
 async function paginaSinConexion() {
   const guardada = await caches.match(PAGINA_SIN_CONEXION, { cacheName: CACHE_APP });
   return guardada || new Response('Sin conexión. Vuelve a intentarlo cuando tengas señal.', {
@@ -160,28 +188,13 @@ async function estatico(evento, url) {
   if (guardado) return guardado;
   const respuesta = await fetch(peticion);
   const ruta = url.pathname.slice(STATIC_URL.length);
-  if (sePuedeGuardar(respuesta) && /^(css|js|images)\//.test(ruta)) {
+  if (sePuedeGuardar(respuesta) && /^(css|js|images|vendor|fonts)\//.test(ruta)) {
     const copia = respuesta.clone();
     evento.waitUntil((async () => {
       const nombre = ruta.startsWith('images/') ? CACHE_FOTOS : CACHE_APP;
       await (await caches.open(nombre)).put(peticion, copia);
       if (nombre === CACHE_FOTOS) await recortar(CACHE_FOTOS, MAX_FOTOS);
     })());
-  }
-  return respuesta;
-}
-
-// ─── Leaflet en unpkg: URLs con versión, no cambian ───────────
-
-async function desdeCdn(evento) {
-  const peticion = evento.request;
-  const guardado = await caches.match(peticion, { cacheName: CACHE_CDN });
-  if (guardado) return guardado;
-  const respuesta = await fetch(peticion);
-  // Solo respuestas CORS legibles: las opacas ocupan mucho más en la cuota del navegador.
-  if (respuesta.type === 'cors' && sePuedeGuardar(respuesta)) {
-    const copia = respuesta.clone();
-    evento.waitUntil(caches.open(CACHE_CDN).then(cache => cache.put(peticion, copia)));
   }
   return respuesta;
 }

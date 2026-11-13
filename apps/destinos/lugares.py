@@ -6,6 +6,7 @@ de la dirección, y se usa solo para calcular distancias: no se guarda en ningú
 from math import cos, radians
 
 from django.db.models import OuterRef, Subquery
+from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework import serializers
@@ -112,6 +113,28 @@ class LugarSerializer(serializers.ModelSerializer):
         return '© colaboradores de OpenStreetMap, ODbL' if lugar.osm_id else None
 
 
+def lugar_en_zona(fila):
+    """Solo lo que pinta el marcador: mover el mapa pide una zona cada vez y en una ciudad son 300 lugares.
+
+    La ficha completa (dirección, teléfono, horario, créditos) se pide al abrir el lugar: LugarDetalleView.
+    """
+    # Coordenadas como número: sin comillas ni ceros de relleno («20.68712» en vez de «"20.687120"»).
+    lugar = {'id': fila['pk'], 'nombre': fila['nombre'], 'tipo': fila['tipo'],
+             'latitud': float(fila['latitud']), 'longitud': float(fila['longitud'])}
+    if fila['num_resenas']:
+        lugar['calificacion_promedio'] = round(float(fila['calificacion_promedio']), 1)
+        lugar['num_resenas'] = fila['num_resenas']
+    return lugar
+
+
+CAMPOS_EN_ZONA = {
+    'id': serializers.IntegerField(), 'nombre': serializers.CharField(), 'tipo': serializers.CharField(),
+    'latitud': serializers.FloatField(), 'longitud': serializers.FloatField(),
+    'calificacion_promedio': serializers.FloatField(required=False, help_text='Solo si tiene reseñas.'),
+    'num_resenas': serializers.IntegerField(required=False, help_text='Solo si tiene reseñas.'),
+}
+
+
 class ZonaSerializer(serializers.Serializer):
     sur = serializers.FloatField(min_value=-90, max_value=90)
     oeste = serializers.FloatField(min_value=-180, max_value=180)
@@ -136,13 +159,14 @@ class BusquedaCercanaSerializer(serializers.Serializer):
 
 
 class LugaresZonaView(APIView):
-    """GET: lugares dentro de la parte visible del mapa."""
+    """GET: lugares dentro de la parte visible del mapa, con los campos mínimos del marcador."""
     permission_classes = [AllowAny]
     authentication_classes = []
     throttle_classes = [ZonaThrottle]
 
     @extend_schema(parameters=[ZonaSerializer], responses={200: inline_serializer('LugaresDeZona', fields={
-        'resultados': LugarSerializer(many=True), 'truncado': serializers.BooleanField(),
+        'resultados': inline_serializer('LugarEnZona', fields=CAMPOS_EN_ZONA, many=True),
+        'truncado': serializers.BooleanField(),
     })})
     def get(self, request):
         zona = ZonaSerializer(data=request.query_params)
@@ -153,9 +177,22 @@ class LugaresZonaView(APIView):
         if datos.get('tipo'):
             lugares = lugares.filter(tipo=datos['tipo'])
         # Uno de más, para saber si quedaron fuera sin contar toda la zona.
-        encontrados = list(lugares.order_by('pk')[:MAXIMO_EN_ZONA + 1])
-        return Response({'resultados': LugarSerializer(encontrados[:MAXIMO_EN_ZONA], many=True).data,
+        encontrados = list(lugares.order_by('pk').values(
+            'pk', 'nombre', 'tipo', 'latitud', 'longitud', 'calificacion_promedio', 'num_resenas',
+        )[:MAXIMO_EN_ZONA + 1])
+        return Response({'resultados': [lugar_en_zona(fila) for fila in encontrados[:MAXIMO_EN_ZONA]],
                          'truncado': len(encontrados) > MAXIMO_EN_ZONA})
+
+
+class LugarDetalleView(APIView):
+    """GET: la ficha completa de un lugar activo; el mapa la pide al abrir su recuadro."""
+    permission_classes = [AllowAny]
+    authentication_classes = []
+    throttle_classes = [ZonaThrottle]
+
+    @extend_schema(operation_id='lugar_detalle', responses={200: LugarSerializer})
+    def get(self, request, pk):
+        return Response(LugarSerializer(get_object_or_404(activos(), pk=pk)).data)
 
 
 class LugaresCercaView(APIView):

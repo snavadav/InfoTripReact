@@ -304,8 +304,11 @@
       edicion = nuevaEdicion();
       ultimaPeticion = cuerpo;
       estadoEdicion.textContent = '';
-      mostrar(plan);
       const sitios = plan.totales.sitios;
+      // Se pliega antes de dibujar para que el mapa nazca ya con el ancho completo. Sin sitios el formulario
+      // se queda abierto: lo siguiente es ajustar lo que se pidió.
+      if (sitios) plegarFormulario(cuerpo); else abrirFormulario(false);
+      mostrar(plan);
       avisar(sitios ? `Listo: ${plural(sitios, 'sitio', 'sitios')} en ${plural(plan.dias.length, 'día', 'días')}.` : 'No encontramos sitios que quepan. Mira las sugerencias.');
       enfocarResultado();
     } catch (error) {
@@ -313,6 +316,48 @@
     } finally {
       botonEnviar.disabled = false;
     }
+  });
+
+  // ── Formulario plegado ──────────────────────────────────
+  // Con la ruta armada, los cinco pasos se pliegan en una fila con lo elegido y el resultado ocupa todo el
+  // ancho. «Cambiar» los vuelve a mostrar tal como estaban.
+  const layout = form.closest('.planeador-layout');
+  const plegado = document.getElementById('ruta-plegado');
+  const textoPlegado = document.getElementById('ruta-plegado-texto');
+  const botonCambiar = document.getElementById('ruta-cambiar');
+  const avisoEdicion = document.getElementById('ruta-aviso-edicion');
+  function resumenDeBusqueda(cuerpo) {
+    const salida = ubicacion ? 'Tu ubicación' : selectMunicipio.selectedOptions[0].textContent.trim();
+    const destino = cuerpo.modo !== 'circulo' && campoDestino.value.trim();
+    const salidaEl = fechaCorta(cuerpo.fecha);
+    const intereses = [...form.querySelectorAll('[name="intereses"]:checked')].map(c => c.nextElementSibling.textContent.trim());
+    return [destino ? `${salida} → ${destino}` : `Desde ${salida}`, plural(cuerpo.dias, 'día', 'días'),
+      `sales el ${salidaEl.dia} ${salidaEl.mes}`, plural(cuerpo.personas, 'persona', 'personas'), intereses.join(', ')];
+  }
+  function plegarFormulario(cuerpo) {
+    if (cuerpo) {
+      const etiqueta = elemento('span', 'Tu búsqueda: ', 'sr-only');
+      textoPlegado.replaceChildren(etiqueta, ...resumenDeBusqueda(cuerpo).filter(Boolean).map(texto => elemento('span', texto)));
+    }
+    form.hidden = true;
+    plegado.hidden = false;
+    layout.classList.add('es-plegado');
+    botonCambiar.setAttribute('aria-expanded', 'false');
+    botonCambiar.textContent = 'Cambiar';
+    mapa?.invalidateSize();
+  }
+  function abrirFormulario(enfocar = true) {
+    const editada = edicion.fijados.size || edicion.excluidos.size || edicion.descansos.length;
+    avisoEdicion.hidden = !editada;
+    form.hidden = false;
+    layout.classList.remove('es-plegado');
+    botonCambiar.setAttribute('aria-expanded', 'true');
+    botonCambiar.textContent = 'Ocultar';
+    mapa?.invalidateSize();
+    if (enfocar) { desplazar(plegado); selectMunicipio.focus({preventScroll: true}); }
+  }
+  botonCambiar.addEventListener('click', () => {
+    if (form.hidden) abrirFormulario(); else { plegarFormulario(); desplazar(plegado); }
   });
 
   // Al terminar de calcular, el foco pasa al resumen (role=status lo anuncia) y no se queda en <body>.

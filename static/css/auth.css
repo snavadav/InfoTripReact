@@ -25,11 +25,12 @@
   text-decoration: none;
 }
 .auth-logo:hover { color: inherit; }
+.auth-logo { min-height: 44px; }
 .auth-logo svg { width: 20px; height: 20px; color: #FF8152; }
 .auth-left-title { margin-bottom: .6rem; font-size: clamp(1.75rem, 1.4rem + 1.4vw, 2.5rem); }
 .auth-left-text { margin-bottom: 1.25rem; color: #B7BEC5; }
 .auth-benefits { display: grid; gap: .5rem; }
-.auth-benefit { display: flex; align-items: flex-start; gap: .5rem; color: #D5DADE; font-size: .9rem; }
+.auth-benefit { display: flex; align-items: flex-start; gap: .5rem; color: #D5DADE; font-size: 1rem; }
 .auth-benefit svg { flex: none; width: 16px; height: 16px; margin-top: .2rem; fill: none; stroke: #41D1B1; stroke-width: 2.5; }
 .auth-steps { display: grid; gap: .85rem; }
 .auth-step { display: flex; gap: .7rem; }
@@ -37,11 +38,11 @@
   flex: none;
   color: #41D1B1;
   font-variant-numeric: tabular-nums;
-  font-size: .85rem;
+  font-size: 1rem;
   line-height: 1.5;
 }
-.step-text strong { display: block; font-size: .9375rem; font-weight: 600; }
-.step-text span { color: #B7BEC5; font-size: .9375rem; }
+.step-text strong { display: block; font-size: 1rem; font-weight: 600; }
+.step-text span { color: #B7BEC5; font-size: 1rem; }
 
 .auth-right { display: flex; align-items: center; justify-content: center; padding: 2rem 1.25rem; background: var(--panel); }
 .auth-form-wrap { width: min(400px, 100%); }
@@ -50,16 +51,16 @@
   margin-bottom: .4rem;
   color: var(--texto-3);
   font-variant-numeric: tabular-nums;
-  font-size: .8125rem;
+  font-size: 1rem;
   letter-spacing: .04em;
   text-transform: uppercase;
 }
 .auth-form-title { margin-bottom: .3rem; font-size: 1.75rem; }
-.auth-form-sub { margin-bottom: 1.25rem; color: var(--texto-2); font-size: .9375rem; }
+.auth-form-sub { margin-bottom: 1.25rem; color: var(--texto-2); font-size: 1rem; }
 .form-group { margin-bottom: .9rem; }
 .form-label { display: block; margin-bottom: .3rem; }
 .form-input.error { border-color: var(--peligro); }
-.field-error { display: none; margin-top: .25rem; color: var(--peligro); font-size: .875rem; }
+.field-error { display: none; margin-top: .25rem; color: var(--peligro); font-size: 1rem; }
 .field-error.show { display: block; }
 .form-error {
   display: none;
@@ -68,20 +69,20 @@
   border-radius: var(--radio-s);
   background: var(--peligro-suave);
   color: var(--peligro);
-  font-size: .9375rem;
+  font-size: 1rem;
 }
 .form-error.show { display: block; }
-.form-forgot { margin: -.3rem 0 1rem; text-align: right; font-size: .9375rem; }
-.form-ayuda, #loginNotice { color: var(--texto-2); font-size: .875rem; }
+.form-forgot { margin: -.3rem 0 1rem; text-align: right; font-size: 1rem; }
+.form-ayuda, #loginNotice { color: var(--texto-2); font-size: 1rem; }
 #loginNotice:not(:empty) { margin-bottom: 1rem; }
 .password-strength { display: none; margin-top: .4rem; }
 .password-strength.show { display: block; }
 .strength-bar { height: 4px; overflow: hidden; border-radius: 2px; background: var(--panel-3); }
 .strength-fill { width: 0; height: 100%; transition: width .2s; }
-.strength-text { display: block; margin-top: .2rem; font-size: .8125rem; }
+.strength-text { display: block; margin-top: .2rem; font-size: 1rem; }
 .show-password, .remember-device { display: flex; align-items: center; gap: .5rem; margin-bottom: .9rem; font-weight: 400; }
-.privacy-note { margin-bottom: 1rem; color: var(--texto-3); font-size: .875rem; }
-.btn-submit { width: 100%; min-height: 46px; font-size: .9375rem; }
+.privacy-note { margin-bottom: 1rem; color: var(--texto-3); font-size: 1rem; }
+.btn-submit { width: 100%; min-height: 46px; font-size: 1rem; }
 .btn-submit svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
 .spinner {
   display: none;
@@ -94,9 +95,9 @@
 }
 @keyframes giro { to { transform: rotate(360deg); } }
 .auth-acciones-codigo { display: flex; justify-content: space-between; gap: 1rem; margin-top: 1rem; }
-.auth-divider { display: flex; align-items: center; gap: .75rem; margin: 1.25rem 0; color: var(--texto-3); font-size: .875rem; }
+.auth-divider { display: flex; align-items: center; gap: .75rem; margin: 1.25rem 0; color: var(--texto-3); font-size: 1rem; }
 .auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--linea); }
-.auth-switch { color: var(--texto-2); font-size: .9rem; text-align: center; }
+.auth-switch { color: var(--texto-2); font-size: 1rem; text-align: center; }
 
 @media (max-width: 860px) {
   .auth-wrapper { grid-template-columns: 1fr; }

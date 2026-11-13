@@ -1,7 +1,7 @@
 {% extends 'base.html' %}{% load static %}
 {% block title %}{{ ruta.titulo }} — InfoTrip{% endblock %}
 {% block robots %}<meta name="robots" content="noindex">{% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/comunidad.css' %}"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""><link rel="stylesheet" href="{% static 'css/mapa.css' %}"><link rel="stylesheet" href="{% static 'css/planeador.css' %}">{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/comunidad.css' %}"><link rel="stylesheet" href="{% static 'vendor/leaflet-1.9.4/leaflet.css' %}"><link rel="stylesheet" href="{% static 'css/mapa.css' %}"><link rel="stylesheet" href="{% static 'css/planeador.css' %}">{% endblock %}
 {% block content %}{% include 'partials/navBar.html' %}
 <main class="explore-shell detail-shell planeador planeador-compartida" id="ruta-compartida" data-titulo="{{ ruta.titulo }}" data-url="{{ url_canonica }}">
   <span class="eyebrow">Ruta compartida</span>
@@ -72,4 +72,4 @@
 </main>
 {{ mapa|json_script:'ruta-datos' }}
 {% endblock %}
-{% block extra_js %}<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script><script src="{% static 'js/mapa-base.js' %}" defer></script><script src="{% static 'js/cuenta-api.js' %}"></script><script src="{% static 'js/compartir-ruta.js' %}" defer></script><script src="{% static 'js/ruta-compartida.js' %}" defer></script>{% endblock %}
+{% block extra_js %}<script src="{% static 'vendor/leaflet-1.9.4/leaflet.js' %}" defer></script><script src="{% static 'js/mapa-base.js' %}" defer></script><script src="{% static 'js/cuenta-api.js' %}"></script><script src="{% static 'js/compartir-ruta.js' %}" defer></script><script src="{% static 'js/ruta-compartida.js' %}" defer></script>{% endblock %}

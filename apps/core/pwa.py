@@ -98,7 +98,7 @@ def manifiesto(request):
 # El service worker descarga los cuadros del mapa con fetch(), que la CSP regula con connect-src (no img-src).
 @csp_override({
     'default-src': [CSP.NONE],
-    'connect-src': [CSP.SELF, 'https://unpkg.com', 'https://tile.openstreetmap.org'],
+    'connect-src': [CSP.SELF, 'https://tile.openstreetmap.org'],
 })
 @require_safe
 def service_worker(request):

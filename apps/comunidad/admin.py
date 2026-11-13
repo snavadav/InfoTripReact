@@ -16,8 +16,10 @@ from .propuestas_lugar import lugares_parecidos
 
 @admin.register(Aporte)
 class AporteAdmin(admin.ModelAdmin):
-    list_display = ['id', 'destino', 'autor', 'tipo', 'estado', 'fecha_visita']
+    list_display = ['id', 'destino', 'autor', 'tipo', 'estado', 'fecha_visita', 'vista']
     list_filter = ['estado', 'tipo']
+    date_hierarchy = 'creado'
+    list_select_related = ['destino', 'autor']
     search_fields = ['destino__nombre', 'autor__email', 'texto']
     readonly_fields = [
         'destino',
@@ -36,6 +38,14 @@ class AporteAdmin(admin.ModelAdmin):
     actions = ['publicar', 'ocultar']
     def has_add_permission(self, request): return False
     def has_delete_permission(self, request, obj=None): return False
+
+    @admin.display(description='Foto')
+    def vista(self, aporte):
+        if aporte.tipo != 'foto' or not aporte.imagen:
+            return '—'
+        return format_html('<img src="{}" alt="Foto enviada de {}" height="56" loading="lazy">',
+                           (aporte.miniatura or aporte.imagen).url, aporte.destino.nombre)
+
     @admin.action(description='Publicar aportes seleccionados', permissions=['change'])
     def publicar(self, request, queryset):
         with transaction.atomic():
@@ -96,6 +106,8 @@ class ReporteAdmin(ReporteAdminBase):
     campo_contenido = 'aporte'
     permiso_contenido = 'comunidad.change_aporte'
     list_display = ['id', 'aporte', 'autor', 'resuelto', 'creado']
+    # El nombre del aporte lee su destino y su autor: sin esto serían dos consultas más por fila.
+    list_select_related = ['aporte__destino', 'aporte__autor', 'autor']
     readonly_fields = ['aporte', 'autor', 'motivo', 'resuelto', 'resuelto_en', 'creado']
 
 
@@ -105,12 +117,14 @@ class ReporteColaboracionAdmin(ReporteAdminBase):
     campo_contenido = 'colaboracion'
     permiso_contenido = 'comunidad.change_colaboracion'
     list_display = ['id', 'colaboracion', 'autor', 'resuelto', 'creado']
+    list_select_related = ['colaboracion__destino', 'autor']
     readonly_fields = ['colaboracion', 'autor', 'motivo', 'resuelto', 'resuelto_en', 'creado']
 
 
 @admin.register(Decision)
 class DecisionAdmin(admin.ModelAdmin):
     list_display = ['aporte', 'moderador', 'estado_anterior', 'estado_nuevo', 'creado']
+    list_select_related = ['aporte__destino', 'aporte__autor', 'moderador']
     readonly_fields = ['aporte', 'moderador', 'estado_anterior', 'estado_nuevo', 'motivo', 'creado']
     def has_add_permission(self, request): return False
     def has_change_permission(self, request, obj=None): return False
@@ -155,6 +169,7 @@ class ColaboracionAdmin(admin.ModelAdmin):
 @admin.register(RevisionColaboracion)
 class RevisionColaboracionAdmin(admin.ModelAdmin):
     list_display = ['colaboracion', 'moderador', 'estado_anterior', 'estado_nuevo', 'creado']
+    list_select_related = ['colaboracion__destino', 'moderador']
     readonly_fields = ['colaboracion', 'moderador', 'estado_anterior', 'estado_nuevo', 'motivo', 'creado']
     def has_add_permission(self, request): return False
     def has_change_permission(self, request, obj=None): return False
@@ -212,12 +227,14 @@ class ReporteResenaLugarAdmin(ReporteAdminBase):
     campo_contenido = 'resena'
     permiso_contenido = 'comunidad.change_resenalugar'
     list_display = ['id', 'resena', 'autor', 'resuelto', 'creado']
+    list_select_related = ['resena__lugar', 'resena__autor', 'autor']
     readonly_fields = ['resena', 'autor', 'motivo', 'resuelto', 'resuelto_en', 'creado']
 
 
 @admin.register(RevisionResenaLugar)
 class RevisionResenaLugarAdmin(admin.ModelAdmin):
     list_display = ['resena', 'moderador', 'estado_anterior', 'estado_nuevo', 'creado']
+    list_select_related = ['resena__lugar', 'resena__autor', 'moderador']
     readonly_fields = ['resena', 'moderador', 'estado_anterior', 'estado_nuevo', 'motivo', 'creado']
     def has_add_permission(self, request): return False
     def has_change_permission(self, request, obj=None): return False

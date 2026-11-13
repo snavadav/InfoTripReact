@@ -1,15 +1,16 @@
 // Explorar sin búsqueda: los destinos más cercanos a la persona, arriba de la lista.
-// La distancia se calcula aquí con los puntos que ya trae el mapa. La ubicación se usa una vez y se descarta:
+// La distancia se calcula aquí con los puntos que ya pidió el mapa (mapa.js). La ubicación se usa una vez y se descarta:
 // no se envía al servidor ni se escribe en la URL, en localStorage ni en ningún registro.
-(() => {
+(async () => {
   'use strict';
   const MAXIMO = 8; // Lo mismo que una página de la lista: cabe sin tapar el resto.
   const LEJOS_KM = 150;
   const byId = id => document.getElementById(id);
   const section = byId('cerca-destinos');
-  const datos = byId('map-places');
-  if (!section || !datos || !navigator.geolocation) return;
-  const places = JSON.parse(datos.textContent)
+  if (!section || !window.InfoTripPuntos || !navigator.geolocation) return;
+  let places;
+  try { places = await window.InfoTripPuntos; } catch { return; } // mapa.js ya avisa que no llegaron.
+  places = places
     .map(place => ({...place, lat: Number(place.latitud), lng: Number(place.longitud)}))
     .filter(place => Number.isFinite(place.lat) && Number.isFinite(place.lng));
   if (!places.length) return;

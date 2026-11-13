@@ -17,17 +17,17 @@ SECRET_KEY = config('SECRET_KEY', default='')
 DEBUG      = False
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='', cast=Csv())
 
-# Content Security Policy (S6): solo se ejecutan scripts de archivos propios y de Leaflet en
-# unpkg, así que un XSS no puede inyectar <script> en línea ni cargar código de otros dominios.
-# Los estilos admiten 'unsafe-inline' porque las plantillas usan bloques <style> y style="".
+# Content Security Policy (S6): solo se ejecutan scripts de archivos propios (Leaflet y las fuentes
+# también se sirven desde static/vendor y static/fonts), así que un XSS no puede inyectar <script> en
+# línea ni cargar código de otros dominios. Los estilos admiten 'unsafe-inline' porque las plantillas
+# usan bloques <style> y style="", y Leaflet coloca el mapa con estilos en línea.
 SECURE_CSP = {
     'default-src': [CSP.SELF],
-    'script-src': [CSP.SELF, 'https://unpkg.com'],
-    'style-src': [CSP.SELF, CSP.UNSAFE_INLINE, 'https://fonts.googleapis.com', 'https://unpkg.com'],
-    'font-src': [CSP.SELF, 'https://fonts.gstatic.com'],
-    'img-src': [CSP.SELF, 'data:', 'https://tile.openstreetmap.org', 'https://unpkg.com'],
-    # unpkg: las herramientas de desarrollo del navegador descargan el source map de Leaflet.
-    'connect-src': [CSP.SELF, 'https://unpkg.com'],
+    'script-src': [CSP.SELF],
+    'style-src': [CSP.SELF, CSP.UNSAFE_INLINE],
+    'font-src': [CSP.SELF],
+    'img-src': [CSP.SELF, 'data:', 'https://tile.openstreetmap.org'],
+    'connect-src': [CSP.SELF],
     # Vista "Mapa" de la portada (mapa_embed en apps/destinos/frontend.py).
     'frame-src': ['https://maps.google.com', 'https://www.google.com'],
     'object-src': [CSP.NONE],
@@ -142,6 +142,7 @@ SPECTACULAR_SETTINGS = {
     'ENUM_NAME_OVERRIDES': {
         'TipoDeLugarEnum': 'apps.destinos.models.TIPOS_DE_LUGAR',
         'EstadoConRetiroEnum': 'apps.comunidad.models.ESTADOS_CON_RETIRO',
+        'TipoDeAvisoEnum': 'apps.comunidad.notificar.OPCIONES_TIPO',
     },
 }
 
@@ -185,6 +186,8 @@ IA_MODELO = config('IA_MODELO', default='') or 'claude-haiku-5-5'
 
 REDIS_URL = config('REDIS_URL', default='')
 CACHES = configurar_cache(REDIS_URL)
+# Cada prueba empieza con la caché vacía: la base se deshace entre pruebas y la caché local no.
+TEST_RUNNER = 'infotrip.test_runner.Ejecutor'
 
 # ─── JWT ──────────────────────────────────────────────────────
 SIMPLE_JWT = {

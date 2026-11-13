@@ -1,0 +1,2 @@
+/* Portada sin JavaScript: fuera los controles que dependen de él. */
+.place-preview, .discovery-board, .discovery-filters, #surprise-place { display: none; }

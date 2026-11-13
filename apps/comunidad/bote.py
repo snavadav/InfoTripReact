@@ -22,7 +22,8 @@ from rest_framework.views import APIView
 from apps.metricas.models import registrar
 from apps.amigos.relaciones import amigos_de
 from apps.destinos.models import Lugar
-from .models import Aporte, GastoReal, Notificacion, PagoEntreParticipantes, Participante, Viaje
+from .models import Aporte, GastoReal, PagoEntreParticipantes, Participante, Viaje
+from .notificar import avisar
 from .views import AporteThrottle
 from .viajes import pesos
 
@@ -325,8 +326,8 @@ class UnirseBoteView(APIView):
             if viaje.participantes.count() >= LIMITE_PARTICIPANTES:
                 raise serializers.ValidationError(f'Este bote ya tiene {LIMITE_PARTICIPANTES} personas.')
             Participante.objects.create(viaje=viaje, usuario=request.user)
-            Notificacion.objects.create(usuario=viaje.autor, enlace=f'/mis-viajes/{viaje.pk}/bote/',
-                                        texto=f'{request.user.nombre} se unió al bote de {viaje.nombre}.'[:300])
+            avisar(viaje.autor, 'bote', f'{quien(request.user)} se unió al bote de {viaje.nombre}.',
+                   f'/mis-viajes/{viaje.pk}/bote/', actor=request.user)
             registrar('bote_unido', usuario=request.user)
         return Response({'viaje': viaje.pk})
 
@@ -464,10 +465,10 @@ class PagosBoteView(APIView):
         datos.is_valid(raise_exception=True)
         pago = datos.save(viaje=viaje, de=yo, fecha=datos.validated_data.get('fecha') or timezone.localdate())
         if pago.para.usuario:
-            Notificacion.objects.create(
-                usuario=pago.para.usuario, enlace=f'/mis-viajes/{viaje.pk}/bote/#cuentas',
-                texto=f'{quien(request.user)} registró que te pagó ${pesos(pago.monto)} en el bote de '
-                      f'{viaje.nombre}. Confírmalo cuando lo recibas.'[:300])
+            avisar(pago.para.usuario, 'pago',
+                   f'{quien(request.user)} registró que te pagó ${pesos(pago.monto)} en el bote de '
+                   f'{viaje.nombre}. Confírmalo cuando lo recibas.', f'/mis-viajes/{viaje.pk}/bote/#cuentas',
+                   actor=request.user, clave=f'pago:{pago.pk}')
         registrar('pago_bote_registrado', usuario=request.user)
         return Response(estado_del_bote(viaje, request), status=201)
 
@@ -503,10 +504,10 @@ class ConfirmarPagoView(APIView):
                 registro.confirmado = True
                 registro.save(update_fields=['confirmado'])
                 if registro.de.usuario:
-                    Notificacion.objects.create(
-                        usuario=registro.de.usuario, enlace=f'/mis-viajes/{viaje.pk}/bote/#cuentas',
-                        texto=f'{quien(request.user)} confirmó que recibió tu pago de ${pesos(registro.monto)} '
-                              f'en el bote de {viaje.nombre}.'[:300])
+                    avisar(registro.de.usuario, 'bote',
+                           f'{quien(request.user)} confirmó que recibió tu pago de ${pesos(registro.monto)} '
+                           f'en el bote de {viaje.nombre}.', f'/mis-viajes/{viaje.pk}/bote/#cuentas',
+                           actor=request.user)
         estado = estado_del_bote(viaje, request)
         if estado['a_mano']:
             registrar('bote_a_mano', usuario=request.user)
@@ -539,10 +540,9 @@ class InvitarAmigosView(APIView):
                 raise serializers.ValidationError(f'Un bote admite hasta {LIMITE_PARTICIPANTES} personas.')
             for amigo in amigos:
                 Participante.objects.create(viaje=viaje, usuario=amigo)
-                Notificacion.objects.create(
-                    usuario=amigo, enlace=f'/mis-viajes/{viaje.pk}/bote/',
-                    texto=f'{quien(request.user)} te agregó al bote de {viaje.nombre}. '
-                          'Si no vas, puedes salirte desde el bote.'[:300])
+                avisar(amigo, 'bote', f'{quien(request.user)} te agregó al bote de {viaje.nombre}. '
+                       'Si no vas, puedes salirte desde el bote.', f'/mis-viajes/{viaje.pk}/bote/',
+                       actor=request.user)
             if amigos:
                 registrar('bote_amigos_invitados', usuario=request.user)
         return Response(estado_del_bote(viaje, request))

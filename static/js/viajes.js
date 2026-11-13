@@ -82,13 +82,26 @@
     [ `Total estimado del grupo: ${money(total)}`, `Por persona (reparto igual): ${money(Math.round(total/people))}`, remaining>=0?`Presupuesto restante: ${money(remaining)}`:`Excede el presupuesto por: ${money(-remaining)}` ].forEach(text=>target.append(node('p',text)));
     document.getElementById('add-expense').disabled=expenses.children.length>=100;
   }
+  // Agenda y pendientes van plegados: se abren solos si la escapada ya tiene algo, y el título dice cuántos hay.
+  const blocks=[...document.querySelectorAll('.trip-bloque')];
+  function syncBlocks(open=false){
+    blocks.forEach(block=>{
+      const count=block.querySelector('[data-cuenta]');
+      const total=document.getElementById(count.dataset.cuenta).children.length;
+      count.textContent=total?`(${total})`:'';
+      if(open)block.open=total>0;
+    });
+  }
+  blocks.forEach(block=>new MutationObserver(()=>syncBlocks()).observe(document.getElementById(block.querySelector('[data-cuenta]').dataset.cuenta),{childList:true}));
+  // Un campo obligatorio vacío dentro de un bloque plegado no se puede enfocar: se abre para que el aviso se vea.
+  form.addEventListener('invalid',event=>{const block=event.target.closest('.trip-bloque');if(block)block.open=true;},true);
   function mayLeave(){if(saving){status.textContent='Espera a que termine el guardado.';return false;}return !dirty||confirm('Tienes cambios sin guardar. ¿Quieres descartarlos?');}
   function edit(item=null, duplicate=false) {
     if(!mayLeave())return;
     form.reset();expenses.replaceChildren();activities.replaceChildren();tasks.replaceChildren();places=[];document.getElementById('add-activity').disabled=false;document.getElementById('add-task').disabled=false;current=duplicate?null:item?.id||null;
     form.elements.fecha_fin.min='';
     if(item){['nombre','destino','fecha_inicio','fecha_fin','personas','presupuesto'].forEach(key=>form.elements[key].value=item[key]); if(duplicate)form.elements.nombre.value=('Copia de '+item.nombre).slice(0,120);item.gastos.forEach(addExpense);(item.actividades||[]).forEach(addActivity);(item.pendientes||[]).forEach(addTask);form.elements.notas.value=item.notas||'';places=item.lugares_detalle||[];}
-    showPlaces();
+    showPlaces();syncBlocks(true);
     document.getElementById('editor-title').textContent=current?'Editar escapada':'Nueva escapada';
     form.querySelector('.form-status').textContent=''; dirty=duplicate;calculate();form.elements.nombre.focus();
   }
@@ -164,11 +177,16 @@
   showPlaces();
   const suggested=new URLSearchParams(location.search).get('destino');
   if(suggested){form.elements.destino.value=suggested.slice(0,200);form.elements.nombre.value=('Escapada a '+suggested).slice(0,120);dirty=true;}
-  // Recién guardada desde el planeador: se abre en el editor.
-  const requested=Number(new URLSearchParams(location.search).get('editar'))||null;
+  // Recién guardada desde el planeador (?editar=) o abierta desde un aviso (?abrir=): se abre en el editor.
+  const params=new URLSearchParams(location.search);
+  const fromPlanner=Number(params.get('editar'))||null;
+  const requested=fromPlanner||Number(params.get('abrir'))||null;
   async function openRequested(){
     if(!requested)return;
-    try{const item=await InfoTrip.api(`/api/v1/mis-viajes/${requested}/`);dirty=false;edit(item);status.replaceChildren(document.createTextNode('Tu ruta quedó guardada como escapada. Ajústala aquí o '),button('Invitar amigos',openPot(item.id,'#bote-amigos')));history.replaceState(null,'',location.pathname);}
+    try{const item=await InfoTrip.api(`/api/v1/mis-viajes/${requested}/`);dirty=false;edit(item);
+      if(fromPlanner)status.replaceChildren(document.createTextNode('Tu ruta quedó guardada como escapada. Ajústala aquí o '),button('Invitar amigos',openPot(item.id,'#bote-amigos')));
+      else status.textContent=`Abriste «${item.nombre}».`;
+      history.replaceState(null,'',location.pathname);}
     catch(error){status.textContent=error.message;}
   }
   const draft=suggested||requested?null:loadDraft();

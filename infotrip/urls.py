@@ -4,7 +4,6 @@ Enrutador principal del proyecto
 """
 
 from django.contrib import admin
-from django.contrib.sitemaps.views import sitemap
 from django.shortcuts import render
 from django.views.generic import TemplateView
 from django.urls import path, include
@@ -19,10 +18,11 @@ from apps.comunidad.pasaporte import foto_publica, pasaporte, pasaporte_publico
 from apps.comunidad.viajes import viaje_publico
 from apps.core.pwa import manifiesto, service_worker, sin_conexion
 from apps.core.views import robots, salud
-from apps.destinos.sitemaps import CostosSitemap, DestinosSitemap, PaginasSitemap
+from apps.destinos.sitemaps import CostosSitemap, DestinosSitemap, PaginasSitemap, sitemap_en_cache
 from apps.usuarios.views_frontend import baja_avisos, login_view, registro_view
 from apps.destinos.frontend import (
     costos_destino, costos_indice, creditos, inicio, listado, detalle, lugar_detalle, misiones, proponer_lugar,
+    puntos_mapa,
 )
 from apps.curador.views import etiquetar as etiquetar_lugares
 from apps.metricas.views import EventosView, panel as panel_metricas
@@ -44,7 +44,7 @@ urlpatterns = [
     path('manifest.webmanifest', manifiesto, name='manifiesto'),
     path('sw.js', service_worker, name='service-worker'),
     path('sin-conexion/', sin_conexion, name='sin-conexion'),
-    path('sitemap.xml', sitemap,
+    path('sitemap.xml', sitemap_en_cache,
          {'sitemaps': {'paginas': PaginasSitemap, 'destinos': DestinosSitemap, 'costos': CostosSitemap}},
          name='django.contrib.sitemaps.views.sitemap'),
     path('favoritos/', TemplateView.as_view(template_name='comunidad/favoritos.html'), name='favoritos'),
@@ -86,6 +86,8 @@ urlpatterns = [
 
     # Frontend
     path('destinos/', listado, name='destinos-listado'),
+    # Con punto: no puede confundirse con el slug de un destino.
+    path('destinos/puntos.json', puntos_mapa, name='destinos-puntos'),
     path('destinos/<slug:slug>/', detalle, name='destino-detalle'),
     path('destinos/<slug:slug>/costos/', costos_destino, name='destino-costos'),
     path('costos/', costos_indice, name='costos-indice'),

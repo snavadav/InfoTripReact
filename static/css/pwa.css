@@ -25,7 +25,7 @@
   color: var(--texto);
   box-shadow: var(--sombra);
   font: inherit;
-  font-size: .875rem;
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
 }
@@ -43,7 +43,7 @@
   background: var(--panel);
   color: var(--texto);
   box-shadow: var(--sombra-flotante);
-  font-size: .875rem;
+  font-size: 1rem;
   line-height: 1.45;
 }
 .instalar-app__ios svg { vertical-align: -3px; color: var(--foco); }

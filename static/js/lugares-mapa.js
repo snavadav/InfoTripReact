@@ -47,27 +47,53 @@
   function distanceText(km) {
     return km < 1 ? `${Math.round(km * 100) * 10} m` : `${km.toFixed(1)} km`;
   }
-  function details(place) {
+  // La zona trae solo lo del marcador; la ficha completa se pide al abrir el recuadro, una vez por lugar.
+  // "Cerca de mí" ya la trae completa (son pocos y con distancia).
+  const fichas = new Map();
+  function fullPlace(place) {
+    if ('subtipo_nombre' in place) return Promise.resolve(place);
+    if (!fichas.has(place.id)) {
+      fichas.set(place.id, fetch(`/api/v1/lugares/${place.id}/`)
+        .then(response => (response.ok ? response.json() : Promise.reject(new Error())))
+        .catch(error => { fichas.delete(place.id); throw error; }));
+    }
+    return fichas.get(place.id);
+  }
+  // Nombre y acciones al instante; lo demás llega con la ficha.
+  function details(place, marker) {
     const box = node('div', null, 'lugar-popup');
     box.append(node('strong', place.nombre));
-    if (place.num_resenas) box.append(node('p', `${place.calificacion_promedio.toFixed(1)} / 5 · ${place.num_resenas} ${place.num_resenas === 1 ? 'reseña' : 'reseñas'}`, 'lugar-popup-nota'));
-    const where = [place.subtipo_nombre, place.municipio].filter(Boolean).join(' · ');
-    box.append(node('p', place.distancia_km === null ? where : `${where} · ${distanceText(place.distancia_km)}`));
-    if (place.horario) box.append(node('p', `Horario registrado: ${place.horario}`));
     const actions = node('div', null, 'lugar-popup-acciones');
-    actions.append(link('Ver ficha', place.url), link('Cómo llegar ↗', `https://www.google.com/maps/dir/?api=1&destination=${place.latitud},${place.longitud}`, true));
-    const phone = place.telefono.replace(/[^+\d]/g, '');
-    if (phone) actions.append(link(place.telefono, `tel:${phone}`));
-    if (place.sitio_web) actions.append(link('Sitio web ↗', place.sitio_web, true));
-    box.append(actions);
-    if (place.osm_url) {
-      const credit = node('p', '© ', 'lugar-popup-credito');
-      credit.append(link('colaboradores de OpenStreetMap', place.osm_url, true));
-      box.append(credit);
-    } else if (place.atribucion) {
-      box.append(node('p', place.atribucion, 'lugar-popup-credito'));
-    }
+    const ficha = link('Ver ficha', place.url || `/lugares/${place.id}/`);
+    actions.append(ficha, link('Cómo llegar ↗', `https://www.google.com/maps/dir/?api=1&destination=${place.latitud},${place.longitud}`, true));
+    const loading = node('p', 'Cargando datos…', 'lugar-popup-nota');
+    box.append(loading, actions);
+    fullPlace(place).then(full => {
+      loading.replaceWith(...extraDetails(full));
+      // Un museo que también es destino tiene su ficha completa en otra dirección.
+      if (full.url) ficha.href = full.url;
+      const phone = full.telefono.replace(/[^+\d]/g, '');
+      if (phone) actions.append(link(full.telefono, `tel:${phone}`));
+      if (full.sitio_web) actions.append(link('Sitio web ↗', full.sitio_web, true));
+      if (full.osm_url) {
+        const credit = node('p', '© ', 'lugar-popup-credito');
+        credit.append(link('colaboradores de OpenStreetMap', full.osm_url, true));
+        box.append(credit);
+      } else if (full.atribucion) {
+        box.append(node('p', full.atribucion, 'lugar-popup-credito'));
+      }
+    }).catch(() => {
+      loading.textContent = 'No pudimos cargar sus datos; la ficha sigue a un clic.';
+    }).finally(() => marker.getPopup()?.update());
     return box;
+  }
+  function extraDetails(place) {
+    const lines = [];
+    if (place.num_resenas) lines.push(node('p', `${place.calificacion_promedio.toFixed(1)} / 5 · ${place.num_resenas} ${place.num_resenas === 1 ? 'reseña' : 'reseñas'}`, 'lugar-popup-nota'));
+    const where = [place.subtipo_nombre, place.municipio].filter(Boolean).join(' · ');
+    lines.push(node('p', place.distancia_km == null ? where : `${where} · ${distanceText(place.distancia_km)}`));
+    if (place.horario) lines.push(node('p', `Horario registrado: ${place.horario}`));
+    return lines;
   }
   // Con `conservar`, solo cambia lo necesario: mover el mapa recarga la zona, y abrir un recuadro cerca
   // del borde mueve el mapa; si se redibujara todo, el recuadro se cerraría justo al abrirse.
@@ -87,7 +113,9 @@
       const position = InfoTripMapa.coordenadas(place);
       if (!position || markerByPlace.has(place.id)) return;
       const marker = L.marker(position, {icon: InfoTripMapa.iconoLugar(place.tipo), title: place.nombre, alt: place.nombre});
-      marker.bindPopup(() => details(place));
+      // Un solo recuadro por marcador: popup.update() vuelve a pedir el contenido y no debe pedir la ficha otra vez.
+      let box = null;
+      marker.bindPopup(() => box || (box = details(place, marker)));
       markerByPlace.set(place.id, marker);
       cluster.addLayer(marker);
     });

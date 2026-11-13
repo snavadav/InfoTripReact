@@ -1,7 +1,7 @@
 {% extends 'base.html' %}{% load static %}
 {% block title %}{{ seo.titulo }}{% endblock %}
 {% block robots %}{% if not sitio.num_resenas %}<meta name="robots" content="noindex">{% endif %}{% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/comunidad.css' %}"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""><link rel="stylesheet" href="{% static 'css/mapa.css' %}">{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/explorar.css' %}"><link rel="stylesheet" href="{% static 'css/comunidad.css' %}"><link rel="stylesheet" href="{% static 'vendor/leaflet-1.9.4/leaflet.css' %}"><link rel="stylesheet" href="{% static 'css/mapa.css' %}">{% endblock %}
 {% block content %}{% include 'partials/navBar.html' %}
 <main class="explore-shell detail-shell" id="lugar" data-lugar="{{ sitio.pk }}" data-latitud="{{ sitio.latitud }}" data-longitud="{{ sitio.longitud }}">
   <a class="back-link" href="{% url 'destinos-listado' %}">← Explorar el mapa</a>
@@ -63,4 +63,4 @@
   {% include 'destinos/footer.html' %}
 </main>
 {% endblock %}
-{% block extra_js %}<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script><script src="{% static 'js/mapa-base.js' %}" defer></script><script src="{% static 'js/ficha-mapa.js' %}" defer></script><script src="{% static 'js/cuenta-api.js' %}"></script><script src="{% static 'js/comunidad.js' %}"></script><script src="{% static 'js/lugar.js' %}" defer></script>{% endblock %}
+{% block extra_js %}<script src="{% static 'vendor/leaflet-1.9.4/leaflet.js' %}" defer></script><script src="{% static 'js/mapa-base.js' %}" defer></script><script src="{% static 'js/ficha-mapa.js' %}" defer></script><script src="{% static 'js/cuenta-api.js' %}"></script><script src="{% static 'js/comunidad.js' %}"></script><script src="{% static 'js/lugar.js' %}" defer></script>{% endblock %}

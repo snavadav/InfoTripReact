@@ -974,6 +974,33 @@ class FlujosTests(StaticLiveServerTestCase):
         self.pagina.wait_for_selector('#shared-routes-status:has-text("Ruta borrada")')
         self.assertFalse(RutaCompartida.objects.exists())
 
+    def test_con_la_ruta_armada_el_formulario_se_pliega_y_se_puede_reabrir(self):
+        self.armar_ruta_de_dos_dias()
+        # El formulario deja su lugar a una fila con lo elegido y el resultado usa todo el ancho.
+        self.assertTrue(self.pagina.locator('#ruta-form').is_hidden())
+        resumen = self.pagina.inner_text('#ruta-plegado-texto')
+        self.assertIn('2 días', resumen)
+        self.assertIn('Miradores', resumen)
+        self.assertEqual(self.pagina.get_attribute('#ruta-cambiar', 'aria-expanded'), 'false')
+        ancho = self.pagina.evaluate("document.getElementById('ruta-resultado').offsetWidth / document.querySelector('.planeador-layout').offsetWidth")
+        self.assertGreater(ancho, .95)
+        self.assertGreaterEqual(self.pagina.locator('#ruta-cambiar').bounding_box()['height'], 44)
+        # «Cambiar» lo vuelve a mostrar tal como estaba y lleva el foco al primer campo.
+        self.pagina.click('#ruta-cambiar')
+        self.assertTrue(self.pagina.locator('#ruta-form').is_visible())
+        self.assertEqual(self.pagina.get_attribute('#ruta-cambiar', 'aria-expanded'), 'true')
+        self.assertEqual(self.pagina.evaluate('document.activeElement.id'), 'ruta-municipio')
+        self.assertTrue(self.pagina.is_checked('#ruta-form input[value="miradores"]'))
+        self.assertTrue(self.pagina.locator('#ruta-aviso-edicion').is_hidden())
+        self.pagina.click('#ruta-cambiar')
+        self.assertTrue(self.pagina.locator('#ruta-form').is_hidden())
+        # Un error al volver a armar deja el formulario abierto, con el error a la vista.
+        self.pagina.click('#ruta-cambiar')
+        self.pagina.fill('#ruta-form [name="hora_fin"]', '08:00')
+        self.pagina.click('#ruta-form button[type="submit"]')
+        self.pagina.wait_for_selector('#ruta-error-cuando:not([hidden])')
+        self.assertTrue(self.pagina.locator('#ruta-form').is_visible())
+
     def armar_ruta_de_dos_dias(self):
         self.destino.categorias.add(Categoria.objects.create(nombre='Miradores', slug='miradores'))
         self.abrir('/planeador/')
@@ -1069,6 +1096,155 @@ class FlujosTests(StaticLiveServerTestCase):
         self.pagina.wait_for_url(self.live_server_url + '/')
         self.abrir('/perfil/')
         self.pagina.wait_for_selector('#profile-login:not([hidden])')
+
+    def test_la_campana_muestra_los_avisos_y_los_marca_como_leidos(self):
+        from apps.comunidad.models import Notificacion
+        from apps.comunidad.notificar import avisar
+        avisar(self.usuario, 'aportes', 'Publicamos tu reseña sobre Mirador.', '/destinos/mirador/')
+        avisar(self.usuario, 'aportes', 'Publicamos tu fotografía sobre Mirador.', '/destinos/mirador/')
+        viejo = avisar(self.usuario, 'pasaporte', 'Ganaste el sello de Tapalpa.', '/pasaporte/')
+        Notificacion.objects.filter(pk=viejo.pk).update(leida=True)
+        # Sin sesión no hay campana y el menú ya dice «Mis viajes» (un solo nombre, con o sin sesión).
+        self.abrir('/planeador/')
+        self.assertEqual(self.pagina.locator('.nav-links a[href="/mis-viajes/"]').inner_text(), 'Mis viajes')
+        self.assertTrue(self.pagina.locator('#avisos-toggle').is_hidden())
+        self.iniciar_sesion()
+        # /planeador/ no carga cuenta-api.js: el número llega con el token que pide avisos-nav.js.
+        self.abrir('/planeador/')
+        self.pagina.wait_for_selector('#avisos-numero:text("2")')
+        self.assertEqual(self.pagina.get_attribute('#avisos-toggle', 'aria-label'), 'Avisos, 2 sin leer')
+        self.pagina.click('#avisos-toggle')
+        self.assertEqual(self.pagina.get_attribute('#avisos-toggle', 'aria-expanded'), 'true')
+        self.pagina.wait_for_selector('#avisos-panel .avisos-grupo[aria-label="Nuevos"] .aviso--nuevo')
+        self.assertEqual(self.pagina.locator('#avisos-panel .aviso--nuevo').count(), 2)
+        self.assertEqual(self.pagina.locator('#avisos-panel .avisos-grupo[aria-label="Anteriores"] .aviso').count(), 1)
+        # Escape cierra y devuelve el foco a la campana.
+        self.pagina.keyboard.press('Escape')
+        self.assertTrue(self.pagina.locator('#avisos-panel').is_hidden())
+        self.assertEqual(self.pagina.evaluate('document.activeElement.id'), 'avisos-toggle')
+        # Abrir un aviso lleva a su acción y lo deja leído; queda uno.
+        self.pagina.click('#avisos-toggle')
+        self.pagina.click('#avisos-panel .aviso--nuevo a:has-text("Publicamos tu reseña")')
+        self.pagina.wait_for_url('**/destinos/mirador/')
+        self.pagina.wait_for_selector('#avisos-numero:text("1")')
+        # «Marcar todo como leído» quita el número.
+        self.pagina.click('#avisos-toggle')
+        self.pagina.click('#avisos-todos-leidos')
+        self.pagina.wait_for_selector('#avisos-numero', state='hidden')
+        self.assertEqual(self.pagina.locator('#avisos-panel .aviso--nuevo').count(), 0)
+        self.assertFalse(Notificacion.objects.filter(leida=False).exists())
+        # En un teléfono la campana sigue a la vista y el panel cabe en la pantalla.
+        self.pagina.set_viewport_size({'width': 375, 'height': 740})
+        self.assertTrue(self.pagina.locator('#avisos-toggle').is_visible())
+        caja = self.pagina.locator('#avisos-panel').bounding_box()
+        self.assertGreaterEqual(caja['x'], 0)
+        self.assertLessEqual(caja['x'] + caja['width'], 375)
+
+    def test_un_aviso_lleva_a_su_accion_y_se_eligen_los_avisos(self):
+        from apps.comunidad.notificar import avisar
+        viaje = Viaje.objects.create(autor=self.usuario, nombre='Tapalpa en familia', destino='Tapalpa', personas=2,
+                                     presupuesto=1000, fecha_inicio=date(2026, 12, 1), fecha_fin=date(2026, 12, 2))
+        aviso = avisar(self.usuario, 'viaje_pronto', '«Tapalpa en familia» empieza mañana.',
+                       f'/mis-viajes/?abrir={viaje.pk}')
+        self.iniciar_sesion()
+        # El enlace del correo (?aviso=) abre la escapada en el editor y deja el aviso leído.
+        self.abrir(f'/mis-viajes/?abrir={viaje.pk}&ref=aviso&aviso={aviso.pk}')
+        self.pagina.wait_for_selector('#editor-title:text("Editar escapada")')
+        self.assertEqual(self.pagina.input_value('#trip-form [name="nombre"]'), 'Tapalpa en familia')
+        self.pagina.wait_for_function('!location.search.includes("aviso=")')
+        aviso.refresh_from_db()
+        self.assertTrue(aviso.leida)
+        # En Mi perfil el aviso ofrece su acción y, desde el correo, se llega a elegir qué avisos recibir.
+        self.abrir('/perfil/#avisos-preferencias')
+        self.pagina.wait_for_selector('#my-notices a.aviso-accion:text("Ver escapada")')
+        self.pagina.wait_for_selector('#avisos-preferencias[open] #avisos-tipos tr')
+        agenda_correo = self.pagina.locator('input[name="sin_correo"][value="viaje_hoy"]')
+        self.assertTrue(agenda_correo.is_enabled())
+        self.pagina.uncheck('input[name="app"][value="viaje_hoy"]')
+        self.assertTrue(agenda_correo.is_disabled())
+        self.pagina.uncheck('input[name="sin_correo"][value="lugares"]')
+        self.pagina.click('#avisos-form button[type="submit"]')
+        self.pagina.wait_for_selector('#avisos-form .form-status:text("Avisos guardados.")')
+        self.usuario.refresh_from_db()
+        self.assertEqual((self.usuario.avisos_silenciados, self.usuario.avisos_sin_correo), (['viaje_hoy'], ['lugares']))
+        # Cada casilla es un objetivo de al menos 44 × 44 px.
+        chicas = self.pagina.evaluate('''[...document.querySelectorAll('.avisos-celda')]
+            .map(c => c.getBoundingClientRect()).filter(r => r.width < 44 || r.height < 44).length''')
+        self.assertEqual(chicas, 0)
+
+    PAGINAS_LEGIBLES = ['/', '/destinos/', '/destinos/mirador/', '/destinos/mirador/costos/', '/costos/', '/misiones/',
+                        '/mis-viajes/', '/login/', '/registro/', '/recuperar/', '/lugares/proponer/', '/negocios/',
+                        '/comentarios/', '/privacidad/', '/creditos/']
+
+    def test_en_movil_el_texto_mide_16_px_y_los_controles_44(self):
+        self.pagina.set_viewport_size({'width': 375, 'height': 812})
+        for ruta in self.PAGINAS_LEGIBLES:
+            with self.subTest(ruta=ruta):
+                self.abrir(ruta)
+                self.pagina.wait_for_load_state('networkidle')
+                # Los desplegables se abren para medir también lo que esconden.
+                self.pagina.evaluate("document.querySelectorAll('main details').forEach(d => { d.open = true; })")
+                chicos = self.pagina.evaluate('''[...document.querySelectorAll('body *')]
+                    .filter(e => !e.closest('.leaflet-container, .sr-only, .skip-link, script, style, noscript'))
+                    .filter(e => e.getClientRects().length)
+                    .filter(e => [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()))
+                    .filter(e => parseFloat(getComputedStyle(e).fontSize) < 16)
+                    .map(e => `${e.tagName}.${e.className} «${e.textContent.trim().slice(0, 30)}»`)''')
+                self.assertEqual(sorted(set(chicos)), [])
+                # Enlaces dentro de un párrafo quedan fuera (WCAG 2.5.8 los exceptúa); botones y campos, no.
+                pequenos = self.pagina.evaluate('''[...document.querySelectorAll(
+                    'button, select, summary, textarea, input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="file"]), a')]
+                    .filter(e => !e.closest('.sr-only, .skip-link'))
+                    .filter(e => e.tagName !== 'A' || getComputedStyle(e).display !== 'inline')
+                    .filter(e => { const r = e.getBoundingClientRect(); return r.height > 0 && r.width > 0 && r.height < 44; })
+                    .map(e => `${e.tagName}.${e.className} «${(e.textContent.trim() || e.getAttribute('aria-label') || e.name || '').slice(0, 30)}» ${Math.round(e.getBoundingClientRect().height)}`)''')
+                self.assertEqual(sorted(set(pequenos)), [])
+                self.assertLessEqual(self.pagina.evaluate('document.documentElement.scrollWidth'), 375)
+
+    def test_el_indice_de_la_ficha_salta_a_cada_seccion_sin_taparla(self):
+        self.pagina.set_viewport_size({'width': 375, 'height': 812})
+        self.abrir('/destinos/mirador/')
+        self.pagina.click('.indice-pagina a[href="#community-title"]')
+        self.pagina.wait_for_function('scrollY > 200')
+        self.pagina.wait_for_timeout(400)
+        indice = self.pagina.locator('.indice-pagina').bounding_box()
+        titulo = self.pagina.locator('#community-title').bounding_box()
+        barra = self.pagina.locator('#navbar').bounding_box()
+        # El índice sigue a la vista bajo la barra y el título queda justo debajo, no escondido detrás.
+        self.assertAlmostEqual(indice['y'], barra['y'] + barra['height'], delta=2)
+        self.assertGreaterEqual(titulo['y'], indice['y'] + indice['height'])
+        self.assertLess(titulo['y'], 400)
+
+    def test_mis_viajes_sugiere_destinos_y_pliega_agenda_y_pendientes(self):
+        Viaje.objects.create(autor=self.usuario, nombre='Con agenda', destino='Tapalpa', personas=1, presupuesto=1,
+                             fecha_inicio='2026-12-01', fecha_fin='2026-12-02',
+                             actividades=[{'dia': 1, 'hora': '10:00', 'titulo': 'Caminar', 'notas': ''}])
+        self.iniciar_sesion()
+        self.abrir('/mis-viajes/')
+        agenda, pendientes = self.pagina.locator('.trip-bloque').all()
+        self.assertIsNone(agenda.get_attribute('open'))
+        # El destino propone lugares del catálogo, pero elegir uno solo llena el campo: no sale de la página.
+        self.pagina.fill('[name="destino"]', 'Mira')
+        self.pagina.click('.buscador-opciones [role="option"]:has-text("Mirador")')
+        self.assertEqual(self.pagina.input_value('[name="destino"]'), 'Mirador')
+        self.assertTrue(self.pagina.url.endswith('/mis-viajes/'))
+        # Al editar una escapada con agenda, ese bloque se abre solo y dice cuántas actividades tiene.
+        self.pagina.on('dialog', lambda dialogo: dialogo.accept())
+        self.pagina.locator('.trip-card button', has_text='Editar').click()
+        self.assertIsNotNone(agenda.get_attribute('open'))
+        self.assertEqual(agenda.locator('[data-cuenta]').inner_text(), '(1)')
+        self.assertIsNone(pendientes.get_attribute('open'))
+
+    def test_axo_se_aparta_mientras_se_escribe_en_un_formulario(self):
+        self.pagina.set_viewport_size({'width': 375, 'height': 812})
+        self.abrir('/mis-viajes/')
+        axo = self.pagina.locator('#trip-chat')
+        self.pagina.focus('[name="fecha_fin"]')
+        self.assertEqual(axo.evaluate('el => getComputedStyle(el).opacity'), '0')
+        self.assertEqual(axo.evaluate('el => getComputedStyle(el).pointerEvents'), 'none')
+        # Al salir del campo vuelve, y sigue alcanzándose con el teclado.
+        self.pagina.focus('#trip-chat-toggle')
+        self.assertEqual(axo.evaluate('el => getComputedStyle(el).opacity'), '1')
 
     def abrir_con_saludo(self, ancho=1280, alto=800):
         self.contexto.close()
