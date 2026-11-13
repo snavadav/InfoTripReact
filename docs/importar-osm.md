@@ -79,6 +79,24 @@ Las personas proponen lugares en `/lugares/proponer/`. Se revisan en `/admin/mod
 
 De las 7,719 tiendas con nombre que había en Jalisco el 30 de octubre de 2026, solo se traen las útiles para quien viaja: conveniencia, supermercados, tiendas variadas y departamentales, centros comerciales, panaderías, pastelerías, dulcerías, licorerías, vinos, bebidas, regalos, artesanías y arte. Se omiten las demás (por ejemplo 1,658 papelerías, ópticas, purificadoras y talleres) y las registradas sin un nombre real, como "Papeleria sin nombre". Para agregar un tipo, súmalo a `TIPO_DE_SUBTIPO` y `Lugar.SUBTIPOS` y a la consulta de `apps/destinos/osm.py`.
 
+## Museos y parques
+
+El mapa de `/destinos/` tiene botones de **Museos** y **Parques**. Son dos tipos más de `Lugar` (`museo` y `parque`) y salen de OpenStreetMap: `tourism=museum`, `leisure=park` y `leisure=nature_reserve` («Área natural»), siempre con nombre. El 13 de noviembre de 2026 eran 78 museos y 1,605 parques y áreas naturales; se omiten los parques sin nombre propio («Parque», «Área verde», «Jardín»).
+
+- Ya van en la consulta normal de `importar_lugares`. Para traer **solo estos**, sin repetir toda la descarga ni tocar los demás lugares, en el servidor (después de `migrate`):
+
+```bash
+dc exec web python manage.py importar_lugares --solo-museos-parques --simular
+```
+
+```bash
+dc exec web python manage.py importar_lugares --solo-museos-parques
+```
+
+- Casi todos los museos ya son también un destino con ficha completa. Cuando el museo y el destino tienen la misma clave de OpenStreetMap, «Ver ficha» lleva a la ficha del destino; si no, a la del lugar.
+- La comunidad también puede proponerlos en `/lugares/proponer/`.
+- El curador de lugares no pide etiquetarlos: decide sobre negocios, y estos no están en duda.
+
 ## Negocios del DENUE (INEGI)
 
 El [DENUE](https://www.inegi.org.mx/servicios/api_denue.html) agrega muchos negocios y más datos de contacto que OpenStreetMap, sobre todo fuera de las ciudades. Necesita una clave gratuita, en `.env` como `DENUE_TOKEN`:

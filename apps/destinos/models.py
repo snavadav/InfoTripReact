@@ -92,9 +92,11 @@ TIPO_DE_SUBTIPO = {
     'convenience': 'comprar', 'supermarket': 'comprar', 'variety_store': 'comprar', 'department_store': 'comprar',
     'mall': 'comprar', 'bakery': 'comprar', 'pastry': 'comprar', 'confectionery': 'comprar', 'alcohol': 'comprar',
     'wine': 'comprar', 'beverages': 'comprar', 'gift': 'comprar', 'craft': 'comprar', 'art': 'comprar',
+    # Qué ver sin que sea un destino con ficha completa: todos los museos y parques con nombre de OpenStreetMap.
+    'museum': 'museo', 'park': 'parque', 'nature_reserve': 'parque',
 }
 TIPOS_DE_LUGAR = [('comer', 'Comer'), ('dormir', 'Dormir'), ('gasolina', 'Gasolina'), ('farmacia', 'Farmacia'),
-                  ('cajero', 'Cajero o banco'), ('comprar', 'Comprar')]
+                  ('cajero', 'Cajero o banco'), ('comprar', 'Comprar'), ('museo', 'Museo'), ('parque', 'Parque')]
 
 
 class Lugar(models.Model):
@@ -114,6 +116,7 @@ class Lugar(models.Model):
         ('pastry', 'Pastelería'), ('confectionery', 'Dulcería'), ('alcohol', 'Licorería'), ('wine', 'Vinos'),
         ('beverages', 'Bebidas'), ('gift', 'Regalos y recuerdos'), ('craft', 'Artesanías y manualidades'),
         ('art', 'Arte y galería'), ('marketplace', 'Mercado'),
+        ('museum', 'Museo'), ('park', 'Parque'), ('nature_reserve', 'Área natural'),
     ]
     nombre = models.CharField(max_length=200)
     tipo = models.CharField(max_length=10, choices=TIPOS)

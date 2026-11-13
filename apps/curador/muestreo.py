@@ -18,13 +18,15 @@ from .models import EtiquetaLugar
 # Multiplicador de Knuth: revuelve los id de forma determinista y la base de datos lo calcula sola.
 _MEZCLA = 2654435761
 _MODULO = 2 ** 32
+# El curador decide qué negocios le sirven a quien viaja. Museos y parques no están en duda: no se etiquetan.
+TIPOS = [(clave, nombre) for clave, nombre in Lugar.TIPOS if clave not in ('museo', 'parque')]
 
 
 def progreso():
     """Etiquetas útiles (sí o no) por tipo de lugar, y en total."""
     por_tipo = dict(EtiquetaLugar.objects.exclude(util=None).values_list('lugar__tipo')
                     .annotate(n=Count('pk')).order_by())
-    filas = [{'tipo': nombre, 'total': por_tipo.get(clave, 0)} for clave, nombre in Lugar.TIPOS]
+    filas = [{'tipo': nombre, 'total': por_tipo.get(clave, 0)} for clave, nombre in TIPOS]
     return filas, sum(por_tipo.values())
 
 
@@ -32,7 +34,7 @@ def siguiente(usuario):
     """Un lugar que esta persona no ha etiquetado, del tipo con menos etiquetas; None si ya no hay."""
     por_tipo = dict(EtiquetaLugar.objects.values_list('lugar__tipo').annotate(n=Count('pk')).order_by())
     pendientes = Lugar.objects.exclude(etiquetas__autor=usuario)
-    for tipo in sorted((clave for clave, _ in Lugar.TIPOS), key=lambda t: (por_tipo.get(t, 0), t)):
+    for tipo in sorted((clave for clave, _ in TIPOS), key=lambda t: (por_tipo.get(t, 0), t)):
         lugar = (pendientes.filter(tipo=tipo).select_related('municipio')
                  .annotate(orden=F('pk') * _MEZCLA % _MODULO).order_by('orden', 'pk').first())
         if lugar:

@@ -13,8 +13,16 @@ from django.utils import timezone
 
 from apps.destinos.ausentes import marcar_ausentes as marcar_ausentes_de
 from apps.destinos.models import Lugar
-from apps.destinos.osm import CONSULTA_LUGARES, CONSULTA_MERCADOS, ErrorOverpass, descargar, interpretar_lugares
+from apps.destinos.osm import (
+    CONSULTA_LUGARES, CONSULTA_MERCADOS, CONSULTA_MUSEOS_PARQUES, ErrorOverpass, descargar, interpretar_lugares,
+)
 from .importar_osm import municipio_de
+
+# Opción → (consulta reducida, subtipos que toca). Lo demás queda como estaba.
+PARCIALES = {
+    'solo_mercados': (CONSULTA_MERCADOS, {'marketplace'}),
+    'solo_museos_parques': (CONSULTA_MUSEOS_PARQUES, {'museum', 'park', 'nature_reserve'}),
+}
 
 CAMPOS = ['nombre', 'tipo', 'subtipo', 'latitud', 'longitud', 'direccion', 'telefono', 'sitio_web', 'horario',
           'municipio',
@@ -36,27 +44,31 @@ class Command(BaseCommand):
                                  'borrarlo ni ocultarlo: una persona decide en la cola de moderación.')
         parser.add_argument('--solo-mercados', action='store_true',
                             help='Solo mercados (amenity=marketplace); no toca los demás lugares.')
+        parser.add_argument('--solo-museos-parques', action='store_true',
+                            help='Solo museos y parques; no toca los demás lugares.')
 
-    def handle(self, *args, archivo, guardar, simular, retirar_ausentes, marcar_ausentes=False, solo_mercados=False,
-               **opciones):
+    def handle(self, *args, archivo, guardar, simular, retirar_ausentes, marcar_ausentes=False, **opciones):
+        elegidas = [opcion for opcion in PARCIALES if opciones.get(opcion)]
+        if len(elegidas) > 1:
+            raise CommandError('Elige una sola importación parcial a la vez.')
+        consulta, subtipos = PARCIALES[elegidas[0]] if elegidas else (CONSULTA_LUGARES, None)
         try:
-            datos = self.leer(archivo) if archivo else descargar(
-                CONSULTA_MERCADOS if solo_mercados else CONSULTA_LUGARES)
+            datos = self.leer(archivo) if archivo else descargar(consulta)
             if guardar:
                 with open(guardar, 'w', encoding='utf-8') as salida:
                     json.dump(datos, salida, ensure_ascii=False)
             lugares, omitidos = interpretar_lugares(datos)
         except ErrorOverpass as error:
             raise CommandError(str(error)) from error
-        if solo_mercados:
-            lugares = [lugar for lugar in lugares if lugar['subtipo'] == 'marketplace']
+        if subtipos:
+            lugares = [lugar for lugar in lugares if lugar['subtipo'] in subtipos]
         # Una respuesta vacía no debe interpretarse como que todos los lugares desaparecieron.
         if not lugares:
             raise CommandError('La respuesta no trae ningún lugar: no se cambió nada.')
 
         importados = Lugar.objects.exclude(osm_id=None)
-        if solo_mercados:
-            importados = importados.filter(subtipo='marketplace')
+        if subtipos:
+            importados = importados.filter(subtipo__in=subtipos)
         existentes = {lugar.osm_id: lugar for lugar in importados}
         municipios, nuevos, cambiados, protegidos, reaparecidos = {}, [], [], 0, 0
         # atomic: un fallo a mitad no deja una importación parcial; al simular siempre se revierte.

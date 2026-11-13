@@ -13,7 +13,23 @@
   const nearbyStatus = byId('nearby-status');
   const typeButtons = [...document.querySelectorAll('[data-lugar-tipo]')];
   const cluster = InfoTripMapa.agrupador().addTo(map);
-  let activeType = '', nearbyPoint = null, userLayer = null, zoneRequest = null, zoneTimer = null;
+  // Cada botón lleva el mismo dibujo que sus marcas en el mapa: así se reconoce el tipo sin leyenda.
+  typeButtons.forEach(button => {
+    const trazo = InfoTripMapa.TRAZOS_LUGAR[button.dataset.lugarTipo];
+    if (!trazo) return;
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('aria-hidden', 'true');
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', trazo);
+    svg.append(path);
+    button.prepend(svg);
+  });
+  // Se pueden encender varios tipos a la vez.
+  const active = new Set();
+  let nearbyPoint = null, nearbyTurn = 0, userLayer = null, zoneRequest = null, zoneTimer = null;
+  // Tipo → respuesta de "Cerca de mí" para la ubicación actual: encender otro tipo no vuelve a pedir los demás.
+  let nearbyCache = new Map();
   let markerByPlace = new Map();
 
   function node(tag, text, className) {
@@ -79,31 +95,38 @@
 
   /* Zona visible */
   async function loadZone() {
+    // Una respuesta que llegara tarde volvería a pintar lo que ya se apagó.
+    zoneRequest?.abort();
     if (nearbyPoint) return;
-    if (!activeType) { draw([]); hint.hidden = true; return; }
+    if (!active.size) { draw([]); hint.hidden = true; return; }
     if (map.getZoom() < ZOOM_MINIMO) {
       draw([]);
       hint.textContent = 'Acércate en el mapa para ver estos lugares.';
       hint.hidden = false;
       return;
     }
-    zoneRequest?.abort();
     zoneRequest = new AbortController();
+    const {signal} = zoneRequest;
     const bounds = map.getBounds();
-    const params = new URLSearchParams({
+    const zone = {
       sur: bounds.getSouth().toFixed(5), oeste: bounds.getWest().toFixed(5), norte: bounds.getNorth().toFixed(5),
-      este: bounds.getEast().toFixed(5), tipo: activeType,
-    });
+      este: bounds.getEast().toFixed(5),
+    };
     try {
-      const response = await fetch(`/api/v1/lugares/?${params}`, {signal: zoneRequest.signal});
-      if (!response.ok) throw new Error();
-      const data = await response.json();
-      draw(data.resultados, {conservar: true});
-      hint.textContent = data.truncado ? 'Hay más lugares aquí: acércate para verlos todos.'
-        : data.resultados.length ? '' : 'No tenemos lugares de este tipo en esta zona.';
+      // Una petición por tipo: cada uno tiene su propio tope, y así los restaurantes no dejan fuera a los hoteles.
+      const parts = await Promise.all([...active].map(async tipo => {
+        const response = await fetch(`/api/v1/lugares/?${new URLSearchParams({...zone, tipo})}`, {signal});
+        if (!response.ok) throw new Error();
+        return response.json();
+      }));
+      if (signal.aborted) return;
+      const places = parts.flatMap(part => part.resultados);
+      draw(places, {conservar: true});
+      hint.textContent = parts.some(part => part.truncado) ? 'Hay más lugares aquí: acércate para verlos todos.'
+        : places.length ? '' : `No tenemos lugares de ${parts.length > 1 ? 'estos tipos' : 'este tipo'} en esta zona.`;
       hint.hidden = !hint.textContent;
     } catch (error) {
-      if (error.name === 'AbortError') return;
+      if (error.name === 'AbortError' || signal.aborted) return;
       hint.textContent = 'No pudimos cargar los lugares. Intenta de nuevo.';
       hint.hidden = false;
     }
@@ -136,23 +159,37 @@
     nearbyStatus.textContent = 'Buscando lo más cercano…';
     nearbyPanel.hidden = false;
     hint.hidden = true;
-    const ask = async radio => {
+    const turn = ++nearbyTurn;
+    const ask = async (radio, tipo) => {
       const response = await fetch('/api/v1/lugares/cerca/', {
         method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({latitud: nearbyPoint[0], longitud: nearbyPoint[1], radio_km: radio, ...(activeType && {tipo: activeType})}),
+        body: JSON.stringify({latitud: nearbyPoint[0], longitud: nearbyPoint[1], radio_km: radio, ...(tipo && {tipo})}),
       });
       if (!response.ok) throw new Error();
       return response.json();
     };
+    const nearest = tipo => {
+      if (!nearbyCache.has(tipo)) {
+        const cache = nearbyCache;
+        // En un pueblo puede no haber nada a 5 km: entonces se amplía antes de responder que no hay.
+        const pending = ask(5, tipo).then(data => data.resultados.length ? data : ask(25, tipo));
+        pending.catch(() => cache.delete(tipo));
+        cache.set(tipo, pending);
+      }
+      return nearbyCache.get(tipo);
+    };
     try {
-      // En un pueblo puede no haber nada a 5 km: entonces se amplía antes de responder que no hay.
-      let data = await ask(5);
-      if (!data.resultados.length) data = await ask(25);
-      draw(data.resultados);
-      showNearby(data.resultados, data.radio_km);
-      const points = [nearbyPoint, ...data.resultados.slice(0, 15).map(place => [Number(place.latitud), Number(place.longitud)])];
+      // Sin tipo elegido se busca de todo; con varios, lo más cercano de cada uno.
+      const parts = await Promise.all((active.size ? [...active] : ['']).map(nearest));
+      // Si mientras tanto se eligió otro tipo o se cerró el panel, manda la búsqueda más nueva.
+      if (turn !== nearbyTurn || !nearbyPoint) return;
+      const places = parts.flatMap(part => part.resultados).sort((a, b) => a.distancia_km - b.distancia_km || a.id - b.id);
+      draw(places);
+      showNearby(places, Math.max(...parts.map(part => part.radio_km)));
+      const points = [nearbyPoint, ...places.slice(0, 15).map(place => [Number(place.latitud), Number(place.longitud)])];
       map.fitBounds(points, {padding: [50, 50], maxZoom: 15});
     } catch {
+      if (turn !== nearbyTurn) return;
       nearbyStatus.textContent = 'No pudimos buscar lugares cercanos. Intenta de nuevo.';
     }
   }
@@ -166,6 +203,7 @@
       nearbyButton.disabled = false;
       nearbyButton.setAttribute('aria-pressed', 'true');
       nearbyPoint = [position.coords.latitude, position.coords.longitude];
+      nearbyCache = new Map();
       if (userLayer) map.removeLayer(userLayer);
       userLayer = L.circleMarker(nearbyPoint, {radius: 7, className: 'mi-ubicacion'}).bindTooltip('Tu ubicación aproximada').addTo(map);
       askNearby();
@@ -178,6 +216,7 @@
   });
   byId('nearby-close').addEventListener('click', () => {
     nearbyPoint = null;
+    nearbyCache = new Map();
     nearbyPanel.hidden = true;
     nearbyButton.setAttribute('aria-pressed', 'false');
     if (userLayer) { map.removeLayer(userLayer); userLayer = null; }
@@ -186,10 +225,13 @@
   });
 
   typeButtons.forEach(button => button.addEventListener('click', () => {
-    activeType = activeType === button.dataset.lugarTipo ? '' : button.dataset.lugarTipo;
-    typeButtons.forEach(other => other.setAttribute('aria-pressed', String(other.dataset.lugarTipo === activeType)));
+    const tipo = button.dataset.lugarTipo;
+    if (!active.delete(tipo)) active.add(tipo);
+    button.setAttribute('aria-pressed', String(active.has(tipo)));
+    // Un recuadro abierto conserva su marcador: se cierra para que el tipo apagado desaparezca completo.
+    map.closePopup();
     if (nearbyPoint) askNearby();
-    else { draw([]); loadZone(); }
+    else loadZone();
   }));
 
   // Enlace "Ver qué hay cerca" de la portada: la persona acaba de pedirlo.

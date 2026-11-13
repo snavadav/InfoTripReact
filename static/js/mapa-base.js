@@ -74,12 +74,14 @@ window.InfoTripMapa = (() => {
     farmacia: 'M12 5v14M5 12h14',
     cajero: 'M3 7h18v11H3zM3 11h18M7 15h3',
     comprar: 'M6 8h12l1 13H5zM9 8V6a3 3 0 0 1 6 0v2',
+    museo: 'M3 21h18M4 18h16M12 3l9 6H3zM6 10v8M10 10v8M14 10v8M18 10v8',
+    parque: 'M12 22v-7M12 15a5 5 0 0 1-4.6-7A4.6 4.6 0 0 1 12 3a4.6 4.6 0 0 1 4.6 5A5 5 0 0 1 12 15zM9 22h6',
   };
 
   function iconoLugar(tipo) {
     return L.divIcon({
       className: 'pin-envoltura',
-      html: `<span class="pin-lugar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${TRAZOS_LUGAR[tipo] || TRAZO_GENERAL}"/></svg></span>`,
+      html: `<span class="pin-lugar${TRAZOS_LUGAR[tipo] ? ` pin-lugar--${tipo}` : ''}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${TRAZOS_LUGAR[tipo] || TRAZO_GENERAL}"/></svg></span>`,
       iconSize: [28, 28],
       iconAnchor: [14, 14],
       popupAnchor: [0, -12],
@@ -161,5 +163,5 @@ window.InfoTripMapa = (() => {
     return `${Math.abs(a).toFixed(4)}° ${a >= 0 ? 'N' : 'S'}, ${Math.abs(o).toFixed(4)}° ${o >= 0 ? 'E' : 'O'}`;
   }
 
-  return {CENTRO_JALISCO, ZOOM_JALISCO, icono, iconoLugar, crear, agrupador, coordenadas, agregarPuntos, formatoCoordenadas};
+  return {CENTRO_JALISCO, ZOOM_JALISCO, TRAZOS_LUGAR, icono, iconoLugar, crear, agrupador, coordenadas, agregarPuntos, formatoCoordenadas};
 })();
