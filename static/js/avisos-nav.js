@@ -109,8 +109,10 @@
     }
     if (!aviso.enlace && !aviso.leida) {
       destino.addEventListener('click', async () => {
+        cambios += 1;
         const datos = await pedir(`/api/v1/notificaciones/${aviso.id}/leida/`, {method: 'POST'});
         if (!datos) return;
+        cambios += 1;
         item.className = 'aviso';
         destino.querySelectorAll('.aviso-punto, .sr-only').forEach(marca => marca.remove());
         actualizar(datos.no_leidas || 0);
@@ -126,11 +128,16 @@
     ul.append(...avisos.map(elemento));
     return [nodo('h3', titulo, 'avisos-grupo-titulo'), ul];
   }
+  // Sube cada vez que algo se marca como leído: una lista pedida antes ya no dice la verdad.
+  let cambios = 0;
   async function cargar() {
     lista.replaceChildren(nodo('p', 'Cargando…', 'avisos-vacio'));
+    const alPedir = cambios;
     try {
       const datos = await pedir('/api/v1/notificaciones/');
       if (!datos) throw new Error();
+      // Si mientras llegaba se marcó algo como leído, esta respuesta traería el número viejo: se pide otra vez.
+      if (alPedir !== cambios) { if (!panel.hidden) cargar(); return; }
       actualizar(datos.no_leidas || 0);
       const avisos = datos.results || [];
       if (!avisos.length) {
@@ -158,8 +165,10 @@
     if (event.key === 'Escape' && !panel.hidden) { abrir(false); boton.focus(); }
   });
   todosLeidos.addEventListener('click', async () => {
+    cambios += 1;
     const datos = await pedir('/api/v1/notificaciones/leidas/', {method: 'POST'});
     if (!datos) return;
+    cambios += 1;
     actualizar(0);
     lista.querySelectorAll('.aviso--nuevo').forEach(item => item.classList.remove('aviso--nuevo'));
     lista.querySelectorAll('.aviso-punto, .aviso .sr-only').forEach(marca => marca.remove());
