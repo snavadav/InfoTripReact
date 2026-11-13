@@ -39,8 +39,8 @@ CONSULTA_LUGARES = """
 [out:json][timeout:300];
 area["ISO3166-2"="MX-JAL"][admin_level=4]->.jalisco;
 (
-  nwr["amenity"~"^(restaurant|fast_food|cafe|bar|pub|fuel|pharmacy|atm|bank|marketplace)$"]["name"](area.jalisco);
-  nwr["tourism"~"^(hotel|motel|hostel|guest_house|apartment|museum)$"]["name"](area.jalisco);
+  nwr["amenity"~"^(restaurant|fast_food|cafe|bar|pub|fuel|pharmacy|atm|bank|marketplace|ice_cream|food_court)$"]["name"](area.jalisco);
+  nwr["tourism"~"^(hotel|motel|hostel|guest_house|apartment|museum|chalet)$"]["name"](area.jalisco);
   nwr["shop"~"^(convenience|supermarket|variety_store|department_store|mall|bakery|pastry|confectionery|alcohol|wine|beverages|gift|craft|art)$"]["name"](area.jalisco);
   nwr["leisure"~"^(park|nature_reserve)$"]["name"](area.jalisco);
 );

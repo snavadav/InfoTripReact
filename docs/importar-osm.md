@@ -97,6 +97,28 @@ dc exec web python manage.py importar_lugares --solo-museos-parques
 - La comunidad también puede proponerlos en `/lugares/proponer/`.
 - El curador de lugares no pide etiquetarlos: decide sobre negocios, y estos no están en duda.
 
+## Cargar un CSV de lugares
+
+`importar_csv` carga un archivo preparado fuera del sitio (por ejemplo, una selección de OpenStreetMap y del Sistema de Información Cultural) **sin duplicar** lo que ya existe. Solo agrega: nunca cambia ni borra nada, y se puede repetir.
+
+```bash
+python manage.py importar_csv lugares.csv --simular
+```
+
+```bash
+python manage.py importar_csv lugares.csv
+```
+
+- **Columnas:** `nombre`, `municipio`, `estado`, `latitud`, `longitud`, `categoria`, `modelo_sugerido` (`Lugar` o `Destino`), `tipo`, `subtipo`, `direccion`, `telefono`, `sitio_web`, `horario`, `horario_fuente_url`, `fuente_nombre`, `fuente_url`, `fuente_id` y `fecha_consulta`. Las demás se ignoran.
+- **Lugares** (`modelo_sugerido=Lugar`): se publican de inmediato, como en `importar_lugares`.
+- **Destinos** (`modelo_sugerido=Destino`): quedan **ocultos** con el texto automático, hasta que el equipo los revise y publique en `/admin/destinos/destino/`. Lo que viene del Sistema de Información Cultural lleva la cita de la fuente en la descripción; consérvala al reescribirla.
+- **Duplicados:** se omite la fila si su clave de OpenStreetMap ya existe como lugar o como destino (publicado u oculto: lo que el equipo ocultó no vuelve a entrar), o si hay algo con el mismo nombre a menos de 150 m.
+- **Qué no entra:** tiendas de alimentos que no le sirven a quien viaja (carnicerías, pescaderías, fruterías, queserías), igual que en la importación de OpenStreetMap, y filas sin nombre, sin municipio o con coordenadas fuera de Jalisco.
+- **Subtipos:** heladerías, zonas de comida y cabañas son subtipos de `Lugar` y también van en la consulta de `importar_lugares`, para que la importación semanal no los marque como desaparecidos.
+- En el servidor el archivo debe estar dentro del contenedor: cópialo antes con `docker compose cp lugares.csv web:/tmp/lugares.csv`.
+
+El 13 de noviembre de 2026, de un archivo de 5,000 filas entraron 166 lugares y 1,282 destinos ocultos; 3,462 ya existían.
+
 ## Negocios del DENUE (INEGI)
 
 El [DENUE](https://www.inegi.org.mx/servicios/api_denue.html) agrega muchos negocios y más datos de contacto que OpenStreetMap, sobre todo fuera de las ciudades. Necesita una clave gratuita, en `.env` como `DENUE_TOKEN`:
